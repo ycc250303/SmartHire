@@ -167,7 +167,7 @@ async function syncCommitToProject(github, params = {}) {
               itemId: "${projectItemId}",
               fieldId: "${assigneesFieldId}",
               value: {
-                userIds: ["${assigneeId}"]
+                assigneeIds: ["${assigneeId}"]
               }
             }) {
               projectV2Item {
