@@ -19,7 +19,7 @@ jobs:
         run: |
           COMMIT_TITLE=$(git log -1 --pretty=format:"%s")
           COMMIT_AUTHOR=$(git log -1 --pretty=format:"%an")
-          COMMIT_DATE=$(git log -1 --pretty=format:"%Y-%m-%d")
+          COMMIT_DATE=$(git log -1 --pretty=format:"%Y-%m-%d" --no-merges)
           COMMIT_AUTHOR_EMAIL=$(git log -1 --pretty=format:"%ae")
           COMMIT_URL="${{ github.event.head_commit.url }}"
           echo "COMMIT_TITLE=$COMMIT_TITLE" >> $GITHUB_ENV
@@ -47,6 +47,6 @@ jobs:
             process.env.COMMIT_SHA = context.sha;
             process.env.COMMIT_URL = process.env.COMMIT_URL;
             
-            // 执行同步脚本
-            const result = await syncCommitToProject();
+            // 执行同步脚本，传递 github 对象
+            const result = await syncCommitToProject(github);
             console.log('同步结果:', result);
