@@ -17,6 +17,21 @@ async function syncCommitToProject(github) {
     console.log(`提交标题: ${commitTitle}`);
     console.log(`提交作者: ${commitAuthor}`);
     console.log(`提交日期: ${commitDate}`);
+    console.log(`仓库所有者: ${repoOwner}`);
+    console.log(`仓库名称: ${repoName}`);
+    console.log(`提交SHA: ${commitSha}`);
+    console.log(`提交URL: ${commitUrl}`);
+
+    // 验证必要的变量
+    if (!repoOwner || !repoName) {
+      throw new Error(`仓库信息不完整: owner=${repoOwner}, name=${repoName}`);
+    }
+    if (!commitTitle) {
+      throw new Error('提交标题为空');
+    }
+    if (!commitSha) {
+      throw new Error('提交SHA为空');
+    }
 
     // 创建 Issue
     console.log('创建 Issue...');

@@ -19,7 +19,7 @@ jobs:
         run: |
           COMMIT_TITLE=$(git log -1 --pretty=format:"%s")
           COMMIT_AUTHOR=$(git log -1 --pretty=format:"%an")
-          COMMIT_DATE=$(git log -1 --pretty=format:"%Y-%m-%d" --no-merges)
+          COMMIT_DATE=$(date -d "$(git log -1 --pretty=format:"%ci")" +"%Y-%m-%d" 2>/dev/null || date +"%Y-%m-%d")
           COMMIT_AUTHOR_EMAIL=$(git log -1 --pretty=format:"%ae")
           COMMIT_URL="${{ github.event.head_commit.url }}"
           echo "COMMIT_TITLE=$COMMIT_TITLE" >> $GITHUB_ENV
@@ -38,10 +38,6 @@ jobs:
             
             // 设置环境变量
             process.env.PROJECT_ID = 'PVT_kwHOCoF7pM4BFUrC';
-            process.env.COMMIT_TITLE = process.env.COMMIT_TITLE;
-            process.env.COMMIT_AUTHOR = process.env.COMMIT_AUTHOR;
-            process.env.COMMIT_DATE = process.env.COMMIT_DATE;
-            process.env.COMMIT_AUTHOR_EMAIL = process.env.COMMIT_AUTHOR_EMAIL;
             process.env.REPO_OWNER = context.repo.owner;
             process.env.REPO_NAME = context.repo.repo;
             process.env.COMMIT_SHA = context.sha;
