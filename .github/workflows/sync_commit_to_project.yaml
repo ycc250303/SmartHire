@@ -1,0 +1,56 @@
+name: Sync Commit to ProjectV2
+
+on:
+  push:
+    branches:
+      - main  # 替换为你主分支名称
+
+jobs:
+  update-project:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. Checkout 代码
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # 2. 获取最新 commit 信息
+      - name: Get latest commit message and author
+        id: commit
+        run: |
+          COMMIT_TITLE=$(git log -1 --pretty=format:"%s")
+          COMMIT_AUTHOR=$(git log -1 --pretty=format:"%an")
+          echo "COMMIT_TITLE=$COMMIT_TITLE" >> $GITHUB_ENV
+          echo "COMMIT_AUTHOR=$COMMIT_AUTHOR" >> $GITHUB_ENV
+
+      # 3. 创建 Issue 并添加到 ProjectV2
+      - name: Add card to ProjectV2
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GH_TOKEN }}
+          script: |
+            const projectId = 'PVT_kwHOCoF7pM4BFUrC'; 
+            const commitTitle = process.env.COMMIT_TITLE;
+            const commitAuthor = process.env.COMMIT_AUTHOR;
+
+            // 创建 Issue
+            const issue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: commitTitle,
+              body: `Author: ${commitAuthor}\n\nCommit: ${context.sha}\n\n[查看提交](${context.payload.head_commit.url})`,
+              labels: ['project-sync', 'auto-generated']
+            });
+
+            // 添加 Issue 到 ProjectV2
+            await github.graphql(`
+              mutation {
+                addProjectV2ItemById(input: {
+                  projectId: "${projectId}",
+                  contentId: "${issue.data.node_id}"
+                }) {
+                  item {
+                    id
+                  }
+                }
+              }
+            `);
