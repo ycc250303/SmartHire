@@ -36,13 +36,21 @@ jobs:
           script: |
             const { syncCommitToProject } = require('./.github/scripts/sync-to-project.js');
             
-            // 设置环境变量
-            process.env.PROJECT_ID = 'PVT_kwHOCoF7pM4BFUrC';
-            process.env.REPO_OWNER = context.repo.owner;
-            process.env.REPO_NAME = context.repo.repo;
-            process.env.COMMIT_SHA = context.sha;
-            process.env.COMMIT_URL = process.env.COMMIT_URL;
+            // 准备参数对象
+            const params = {
+              projectId: 'PVT_kwHOCoF7pM4BFUrC',
+              commitTitle: process.env.COMMIT_TITLE,
+              commitAuthor: process.env.COMMIT_AUTHOR,
+              commitDate: process.env.COMMIT_DATE,
+              commitAuthorEmail: process.env.COMMIT_AUTHOR_EMAIL,
+              repoOwner: context.repo.owner,
+              repoName: context.repo.repo,
+              commitSha: context.sha,
+              commitUrl: process.env.COMMIT_URL
+            };
             
-            // 执行同步脚本，传递 github 对象
-            const result = await syncCommitToProject(github);
+            console.log('传递的参数:', params);
+            
+            // 执行同步脚本，传递 github 对象和参数
+            const result = await syncCommitToProject(github, params);
             console.log('同步结果:', result);

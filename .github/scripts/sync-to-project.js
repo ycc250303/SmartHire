@@ -1,17 +1,16 @@
 const { execSync } = require('child_process');
 
-// 获取环境变量
-const projectId = process.env.PROJECT_ID || 'PVT_kwHOCoF7pM4BFUrC';
-const commitTitle = process.env.COMMIT_TITLE;
-const commitAuthor = process.env.COMMIT_AUTHOR;
-const commitDate = process.env.COMMIT_DATE;
-const commitAuthorEmail = process.env.COMMIT_AUTHOR_EMAIL;
-const repoOwner = process.env.REPO_OWNER;
-const repoName = process.env.REPO_NAME;
-const commitSha = process.env.COMMIT_SHA;
-const commitUrl = process.env.COMMIT_URL;
-
-async function syncCommitToProject(github) {
+async function syncCommitToProject(github, params = {}) {
+  // 从参数对象获取值，如果没有传递则从环境变量获取（向后兼容）
+  const projectId = params.projectId || process.env.PROJECT_ID || 'PVT_kwHOCoF7pM4BFUrC';
+  const commitTitle = params.commitTitle || process.env.COMMIT_TITLE;
+  const commitAuthor = params.commitAuthor || process.env.COMMIT_AUTHOR;
+  const commitDate = params.commitDate || process.env.COMMIT_DATE;
+  const commitAuthorEmail = params.commitAuthorEmail || process.env.COMMIT_AUTHOR_EMAIL;
+  const repoOwner = params.repoOwner || process.env.REPO_OWNER;
+  const repoName = params.repoName || process.env.REPO_NAME;
+  const commitSha = params.commitSha || process.env.COMMIT_SHA;
+  const commitUrl = params.commitUrl || process.env.COMMIT_URL;
   try {
     console.log('开始同步提交到项目...');
     console.log(`提交标题: ${commitTitle}`);
