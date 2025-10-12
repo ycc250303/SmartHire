@@ -39,7 +39,8 @@ async function syncCommitToProject(github, params = {}) {
       repo: repoName,
       title: commitTitle,
       body: `Author: ${commitAuthor}\n\nCommit: ${commitSha}\n\n[查看提交](${commitUrl})`,
-      labels: ['project-sync', 'auto-generated']
+      labels: ['project-sync', 'auto-generated'],
+      assignees: [commitAuthor] // 直接在创建 Issue 时设置 assignee
     });
 
     console.log(`Issue 创建成功: ${issue.data.html_url}`);
@@ -144,45 +145,8 @@ async function syncCommitToProject(github, params = {}) {
       console.log('未找到 Status 字段或 "In progress" 选项');
     }
 
-    // 设置 Assignees 为提交者
-    if (assigneesFieldId) {
-      console.log('设置 Assignees 为提交者...');
-      // 首先尝试通过用户名查找用户
-      let assigneeId = null;
-      try {
-        const user = await github.rest.users.getByUsername({
-          username: commitAuthor
-        });
-        assigneeId = user.data.node_id;
-        console.log(`找到用户: ${commitAuthor} (${assigneeId})`);
-      } catch (error) {
-        console.log(`无法找到用户: ${commitAuthor}`, error.message);
-      }
-
-      if (assigneeId) {
-        await github.graphql(`
-          mutation {
-            updateProjectV2ItemFieldValue(input: {
-              projectId: "${projectId}",
-              itemId: "${projectItemId}",
-              fieldId: "${assigneesFieldId}",
-              value: {
-                assigneeIds: ["${assigneeId}"]
-              }
-            }) {
-              projectV2Item {
-                id
-              }
-            }
-          }
-        `);
-        console.log('Assignees 设置成功');
-      } else {
-        console.log('无法设置 Assignees，用户不存在');
-      }
-    } else {
-      console.log('未找到 Assignees 字段');
-    }
+    // 注意：Assignees 已通过 Issue 创建时设置，跳过项目字段设置
+    console.log('Assignees 已通过 Issue 创建时设置，跳过项目字段设置');
 
     // 设置 Start date 为提交日期
     if (startDateFieldId) {
