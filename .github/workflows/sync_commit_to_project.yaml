@@ -5,6 +5,10 @@ on:
     branches:
       - main  # 替换为你主分支名称
 
+premissions:
+  issues: write
+  content: read
+
 jobs:
   update-project:
     runs-on: ubuntu-latest
