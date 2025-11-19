@@ -1,0 +1,38 @@
+package com.SmartHire.userAuthService.mapper;
+
+import com.SmartHire.userAuthService.model.User;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
+
+import java.util.List;
+
+/**
+ * <p>
+ * 用户基础表 Mapper 接口
+ * </p>
+ *
+ * @author SmartHire Team
+ * @since 2025-11-15
+ */
+@Mapper
+public interface UserAuthMapper extends BaseMapper<User> {
+
+    // 根据用户名查询用户信息
+    @Select("select * from user where username=#{username}")
+    public User findByUserName(String username);
+
+    // 检查用户名是否存在
+    @Select("select id from user where username= #{username} limit 1")
+    public Long checkUsernameExist(String username);
+
+    // 检查邮箱是否存在
+    @Select("select id from user where email= #{email} limit 1")
+    public Long checkEmailExist(String email);
+
+    // 检查手机号是否存在
+    @Select("select id from user where phone= #{phone} limit 1")
+    public Long checkPhoneExist(String phone);
+
+}

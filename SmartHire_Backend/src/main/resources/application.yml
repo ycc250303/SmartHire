@@ -1,0 +1,43 @@
+spring:
+  config:
+    import: optional:classpath:/application-local.yml
+  application:
+    name: SmartHire_Backend
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  # MyBatis-Plus 配置
+  mybatis-plus:
+    # Mapper XML 文件位置（支持多个路径）
+    mapper-locations: classpath*:com/SmartHire/userAuthService/mapper/xml/*.xml,classpath*:mapper/**/*.xml
+    # 实体类包路径
+    type-aliases-package: com.SmartHire.userAuthService.entity
+    # 全局配置
+    global-config:
+      # 数据库配置
+      db-config:
+        # 主键类型
+        id-type: auto
+        # 表名下划线命名
+        table-underline: true
+    # MyBatis 原生配置
+    configuration:
+      # 开启驼峰命名转换
+      map-underscore-to-camel-case: true
+      # SQL 日志输出（开发环境）
+      log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+  jpa:
+    hibernate:
+      ddl-auto: update   # 自动建表（可选值：none, validate, update, create, create-drop）
+    show-sql: true        # 控制台输出SQL语句
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+
+# 服务器配置
+server:
+  port: 8080
+  servlet:
+    context-path: /smarthire/api

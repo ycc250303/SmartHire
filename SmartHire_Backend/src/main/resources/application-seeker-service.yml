@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: SmartHire_SeekerService
+
+server:
+  port: 8082
+  servlet:
+    context-path: /smarthire/api
+
+# inherits datasource/redis/mail from application.yml
