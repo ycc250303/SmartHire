@@ -1,7 +1,7 @@
 {
-    "name" : "",
-    "appid" : "",
-    "description" : "",
+    "name" : "SmartHire+ Seeker",
+    "appid" : "com.smarthire.seeker",
+    "description" : "SmartHire+ mobile client for candidates",
     "versionName" : "1.0.0",
     "versionCode" : "100",
     "transformPx" : false,

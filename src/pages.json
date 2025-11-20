@@ -1,16 +1,60 @@
 {
-	"pages": [
-		{
-			"path": "pages/index/index",
-			"style": {
-				"navigationBarTitleText": ""
-			}
-		}
-	],
-	"globalStyle": {
-		"navigationBarTextStyle": "black",
-		"navigationBarTitleText": "uni-app",
-		"navigationBarBackgroundColor": "#F8F8F8",
-		"backgroundColor": "#F8F8F8"
-	}
+  "pages": [
+    {
+      "path": "pages/index/index",
+      "style": {
+        "navigationBarTitleText": "岗位",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/chat/index",
+      "style": {
+        "navigationBarTitleText": "消息",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/profile/index",
+      "style": {
+        "navigationBarTitleText": "我的",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "SmartHire+",
+    "navigationBarBackgroundColor": "#ffffff",
+    "backgroundColor": "#f6f9ff"
+  },
+  "tabBar": {
+    "color": "#6b778c",
+    "selectedColor": "#4ba3ff",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "岗位",
+        "iconPath": "static/tab-jobs.png",
+        "selectedIconPath": "static/tab-jobs-active.png"
+      },
+      {
+        "pagePath": "pages/chat/index",
+        "text": "消息",
+        "iconPath": "static/tab-chat.png",
+        "selectedIconPath": "static/tab-chat-active.png"
+      },
+      {
+        "pagePath": "pages/profile/index",
+        "text": "我的",
+        "iconPath": "static/tab-profile.png",
+        "selectedIconPath": "static/tab-profile-active.png"
+      }
+    ]
+  }
 }
