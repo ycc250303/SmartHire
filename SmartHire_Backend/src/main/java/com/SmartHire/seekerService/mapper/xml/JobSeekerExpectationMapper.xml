@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.SmartHire.seekerService.mapper.JobSeekerExpectationMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.SmartHire.seekerService.model.JobSeekerExpectation">
+        <id column="id" property="id" />
+        <result column="job_seeker_id" property="jobSeekerId" />
+        <result column="expected_position" property="expectedPosition" />
+        <result column="job_category" property="jobCategory" />
+        <result column="expected_industry" property="expectedIndustry" />
+        <result column="work_city" property="workCity" />
+        <result column="salary_min" property="salaryMin" />
+        <result column="salary_max" property="salaryMax" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, job_seeker_id, expected_position, job_category, expected_industry, work_city, salary_min, salary_max, created_at, updated_at
+    </sql>
+
+</mapper>

@@ -17,10 +17,22 @@ public enum ErrorCode {
     TOKEN_IS_NULL(1011, "JWT Token 为空"),
     TOKEN_IS_INVALID(1012, "JWT Token 无效"),
     USER_NOT_LOGIN(1013, "用户未登录"),
-    // 求职者相关错误码 (2000-2099)
-    SEEKER_ALREADY_REGISTERED(2001, "该用户已注册求职者信息，请勿重复注册"),
-    SEEKER_NOT_EXIST(2002, "求职者信息不存在，请先注册求职者信息"),
-    SYSTEM_ERROR(9999, "系统内部错误，请联系管理员");
+    // 求职者相关错误码 (1100-1199)
+    SEEKER_ALREADY_REGISTERED(1101, "该用户已注册求职者信息，请勿重复注册"),
+    SEEKER_NOT_EXIST(1102, "求职者信息不存在"),
+    USER_NOT_SEEKER(1103, "用户身份不是求职者"),
+    EDUCATION_EXPERIENCE_NOT_EXIST(1104, "教育经历不存在"),
+    EDUCATION_EXPERIENCE_NOT_BELONG_TO_USER(1105, "教育经历不属于当前用户"),
+    EDUCATION_EXPERIENCE_ALREADY_EXIST(1106, "存在相同的教育经历"),
+    PROJECT_EXPERIENCE_NOT_EXIST(1107, "项目经历不存在"),
+    PROJECT_EXPERIENCE_NOT_BELONG_TO_USER(1108, "项目经历不属于当前用户"),
+    WORK_EXPERIENCE_NOT_EXIST(1109, "工作/实习经历不存在"),
+    WORK_EXPERIENCE_NOT_BELONG_TO_USER(1110, "工作/实习经历不属于当前用户"),
+    SKILL_NOT_EXIST(1111, "技能不存在"),
+    SKILL_NOT_BELONG_TO_USER(1112, "技能不属于当前用户"),
+    SKILL_LIMIT_EXCEEDED(1113, "技能数量已达上限"),
+    SKILL_ALREADY_EXIST(1114, "已存在相同技能"),
+    SYSTEM_ERROR(9999, "系统内部错误,请检查业务处理逻辑,以及是否存在未处理的异常情况");
 
     private final Integer code;
     private final String message;
