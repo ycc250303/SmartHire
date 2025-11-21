@@ -3,6 +3,7 @@ package com.SmartHire.userAuthService.service.impl;
 import com.SmartHire.shared.exception.enums.ErrorCode;
 import com.SmartHire.shared.exception.exception.BusinessException;
 import com.SmartHire.shared.utils.JwtUtil;
+import com.SmartHire.shared.utils.ThreadLocalUtil;
 import com.SmartHire.userAuthService.dto.LoginDTO;
 import com.SmartHire.userAuthService.dto.PublicUserInfoDTO;
 import com.SmartHire.userAuthService.dto.RegisterDTO;
@@ -138,7 +139,9 @@ public class UserAuthServiceImpl extends ServiceImpl<UserAuthMapper, User> imple
      * @return 用户信息DTO
      */
     @Override
-    public UserInfoDTO getUserInfo(Long userId) {
+    public UserInfoDTO getUserInfo() {
+        Map<String, Object> map = ThreadLocalUtil.get();
+        Long userId = JwtUtil.getUserIdFromToken(map);
         User user = userMapper.selectById(userId);
         if (user == null) {
             throw new BusinessException(ErrorCode.USER_ID_NOT_EXIST);
@@ -169,5 +172,12 @@ public class UserAuthServiceImpl extends ServiceImpl<UserAuthMapper, User> imple
         publicUserInfoDTO.setUserType(user.getUserType());
         publicUserInfoDTO.setAvatarUrl(user.getAvatarUrl());
         return publicUserInfoDTO;
+    }
+
+    @Override
+    public void updateUserAvator(String avatarUrl){
+        Map<String, Object> map = ThreadLocalUtil.get();
+        Long userId = JwtUtil.getUserIdFromToken(map);
+        userMapper.updateUserAvator(avatarUrl,userId);
     }
 }

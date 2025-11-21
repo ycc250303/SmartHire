@@ -11,6 +11,7 @@ import com.SmartHire.userAuthService.service.UserAuthService;
 import com.SmartHire.userAuthService.service.VerificationCodeService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
+import org.hibernate.validator.constraints.URL;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -19,7 +20,7 @@ import java.util.Map;
 
 /**
  * <p>
- * 用户基础表 前端控制器
+ * 用户基础表
  * </p>
  *
  * @author SmartHire Team
@@ -101,9 +102,8 @@ public class UserAuthController {
     @GetMapping("/user-info")
     @Operation(summary = "获取当前登录用户信息", description = "获取当前登录用户的完整信息（仅自己可查看）")
     public Result<UserInfoDTO> getUserInfo() {
-        Map<String, Object> map = ThreadLocalUtil.get();
-        Long userId = JwtUtil.getUserIdFromToken(map);
-        UserInfoDTO userInfo = userService.getUserInfo(userId);
+
+        UserInfoDTO userInfo = userService.getUserInfo();
         return Result.success("获取用户信息成功", userInfo);
     }
 
@@ -118,5 +118,13 @@ public class UserAuthController {
     public Result<PublicUserInfoDTO> getPublicUserInfo(@PathVariable Long userId) {
         PublicUserInfoDTO publicUserInfo = userService.getPublicUserInfo(userId);
         return Result.success("获取用户公开信息成功", publicUserInfo);
+    }
+
+
+    @PatchMapping("/update-user-avatar")
+    @Operation(summary = "更新用户头像", description = "更新用户头像")
+    public Result<?> updateUserAvator(@RequestParam @URL String avatarUrl) {
+        userService.updateUserAvator(avatarUrl);
+        return Result.success("更新用户头像成功");
     }
 }

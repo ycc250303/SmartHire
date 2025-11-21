@@ -43,10 +43,9 @@ public interface UserAuthService extends IService<User> {
     /**
      * 获取用户信息（完整信息，仅自己可查看）
      *
-     * @param userId 用户ID
      * @return 用户信息DTO
      */
-    UserInfoDTO getUserInfo(Long userId);
+    UserInfoDTO getUserInfo();
 
     /**
      * 获取公开用户信息（他人可查看，不包含隐私信息）
@@ -55,4 +54,11 @@ public interface UserAuthService extends IService<User> {
      * @return 公开用户信息DTO
      */
     PublicUserInfoDTO getPublicUserInfo(Long userId);
+
+    /**
+     * 更新用户头像
+     *
+     * @param avatarUrl 头像URL
+     */
+    void updateUserAvator(String avatarUrl);
 }

@@ -2,6 +2,7 @@ package com.SmartHire.userAuthService.mapper;
 
 import com.SmartHire.userAuthService.model.User;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
@@ -38,4 +39,8 @@ public interface UserAuthMapper extends BaseMapper<User> {
     // 根据ID查询用户信息
     @Select("select * from user where id = #{id}")
     public User findById(Long id);
+
+    // 更新用户头像
+    @Update("update user set avatar_url = #{avatarUrl},updated_at=now() where id = #{id}")
+    void updateUserAvator(String avatarUrl,Long id);
 }
