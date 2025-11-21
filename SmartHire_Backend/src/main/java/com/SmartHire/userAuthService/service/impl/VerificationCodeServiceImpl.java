@@ -80,7 +80,7 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
     }
 
     /**
-     * 验证用户输入的验证码
+     * 验证用户输入的验证码（验证成功后立即删除验证码，防止重复使用）
      *
      * @param email 邮箱地址
      * @param code  用户输入的验证码
@@ -112,6 +112,53 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
 
         // 5. 验证成功后删除验证码（防止重复使用）
         redisTemplate.delete(codeKey);
-        log.info("验证码验证成功，邮箱: {}", email);
+        log.info("验证码验证成功并已删除，邮箱: {}", email);
+    }
+
+    /**
+     * 验证用户输入的验证码（验证成功后不删除验证码，用于注册等场景，注册成功后再删除）
+     *
+     * @param email 邮箱地址
+     * @param code  用户输入的验证码
+     */
+    @Override
+    public void verifyCodeWithoutDelete(String email, String code) {
+        // 1. 参数校验
+        if (email == null || email.trim().isEmpty() ||
+                code == null || code.trim().isEmpty()) {
+            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "邮箱或验证码不能为空");
+        }
+
+        // 2. 从 Redis 获取验证码
+        String codeKey = CODE_KEY_PREFIX + email;
+        String storedCode = redisTemplate.opsForValue().get(codeKey);
+
+        // 3. 验证码不存在或已过期
+        if (storedCode == null) {
+            log.warn("验证码验证失败：验证码不存在或已过期，邮箱: {}", email);
+            throw new BusinessException(ErrorCode.EMAIL_CODE_INVALID);
+        }
+
+        // 4. 比对验证码
+        boolean isValid = storedCode.trim().equals(code.trim());
+        if (!isValid) {
+            log.warn("验证码验证失败：验证码不匹配，邮箱: {}", email);
+            throw new BusinessException(ErrorCode.EMAIL_CODE_INVALID);
+        }
+
+        // 5. 验证成功但不删除验证码（等待业务成功后删除）
+        log.info("验证码验证成功（未删除，等待业务成功后删除），邮箱: {}", email);
+    }
+
+    /**
+     * 删除指定邮箱的验证码
+     *
+     * @param email 邮箱地址
+     */
+    @Override
+    public void deleteCode(String email) {
+        String codeKey = CODE_KEY_PREFIX + email;
+        redisTemplate.delete(codeKey);
+        log.info("验证码已删除，邮箱: {}", email);
     }
 }

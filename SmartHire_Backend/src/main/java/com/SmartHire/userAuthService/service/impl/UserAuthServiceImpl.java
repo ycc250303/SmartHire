@@ -52,7 +52,7 @@ public class UserAuthServiceImpl extends ServiceImpl<UserAuthMapper, User> imple
      */
     @Override
     public void register(RegisterDTO request) {
-        // 统一业务校验
+        // 统一业务校验（验证码验证成功但不删除）
         validateRegisterRequest(request);
 
         User user = new User();
@@ -71,6 +71,10 @@ public class UserAuthServiceImpl extends ServiceImpl<UserAuthMapper, User> imple
         user.setUpdatedAt(now);
 
         userMapper.insert(user);
+
+        // 注册成功后删除验证码
+        verificationCodeService.deleteCode(request.getEmail());
+
         log.info("用户注册成功，用户ID: {}, 用户名: {}, 邮箱: {}, 手机号: {}", user.getId(), user.getUsername(), user.getEmail(),
                 user.getPhone());
     }
@@ -95,7 +99,8 @@ public class UserAuthServiceImpl extends ServiceImpl<UserAuthMapper, User> imple
      * 注册业务校验
      */
     private void validateRegisterRequest(RegisterDTO request) {
-        verificationCodeService.verifyCode(request.getEmail(), request.getVerifyCode());
+        // 验证验证码（验证成功后不删除，等注册成功后再删除）
+        verificationCodeService.verifyCodeWithoutDelete(request.getEmail(), request.getVerifyCode());
 
         if (userMapper.checkEmailExist(request.getEmail()) != null) {
             throw new BusinessException(ErrorCode.EMAIL_ALREADY_REGISTERED);
