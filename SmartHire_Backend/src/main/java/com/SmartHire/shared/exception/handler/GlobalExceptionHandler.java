@@ -4,6 +4,8 @@ import com.SmartHire.shared.entity.Result;
 import com.SmartHire.shared.exception.enums.ErrorCode;
 import com.SmartHire.shared.exception.exception.AuthenticationException;
 import com.SmartHire.shared.exception.exception.BusinessException;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
@@ -41,9 +43,8 @@ public class GlobalExceptionHandler {
         return Result.error(e.getCode(), e.getMessage());
     }
 
-
     /**
-     * 处理参数校验异常（Spring Validation）
+     * 处理参数校验异常（@RequestBody 和 @ModelAttribute 的验证失败）
      * 统一转换为 BusinessException，使用统一的错误码
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -59,6 +60,24 @@ public class GlobalExceptionHandler {
 
         // 统一转换为 BusinessException，使用 VALIDATION_ERROR 错误码
         // 这样前端只需要处理 BusinessException 一种异常类型
+        return Result.error(ErrorCode.VALIDATION_ERROR.getCode(), message);
+    }
+
+    /**
+     * 处理方法参数校验异常（@RequestParam、@PathVariable 等参数的验证失败）
+     * 统一转换为 BusinessException，使用统一的错误码
+     */
+    @ExceptionHandler(ConstraintViolationException.class)
+    public Result<?> handleConstraintViolationException(ConstraintViolationException e) {
+        // 合并所有错误消息
+        String message = e.getConstraintViolations()
+                .stream()
+                .map(ConstraintViolation::getMessage)
+                .collect(Collectors.joining("；"));
+
+        log.warn("方法参数校验异常: {}", message);
+
+        // 统一转换为 BusinessException，使用 VALIDATION_ERROR 错误码
         return Result.error(ErrorCode.VALIDATION_ERROR.getCode(), message);
     }
 

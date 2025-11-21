@@ -2,6 +2,7 @@ package com.SmartHire.userAuthService.controller;
 
 import com.SmartHire.shared.entity.Result;
 import com.SmartHire.shared.utils.JwtUtil;
+import com.SmartHire.shared.utils.ThreadLocalUtil;
 import com.SmartHire.userAuthService.dto.LoginDTO;
 import com.SmartHire.userAuthService.dto.PublicUserInfoDTO;
 import com.SmartHire.userAuthService.dto.RegisterDTO;
@@ -11,6 +12,7 @@ import com.SmartHire.userAuthService.service.VerificationCodeService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -25,6 +27,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/user-auth")
+@Validated // 启用方法参数验证
 public class UserAuthController {
 
     @Autowired
@@ -41,7 +44,8 @@ public class UserAuthController {
      */
     @PostMapping("/send-verification-code")
     @Operation(summary = "发送邮箱验证码", description = "向指定邮箱发送验证码")
-    public Result<?> sendVerificationCode(@RequestParam String email) {
+    public Result<?> sendVerificationCode(
+            @RequestParam @jakarta.validation.constraints.Email(message = "邮箱格式不正确") String email) {
         // 如果 Service 抛出 BusinessException，会被 GlobalExceptionHandler 自动处理
         verificationCodeService.sendVerificationCode(email);
         return Result.success("验证码发送成功");
@@ -56,7 +60,9 @@ public class UserAuthController {
      */
     @PostMapping("/verify-code")
     @Operation(summary = "验证邮箱验证码", description = "验证指定邮箱的验证码")
-    public Result<?> verifyCode(@RequestParam String email, @RequestParam String code) {
+    public Result<?> verifyCode(
+            @RequestParam @jakarta.validation.constraints.Email(message = "邮箱格式不正确") String email,
+            @RequestParam @jakarta.validation.constraints.NotBlank(message = "验证码不能为空") String code) {
         verificationCodeService.verifyCode(email, code);
         return Result.success("验证码验证成功");
     }
@@ -90,13 +96,12 @@ public class UserAuthController {
     /**
      * 获取当前登录用户信息（完整信息，仅自己可查看）
      *
-     * @param token JWT token
      * @return 用户信息
      */
     @GetMapping("/user-info")
-    @Operation(summary = "获取当前用户信息", description = "通过JWT token获取当前登录用户的完整信息（包含邮箱、手机号等隐私信息）")
-    public Result<UserInfoDTO> getUserInfo(@RequestHeader(name = "Authorization") String token) {
-        Map<String, Object> map = JwtUtil.parseToken(token);
+    @Operation(summary = "获取当前登录用户信息", description = "获取当前登录用户的完整信息（仅自己可查看）")
+    public Result<UserInfoDTO> getUserInfo() {
+        Map<String, Object> map = ThreadLocalUtil.get();
         Long userId = JwtUtil.getUserIdFromToken(map);
         UserInfoDTO userInfo = userService.getUserInfo(userId);
         return Result.success("获取用户信息成功", userInfo);

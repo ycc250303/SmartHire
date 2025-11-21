@@ -16,6 +16,7 @@ public enum ErrorCode {
     USER_ID_NOT_EXIST(1010, "用户ID不存在，请先注册用户"),
     TOKEN_IS_NULL(1011, "JWT Token 为空"),
     TOKEN_IS_INVALID(1012, "JWT Token 无效"),
+    USER_NOT_LOGIN(1013, "用户未登录"),
     // 求职者相关错误码 (2000-2099)
     SEEKER_ALREADY_REGISTERED(2001, "该用户已注册求职者信息，请勿重复注册"),
     SEEKER_NOT_EXIST(2002, "求职者信息不存在，请先注册求职者信息"),
