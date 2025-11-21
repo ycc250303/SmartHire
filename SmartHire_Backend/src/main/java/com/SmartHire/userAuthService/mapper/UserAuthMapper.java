@@ -35,4 +35,7 @@ public interface UserAuthMapper extends BaseMapper<User> {
     @Select("select id from user where phone= #{phone} limit 1")
     public Long checkPhoneExist(String phone);
 
+    // 根据ID查询用户信息
+    @Select("select * from user where id = #{id}")
+    public User findById(Long id);
 }

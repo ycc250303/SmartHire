@@ -63,28 +63,26 @@ public class UserAuthController {
 
     /**
      * 用户注册
-     * 使用 @ModelAttribute 接收参数，支持 form-data 和 query 参数，统一接口风格
      *
-     * @param request 注册请求参数
+     * @param request 注册请求参数（JSON格式）
      * @return 操作结果
      */
     @PostMapping("/register")
     @Operation(summary = "用户注册", description = "新用户注册接口")
-    public Result<?> register(@Valid @ModelAttribute RegisterDTO request) {
+    public Result<?> register(@Valid @RequestBody RegisterDTO request) {
         userService.register(request);
         return Result.success("注册成功");
     }
 
     /**
      * 用户登录
-     * 使用 @ModelAttribute 接收参数，支持 form-data 和 query 参数，统一接口风格
      *
-     * @param request 登录请求参数
+     * @param request 登录请求参数（JSON格式）
      * @return 操作结果
      */
     @PostMapping("/login")
     @Operation(summary = "用户登录", description = "用户登录接口")
-    public Result<String> login(@Valid @ModelAttribute LoginDTO request) {
+    public Result<String> login(@Valid @RequestBody LoginDTO request) {
         String token = userService.login(request);
         return Result.success("登录成功", token);
     }
