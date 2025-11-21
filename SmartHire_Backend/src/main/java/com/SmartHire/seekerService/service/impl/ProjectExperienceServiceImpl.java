@@ -4,10 +4,8 @@ import com.SmartHire.seekerService.dto.ProjectExperienceDTO;
 import com.SmartHire.seekerService.mapper.ProjectExperienceMapper;
 import com.SmartHire.seekerService.model.ProjectExperience;
 import com.SmartHire.seekerService.service.ProjectExperienceService;
-import com.SmartHire.seekerService.service.JobSeekerService;
 import com.SmartHire.shared.exception.enums.ErrorCode;
 import com.SmartHire.shared.exception.exception.BusinessException;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.validation.Valid;
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -15,7 +13,6 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Date;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,16 +29,14 @@ import org.springframework.util.StringUtils;
  */
 @Slf4j
 @Service
-public class ProjectExperienceServiceImpl extends ServiceImpl<ProjectExperienceMapper, ProjectExperience>
+public class ProjectExperienceServiceImpl
+        extends AbstractSeekerOwnedService<ProjectExperienceMapper, ProjectExperience>
         implements ProjectExperienceService {
 
     private static final DateTimeFormatter YEAR_MONTH_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM");
 
     @Autowired
     private ProjectExperienceMapper projectExperienceMapper;
-
-    @Autowired
-    private JobSeekerService jobSeekerService;
 
     /**
      * 添加项目经历
@@ -50,7 +45,7 @@ public class ProjectExperienceServiceImpl extends ServiceImpl<ProjectExperienceM
      */
     @Override
     public void addProjectExperience(@Valid ProjectExperienceDTO request) {
-        Long jobSeekerId = jobSeekerService.getJobSeekerId();
+        Long jobSeekerId = currentSeekerId();
 
         ProjectExperience experience = new ProjectExperience();
         experience.setJobSeekerId(jobSeekerId);
@@ -72,7 +67,7 @@ public class ProjectExperienceServiceImpl extends ServiceImpl<ProjectExperienceM
      */
     @Override
     public void updateProjectExperience(Long id, ProjectExperienceDTO request) {
-        Long jobSeekerId = jobSeekerService.getJobSeekerId();
+        Long jobSeekerId = currentSeekerId();
         ProjectExperience existingExperience = getOwnedProjectExperience(id, jobSeekerId);
 
         if (!applyProjectUpdates(existingExperience, request)) {
@@ -92,7 +87,7 @@ public class ProjectExperienceServiceImpl extends ServiceImpl<ProjectExperienceM
      */
     @Override
     public List<ProjectExperienceDTO> getProjectExperiences() {
-        Long jobSeekerId = jobSeekerService.getJobSeekerId();
+        Long jobSeekerId = currentSeekerId();
         List<ProjectExperience> experiences = lambdaQuery()
                 .eq(ProjectExperience::getJobSeekerId, jobSeekerId)
                 .orderByDesc(ProjectExperience::getStartDate)
@@ -110,7 +105,7 @@ public class ProjectExperienceServiceImpl extends ServiceImpl<ProjectExperienceM
      */
     @Override
     public void deleteProjectExperience(Long id) {
-        Long jobSeekerId = jobSeekerService.getJobSeekerId();
+        Long jobSeekerId = currentSeekerId();
         getOwnedProjectExperience(id, jobSeekerId);
         projectExperienceMapper.deleteById(id);
     }
@@ -235,13 +230,10 @@ public class ProjectExperienceServiceImpl extends ServiceImpl<ProjectExperienceM
     }
 
     private ProjectExperience getOwnedProjectExperience(Long id, Long jobSeekerId) {
-        ProjectExperience experience = projectExperienceMapper.selectById(id);
-        if (experience == null) {
-            throw new BusinessException(ErrorCode.PROJECT_EXPERIENCE_NOT_EXIST);
-        }
-        if (!Objects.equals(experience.getJobSeekerId(), jobSeekerId)) {
-            throw new BusinessException(ErrorCode.PROJECT_EXPERIENCE_NOT_BELONG_TO_USER);
-        }
-        return experience;
+        return requireOwnedEntity(id,
+                projectExperienceMapper::selectById,
+                ProjectExperience::getJobSeekerId,
+                ErrorCode.PROJECT_EXPERIENCE_NOT_EXIST,
+                ErrorCode.PROJECT_EXPERIENCE_NOT_BELONG_TO_USER);
     }
 }
