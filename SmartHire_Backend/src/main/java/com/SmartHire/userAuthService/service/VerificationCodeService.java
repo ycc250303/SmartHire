@@ -24,7 +24,7 @@ public interface VerificationCodeService {
     void verifyCode(@Email(message = "邮箱格式不正确") String email,
             @NotBlank(message = "验证码不能为空") String code);
 
-    /**
+    /** 
      * 验证用户输入的验证码（验证成功后不删除验证码，用于注册等场景，注册成功后再删除）
      *
      * @param email 邮箱地址（使用 @Email 注解自动验证格式）
