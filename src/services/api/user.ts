@@ -20,7 +20,7 @@ export interface PublicUserInfo {
  */
 export function getCurrentUserInfo(): Promise<UserInfo> {
   return http<UserInfo>({
-    url: '/user-auth/user-info',
+    url: '/api/user-auth/user-info',
     method: 'GET',
   });
 }
@@ -30,7 +30,7 @@ export function getCurrentUserInfo(): Promise<UserInfo> {
  */
 export function getPublicUserInfo(userId: number): Promise<PublicUserInfo> {
   return http<PublicUserInfo>({
-    url: `/user-auth/public-user-info/${userId}`,
+    url: `/api/user-auth/public-user-info/${userId}`,
     method: 'GET',
     skipAuth: true,
   });

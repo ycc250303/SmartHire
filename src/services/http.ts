@@ -19,7 +19,9 @@ export interface ApiResponse<T = unknown> {
 
 const DEFAULT_TIMEOUT = 15000;
 const TOKEN_KEY = "auth_token";
+const TOKEN_EXPIRE_KEY = "auth_token_expire";
 const SUCCESS_CODE = 0;
+const TOKEN_EXPIRY_DAYS = 3;
 
 /**
  * Get stored auth token
@@ -44,11 +46,51 @@ export function setToken(token: string): void {
 }
 
 /**
+ * Set auth token with expiry time
+ */
+export function setTokenWithExpiry(token: string): void {
+  try {
+    const expireTime = Date.now() + TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000;
+    uni.setStorageSync(TOKEN_KEY, token);
+    uni.setStorageSync(TOKEN_EXPIRE_KEY, expireTime.toString());
+  } catch (error) {
+    console.error("Failed to set token with expiry:", error);
+  }
+}
+
+/**
+ * Check if token is valid (exists and not expired)
+ */
+export function isTokenValid(): boolean {
+  try {
+    const token = uni.getStorageSync(TOKEN_KEY);
+    if (!token) {
+      return false;
+    }
+
+    const expireTime = uni.getStorageSync(TOKEN_EXPIRE_KEY);
+    if (!expireTime) {
+      return false;
+    }
+
+    const expireTimeNum = parseInt(expireTime, 10);
+    if (isNaN(expireTimeNum)) {
+      return false;
+    }
+
+    return Date.now() < expireTimeNum;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Clear auth token
  */
 export function clearToken(): void {
   try {
     uni.removeStorageSync(TOKEN_KEY);
+    uni.removeStorageSync(TOKEN_EXPIRE_KEY);
   } catch (error) {
     console.error("Failed to clear token:", error);
   }

@@ -2,7 +2,7 @@
   <view class="job-card">
     <view class="card-header">
       <view class="job-title">{{ job.title }}</view>
-      <view class="match-score" v-if="job.matchScore !== undefined && job.matchScore !== null">
+      <view class="match-score">
         <text class="score-value">{{ job.matchScore }}%</text>
         <text class="score-label">{{ t('pages.jobs.matchScore') }}</text>
       </view>

@@ -19,7 +19,7 @@ export interface InternJobItem {
   work_months_min: number;
   skills: string[];
   degrees: Degree;
-  matchScore?: number; 
+  matchScore: number; 
 }
 
 export interface InternJobRecommendationsResponse {
@@ -39,7 +39,7 @@ export function getInternJobRecommendations(userId?: number | null): Promise<Int
   }
   
   return http<InternJobRecommendationsResponse>({
-    url: '/seeker/job-recommendations/intern',
+    url: '/api/seeker/job-recommendations/intern',
     method: 'GET',
     data: params,
   });

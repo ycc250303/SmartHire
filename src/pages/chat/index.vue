@@ -1,20 +1,26 @@
 <template>
   <view class="page">
-    
+    <button class="logout-btn" @click="handleLogout">Logout (Debug)</button>
   </view>
 </template>
 
 <script setup lang="ts">
 import { onLoad } from '@dcloudio/uni-app';
 import { t } from '@/locales';
-
+import { clearToken } from '@/services/http';
 
 onLoad(() => {
   uni.setNavigationBarTitle({
     title: t('navigation.chat')
   });
-
 });
+
+function handleLogout() {
+  clearToken();
+  uni.redirectTo({
+    url: '/pages/auth/login',
+  });
+}
 </script>
 
 <style lang="scss" scoped>
@@ -47,5 +53,11 @@ onLoad(() => {
 .welcome-subtitle {
   font-size: 28rpx;
   color: vars.$text-muted;
+}
+
+.logout-btn {
+  width: 200rpx;
+  height: 80rpx;
+  
 }
 </style>
