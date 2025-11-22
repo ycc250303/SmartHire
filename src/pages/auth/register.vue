@@ -51,7 +51,7 @@
               :placeholder="t('auth.register.password')"
             />
             <view class="eye-icon" @click="togglePassword">
-              <view :class="['eye-svg', { 'eye-closed': !showPassword }] "></view>
+              <view :class="['eye-svg', { 'eye-closed': !showPassword }]"></view>
             </view>
           </view>
         </view>
@@ -171,24 +171,15 @@ onLoad(() => {
   });
 });
 
-/**
- * Toggle password visibility
- */
 function togglePassword() {
   showPassword.value = !showPassword.value;
 }
 
-/**
- * Select user type and move to step 2
- */
 function selectUserType(type: UserType) {
   formData.value.userType = type;
   step.value = 2;
 }
 
-/**
- * Go back to previous step
- */
 function goBack() {
   if (step.value === 2) {
     step.value = 1;
@@ -196,18 +187,12 @@ function goBack() {
   }
 }
 
-/**
- * Navigate to help page
- */
 function goToHelp() {
   uni.navigateTo({
     url: '/pages/auth/help',
   });
 }
 
-/**
- * Handle gender picker change
- */
 function onGenderChange(e: any) {
   const option = genderOptions.value[e.detail.value];
   if (option) {
@@ -215,24 +200,15 @@ function onGenderChange(e: any) {
   }
 }
 
-/**
- * Validate email format
- */
 function isValidEmail(email: string): boolean {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
 }
 
-/**
- * Validate phone format
- */
 function isValidPhone(phone: string): boolean {
   return /^\d{11}$/.test(phone);
 }
 
-/**
- * Validate form data
- */
 function validateForm(): string | null {
   if (!formData.value.username.trim()) {
     return t('auth.register.validation.usernameRequired');
@@ -264,9 +240,6 @@ function validateForm(): string | null {
   return null;
 }
 
-/**
- * Start countdown timer
- */
 function startCountdown() {
   countdown.value = 60;
   countdownTimer = setInterval(() => {
@@ -278,9 +251,6 @@ function startCountdown() {
   }, 1000) as unknown as number;
 }
 
-/**
- * Handle send verification code
- */
 async function handleSendCode() {
   errorMessage.value = '';
 
@@ -311,9 +281,6 @@ async function handleSendCode() {
   }
 }
 
-/**
- * Handle registration
- */
 async function handleRegister() {
   errorMessage.value = '';
 
@@ -323,17 +290,17 @@ async function handleRegister() {
     return;
   }
 
-  loading.value = true;
+  loading value = true;
 
   try {
     const params: RegisterParams = {
-      username: formData.value.username.trim(),
-      password: formData.value.password,
-      email: formData.value.email.trim(),
-      phone: formData.value.phone.trim(),
-      gender: formData.value.gender!,
-      userType: formData.value.userType,
-      verifyCode: formData.value.verifyCode.trim(),
+      username: formData value.username.trim(),
+      password: formData value.password,
+      email: formData value.email.trim(),
+      phone: formData value.phone.trim(),
+      gender: formData value.gender!,
+      userType: formData value.userType,
+      verifyCode: formData value.verifyCode.trim(),
     };
 
     await register(params);
@@ -377,7 +344,6 @@ async function handleRegister() {
   min-height: 100vh;
 }
 
-/* Step 1: Identity Selection */
 .identity-selection {
   display: flex;
   flex-direction: column;
@@ -425,7 +391,6 @@ async function handleRegister() {
   color: vars.$text-color;
 }
 
-/* Step 2: Registration Form */
 .registration-form {
   padding: vars.$spacing-xl vars.$spacing-lg;
   min-height: 100vh;
@@ -484,4 +449,161 @@ async function handleRegister() {
   width: 100rpx;
   display: flex;
   align-items: center;
-  justifyavía
+  justify-content: center;
+  cursor: pointer;
+}
+
+.eye-svg {
+  width: 44rpx;
+  height: 44rpx;
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    width: 44rpx;
+    height: 28rpx;
+    border: 3rpx solid #6b778c;
+    border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+    top: 8rpx;
+    left: 0;
+  }
+  
+  &::after {
+    content: '';
+    position: absolute;
+    width: 12rpx;
+    height: 12rpx;
+    background-color: #6b778c;
+    border-radius: 50%;
+    top: 16rpx;
+    left: 16rpx;
+  }
+  
+  &.eye-closed::before {
+    border-radius: 0;
+    height: 0;
+    border-bottom: 3rpx solid #6b778c;
+    top: 20rpx;
+  }
+  
+  &.eye-closed::after {
+    display: none;
+  }
+}
+
+.code-input-wrapper {
+  display: flex;
+  gap: vars.$spacing-sm;
+  align-items: center;
+}
+
+.code-input {
+  flex: 1;
+}
+
+.send-code-btn {
+  flex-shrink: 0;
+  width: 180rpx;
+  height: 106rpx;
+  background-color: vars.$primary-color;
+  color: #ffffff;
+  border: none;
+  border-radius: vars.$border-radius;
+  font-size: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  
+  &:disabled {
+    background-color: vars.$text-muted;
+    opacity: 0.6;
+  }
+
+  &::after {
+    border: none;
+  }
+}
+
+.picker-input {
+  width: 100%;
+  height: 106rpx;
+  background-color: #f5f7fa;
+  border-radius: vars.$border-radius;
+  padding: 0 vars.$spacing-md;
+  display: flex;
+  align-items: center;
+}
+
+.picker-text {
+  font-size: 30rpx;
+  color: vars.$text-color;
+
+  &.placeholder {
+    color: vars.$text-muted;
+  }
+}
+
+.error-message {
+  background-color: #ffebee;
+  border-radius: vars.$border-radius;
+  padding: vars.$spacing-md;
+  margin-bottom: vars.$spacing-lg;
+}
+
+.error-text {
+  font-size: 24rpx;
+  color: #d32f2f;
+  line-height: 1.5;
+}
+
+.submit-btn {
+  width: 100%;
+  height: 100rpx;
+  background-color: vars.$primary-color;
+  color: #ffffff;
+  border: none;
+  border-radius: vars.$border-radius-lg;
+  font-size: 32rpx;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: vars.$spacing-md;
+  padding: 0;
+
+  &:disabled {
+    opacity: 0.6;
+  }
+
+  &::after {
+    border: none;
+  }
+}
+
+.bottom-links {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: vars.$spacing-sm;
+}
+
+.link-item {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.link-text {
+  font-size: 26rpx;
+}
+
+.link-muted {
+  color: vars.$text-muted;
+}
+
+.link-primary {
+  color: vars.$primary-color;
+  font-weight: 500;
+}
+</style>
