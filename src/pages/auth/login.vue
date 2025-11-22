@@ -26,7 +26,7 @@
               :placeholder="t('auth.login.password')"
             />
             <view class="eye-icon" @click="togglePassword">
-              <view :class="['eye-svg', { 'eye-closed': !showPassword }]"></view>
+              <view :class="['eye-svg', { 'eye-closed': !showPassword }] "></view>
             </view>
           </view>
         </view>
@@ -131,7 +131,7 @@ async function handleLogin() {
       uni.switchTab({
         url: '/pages/index/index',
       });
-    }, 0);
+    }, 1000);
   } catch (err) {
     errorMessage.value = err instanceof Error ? err.message : 'Login failed';
   } finally {

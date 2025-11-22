@@ -39,7 +39,7 @@ export interface LoginParams {
  * Send verification code to email
  */
 export function sendVerificationCode(params: SendVerificationCodeParams): Promise<null> {
-  const queryString = new URLSearchParams({ email: params.email }).toString();
+  const queryString = `email=${encodeURIComponent(params.email)}`;
   return http<null>({
     url: `/api/user-auth/send-verification-code?${queryString}`,
     method: 'POST',
@@ -51,10 +51,7 @@ export function sendVerificationCode(params: SendVerificationCodeParams): Promis
  * Verify email verification code
  */
 export function verifyCode(params: VerifyCodeParams): Promise<null> {
-  const queryString = new URLSearchParams({
-    email: params.email,
-    code: params.code,
-  }).toString();
+  const queryString = `email=${encodeURIComponent(params.email)}&code=${encodeURIComponent(params.code)}`;
   return http<null>({
     url: `/api/user-auth/verify-code?${queryString}`,
     method: 'POST',
@@ -86,4 +83,3 @@ export function login(params: LoginParams): Promise<string> {
     skipAuth: true,
   });
 }
-
