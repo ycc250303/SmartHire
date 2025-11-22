@@ -34,7 +34,7 @@
             >
               <view class="picker-input">
                 <text class="picker-text" :class="{ 'placeholder': formData.gender === null }">
-                  {{ formData.gender !== null ? genderOptions[formData.gender].label : t('auth.register.gender') }}
+                  {{ selectedGenderLabel }}
                 </text>
               </view>
             </picker>
@@ -51,7 +51,7 @@
               :placeholder="t('auth.register.password')"
             />
             <view class="eye-icon" @click="togglePassword">
-              <view :class="['eye-svg', { 'eye-closed': !showPassword }]"></view>
+              <view :class="['eye-svg', { 'eye-closed': !showPassword }] "></view>
             </view>
           </view>
         </view>
@@ -122,7 +122,8 @@
 import { ref, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { t } from '@/locales';
-import { Gender, UserType, register, sendVerificationCode, type RegisterParams } from '@/services/api/auth';
+import { Gender, UserType, register, sendVerificationCode, login, type RegisterParams } from '@/services/api/auth';
+import { setTokenWithExpiry } from '@/services/http';
 
 const step = ref(1);
 const loading = ref(false);
@@ -155,6 +156,14 @@ const genderOptions = computed(() => [
   { value: Gender.Female, label: t('auth.register.female') },
   { value: Gender.PreferNotToSay, label: t('auth.register.preferNotToSay') },
 ]);
+
+const selectedGenderLabel = computed(() => {
+  if (formData.value.gender === null) {
+    return t('auth.register.gender');
+  }
+  const option = genderOptions.value.find(item => item.value === formData.value.gender);
+  return option ? option.label : t('auth.register.gender');
+});
 
 onLoad(() => {
   uni.setNavigationBarTitle({
@@ -200,7 +209,10 @@ function goToHelp() {
  * Handle gender picker change
  */
 function onGenderChange(e: any) {
-  formData.value.gender = genderOptions.value[e.detail.value].value;
+  const option = genderOptions.value[e.detail.value];
+  if (option) {
+    formData.value.gender = option.value;
+  }
 }
 
 /**
@@ -332,11 +344,24 @@ async function handleRegister() {
       duration: 1000,
     });
 
+    const token = await login({
+      username: params.username,
+      password: params.password,
+    });
+
+    setTokenWithExpiry(token);
+
+    uni.showToast({
+      title: t('auth.login.loginSuccess'),
+      icon: 'success',
+      duration: 1000,
+    });
+
     setTimeout(() => {
-      uni.redirectTo({
-        url: '/pages/auth/login',
+      uni.switchTab({
+        url: '/pages/index/index',
       });
-    }, 0);
+    }, 1000);
   } catch (err) {
     errorMessage.value = err instanceof Error ? err.message : 'Registration failed';
   } finally {
@@ -459,156 +484,4 @@ async function handleRegister() {
   width: 100rpx;
   display: flex;
   align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-.eye-svg {
-  width: 44rpx;
-  height: 44rpx;
-  position: relative;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    width: 44rpx;
-    height: 28rpx;
-    border: 3rpx solid #6b778c;
-    border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
-    top: 8rpx;
-    left: 0;
-  }
-  
-  &::after {
-    content: '';
-    position: absolute;
-    width: 12rpx;
-    height: 12rpx;
-    background-color: #6b778c;
-    border-radius: 50%;
-    top: 16rpx;
-    left: 16rpx;
-  }
-  
-  &.eye-closed::before {
-    border-radius: 0;
-    height: 0;
-    border-bottom: 3rpx solid #6b778c;
-    top: 20rpx;
-  }
-  
-  &.eye-closed::after {
-    display: none;
-  }
-}
-
-.code-input-wrapper {
-  display: flex;
-  gap: vars.$spacing-sm;
-  align-items: center;
-}
-
-.code-input {
-  flex: 1;
-}
-
-.send-code-btn {
-  flex-shrink: 0;
-  width: 180rpx;
-  height: 106rpx;
-  background-color: vars.$primary-color;
-  color: #ffffff;
-  border: none;
-  border-radius: vars.$border-radius;
-  font-size: 24rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  
-  &:disabled {
-    background-color: vars.$text-muted;
-    opacity: 0.6;
-  }
-
-  &::after {
-    border: none;
-  }
-}
-
-.picker-input {
-  width: 100%;
-  height: 106rpx;
-  background-color: #f5f7fa;
-  border-radius: vars.$border-radius;
-  padding: 0 vars.$spacing-md;
-  display: flex;
-  align-items: center;
-}
-
-.picker-text {
-  font-size: 30rpx;
-  color: vars.$text-color;
-
-  &.placeholder {
-    color: vars.$text-muted;
-  }
-}
-
-.error-message {
-  background-color: #ffebee;
-  border-radius: vars.$border-radius;
-  padding: vars.$spacing-md;
-  margin-bottom: vars.$spacing-lg;
-}
-
-.error-text {
-  font-size: 24rpx;
-  color: #d32f2f;
-  line-height: 1.5;
-}
-
-.submit-btn {
-  width: 100%;
-  height: 100rpx;
-  background-color: vars.$primary-color;
-  color: #ffffff;
-  border: none;
-  border-radius: vars.$border-radius-lg;
-  font-size: 32rpx;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: vars.$spacing-md;
-  padding: 0;
-
-  &:disabled {
-    opacity: 0.6;
-  }
-
-  &::after {
-    border: none;
-  }
-}
-
-.bottom-links {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-top: vars.$spacing-sm;
-}
-
-.link-item {
-  display: flex;
-  flex-wrap: wrap;
-}
-
-.link-text {
-  font-size: 26rpx;
-}
-
-.link-muted {
-  color: vars.$text-muted;
-}
-</style>
+  justifyavía
