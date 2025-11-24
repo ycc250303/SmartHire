@@ -5,18 +5,18 @@
         class="tab-item"
         :class="{ active: activeTab === 'chat' }"
         @click="activeTab = 'chat'"
-      >浼氳瘽</view>
+      >会话</view>
       <view
         class="tab-item"
         :class="{ active: activeTab === 'notice' }"
         @click="activeTab = 'notice'"
-      >閫氱煡</view>
+      >通知</view>
     </view>
 
     <view v-if="activeTab === 'chat'" class="chat-list">
       <view class="chat-item" v-for="chat in conversations" :key="chat.id" @click="openChat(chat.id)">
         <view class="chat-info">
-          <view class="chat-title">{{ chat.candidate }} 路 {{ chat.jobTitle }}</view>
+          <view class="chat-title">{{ chat.candidate }} · {{ chat.jobTitle }}</view>
           <view class="chat-preview">{{ chat.lastMessage }}</view>
         </view>
         <view class="chat-meta">

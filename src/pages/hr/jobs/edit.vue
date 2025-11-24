@@ -2,33 +2,33 @@
   <view class="job-edit">
     <view class="form-card">
       <view class="form-item">
-        <text class="label">鑱屼綅鏍囬</text>
-        <input v-model="form.title" placeholder="璇疯緭鍏ヨ亴浣嶆爣棰? />
+        <text class="label">岗位标题</text>
+        <input v-model="form.title" placeholder="请输入职位标题" />
       </view>
       <view class="form-item">
-        <text class="label">宸ヤ綔鍦扮偣</text>
-        <input v-model="form.city" placeholder="濡傦細涓婃捣-娴︿笢" />
+        <text class="label">工作地点</text>
+        <input v-model="form.city" placeholder="如：上海-浦东" />
       </view>
       <view class="form-item">
-        <text class="label">钖祫鑼冨洿</text>
-        <input v-model="form.salary" placeholder="濡傦細25-35k路16钖? />
+        <text class="label">薪资范围</text>
+        <input v-model="form.salary" placeholder="如：25-35k·16薪" />
       </view>
       <view class="form-item">
-        <text class="label">宸ヤ綔绫诲瀷</text>
+        <text class="label">工作类型</text>
         <picker :range="jobTypes" @change="onTypeChange">
-          <view class="picker-value">{{ form.jobType || '璇烽€夋嫨宸ヤ綔绫诲瀷' }}</view>
+          <view class="picker-value">{{ form.jobType || '请选择工作类型' }}</view>
         </picker>
       </view>
       <view class="form-item textarea">
-        <text class="label">宀椾綅鎻忚堪</text>
-        <textarea v-model="form.description" placeholder="鑱岃矗銆侀」鐩儗鏅瓑"></textarea>
+        <text class="label">岗位描述</text>
+        <textarea v-model="form.description" placeholder="职责、项目背景等"></textarea>
       </view>
       <view class="form-item textarea">
-        <text class="label">浠昏亴瑕佹眰</text>
-        <textarea v-model="form.requirements" placeholder="鎶€鑳姐€佺粡楠岃姹?></textarea>
+        <text class="label">任职要求</text>
+        <textarea v-model="form.requirements" placeholder="技能、经验要求等"></textarea>
       </view>
-      <button class="primary" @click="handleSubmit">淇濆瓨</button>
-      <button class="ghost" @click="runJDCheck">JD 璐ㄩ噺妫€娴嬶紙鍗犱綅锛?/button>
+      <button class="primary" @click="handleSubmit">保存</button>
+      <button class="ghost" @click="runJDCheck">JD 质量巡检（示例）</button>
     </view>
   </view>
 </template>
@@ -48,7 +48,7 @@ interface JobForm {
   requirements: string;
 }
 
-const jobTypes = ['鍏ㄨ亴', '瀹炰範', '澶栧寘', '鍏艰亴'];
+const jobTypes = ['全职', '实习', '外包', '兼职'];
 
 const form = reactive<JobForm>({
   title: '',
@@ -67,19 +67,19 @@ const populateForm = async (id: number) => {
     title: data.job.title,
     city: data.job.city,
     salary: data.job.salary,
-    jobType: '鍏ㄨ亴',
-    description: '璐熻矗鏍稿績鍔熻兘杩唬锛屽崗鍚?AI 鑳藉姏澧炲己鍓嶇浣撻獙',
-    requirements: '鐔熸倝 Vue3/TS锛屾湁 B 绔粡楠屼紭鍏?,
+    jobType: '全职',
+    description: '负责核心功能迭代，联合 AI 能力提升前端体验。',
+    requirements: '熟练 Vue3/TS，具备 B 端经验者优先。',
   });
 };
 
 const handleSubmit = () => {
   if (!form.title || !form.city) {
-    uni.showToast({ title: '璇峰～鍐欏繀瑕佷俊鎭?, icon: 'none' });
+    uni.showToast({ title: '请填写必填信息', icon: 'none' });
     return;
   }
   // TODO: POST /api/hr/jobs or PUT /api/hr/jobs/:id
-  uni.showToast({ title: '淇濆瓨鎴愬姛', icon: 'success' });
+  uni.showToast({ title: '保存成功', icon: 'success' });
   setTimeout(() => {
     uni.navigateBack();
   }, 600);
@@ -91,7 +91,7 @@ const onTypeChange = (event: any) => {
 };
 
 const runJDCheck = () => {
-  uni.showToast({ title: 'JD 妫€娴嬪緟鎺ュ叆', icon: 'none' });
+  uni.showToast({ title: 'JD 检查功能待接入', icon: 'none' });
 };
 
 onLoad((options) => {

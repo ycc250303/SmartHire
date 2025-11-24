@@ -3,27 +3,27 @@
     <view class="card">
       <view class="header">
         <view class="name">{{ candidate.name }}</view>
-        <view class="score">鍖归厤搴?{{ candidate.score }}%</view>
+        <view class="score">匹配度 {{ candidate.score }}%</view>
       </view>
-      <view class="meta">鎰忓悜宀椾綅锛歿{ candidate.intentPosition }}</view>
-      <view class="meta">褰撳墠鐘舵€侊細{{ candidate.status }}</view>
+      <view class="meta">意向岗位：{{ candidate.intentPosition }}</view>
+      <view class="meta">当前状态：{{ candidate.status }}</view>
       <view class="tags">
         <text class="tag" v-for="tag in candidate.tags" :key="tag">{{ tag }}</text>
       </view>
       <view class="section">
-        <view class="section-title">浼樺娍浜偣</view>
-        <view class="section-content">鍏峰澶у巶鑳屾櫙锛屼富瀵煎绔悓鏋勬柟妗堛€?/view>
+        <view class="section-title">亮点概述</view>
+        <view class="section-content">擅长大型前端架构，熟悉多端同构方案等。</view>
       </view>
       <view class="section">
-        <view class="section-title">闇€鍏虫敞浜嬮」</view>
-        <view class="section-content">缂哄皯 ToB 澶嶆潅鏉冮檺缁忛獙锛屽缓璁潰璇曟椂閲嶇偣纭銆?/view>
+        <view class="section-title">需关注事项</view>
+        <view class="section-content">ToB 复杂权限经验较少，建议面试时重点确认。</view>
       </view>
     </view>
 
     <view class="card actions">
-      <button class="primary" @click="updateStatus('pass')">閫氳繃鍒濈瓫</button>
-      <button class="secondary" @click="updateStatus('reject')">鏆備笉鍚堥€?/button>
-      <button class="outline" @click="updateStatus('interview')">鍔犲叆闈㈣瘯</button>
+      <button class="primary" @click="updateStatus('pass')">通过进入复试</button>
+      <button class="secondary" @click="updateStatus('reject')">暂不同意</button>
+      <button class="outline" @click="updateStatus('interview')">加入面试</button>
     </view>
   </view>
 </template>
@@ -43,7 +43,7 @@ const loadCandidate = (id?: string) => {
 
 const updateStatus = (status: string) => {
   // TODO: POST /api/hr/candidates/:id/status
-  uni.showToast({ title: `宸叉爣璁颁负 ${status}`, icon: 'success' });
+  uni.showToast({ title: `已标记为 ${status}`, icon: 'success' });
 };
 
 onLoad((options) => {

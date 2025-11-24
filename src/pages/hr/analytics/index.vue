@@ -1,18 +1,19 @@
 ﻿<template>
   <view class="analytics-page">
     <view class="card">
-      <view class="title">鎷涜仒瓒嬪娍鍒嗘瀽</view>
-      <view class="desc">杩欓噷灏嗘帴鍏?ECharts/鍥捐〃缁勪欢灞曠ず婕忔枟銆佽浆鍖栫巼绛夈€?/view>
+      <view class="title">招聘漏斗分析</view>
+      <view class="desc">后续将接入 ECharts 展示投递、筛选、转化率等数据。</view>
     </view>
     <view class="card">
-      <view class="title">鏅鸿兘娲炲療</view>
-      <view class="desc">缁撳悎 LLM 杈撳嚭鎷涜仒绛栫暐寤鸿锛屽綋鍓嶄负鍗犱綅鏂囨銆?/view>
+      <view class="title">智能洞察</view>
+      <view class="desc">结合 LLM 输出招聘策略建议，目前为岗位示例。</view>
     </view>
   </view>
 </template>
 
 <script setup lang="ts">
-// TODO: 鎺ュ叆鍥捐〃涓庡垎鏋愭帴鍙?</script>
+// TODO: 接入可视化图表与分析接口
+</script>
 
 <style scoped lang="scss">
 .analytics-page {

@@ -2,11 +2,10 @@
   <view class="home-page">
     <view class="top-bar">
       <view class="welcome-block">
-        <text class="welcome-title">{{ companyName }} · SmartHire+</text>
-        <text class="welcome-desc">今日招聘概览</text>
+        <text class="welcome-title">SmartHire+</text>
       </view>
       <view class="avatar" @click="goProfile">
-        <image src="https://cdn.jsdelivr.net/gh/placeholderuser/assets/hr-avatar.png" mode="aspectFill" />
+        <image :src="avatarImg" mode="aspectFill" />
       </view>
     </view>
 
@@ -67,12 +66,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted } from 'vue';
 import { fetchDashboardData, type DashboardTodoItem, type RecruitStatistic, type InsightCardItem } from '@/mock/hr';
-import { useHrStore } from '@/store/hr';
-
-const hrStore = useHrStore();
-const companyName = computed(() => hrStore.companyName);
+import avatarImg from '@/static/user-avatar.png';
 
 const todos = ref<DashboardTodoItem[]>([]);
 const stats = ref<RecruitStatistic[]>([]);
@@ -161,20 +157,20 @@ onMounted(() => {
   font-weight: 600;
 }
 
-.welcome-desc {
-  font-size: 26rpx;
-  color: #8a94a6;
-}
-
 .avatar {
   width: 88rpx;
   height: 88rpx;
-  border-radius: 50%;
+  border-radius: 16rpx;
   background: #eef2ff;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
+}
+
+.avatar image {
+  width: 100%;
+  height: 100%;
 }
 
 .card {

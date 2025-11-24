@@ -4,47 +4,47 @@
       <view class="header">
         <view>
           <view class="job-title">{{ job.title }}</view>
-          <view class="job-meta">{{ job.city }} / {{ job.salary }}</view>
+          <view class="job-meta">{{ job.city }} · {{ job.salary }}</view>
         </view>
         <view class="status-tag" :class="job.status">{{ statusText(job.status) }}</view>
       </view>
       <view class="job-actions">
-        <button class="ghost" @click="editJob">缂栬緫</button>
+        <button class="ghost" @click="editJob">编辑</button>
         <button class="primary" @click="toggleJobStatus">
-          {{ job.status === 'open' ? '鏆傚仠鎷涜仒' : '閲嶆柊寮€鍚? }}
+          {{ job.status === 'open' ? '暂停招聘' : '重新开启' }}
         </button>
       </view>
     </view>
 
     <view class="card pipeline-card">
-      <view class="section-title">鎷涜仒杩涘害</view>
+      <view class="section-title">招聘进度</view>
       <view class="pipeline-grid">
         <view class="pipeline-item" v-for="item in pipeline" :key="item.label">
           <view class="label">{{ item.label }}</view>
           <view class="value">{{ item.value }}</view>
         </view>
       </view>
-      <button class="ghost" @click="goCandidates">鏌ョ湅鍊欓€変汉鍒楄〃</button>
+      <button class="ghost" @click="goCandidates">查看候选人列表</button>
     </view>
 
     <view class="card candidate-card">
-      <view class="section-title">鏅鸿兘鍖归厤鍊欓€変汉</view>
+      <view class="section-title">智能匹配候选人</view>
       <view class="candidate-item" v-for="candidate in candidates" :key="candidate.id">
         <view>
-          <view class="candidate-name">{{ candidate.name }} / {{ candidate.score }} 鍒?/view>
-          <view class="candidate-meta">{{ candidate.intentPosition }} / {{ candidate.status }}</view>
+          <view class="candidate-name">{{ candidate.name }} · {{ candidate.score }} 分</view>
+          <view class="candidate-meta">{{ candidate.intentPosition }} · {{ candidate.status }}</view>
           <view class="tag-list">
             <text class="tag" v-for="tag in candidate.tags" :key="tag">{{ tag }}</text>
           </view>
-          <view class="candidate-desc">鍖归厤璇存槑锛歿{ candidate.matchExplain }}</view>
+          <view class="candidate-desc">匹配说明：{{ candidate.matchExplain }}</view>
         </view>
-        <button class="ghost" @click.stop="viewCandidate(candidate.id)">璇︽儏</button>
+        <button class="ghost" @click.stop="viewCandidate(candidate.id)">详情</button>
       </view>
     </view>
 
     <view class="card jd-card" v-if="jdQuality">
-      <view class="section-title">JD 璐ㄩ噺涓庡悎瑙?/view>
-      <view class="score">璐ㄩ噺璇勫垎 {{ jdQuality.score }}/100</view>
+      <view class="section-title">JD 质量与合规</view>
+      <view class="score">质量评分 {{ jdQuality.score }}/100</view>
       <view class="risk-list">
         <view class="risk-item" v-for="riskItem in jdQuality.risks" :key="riskItem.message">
           <text class="risk-type">{{ riskLabel(riskItem.type) }}</text>
@@ -52,15 +52,15 @@
         </view>
       </view>
       <view class="suggestions">
-        <view class="suggest-title">浼樺寲寤鸿</view>
+        <view class="suggest-title">优化建议</view>
         <view class="suggest-item" v-for="suggest in jdQuality.suggestions" :key="suggest">{{ suggest }}</view>
       </view>
-      <button class="ghost" @click="viewReport">鏌ョ湅瀹屾暣鎶ュ憡</button>
+      <button class="ghost" @click="viewReport">查看完整报告</button>
     </view>
 
     <view class="card risk-card" v-if="risk">
-      <view class="section-title">椋庢帶鎻愮ず</view>
-      <view class="risk-level" :class="risk.level">{{ risk.level === 'high' ? '楂橀闄? : '涓闄? }}</view>
+      <view class="section-title">风控提示</view>
+      <view class="risk-level" :class="risk.level">{{ risk.level === 'high' ? '高风险' : '中风险' }}</view>
       <view class="risk-message">{{ risk.message }}</view>
       <view class="risk-detail">{{ risk.detail }}</view>
     </view>
@@ -85,10 +85,10 @@ const risk = ref<RiskAlert | null>(null);
 const jobId = ref<number>(0);
 
 const pipeline = computed(() => [
-  { label: '鏂版姇閫?, value: job.value?.applied ?? 0 },
-  { label: '闈㈣瘯涓?, value: job.value?.interviewing ?? 0 },
+  { label: '新投递', value: job.value?.applied ?? 0 },
+  { label: '面试中', value: job.value?.interviewing ?? 0 },
   { label: 'Offer', value: job.value?.offer ?? 0 },
-  { label: '宸插叆鑱?, value: 6 },
+  { label: '已入职', value: job.value?.onboarded ?? 0 },
 ]);
 
 const loadDetail = async (id: number) => {
@@ -101,7 +101,7 @@ const loadDetail = async (id: number) => {
 };
 
 const statusText = (status: JobSummary['status']) => {
-  const map = { open: '鎷涜仒涓?, paused: '宸叉殏鍋?, closed: '宸插叧闂? } as const;
+  const map = { open: '招聘中', paused: '已暂停', closed: '已关闭' } as const;
   return map[status];
 };
 
@@ -113,7 +113,7 @@ const editJob = () => {
 const toggleJobStatus = () => {
   if (!job.value) return;
   // TODO: PUT /api/hr/jobs/:id/status
-  uni.showToast({ title: '鐘舵€佸凡鏇存柊', icon: 'success' });
+  uni.showToast({ title: '状态已更新', icon: 'success' });
 };
 
 const goCandidates = () => {
@@ -127,17 +127,17 @@ const viewCandidate = (candidateId: string) => {
 
 const riskLabel = (type: JDQualityReport['risks'][number]['type']) => {
   const map = {
-    discrimination: '姝ц鐢ㄨ',
-    ambiguity: '鎻忚堪妯＄硦',
-    other: '鍏朵粬',
+    discrimination: '歧视用语',
+    ambiguity: '描述模糊',
+    other: '其他',
   } as const;
   return map[type];
 };
 
 const viewReport = () => {
   uni.showModal({
-    title: 'JD 鍒嗘瀽鎶ュ憡',
-    content: 'TODO: 鎺ュ叆 JD 璐ㄩ噺鎶ュ憡寮圭獥',
+    title: 'JD 分析报告',
+    content: 'TODO: 接入 JD 质量报告弹窗',
     showCancel: false,
   });
 };

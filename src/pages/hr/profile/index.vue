@@ -2,30 +2,35 @@
   <view class="profile-page">
     <view class="card">
       <view class="name-row">
-        <view>
-          <view class="name">{{ profile.name }}</view>
-          <view class="role">{{ profile.role }} 路 {{ profile.company }}</view>
+        <view class="profile-info">
+          <view class="avatar-wrapper">
+            <image :src="avatarImg" mode="aspectFill" />
+          </view>
+          <view>
+            <view class="name">{{ profile.name }}</view>
+            <view class="role">{{ profile.role }} · {{ profile.company }}</view>
+          </view>
         </view>
         <view class="badge">{{ profile.companyStatus }}</view>
       </view>
-      <view class="info">閭锛歿{ profile.email }}</view>
-      <view class="info">鎵嬫満鍙凤細{{ profile.phone }}</view>
+      <view class="info">邮箱：{{ profile.email }}</view>
+      <view class="info">手机号：{{ profile.phone }}</view>
     </view>
 
     <view class="card">
-      <view class="section-title">璁剧疆</view>
+      <view class="section-title">设置</view>
       <view class="setting-item">
-        <text>鎺ユ敹鎺ㄩ€侀€氱煡</text>
+        <text>接收推送通知</text>
         <switch :checked="profile.notifyEnabled" @change="toggleNotify" color="#2f7cff" />
       </view>
       <view class="setting-item">
-        <text>娣辫壊妯″紡</text>
+        <text>深色模式</text>
         <switch :checked="profile.darkMode" @change="toggleDarkMode" color="#2f7cff" />
       </view>
     </view>
 
     <view class="card logout-card">
-      <button class="logout" @click="logout">閫€鍑虹櫥褰?/button>
+      <button class="logout" @click="logout">退出登录</button>
     </view>
   </view>
 </template>
@@ -34,6 +39,7 @@
 import { ref, onMounted } from 'vue';
 import { fetchProfile, type HRProfile } from '@/mock/hr';
 import { useHrStore } from '@/store/hr';
+import avatarImg from '@/static/user-avatar.png';
 
 const profile = ref<HRProfile>({
   name: '',
@@ -41,7 +47,7 @@ const profile = ref<HRProfile>({
   email: '',
   phone: '',
   company: '',
-  companyStatus: '鏈璇?,
+  companyStatus: '未认证',
   notifyEnabled: true,
   darkMode: false,
 });
@@ -67,9 +73,10 @@ const toggleDarkMode = (event: any) => {
 };
 
 const logout = () => {
-  // TODO: 璋冪敤閫€鍑虹櫥褰曟帴鍙?  uni.showModal({
-    title: '鎻愮ず',
-    content: '纭閫€鍑哄綋鍓嶈处鍙峰悧锛?,
+  // TODO: 调用退出登录接口
+  uni.showModal({
+    title: '提示',
+    content: '确认退出当前账号吗？',
     success: (res) => {
       if (res.confirm) {
         uni.reLaunch({ url: '/pages/auth/login' });
@@ -101,6 +108,25 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.profile-info {
+  display: flex;
+  align-items: center;
+}
+
+.avatar-wrapper {
+  width: 112rpx;
+  height: 112rpx;
+  border-radius: 16rpx;
+  background: #eef2ff;
+  margin-right: 24rpx;
+  overflow: hidden;
+}
+
+.avatar-wrapper image {
+  width: 100%;
+  height: 100%;
 }
 
 .name {

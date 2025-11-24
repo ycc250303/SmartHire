@@ -2,7 +2,7 @@
   <view class="chat-page">
     <view class="chat-header">
       <view class="title">{{ chatTitle }}</view>
-      <button class="outline" @click="showSummary">AI 瀵硅瘽鎬荤粨锛堥鐣欙級</button>
+      <button class="outline" @click="showSummary">AI 对话总结（预览）</button>
     </view>
 
     <scroll-view scroll-y class="chat-body" :scroll-into-view="lastMessageId">
@@ -13,8 +13,8 @@
     </scroll-view>
 
     <view class="chat-input">
-      <input v-model="draft" placeholder="杈撳叆娑堟伅..." @confirm="sendMessage" />
-      <button class="send" @click="sendMessage">鍙戦€?/button>
+      <input v-model="draft" placeholder="输入消息..." @confirm="sendMessage" />
+      <button class="send" @click="sendMessage">发送</button>
     </view>
   </view>
 </template>
@@ -26,7 +26,7 @@ import { fetchChatHistory, mockConversations, type MessageBubble } from '@/mock/
 
 const messages = ref<MessageBubble[]>([]);
 const draft = ref('');
-const chatTitle = ref('鍊欓€変汉浼氳瘽');
+const chatTitle = ref('候选人对话');
 const lastMessageId = ref('');
 
 const loadChat = async () => {
@@ -52,14 +52,14 @@ const sendMessage = () => {
 };
 
 const showSummary = () => {
-  uni.showToast({ title: 'LLM 鎬荤粨鍔熻兘寰呮帴鍏?, icon: 'none' });
+  uni.showToast({ title: 'LLM 总结功能待接入', icon: 'none' });
 };
 
 onLoad((options) => {
   const chatId = options?.id as string;
   const meta = mockConversations.find((item) => item.id === chatId);
   if (meta) {
-    chatTitle.value = `${meta.candidate} 路 ${meta.jobTitle}`;
+    chatTitle.value = `${meta.candidate} · ${meta.jobTitle}`;
   }
   loadChat();
 });

@@ -39,6 +39,7 @@ export interface JobSummary {
   applied: number;
   interviewing: number;
   offer: number;
+  onboarded: number;
   updatedAt: string;
 }
 
@@ -171,6 +172,7 @@ export const mockJobSummaries: JobSummary[] = [
     applied: 68,
     interviewing: 15,
     offer: 2,
+    onboarded: 1,
     updatedAt: dayjs().subtract(2, 'hour').toISOString(),
   },
   {
@@ -182,6 +184,7 @@ export const mockJobSummaries: JobSummary[] = [
     applied: 92,
     interviewing: 22,
     offer: 4,
+    onboarded: 2,
     updatedAt: dayjs().subtract(1, 'day').toISOString(),
   },
   {
@@ -193,6 +196,7 @@ export const mockJobSummaries: JobSummary[] = [
     applied: 34,
     interviewing: 6,
     offer: 1,
+    onboarded: 1,
     updatedAt: dayjs().subtract(3, 'day').toISOString(),
   },
 ];

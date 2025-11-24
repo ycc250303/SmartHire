@@ -3,7 +3,7 @@
     {
       "path": "pages/hr/home/index",
       "style": {
-        "navigationBarTitleText": "宸ヤ綔鍙?,
+        "navigationBarTitleText": "工作台",
         "navigationBarTextStyle": "black",
         "navigationBarBackgroundColor": "#ffffff"
       }
@@ -11,7 +11,7 @@
     {
       "path": "pages/hr/jobs/index",
       "style": {
-        "navigationBarTitleText": "宀椾綅绠＄悊",
+        "navigationBarTitleText": "岗位管理",
         "navigationBarTextStyle": "black",
         "navigationBarBackgroundColor": "#ffffff"
       }
@@ -19,7 +19,7 @@
     {
       "path": "pages/hr/jobs/detail",
       "style": {
-        "navigationBarTitleText": "宀椾綅璇︽儏",
+        "navigationBarTitleText": "岗位详情",
         "navigationBarTextStyle": "black",
         "navigationBarBackgroundColor": "#ffffff"
       }
@@ -27,7 +27,7 @@
     {
       "path": "pages/hr/jobs/edit",
       "style": {
-        "navigationBarTitleText": "缂栬緫宀椾綅",
+        "navigationBarTitleText": "编辑岗位",
         "navigationBarTextStyle": "black",
         "navigationBarBackgroundColor": "#ffffff"
       }
@@ -35,7 +35,7 @@
     {
       "path": "pages/hr/messages/index",
       "style": {
-        "navigationBarTitleText": "娑堟伅涓績",
+        "navigationBarTitleText": "消息中心",
         "navigationBarTextStyle": "black",
         "navigationBarBackgroundColor": "#ffffff"
       }
@@ -43,7 +43,7 @@
     {
       "path": "pages/hr/messages/chat",
       "style": {
-        "navigationBarTitleText": "涓庡€欓€変汉娌熼€?,
+        "navigationBarTitleText": "与候选人对话",
         "navigationBarTextStyle": "black",
         "navigationBarBackgroundColor": "#ffffff"
       }
@@ -51,7 +51,7 @@
     {
       "path": "pages/hr/profile/index",
       "style": {
-        "navigationBarTitleText": "鎴戠殑",
+        "navigationBarTitleText": "我的",
         "navigationBarTextStyle": "black",
         "navigationBarBackgroundColor": "#ffffff"
       }
@@ -59,7 +59,7 @@
     {
       "path": "pages/hr/analytics/index",
       "style": {
-        "navigationBarTitleText": "鏁版嵁鍒嗘瀽",
+        "navigationBarTitleText": "数据分析",
         "navigationBarTextStyle": "black",
         "navigationBarBackgroundColor": "#ffffff"
       }
@@ -67,7 +67,7 @@
     {
       "path": "pages/hr/candidate/detail",
       "style": {
-        "navigationBarTitleText": "鍊欓€変汉璇︽儏",
+        "navigationBarTitleText": "候选人详情",
         "navigationBarTextStyle": "black",
         "navigationBarBackgroundColor": "#ffffff"
       }
@@ -75,7 +75,7 @@
     {
       "path": "pages/auth/login",
       "style": {
-        "navigationBarTitleText": "鐧诲綍",
+        "navigationBarTitleText": "登录",
         "navigationBarTextStyle": "black",
         "navigationBarBackgroundColor": "#ffffff"
       }
@@ -83,7 +83,7 @@
     {
       "path": "pages/auth/register",
       "style": {
-        "navigationBarTitleText": "娉ㄥ唽",
+        "navigationBarTitleText": "注册",
         "navigationBarTextStyle": "black",
         "navigationBarBackgroundColor": "#ffffff"
       }
@@ -103,22 +103,23 @@
     "list": [
       {
         "pagePath": "pages/hr/home/index",
-        "text": "宸ヤ綔鍙?,
+        "text": "工作台",
         "iconPath": "static/tab-home.png",
         "selectedIconPath": "static/tab-home-active.png"
       },
       {
         "pagePath": "pages/hr/jobs/index",
-        "text": "宀椾綅",
+        "text": "岗位",
         "iconPath": "static/tab-jobs.png",
         "selectedIconPath": "static/tab-jobs-active.png"
       },
       {
         "pagePath": "pages/hr/messages/index",
-        "text": "娑堟伅",
+        "text": "消息",
         "iconPath": "static/tab-chat.png",
         "selectedIconPath": "static/tab-chat-active.png"
       }
     ]
   }
 }
+
