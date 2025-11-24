@@ -1,0 +1,124 @@
+﻿{
+  "pages": [
+    {
+      "path": "pages/hr/home/index",
+      "style": {
+        "navigationBarTitleText": "宸ヤ綔鍙?,
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/hr/jobs/index",
+      "style": {
+        "navigationBarTitleText": "宀椾綅绠＄悊",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/hr/jobs/detail",
+      "style": {
+        "navigationBarTitleText": "宀椾綅璇︽儏",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/hr/jobs/edit",
+      "style": {
+        "navigationBarTitleText": "缂栬緫宀椾綅",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/hr/messages/index",
+      "style": {
+        "navigationBarTitleText": "娑堟伅涓績",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/hr/messages/chat",
+      "style": {
+        "navigationBarTitleText": "涓庡€欓€変汉娌熼€?,
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/hr/profile/index",
+      "style": {
+        "navigationBarTitleText": "鎴戠殑",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/hr/analytics/index",
+      "style": {
+        "navigationBarTitleText": "鏁版嵁鍒嗘瀽",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/hr/candidate/detail",
+      "style": {
+        "navigationBarTitleText": "鍊欓€変汉璇︽儏",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/auth/login",
+      "style": {
+        "navigationBarTitleText": "鐧诲綍",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/auth/register",
+      "style": {
+        "navigationBarTitleText": "娉ㄥ唽",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "SmartHire+ HR",
+    "navigationBarBackgroundColor": "#ffffff",
+    "backgroundColor": "#f6f7fb"
+  },
+  "tabBar": {
+    "color": "#7a869a",
+    "selectedColor": "#2f7cff",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/hr/home/index",
+        "text": "宸ヤ綔鍙?,
+        "iconPath": "static/tab-home.png",
+        "selectedIconPath": "static/tab-home-active.png"
+      },
+      {
+        "pagePath": "pages/hr/jobs/index",
+        "text": "宀椾綅",
+        "iconPath": "static/tab-jobs.png",
+        "selectedIconPath": "static/tab-jobs-active.png"
+      },
+      {
+        "pagePath": "pages/hr/messages/index",
+        "text": "娑堟伅",
+        "iconPath": "static/tab-chat.png",
+        "selectedIconPath": "static/tab-chat-active.png"
+      }
+    ]
+  }
+}
