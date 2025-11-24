@@ -17,6 +17,8 @@ public enum ErrorCode {
     TOKEN_IS_NULL(1011, "JWT Token 为空"),
     TOKEN_IS_INVALID(1012, "JWT Token 无效"),
     USER_NOT_LOGIN(1013, "用户未登录"),
+    USER_AVATAR_FILE_EMPTY(1014, "上传的头像文件不能为空"),
+    USER_AVATAR_UPLOAD_FAILED(1015, "头像上传失败"),
     // 求职者相关错误码 (1100-1199)
     SEEKER_ALREADY_REGISTERED(1101, "该用户已注册求职者信息，请勿重复注册"),
     SEEKER_NOT_EXIST(1102, "求职者信息不存在"),
@@ -32,6 +34,17 @@ public enum ErrorCode {
     SKILL_NOT_BELONG_TO_USER(1112, "技能不属于当前用户"),
     SKILL_LIMIT_EXCEEDED(1113, "技能数量已达上限"),
     SKILL_ALREADY_EXIST(1114, "已存在相同技能"),
+    PROJECT_EXPERIENCE_LIMIT_EXCEEDED(1115, "项目经历数量已达上限"),
+    WORK_EXPERIENCE_LIMIT_EXCEEDED(1116, "工作/实习经历数量已达上限"),
+    JOB_SEEKER_EXPECTATION_NOT_EXIST(1117, "求职期望不存在"),
+    JOB_SEEKER_EXPECTATION_NOT_BELONG_TO_USER(1118, "求职期望不属于当前用户"),
+    JOB_SEEKER_EXPECTATION_LIMIT_EXCEEDED(1119, "求职期望数量已达上限（最多5个）"),
+    SALARY_MAX_LESS_THAN_MIN(1120, "期望薪资最高值不能小于最低值"),
+    RESUME_NOT_EXIST(1121, "简历不存在"),
+    RESUME_NOT_BELONG_TO_USER(1122, "简历不属于当前用户"),
+    RESUME_LIMIT_EXCEEDED(1123, "附件简历数量已达上限（最多5个）"),
+    RESUME_FILE_EMPTY(1124, "上传的简历文件不能为空"),
+    RESUME_UPLOAD_FAILED(1125, "简历上传失败"),
     SYSTEM_ERROR(9999, "系统内部错误,请检查业务处理逻辑,以及是否存在未处理的异常情况");
 
     private final Integer code;

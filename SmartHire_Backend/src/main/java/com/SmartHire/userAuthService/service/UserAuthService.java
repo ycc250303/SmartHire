@@ -6,6 +6,9 @@ import com.SmartHire.userAuthService.dto.RegisterDTO;
 import com.SmartHire.userAuthService.dto.UserInfoDTO;
 import com.SmartHire.userAuthService.model.User;
 import com.baomidou.mybatisplus.extension.service.IService;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 /**
  * <p>
@@ -58,7 +61,8 @@ public interface UserAuthService extends IService<User> {
     /**
      * 更新用户头像
      *
-     * @param avatarUrl 头像URL
+     * @param avatarFile 头像文件
+     * @return 用户头像URL
      */
-    void updateUserAvator(String avatarUrl);
+    String updateUserAvatar(MultipartFile avatarFile)  throws IOException;
 }

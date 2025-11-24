@@ -13,10 +13,12 @@ public class JwtUtil {
 
     private static final String SECRET_KEY = "SmartHire";
 
+    private static final Integer TOKEN_VALID_TIME = 7 * 24 * 60 * 60 * 1000;
+
     public static String generateToken(Map<String, Object> claims) {
         return JWT.create()
                 .withClaim("claims", claims)
-                .withExpiresAt(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24 * 15))
+                .withExpiresAt(new Date(System.currentTimeMillis() + TOKEN_VALID_TIME))
                 .sign(Algorithm.HMAC256(SECRET_KEY));
     }
 
