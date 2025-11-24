@@ -41,11 +41,6 @@ public class JobSeekerExpectation implements Serializable {
     private String expectedPosition;
 
     /**
-     * 职位类别
-     */
-    private String jobCategory;
-
-    /**
      * 期望行业
      */
     private String expectedIndustry;

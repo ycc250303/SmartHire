@@ -38,6 +38,8 @@ public class WorkExperienceServiceImpl extends ServiceImpl<WorkExperienceMapper,
 
     private static final DateTimeFormatter YEAR_MONTH_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM");
 
+    private static final Integer MAX_WORK_EXPERIENCE_COUNT = 5;
+
     @Autowired
     private WorkExperienceMapper workExperienceMapper;
 
@@ -47,6 +49,14 @@ public class WorkExperienceServiceImpl extends ServiceImpl<WorkExperienceMapper,
     @Override
     public void addWorkExperience(@Valid WorkExperienceDTO request) {
         Long jobSeekerId = jobSeekerService.getJobSeekerId();
+
+        long workExperienceCount = lambdaQuery()
+                .eq(WorkExperience::getJobSeekerId, jobSeekerId)
+                .count();
+
+        if (workExperienceCount >= MAX_WORK_EXPERIENCE_COUNT) {
+            throw new BusinessException(ErrorCode.WORK_EXPERIENCE_LIMIT_EXCEEDED);
+        }
 
         WorkExperience experience = new WorkExperience();
         experience.setJobSeekerId(jobSeekerId);

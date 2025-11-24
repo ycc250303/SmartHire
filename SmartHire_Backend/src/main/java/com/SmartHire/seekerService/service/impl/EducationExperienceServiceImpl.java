@@ -200,6 +200,7 @@ public class EducationExperienceServiceImpl
                 .count() > 0;
     }
 
+    
     private EducationExperience getOwnedEducation(Long id) {
         return requireOwnedEntity(id,
                 educationExperienceMapper::selectById,

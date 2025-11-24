@@ -1,8 +1,10 @@
 package com.SmartHire.seekerService.controller;
 
 import com.SmartHire.seekerService.dto.EducationExperienceDTO;
+import com.SmartHire.seekerService.dto.JobSeekerExpectationDTO;
 import com.SmartHire.seekerService.dto.ProjectExperienceDTO;
 import com.SmartHire.seekerService.dto.RegisterSeekerDTO;
+import com.SmartHire.seekerService.dto.ResumeDTO;
 import com.SmartHire.seekerService.dto.SkillDTO;
 import com.SmartHire.seekerService.dto.WorkExperienceDTO;
 import com.SmartHire.seekerService.service.*;
@@ -11,8 +13,10 @@ import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * <p>
@@ -262,5 +266,98 @@ public class SeekerController {
     public Result<?> deleteSkill(@PathVariable Long id) {
         skillService.deleteSkill(id);
         return Result.success("删除技能成功");
+    }
+
+    /**
+     * 上传附件简历
+     */
+    @PostMapping(value = "/upload-resume", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "上传附件简历", description = "上传附件简历，名称默认取原文件名，最多5个")
+    public Result<?> uploadResume(@RequestBody MultipartFile resumeFile) {
+        resumeService.uploadResume(resumeFile);
+        return Result.success("上传简历成功");
+    }
+
+    /**
+     * 获取附件简历列表
+     */
+    @GetMapping("/get-resumes")
+    @Operation(summary = "获取附件简历列表", description = "一次返回当前求职者的所有附件简历")
+    public Result<?> getResumes() {
+        return Result.success("获取简历成功", resumeService.getResumes());
+    }
+
+    /**
+     * 更新附件简历
+     */
+    @PatchMapping("/update-resume/{id}")
+    @Operation(summary = "更新附件简历", description = "仅支持修改名称和隐私级别，至少一项有变动")
+    public Result<?> updateResume(@PathVariable Long id,
+            @Validated(ResumeDTO.Update.class) @RequestBody ResumeDTO request) {
+        resumeService.updateResume(id, request);
+        return Result.success("更新简历成功");
+    }
+
+    /**
+     * 删除附件简历
+     */
+    @DeleteMapping("/delete-resume/{id}")
+    @Operation(summary = "删除附件简历", description = "删除指定的附件简历")
+    public Result<?> deleteResume(@PathVariable Long id) {
+        resumeService.deleteResume(id);
+        return Result.success("删除简历成功");
+    }
+
+    /**
+     * 添加求职期望
+     *
+     * @param request
+     * @return
+     */
+    @PostMapping("/add-job-seeker-expectation")
+    @Operation(summary = "添加求职期望", description = "添加求职期望，最多5个")
+    public Result<?> addJobSeekerExpectation(
+            @Validated(JobSeekerExpectationDTO.Create.class) @RequestBody JobSeekerExpectationDTO request) {
+        jobSeekerExpectationService.addJobSeekerExpectation(request);
+        return Result.success("添加求职期望成功");
+    }
+
+    /**
+     * 获取求职期望列表
+     *
+     * @return
+     */
+    @GetMapping("/get-job-seeker-expectations")
+    @Operation(summary = "获取求职期望列表", description = "获取当前用户的所有求职期望")
+    public Result<?> getJobSeekerExpectations() {
+        return Result.success("获取求职期望成功", jobSeekerExpectationService.getJobSeekerExpectations());
+    }
+
+    /**
+     * 修改求职期望
+     *
+     * @param id
+     * @param request
+     * @return
+     */
+    @PatchMapping("/update-job-seeker-expectation/{id}")
+    @Operation(summary = "修改求职期望", description = "修改求职期望，只需要DTO中的一项不为空即可")
+    public Result<?> updateJobSeekerExpectation(@PathVariable Long id,
+            @Validated(JobSeekerExpectationDTO.Update.class) @RequestBody JobSeekerExpectationDTO request) {
+        jobSeekerExpectationService.updateJobSeekerExpectation(id, request);
+        return Result.success("修改求职期望成功");
+    }
+
+    /**
+     * 删除求职期望
+     *
+     * @param id
+     * @return
+     */
+    @DeleteMapping("/delete-job-seeker-expectation/{id}")
+    @Operation(summary = "删除求职期望", description = "删除指定的求职期望")
+    public Result<?> deleteJobSeekerExpectation(@PathVariable Long id) {
+        jobSeekerExpectationService.deleteJobSeekerExpectation(id);
+        return Result.success("删除求职期望成功");
     }
 }

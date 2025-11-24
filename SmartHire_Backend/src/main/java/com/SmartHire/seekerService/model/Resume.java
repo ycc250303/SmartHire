@@ -41,12 +41,7 @@ public class Resume implements Serializable {
     private String resumeName;
 
     /**
-     * 是否默认简历
-     */
-    private Byte isDefault;
-
-    /**
-     * 隐私级别：1-完全公开 2-部分公开 3-仅投递可见
+     * 隐私级别：1-公开 2-仅投递可见
      */
     private Byte privacyLevel;
 
@@ -59,11 +54,6 @@ public class Resume implements Serializable {
      * 完整度（0-100）
      */
     private Integer completeness;
-
-    /**
-     * 状态：0-草稿 1-已发布
-     */
-    private Byte status;
 
     /**
      * 创建时间

@@ -35,6 +35,7 @@ public class ProjectExperienceServiceImpl
 
     private static final DateTimeFormatter YEAR_MONTH_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM");
 
+    private static final Integer MAX_PROJECT_EXPERIENCES = 5;
     @Autowired
     private ProjectExperienceMapper projectExperienceMapper;
 
@@ -46,6 +47,13 @@ public class ProjectExperienceServiceImpl
     @Override
     public void addProjectExperience(@Valid ProjectExperienceDTO request) {
         Long jobSeekerId = currentSeekerId();
+
+        long projectExperienceCount = lambdaQuery()
+                .eq(ProjectExperience::getJobSeekerId, jobSeekerId)
+                .count();
+        if (projectExperienceCount >= MAX_PROJECT_EXPERIENCES) {
+            throw new BusinessException(ErrorCode.PROJECT_EXPERIENCE_LIMIT_EXCEEDED);
+         }
 
         ProjectExperience experience = new ProjectExperience();
         experience.setJobSeekerId(jobSeekerId);
