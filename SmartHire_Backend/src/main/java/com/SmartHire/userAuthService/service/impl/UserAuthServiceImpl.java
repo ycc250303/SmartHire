@@ -2,6 +2,7 @@ package com.SmartHire.userAuthService.service.impl;
 
 import com.SmartHire.shared.exception.enums.ErrorCode;
 import com.SmartHire.shared.exception.exception.BusinessException;
+import com.SmartHire.shared.utils.AliOssUtil;
 import com.SmartHire.shared.utils.JwtUtil;
 import com.SmartHire.shared.utils.ThreadLocalUtil;
 import com.SmartHire.userAuthService.dto.LoginDTO;
@@ -18,10 +19,13 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * <p>
@@ -34,6 +38,7 @@ import java.util.Map;
 @Slf4j
 @Service
 public class UserAuthServiceImpl extends ServiceImpl<UserAuthMapper, User> implements UserAuthService {
+
     @Autowired
     private UserAuthMapper userMapper;
 
@@ -42,6 +47,12 @@ public class UserAuthServiceImpl extends ServiceImpl<UserAuthMapper, User> imple
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private AliOssUtil aliOssUtil;
+
+    private static final String AVATAR_DIRECTORY_KEY = "avatar";
+    private static final String DEFAULT_AVATAR_URL = "https://smart-hire.oss-cn-shanghai.aliyuncs.com/default-avatar.png";
 
     @Override
     public User findByUserName(String username) {
@@ -65,7 +76,7 @@ public class UserAuthServiceImpl extends ServiceImpl<UserAuthMapper, User> imple
 
         user.setUserType(request.getUserType());
         user.setStatus(1);
-        user.setAvatarUrl("https://wanx.alicdn.com/material/20250318/first_frame.png");
+        user.setAvatarUrl(DEFAULT_AVATAR_URL);
 
         Date now = new Date();
         user.setCreatedAt(now);
@@ -135,13 +146,15 @@ public class UserAuthServiceImpl extends ServiceImpl<UserAuthMapper, User> imple
     /**
      * 获取用户信息
      *
-     * @param userId 用户ID
      * @return 用户信息DTO
      */
     @Override
     public UserInfoDTO getUserInfo() {
         Map<String, Object> map = ThreadLocalUtil.get();
         Long userId = JwtUtil.getUserIdFromToken(map);
+        if (userId == null) {
+            throw new BusinessException(ErrorCode.USER_ID_NOT_EXIST);
+        }
         User user = userMapper.selectById(userId);
         if (user == null) {
             throw new BusinessException(ErrorCode.USER_ID_NOT_EXIST);
@@ -175,9 +188,61 @@ public class UserAuthServiceImpl extends ServiceImpl<UserAuthMapper, User> imple
     }
 
     @Override
-    public void updateUserAvator(String avatarUrl){
+    public String updateUserAvatar(MultipartFile avatarFile) throws IOException {
         Map<String, Object> map = ThreadLocalUtil.get();
         Long userId = JwtUtil.getUserIdFromToken(map);
-        userMapper.updateUserAvator(avatarUrl,userId);
+        if (userId == null) {
+            throw new BusinessException(ErrorCode.USER_ID_NOT_EXIST);
+        }
+
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.USER_ID_NOT_EXIST);
+        }
+        String oldAvatarUrl = user.getAvatarUrl();
+
+        // 生成文件名
+        String originalFileName = avatarFile.getOriginalFilename();
+        log.info("originalFileName:" + originalFileName);
+        String fileExtension = "";
+
+        // 安全地获取文件扩展名
+        if (originalFileName != null && originalFileName.contains(".")) {
+            fileExtension = originalFileName.substring(originalFileName.lastIndexOf("."));
+        }
+
+        String fileName = UUID.randomUUID().toString() + fileExtension;
+        try {
+            String avatarUrl = aliOssUtil.uploadFile(AVATAR_DIRECTORY_KEY, fileName, avatarFile.getInputStream());
+            userMapper.updateUserAvator(avatarUrl, userId);
+            removeOldAvatar(oldAvatarUrl, avatarUrl);
+            return avatarUrl;
+        } catch (RuntimeException ex) {
+            log.error("用户头像上传失败, userId={}, fileName={}", userId, fileName, ex);
+            throw new BusinessException(ErrorCode.USER_AVATAR_UPLOAD_FAILED);
+        }
+    }
+
+    private void removeOldAvatar(String oldAvatarUrl, String newAvatarUrl) {
+        if (oldAvatarUrl == null || oldAvatarUrl.isBlank()) {
+            return;
+        }
+        if (oldAvatarUrl.equals(newAvatarUrl)) {
+            return;
+        }
+        if (DEFAULT_AVATAR_URL.equals(oldAvatarUrl)) {
+            return;
+        }
+
+        String objectName = aliOssUtil.extractObjectName(oldAvatarUrl);
+        if (objectName == null || objectName.isBlank()) {
+            return;
+        }
+        boolean deleted = aliOssUtil.deleteFile(objectName);
+        if (deleted) {
+            log.info("旧头像删除成功, objectName={}", objectName);
+        } else {
+            log.warn("旧头像删除失败, objectName={}", objectName);
+        }
     }
 }

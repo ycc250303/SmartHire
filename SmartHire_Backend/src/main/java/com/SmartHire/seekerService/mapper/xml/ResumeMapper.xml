@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.SmartHire.seekerService.mapper.ResumeMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.SmartHire.seekerService.model.Resume">
+        <id column="id" property="id" />
+        <result column="job_seeker_id" property="jobSeekerId" />
+        <result column="resume_name" property="resumeName" />
+        <result column="is_default" property="isDefault" />
+        <result column="privacy_level" property="privacyLevel" />
+        <result column="file_url" property="fileUrl" />
+        <result column="completeness" property="completeness" />
+        <result column="status" property="status" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, job_seeker_id, resume_name, is_default, privacy_level, file_url, completeness, status, created_at, updated_at
+    </sql>
+
+</mapper>

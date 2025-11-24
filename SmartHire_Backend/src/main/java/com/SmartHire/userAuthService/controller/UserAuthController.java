@@ -15,7 +15,9 @@ import org.hibernate.validator.constraints.URL;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.Map;
 
 /**
@@ -112,7 +114,7 @@ public class UserAuthController {
      *
      * @param userId 用户ID
      * @return 公开用户信息
-     */
+     */ 
     @GetMapping("/public-user-info/{userId}")
     @Operation(summary = "获取用户公开信息", description = "通过用户ID获取其他用户的公开信息（不包含邮箱、手机号等隐私信息）")
     public Result<PublicUserInfoDTO> getPublicUserInfo(@PathVariable Long userId) {
@@ -123,8 +125,8 @@ public class UserAuthController {
 
     @PatchMapping("/update-user-avatar")
     @Operation(summary = "更新用户头像", description = "更新用户头像")
-    public Result<?> updateUserAvator(@RequestParam @URL String avatarUrl) {
-        userService.updateUserAvator(avatarUrl);
-        return Result.success("更新用户头像成功");
+    public Result<?> updateUserAvatar(@RequestBody MultipartFile avatarFile) throws IOException {
+        String url = userService.updateUserAvatar(avatarFile);
+        return Result.success("更新用户头像成功",url);
     }
 }
