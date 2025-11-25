@@ -1,6 +1,6 @@
-package com.SmartHire.seekerService.service;
+package com.SmartHire.seekerService.service.seekerTableService;
 
-import com.SmartHire.seekerService.dto.ProjectExperienceDTO;
+import com.SmartHire.seekerService.dto.seekerTableDto.ProjectExperienceDTO;
 import com.SmartHire.seekerService.model.ProjectExperience;
 import com.baomidou.mybatisplus.extension.service.IService;
 import java.util.List;

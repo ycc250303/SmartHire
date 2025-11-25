@@ -1,4 +1,4 @@
-package com.SmartHire.seekerService.dto;
+package com.SmartHire.seekerService.dto.seekerTableDto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;

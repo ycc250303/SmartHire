@@ -35,6 +35,9 @@ public class JobSeekerServiceImpl extends ServiceImpl<JobSeekerMapper, JobSeeker
     @Autowired
     private UserAuthMapper userAuthMapper;
 
+    @Autowired
+    private JwtUtil jwtUtil;
+
     /**
      * 注册求职者
      *
@@ -43,7 +46,7 @@ public class JobSeekerServiceImpl extends ServiceImpl<JobSeekerMapper, JobSeeker
     @Override
     public void registerSeeker(RegisterSeekerDTO request) {
         Map<String, Object> map = ThreadLocalUtil.get();
-        Long userId = JwtUtil.getUserIdFromToken(map);
+        Long userId = jwtUtil.getUserIdFromToken(map);
         log.info("用户ID：{}", userId);
         // 验证用户是否存在
         User user = userAuthMapper.findById(userId);
@@ -82,7 +85,7 @@ public class JobSeekerServiceImpl extends ServiceImpl<JobSeekerMapper, JobSeeker
     @Override
     public JobSeeker getSeekerInfo() {
         Map<String, Object> map = ThreadLocalUtil.get();
-        Long userId = JwtUtil.getUserIdFromToken(map);
+        Long userId = jwtUtil.getUserIdFromToken(map);
 
         // 验证用户是否存在
         User user = userAuthMapper.selectById(userId);
@@ -115,8 +118,8 @@ public class JobSeekerServiceImpl extends ServiceImpl<JobSeekerMapper, JobSeeker
     @Override
     public Long getJobSeekerId() {
         Map<String, Object> map = ThreadLocalUtil.get();
-        Long userId = JwtUtil.getUserIdFromToken(map);
-        if(userId == null){
+        Long userId = jwtUtil.getUserIdFromToken(map);
+        if (userId == null) {
             throw new BusinessException(ErrorCode.USER_ID_NOT_EXIST);
         }
         JobSeeker jobSeeker = lambdaQuery()

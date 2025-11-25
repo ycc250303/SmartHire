@@ -1,15 +1,7 @@
 package com.SmartHire.seekerService.service.impl;
 
-import com.SmartHire.seekerService.mapper.EducationExperienceMapper;
-import com.SmartHire.seekerService.mapper.JobSeekerMapper;
-import com.SmartHire.seekerService.mapper.ProjectExperienceMapper;
-import com.SmartHire.seekerService.mapper.SkillMapper;
-import com.SmartHire.seekerService.mapper.WorkExperienceMapper;
-import com.SmartHire.seekerService.model.EducationExperience;
-import com.SmartHire.seekerService.model.JobSeeker;
-import com.SmartHire.seekerService.model.ProjectExperience;
-import com.SmartHire.seekerService.model.Skill;
-import com.SmartHire.seekerService.model.WorkExperience;
+import com.SmartHire.seekerService.mapper.*;
+import com.SmartHire.seekerService.model.*;
 import com.SmartHire.seekerService.service.OnlineResumeService;
 import com.SmartHire.shared.exception.enums.ErrorCode;
 import com.SmartHire.shared.exception.exception.BusinessException;
@@ -39,6 +31,9 @@ public class OnlineResumeServiceImpl implements OnlineResumeService {
 
     @Autowired
     private EducationExperienceMapper educationExperienceMapper;
+
+    @Autowired
+    private JobSeekerExpectationMapper jobSeekerExpectationMapper;
 
     @Autowired
     private ProjectExperienceMapper projectExperienceMapper;
@@ -76,6 +71,11 @@ public class OnlineResumeServiceImpl implements OnlineResumeService {
                             .eq(EducationExperience::getJobSeekerId, jobSeekerId)
                             .orderByDesc(EducationExperience::getStartYear));
 
+            List<JobSeekerExpectation> jobSeekerExpectations = jobSeekerExpectationMapper.selectList(
+                    new LambdaQueryWrapper<JobSeekerExpectation>()
+                            .eq(JobSeekerExpectation::getJobSeekerId, jobSeekerId)
+                            .orderByDesc(JobSeekerExpectation::getCreatedAt));
+
             List<ProjectExperience> projectExperiences = projectExperienceMapper.selectList(
                     new LambdaQueryWrapper<ProjectExperience>()
                             .eq(ProjectExperience::getJobSeekerId, jobSeekerId)
@@ -92,6 +92,7 @@ public class OnlineResumeServiceImpl implements OnlineResumeService {
             Map<String, Object> resume = new LinkedHashMap<>();
             resume.put("userBase", buildUserBaseInfo(user));
             resume.put("educationExperiences", educationExperiences);
+            resume.put("jobSeekerExpectations", jobSeekerExpectations);
             resume.put("projectExperiences", projectExperiences);
             resume.put("workExperiences", workExperiences);
             resume.put("skills", skills);
@@ -113,3 +114,5 @@ public class OnlineResumeServiceImpl implements OnlineResumeService {
         return userBase;
     }
 }
+
+

@@ -1,10 +1,10 @@
-package com.SmartHire.seekerService.service.impl;
+package com.SmartHire.seekerService.service.impl.seekerTableImpl;
 
-import com.SmartHire.seekerService.dto.WorkExperienceDTO;
+import com.SmartHire.seekerService.dto.seekerTableDto.WorkExperienceDTO;
 import com.SmartHire.seekerService.mapper.WorkExperienceMapper;
 import com.SmartHire.seekerService.model.WorkExperience;
 import com.SmartHire.seekerService.service.JobSeekerService;
-import com.SmartHire.seekerService.service.WorkExperienceService;
+import com.SmartHire.seekerService.service.seekerTableService.WorkExperienceService;
 import com.SmartHire.shared.exception.enums.ErrorCode;
 import com.SmartHire.shared.exception.exception.BusinessException;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;

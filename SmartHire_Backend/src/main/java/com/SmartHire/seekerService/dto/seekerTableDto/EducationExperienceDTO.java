@@ -1,4 +1,4 @@
-package com.SmartHire.seekerService.dto;
+package com.SmartHire.seekerService.dto.seekerTableDto;
 
 import com.SmartHire.seekerService.utils.ValidEducationYears;
 import jakarta.validation.constraints.*;

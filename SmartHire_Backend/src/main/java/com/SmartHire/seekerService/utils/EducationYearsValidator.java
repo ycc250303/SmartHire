@@ -1,6 +1,6 @@
 package com.SmartHire.seekerService.utils;
 
-import com.SmartHire.seekerService.dto.EducationExperienceDTO;
+import com.SmartHire.seekerService.dto.seekerTableDto.EducationExperienceDTO;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 

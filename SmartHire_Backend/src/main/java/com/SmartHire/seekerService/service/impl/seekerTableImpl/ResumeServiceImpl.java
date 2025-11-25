@@ -1,9 +1,9 @@
-package com.SmartHire.seekerService.service.impl;
+package com.SmartHire.seekerService.service.impl.seekerTableImpl;
 
-import com.SmartHire.seekerService.dto.ResumeDTO;
+import com.SmartHire.seekerService.dto.seekerTableDto.ResumeDTO;
 import com.SmartHire.seekerService.mapper.ResumeMapper;
 import com.SmartHire.seekerService.model.Resume;
-import com.SmartHire.seekerService.service.ResumeService;
+import com.SmartHire.seekerService.service.seekerTableService.ResumeService;
 import com.SmartHire.shared.exception.enums.ErrorCode;
 import com.SmartHire.shared.exception.exception.BusinessException;
 import com.SmartHire.shared.utils.AliOssUtil;

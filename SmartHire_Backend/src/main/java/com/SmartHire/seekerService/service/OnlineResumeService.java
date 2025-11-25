@@ -15,3 +15,5 @@ public interface OnlineResumeService {
     Map<String, Object> getOnlineResumeByUserId(Long userId);
 }
 
+
+
