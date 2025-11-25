@@ -7,6 +7,7 @@ import com.SmartHire.seekerService.dto.RegisterSeekerDTO;
 import com.SmartHire.seekerService.dto.seekerTableDto.ResumeDTO;
 import com.SmartHire.seekerService.dto.seekerTableDto.SkillDTO;
 import com.SmartHire.seekerService.dto.seekerTableDto.WorkExperienceDTO;
+import com.SmartHire.seekerService.model.JobSeeker;
 import com.SmartHire.seekerService.service.*;
 import com.SmartHire.seekerService.service.seekerTableService.*;
 import com.SmartHire.shared.entity.Result;
@@ -80,9 +81,9 @@ public class SeekerController {
      */
     @GetMapping("/get-seeker-info")
     @Operation(summary = "获取求职者信息", description = "获取求职者信息")
-    public Result<?> getSeekerInfo() {
-        jobSeekerService.getSeekerInfo();
-        return Result.success("获取求职者信息成功");
+    public Result<JobSeeker> getSeekerInfo() {
+        JobSeeker jobSeeker =  jobSeekerService.getSeekerInfo();
+        return Result.success("获取求职者信息成功",jobSeeker);
     }
 
     /**
