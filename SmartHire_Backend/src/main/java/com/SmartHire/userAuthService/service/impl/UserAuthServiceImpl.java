@@ -140,6 +140,10 @@ public class UserAuthServiceImpl extends ServiceImpl<UserAuthMapper, User> imple
             throw new BusinessException(ErrorCode.USER_AUTH_USER_PASSWORD_ERROR);
         }
 
+        if (loginUser.getStatus() == null || loginUser.getStatus() == 0) {
+            throw new BusinessException(ErrorCode.ACCOUNT_DISABLED);
+        }
+
         return loginUser;
     }
 

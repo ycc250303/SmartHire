@@ -11,6 +11,8 @@ import com.SmartHire.seekerService.service.*;
 import com.SmartHire.shared.entity.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -50,6 +52,9 @@ public class SeekerController {
 
     @Autowired
     private SkillService skillService;
+
+    @Autowired
+    private OnlineResumeService onlineResumeService;
 
     /**
      * 注册求职者
@@ -359,5 +364,18 @@ public class SeekerController {
     public Result<?> deleteJobSeekerExpectation(@PathVariable Long id) {
         jobSeekerExpectationService.deleteJobSeekerExpectation(id);
         return Result.success("删除求职期望成功");
+    }
+
+    /**
+     * 获取指定用户的在线简历
+     *
+     * @param userId 用户ID
+     * @return 在线简历聚合数据
+     */
+    @GetMapping("/online-resume")
+    @Operation(summary = "获取在线简历", description = "HR或内部系统查看指定用户的在线简历")
+    public Result<?> getOnlineResume(
+            @RequestParam("userId") @NotNull(message = "用户ID不能为空") @Positive(message = "用户ID必须为正整数") Long userId) {
+        return Result.success("获取在线简历成功", onlineResumeService.getOnlineResumeByUserId(userId));
     }
 }
