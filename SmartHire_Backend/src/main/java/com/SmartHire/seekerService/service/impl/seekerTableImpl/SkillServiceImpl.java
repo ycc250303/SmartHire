@@ -1,9 +1,9 @@
-package com.SmartHire.seekerService.service.impl;
+package com.SmartHire.seekerService.service.impl.seekerTableImpl;
 
-import com.SmartHire.seekerService.dto.SkillDTO;
+import com.SmartHire.seekerService.dto.seekerTableDto.SkillDTO;
 import com.SmartHire.seekerService.mapper.SkillMapper;
 import com.SmartHire.seekerService.model.Skill;
-import com.SmartHire.seekerService.service.SkillService;
+import com.SmartHire.seekerService.service.seekerTableService.SkillService;
 import com.SmartHire.shared.exception.enums.ErrorCode;
 import com.SmartHire.shared.exception.exception.BusinessException;
 import jakarta.validation.Valid;

@@ -1,16 +1,20 @@
 package com.SmartHire.seekerService.controller;
 
-import com.SmartHire.seekerService.dto.EducationExperienceDTO;
-import com.SmartHire.seekerService.dto.JobSeekerExpectationDTO;
-import com.SmartHire.seekerService.dto.ProjectExperienceDTO;
+import com.SmartHire.seekerService.dto.seekerTableDto.EducationExperienceDTO;
+import com.SmartHire.seekerService.dto.seekerTableDto.JobSeekerExpectationDTO;
+import com.SmartHire.seekerService.dto.seekerTableDto.ProjectExperienceDTO;
 import com.SmartHire.seekerService.dto.RegisterSeekerDTO;
-import com.SmartHire.seekerService.dto.ResumeDTO;
-import com.SmartHire.seekerService.dto.SkillDTO;
-import com.SmartHire.seekerService.dto.WorkExperienceDTO;
+import com.SmartHire.seekerService.dto.seekerTableDto.ResumeDTO;
+import com.SmartHire.seekerService.dto.seekerTableDto.SkillDTO;
+import com.SmartHire.seekerService.dto.seekerTableDto.WorkExperienceDTO;
+import com.SmartHire.seekerService.model.JobSeeker;
 import com.SmartHire.seekerService.service.*;
+import com.SmartHire.seekerService.service.seekerTableService.*;
 import com.SmartHire.shared.entity.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -51,6 +55,12 @@ public class SeekerController {
     @Autowired
     private SkillService skillService;
 
+    @Autowired
+    private OnlineResumeService onlineResumeService;
+
+    @Autowired
+    private JobCardService jobCardService;
+
     /**
      * 注册求职者
      *
@@ -71,9 +81,9 @@ public class SeekerController {
      */
     @GetMapping("/get-seeker-info")
     @Operation(summary = "获取求职者信息", description = "获取求职者信息")
-    public Result<?> getSeekerInfo() {
-        jobSeekerService.getSeekerInfo();
-        return Result.success("获取求职者信息成功");
+    public Result<JobSeeker> getSeekerInfo() {
+        JobSeeker jobSeeker =  jobSeekerService.getSeekerInfo();
+        return Result.success("获取求职者信息成功",jobSeeker);
     }
 
     /**
@@ -359,5 +369,31 @@ public class SeekerController {
     public Result<?> deleteJobSeekerExpectation(@PathVariable Long id) {
         jobSeekerExpectationService.deleteJobSeekerExpectation(id);
         return Result.success("删除求职期望成功");
+    }
+
+    /**
+     * 获取指定用户的在线简历
+     *
+     * @param userId 用户ID
+     * @return 在线简历聚合数据
+     */
+    @GetMapping("/online-resume")
+    @Operation(summary = "获取在线简历", description = "HR或内部系统查看指定用户的在线简历")
+    public Result<?> getOnlineResume(
+            @RequestParam("userId") @NotNull(message = "用户ID不能为空") @Positive(message = "用户ID必须为正整数") Long userId) {
+        return Result.success("获取在线简历成功", onlineResumeService.getOnlineResumeByUserId(userId));
+    }
+
+    /**
+     * 获取指定用户的求职卡片
+     *
+     * @param userId 用户ID
+     * @return 求职卡片信息
+     */
+    @GetMapping("/job-card")
+    @Operation(summary = "获取求职卡片", description = "HR或内部系统查看指定用户的求职卡片")
+    public Result<?> getJobCard(
+            @RequestParam("userId") @NotNull(message = "用户ID不能为空") @Positive(message = "用户ID必须为正整数") Long userId) {
+        return Result.success("获取求职卡片成功", jobCardService.getJobCard(userId));
     }
 }

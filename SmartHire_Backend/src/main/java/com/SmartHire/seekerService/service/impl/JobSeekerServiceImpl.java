@@ -7,7 +7,7 @@ import com.SmartHire.seekerService.service.JobSeekerService;
 import com.SmartHire.shared.exception.enums.ErrorCode;
 import com.SmartHire.shared.exception.exception.BusinessException;
 import com.SmartHire.shared.utils.JwtUtil;
-import com.SmartHire.shared.utils.ThreadLocalUtil;
+import com.SmartHire.shared.utils.SecurityContextUtil;
 import com.SmartHire.userAuthService.mapper.UserAuthMapper;
 import com.SmartHire.userAuthService.model.User;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -35,6 +35,9 @@ public class JobSeekerServiceImpl extends ServiceImpl<JobSeekerMapper, JobSeeker
     @Autowired
     private UserAuthMapper userAuthMapper;
 
+    @Autowired
+    private JwtUtil jwtUtil;
+
     /**
      * 注册求职者
      *
@@ -42,8 +45,8 @@ public class JobSeekerServiceImpl extends ServiceImpl<JobSeekerMapper, JobSeeker
      */
     @Override
     public void registerSeeker(RegisterSeekerDTO request) {
-        Map<String, Object> map = ThreadLocalUtil.get();
-        Long userId = JwtUtil.getUserIdFromToken(map);
+        Map<String, Object> map = SecurityContextUtil.getCurrentClaims();
+        Long userId = jwtUtil.getUserIdFromToken(map);
         log.info("用户ID：{}", userId);
         // 验证用户是否存在
         User user = userAuthMapper.findById(userId);
@@ -81,8 +84,8 @@ public class JobSeekerServiceImpl extends ServiceImpl<JobSeekerMapper, JobSeeker
      */
     @Override
     public JobSeeker getSeekerInfo() {
-        Map<String, Object> map = ThreadLocalUtil.get();
-        Long userId = JwtUtil.getUserIdFromToken(map);
+        Map<String, Object> map = SecurityContextUtil.getCurrentClaims();
+        Long userId = jwtUtil.getUserIdFromToken(map);
 
         // 验证用户是否存在
         User user = userAuthMapper.selectById(userId);
@@ -114,9 +117,9 @@ public class JobSeekerServiceImpl extends ServiceImpl<JobSeekerMapper, JobSeeker
      */
     @Override
     public Long getJobSeekerId() {
-        Map<String, Object> map = ThreadLocalUtil.get();
-        Long userId = JwtUtil.getUserIdFromToken(map);
-        if(userId == null){
+        Map<String, Object> map = SecurityContextUtil.getCurrentClaims();
+        Long userId = jwtUtil.getUserIdFromToken(map);
+        if (userId == null) {
             throw new BusinessException(ErrorCode.USER_ID_NOT_EXIST);
         }
         JobSeeker jobSeeker = lambdaQuery()

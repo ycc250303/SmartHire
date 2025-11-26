@@ -1,6 +1,6 @@
-package com.SmartHire.seekerService.service;
+package com.SmartHire.seekerService.service.seekerTableService;
 
-import com.SmartHire.seekerService.dto.SkillDTO;
+import com.SmartHire.seekerService.dto.seekerTableDto.SkillDTO;
 import com.SmartHire.seekerService.model.Skill;
 import com.baomidou.mybatisplus.extension.service.IService;
 import jakarta.validation.Valid;

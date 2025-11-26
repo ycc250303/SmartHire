@@ -1,4 +1,4 @@
-package com.SmartHire.seekerService.service.impl;
+package com.SmartHire.seekerService.service.impl.seekerTableImpl;
 
 import com.SmartHire.seekerService.service.JobSeekerService;
 import com.SmartHire.shared.exception.enums.ErrorCode;

@@ -1,24 +1,17 @@
 package com.SmartHire.userAuthService.controller;
 
 import com.SmartHire.shared.entity.Result;
-import com.SmartHire.shared.utils.JwtUtil;
-import com.SmartHire.shared.utils.ThreadLocalUtil;
-import com.SmartHire.userAuthService.dto.LoginDTO;
-import com.SmartHire.userAuthService.dto.PublicUserInfoDTO;
-import com.SmartHire.userAuthService.dto.RegisterDTO;
-import com.SmartHire.userAuthService.dto.UserInfoDTO;
+import com.SmartHire.userAuthService.dto.*;
 import com.SmartHire.userAuthService.service.UserAuthService;
 import com.SmartHire.userAuthService.service.VerificationCodeService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
-import org.hibernate.validator.constraints.URL;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.Map;
 
 /**
  * <p>
@@ -90,10 +83,10 @@ public class UserAuthController {
      * @return 操作结果
      */
     @PostMapping("/login")
-    @Operation(summary = "用户登录", description = "用户登录接口")
-    public Result<String> login(@Valid @RequestBody LoginDTO request) {
-        String token = userService.login(request);
-        return Result.success("登录成功", token);
+    @Operation(summary = "用户登录")
+    public Result<LoginResponseDTO> login(@Valid @RequestBody LoginDTO request) {
+        LoginResponseDTO resp = userService.login(request);
+        return Result.success("登录成功", resp);
     }
 
     /**
@@ -114,7 +107,7 @@ public class UserAuthController {
      *
      * @param userId 用户ID
      * @return 公开用户信息
-     */ 
+     */
     @GetMapping("/public-user-info/{userId}")
     @Operation(summary = "获取用户公开信息", description = "通过用户ID获取其他用户的公开信息（不包含邮箱、手机号等隐私信息）")
     public Result<PublicUserInfoDTO> getPublicUserInfo(@PathVariable Long userId) {
@@ -122,11 +115,24 @@ public class UserAuthController {
         return Result.success("获取用户公开信息成功", publicUserInfo);
     }
 
-
     @PatchMapping("/update-user-avatar")
     @Operation(summary = "更新用户头像", description = "更新用户头像")
     public Result<?> updateUserAvatar(@RequestBody MultipartFile avatarFile) throws IOException {
         String url = userService.updateUserAvatar(avatarFile);
-        return Result.success("更新用户头像成功",url);
+        return Result.success("更新用户头像成功", url);
+    }
+
+    @PostMapping("/logout")
+    @Operation(summary = "用户登出", description = "用户登出接口")
+    public Result<?> logout() {
+        userService.logout();
+        return Result.success("登出成功");
+    }
+
+    @PostMapping("/refresh-token")
+    @Operation(summary = "刷新 Access Token")
+    public Result<LoginResponseDTO> refreshToken(@Valid @RequestBody RefreshTokenDTO request) {
+        LoginResponseDTO resp = userService.refreshToken(request.getRefreshToken());
+        return Result.success("刷新成功", resp);
     }
 }

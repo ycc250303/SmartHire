@@ -1,6 +1,6 @@
-package com.SmartHire.seekerService.service;
+package com.SmartHire.seekerService.service.seekerTableService;
 
-import com.SmartHire.seekerService.dto.ResumeDTO;
+import com.SmartHire.seekerService.dto.seekerTableDto.ResumeDTO;
 import com.SmartHire.seekerService.model.Resume;
 import com.baomidou.mybatisplus.extension.service.IService;
 import java.util.List;

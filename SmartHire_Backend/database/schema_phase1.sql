@@ -52,7 +52,6 @@ CREATE TABLE `job_seeker_expectation` (
     `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '求职期望ID',
     `job_seeker_id` BIGINT NOT NULL COMMENT '求职者ID',
     `expected_position` VARCHAR(100) NOT NULL COMMENT '期望职位',
-    `job_category` VARCHAR(50) COMMENT '职位类别',
     `expected_industry` VARCHAR(100) COMMENT '期望行业',
     `work_city` VARCHAR(50) NOT NULL COMMENT '期望工作城市',
     `salary_min` DECIMAL(10, 2) COMMENT '期望薪资最低',
@@ -116,7 +115,6 @@ CREATE TABLE `resume` (
     `privacy_level` TINYINT DEFAULT 1 COMMENT '隐私级别：1-完全公开 2-仅投递可见',
     `file_url` VARCHAR(255) COMMENT '简历文件URL（PDF/Word等文件）',
     `completeness` INT DEFAULT 0 COMMENT '完整度（0-100）',
-    `status` TINYINT DEFAULT 1 COMMENT '状态：0-草稿 1-已发布',
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`id`),
@@ -182,7 +180,7 @@ CREATE TABLE `skill` (
     `skill_name` VARCHAR(50) NOT NULL COMMENT '技能名称',
     `level` TINYINT COMMENT '熟练度 0-了解 1-熟悉 2-掌握',
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT  '更新时间',
+    `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`id`),
     KEY `idx_job_seeker_id` (`job_seeker_id`),
     KEY `idx_skill_name` (`skill_name`),
@@ -324,7 +322,16 @@ CREATE TABLE `interview` (
     KEY `idx_status` (`status`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '面试安排表';
 -- =====================================================
--- 创建完成 - 第一阶段（17张核心业务表）
+-- 6. 
 -- =====================================================
--- 统计信息
-SELECT '第一阶段数据库创建完成' AS message;
+-- 6.1 国内本科高校目录表
+CREATE TABLE `cn_undergrad_college` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    `name` VARCHAR(255) NOT NULL COMMENT '学校名称',
+    `city` VARCHAR(100) NOT NULL COMMENT '学校所在城市',
+    `rank` TINYINT DEFAULT 0 COMMENT '头衔：1-985 2-211 4-双一流 8-民办，可按位组合',
+    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_name_city` (`name`, `city`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '国内本科高校目录表';

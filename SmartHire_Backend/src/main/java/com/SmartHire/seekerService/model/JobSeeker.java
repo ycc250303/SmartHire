@@ -70,10 +70,12 @@ public class JobSeeker implements Serializable {
     /**
      * 创建时间
      */
+    @JsonIgnore
     private Date createdAt;
 
     /**
      * 更新时间
      */
+    @JsonIgnore
     private Date updatedAt;
 }

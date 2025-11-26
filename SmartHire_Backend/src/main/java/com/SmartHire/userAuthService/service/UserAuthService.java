@@ -1,9 +1,6 @@
 package com.SmartHire.userAuthService.service;
 
-import com.SmartHire.userAuthService.dto.LoginDTO;
-import com.SmartHire.userAuthService.dto.PublicUserInfoDTO;
-import com.SmartHire.userAuthService.dto.RegisterDTO;
-import com.SmartHire.userAuthService.dto.UserInfoDTO;
+import com.SmartHire.userAuthService.dto.*;
 import com.SmartHire.userAuthService.model.User;
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.springframework.web.multipart.MultipartFile;
@@ -39,9 +36,9 @@ public interface UserAuthService extends IService<User> {
      * 登录
      *
      * @param request 登录请求
-     * @return token
+     * @return LoginResponseDTO
      */
-    String login(LoginDTO request);
+    LoginResponseDTO login(LoginDTO request);
 
     /**
      * 获取用户信息（完整信息，仅自己可查看）
@@ -64,5 +61,18 @@ public interface UserAuthService extends IService<User> {
      * @param avatarFile 头像文件
      * @return 用户头像URL
      */
-    String updateUserAvatar(MultipartFile avatarFile)  throws IOException;
+    String updateUserAvatar(MultipartFile avatarFile) throws IOException;
+
+    /**
+     * 登出
+     */
+    void logout();
+
+    /**
+     * 刷新令牌
+     *
+     * @param refreshToken 刷新令牌
+     * @return 新的令牌
+     */
+    LoginResponseDTO refreshToken(String refreshToken);
 }
