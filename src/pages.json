@@ -5,7 +5,8 @@
       "style": {
         "navigationBarTitleText": "岗位",
         "navigationBarTextStyle": "black",
-        "navigationBarBackgroundColor": "#ffffff"
+        "navigationBarBackgroundColor": "#ffffff",
+        "navigationStyle": "custom"
       }
     },
     {
@@ -13,7 +14,8 @@
       "style": {
         "navigationBarTitleText": "消息",
         "navigationBarTextStyle": "black",
-        "navigationBarBackgroundColor": "#ffffff"
+        "navigationBarBackgroundColor": "#ffffff",
+        "navigationStyle": "custom"
       }
     },
     {
@@ -21,7 +23,8 @@
       "style": {
         "navigationBarTitleText": "我的",
         "navigationBarTextStyle": "black",
-        "navigationBarBackgroundColor": "#ffffff"
+        "navigationBarBackgroundColor": "#ffffff",
+        "navigationStyle": "custom"
       }
     },
     {
@@ -47,6 +50,87 @@
         "navigationBarTextStyle": "black",
         "navigationBarBackgroundColor": "#ffffff"
       }
+    },
+    {
+      "path": "pages/profile/settings",
+      "style": {
+        "navigationBarTitleText": "设置",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/profile/self",
+      "style": {
+        "navigationBarTitleText": "个人资料",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/profile/resume/online-resume",
+      "style": {
+        "navigationBarTitleText": "在线简历",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff",
+        "navigationStyle": "default"
+      }
+    },
+    {
+      "path": "pages/profile/resume/attachment-resume",
+      "style": {
+        "navigationBarTitleText": "附件简历",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/profile/resume/edit/basic-info",
+      "style": {
+        "navigationBarTitleText": "基本信息",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/profile/resume/edit/expectation",
+      "style": {
+        "navigationBarTitleText": "求职期望",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/profile/resume/edit/work-experience",
+      "style": {
+        "navigationBarTitleText": "工作经历",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/profile/resume/edit/project-experience",
+      "style": {
+        "navigationBarTitleText": "项目经历",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/profile/resume/edit/education-experience",
+      "style": {
+        "navigationBarTitleText": "教育经历",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/profile/resume/edit/skill",
+      "style": {
+        "navigationBarTitleText": "技能",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
     }
   ],
   "globalStyle": {
@@ -56,6 +140,7 @@
     "backgroundColor": "#f6f9ff"
   },
   "tabBar": {
+    "custom": true,
     "color": "#6b778c",
     "selectedColor": "#4ba3ff",
     "backgroundColor": "#ffffff",

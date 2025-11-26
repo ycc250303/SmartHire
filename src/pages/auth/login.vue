@@ -61,8 +61,11 @@
 import { ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { t } from '@/locales';
+import { useNavigationTitle } from '@/utils/useNavigationTitle';
 import { login, type LoginParams } from '@/services/api/auth';
 import { setTokenWithExpiry } from '@/services/http';
+
+useNavigationTitle('navigation.login');
 
 const loading = ref(false);
 const errorMessage = ref('');

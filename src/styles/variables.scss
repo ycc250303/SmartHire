@@ -2,6 +2,11 @@
 $primary-color: #4ba3ff;
 $primary-color-soft: #ebf5ff;
 
+// Light blue colors
+$light-blue: #a9ceeb;
+$soft-blue: #bbdefb;
+$pale-blue: #f0f7ff;
+
 // Background colors
 $bg-color: #f6f9ff;
 $surface-color: #ffffff;
@@ -11,9 +16,9 @@ $text-color: #122038;
 $text-muted: #6b778c;
 
 // Border radius
-$border-radius: 24rpx;
-$border-radius-sm: 12rpx;
-$border-radius-lg: 32rpx;
+$border-radius: 32rpx;
+$border-radius-sm: 16rpx;
+$border-radius-lg: 48rpx;
 
 // Spacing
 $spacing-xs: 8rpx;

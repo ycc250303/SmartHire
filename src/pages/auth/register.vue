@@ -122,8 +122,11 @@
 import { ref, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { t } from '@/locales';
+import { useNavigationTitle } from '@/utils/useNavigationTitle';
 import { Gender, UserType, register, sendVerificationCode, login, type RegisterParams } from '@/services/api/auth';
 import { setTokenWithExpiry } from '@/services/http';
+
+useNavigationTitle('navigation.register');
 
 const step = ref(1);
 const loading = ref(false);

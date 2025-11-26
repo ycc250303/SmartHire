@@ -1,47 +1,60 @@
 <template>
   <view class="page">
-    <view class="job-list" v-if="jobs.length > 0">
-      <JobCard
-        v-for="job in jobs"
-        :key="job.jobId"
-        :job="job"
-      />
-      
+    <view class="category-section">
+      <view 
+        v-for="category in categories" 
+        :key="category.value"
+        class="category-item"
+        :class="{ active: currentCategory === category.value }"
+        @click="handleCategoryChange(category.value)"
+      >
+        <text class="category-text">{{ category.label }}</text>
+        <view v-if="currentCategory === category.value" class="category-indicator"></view>
+      </view>
     </view>
-    <view class="empty-state" v-else-if="!loading && !error">
-      <text class="empty-text">{{ t('pages.jobs.noJobs') }}</text>
+
+    <view class="content-section">
+      <component :is="currentComponent" />
     </view>
-    <view class="loading-state" v-else-if="loading">
-      <text class="loading-text">{{ t('pages.jobs.loading') }}</text>
-    </view>
-    <view class="error-state" v-else-if="error">
-      <text class="error-text">{{ t('pages.jobs.loadError') }}</text>
-    </view>
+    
+    <CustomTabBar />
   </view>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { onLoad } from '@dcloudio/uni-app';
+import { ref, computed } from 'vue';
+import { onLoad, onShow } from '@dcloudio/uni-app';
 import { t } from '@/locales';
-import { getInternJobRecommendations, type InternJobItem } from '@/services/api/recommendations';
-import JobCard from '@/components/common/JobCard.vue';
+import InternshipPage from './internship.vue';
+import ParttimePage from './parttime.vue';
+import FulltimePage from './fulltime.vue';
+import CustomTabBar from '@/components/common/CustomTabBar.vue';
 
-const jobs = ref<InternJobItem[]>([]);
-const loading = ref(false);
-const error = ref<string | null>(null);
+type CategoryType = 'internship' | 'parttime' | 'fulltime';
 
-const loadJobs = async () => {
-  loading.value = true;
-  error.value = null;
-  try {
-    const response = await getInternJobRecommendations();
-    jobs.value = response.jobs;
-  } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Unknown error';
-  } finally {
-    loading.value = false;
+const currentCategory = ref<CategoryType>('internship');
+
+const categories = computed(() => [
+  { value: 'internship' as CategoryType, label: t('pages.jobs.internship') },
+  { value: 'parttime' as CategoryType, label: t('pages.jobs.parttime') },
+  { value: 'fulltime' as CategoryType, label: t('pages.jobs.fulltime') },
+]);
+
+const currentComponent = computed(() => {
+  switch (currentCategory.value) {
+    case 'internship':
+      return InternshipPage;
+    case 'parttime':
+      return ParttimePage;
+    case 'fulltime':
+      return FulltimePage;
+    default:
+      return InternshipPage;
   }
+});
+
+const handleCategoryChange = (category: CategoryType) => {
+  currentCategory.value = category;
 };
 
 onLoad(() => {
@@ -50,8 +63,8 @@ onLoad(() => {
   });
 });
 
-onMounted(() => {
-  loadJobs();
+onShow(() => {
+  uni.hideTabBar();
 });
 </script>
 
@@ -60,33 +73,46 @@ onMounted(() => {
 
 .page {
   min-height: 100vh;
-  background-color: vars.$bg-color;
-  padding: vars.$spacing-md;
+  background: linear-gradient(to bottom, vars.$light-blue 0%, vars.$surface-color 10%);
+  padding-top: calc(var(--status-bar-height) + vars.$spacing-lg);
 }
 
-.job-list {
+.category-section {
   display: flex;
-  flex-direction: column;
+  gap: vars.$spacing-xl;
+  padding: vars.$spacing-lg vars.$spacing-xl;
+  margin-bottom: vars.$spacing-md;
 }
 
-.empty-state,
-.loading-state,
-.error-state {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 400rpx;
-  padding: vars.$spacing-xl;
+.category-item {
+  position: relative;
+  cursor: pointer;
+  padding-bottom: vars.$spacing-xs;
 }
 
-.empty-text,
-.loading-text,
-.error-text {
-  font-size: 28rpx;
+.category-text {
+  font-size: 36rpx;
   color: vars.$text-muted;
+  transition: all 0.3s;
 }
 
-.error-text {
-  color: #ff6b6b;
+.category-item.active .category-text {
+  color: vars.$text-color;
+  font-weight: 700;
+}
+
+.category-indicator {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 6rpx;
+  background-color: vars.$primary-color;
+  border-radius: vars.$border-radius;
+}
+
+.content-section {
+  flex: 1;
+  padding-bottom: 120rpx;
 }
 </style>

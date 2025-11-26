@@ -11,7 +11,16 @@ import { useUserStore } from "@/store/user";
 onLaunch(() => {
   console.log("App launched");
   checkAuthStatus();
+  hideNativeTabBar();
 });
+
+function hideNativeTabBar() {
+  try {
+    uni.hideTabBar();
+  } catch (error) {
+    console.error('Failed to hide native tabBar:', error);
+  }
+}
 
 onShow(() => {
   console.log("App shown");

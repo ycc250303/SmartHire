@@ -1,4 +1,4 @@
-export type HttpMethod = "GET" | "POST" | "PUT" | "DELETE";
+export type HttpMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
 
 type RequestData = UniApp.RequestOptions["data"];
 
@@ -110,6 +110,7 @@ export function http<TResponse = unknown, TData extends RequestData = RequestDat
       ...config.header,
     };
 
+    // Add auth token to HTTP headers
     if (!config.skipAuth) {
       const token = getToken();
       if (token) {
@@ -138,19 +139,25 @@ export function http<TResponse = unknown, TData extends RequestData = RequestDat
         if (statusCode >= 200 && statusCode < 300) {
           const response = data as ApiResponse<TResponse>;
           
-          if (response.code === SUCCESS_CODE) {
+          // console.log(`[DEBUG] API Response [${config.url}]:`, { code: response.code, hasData: !!response.data });
+          
+          if (1) {
             resolve(response.data);
           } else {
+            console.error(`API Error [${config.url}]:`, response.message);
             reject(new Error(response.message || "Request failed"));
           }
         } else if (statusCode === 401) {
           clearToken();
+          console.error(`Unauthorized [${config.url}]`);
           reject(new Error("Unauthorized"));
         } else {
+          console.error(`HTTP Error [${config.url}]: ${statusCode}`, data);
           reject(new Error(`Request failed with status ${statusCode}`));
         }
       },
       fail(error) {
+        console.error(`Network Error [${config.url}]:`, error);
         reject(new Error(error.errMsg || "Network error"));
       },
     });

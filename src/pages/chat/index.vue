@@ -1,13 +1,17 @@
 <template>
   <view class="page">
+    <!--Debug button-->
     <button class="logout-btn" @click="handleLogout">Logout (Debug)</button>
+    
+    <CustomTabBar />
   </view>
 </template>
 
 <script setup lang="ts">
-import { onLoad } from '@dcloudio/uni-app';
+import { onLoad, onShow } from '@dcloudio/uni-app';
 import { t } from '@/locales';
 import { clearToken } from '@/services/http';
+import CustomTabBar from '@/components/common/CustomTabBar.vue';
 
 onLoad(() => {
   uni.setNavigationBarTitle({
@@ -15,12 +19,18 @@ onLoad(() => {
   });
 });
 
+onShow(() => {
+  uni.hideTabBar();
+});
+
+// Debug 
 function handleLogout() {
   clearToken();
   uni.redirectTo({
     url: '/pages/auth/login',
   });
 }
+
 </script>
 
 <style lang="scss" scoped>
@@ -28,8 +38,10 @@ function handleLogout() {
 
 .page {
   min-height: 100vh;
-  background-color: vars.$bg-color;
+  background: linear-gradient(to bottom, vars.$light-blue 0%, vars.$surface-color 25%);
   padding: vars.$spacing-md;
+  padding-top: calc(var(--status-bar-height) + vars.$spacing-lg);
+  padding-bottom: 120rpx;
 }
 
 .welcome-container {
@@ -55,9 +67,11 @@ function handleLogout() {
   color: vars.$text-muted;
 }
 
+/* debug */
 .logout-btn {
   width: 200rpx;
   height: 80rpx;
   
 }
+
 </style>

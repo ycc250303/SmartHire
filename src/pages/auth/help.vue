@@ -7,11 +7,12 @@
 <script setup lang="ts">
 import { onLoad } from '@dcloudio/uni-app';
 import { t } from '@/locales';
+import { useNavigationTitle } from '@/utils/useNavigationTitle';
+
+useNavigationTitle('navigation.help');
 
 onLoad(() => {
-  uni.setNavigationBarTitle({
-    title: t('auth.help.title')
-  });
+  // Navigation title is handled by useNavigationTitle
 });
 </script>
 
