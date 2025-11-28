@@ -293,17 +293,17 @@ async function handleRegister() {
     return;
   }
 
-  loading value = true;
+  loading.value = true;
 
   try {
     const params: RegisterParams = {
-      username: formData value.username.trim(),
-      password: formData value.password,
-      email: formData value.email.trim(),
-      phone: formData value.phone.trim(),
-      gender: formData value.gender!,
-      userType: formData value.userType,
-      verifyCode: formData value.verifyCode.trim(),
+      username: formData.value.username.trim(),
+      password: formData.value.password,
+      email: formData.value.email.trim(),
+      phone: formData.value.phone.trim(),
+      gender: formData.value.gender!,
+      userType: formData.value.userType,
+      verifyCode: formData.value.verifyCode.trim(),
     };
 
     await register(params);

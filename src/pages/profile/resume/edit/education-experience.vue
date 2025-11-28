@@ -82,14 +82,22 @@
         </view>
 
         <view class="form-item">
-          <view class="switch-row">
-            <text class="form-label">{{ t('pages.resume.edit.education.isCurrent') }}</text>
-            <switch
-              :checked="formData.isCurrent === 1"
-              @change="handleSwitchChange"
-              color="#4ba3ff"
-            />
-          </view>
+          <text class="form-label">{{ t('pages.resume.edit.education.isCurrent') }}</text>
+          <picker
+            class="form-picker"
+            mode="selector"
+            :range="isCurrentOptions"
+            :range-key="'label'"
+            :value="isCurrentIndex"
+            @change="handleIsCurrentChange"
+          >
+            <view class="picker-value">
+              <text :class="formData.isCurrent !== undefined ? 'picker-text' : 'picker-placeholder'">
+                {{ isCurrentOptions[isCurrentIndex]?.label || t('pages.resume.edit.education.isCurrent') }}
+              </text>
+              <text class="picker-arrow">›</text>
+            </view>
+          </picker>
         </view>
       </view>
     </scroll-view>
@@ -154,6 +162,15 @@ const educationIndex = computed(() => {
   return formData.value.education;
 });
 
+const isCurrentOptions = [
+  { label: t('pages.resume.edit.education.isCurrentNo'), value: 0 },
+  { label: t('pages.resume.edit.education.isCurrentYes'), value: 1 },
+];
+
+const isCurrentIndex = computed(() => {
+  return formData.value.isCurrent === 1 ? 1 : 0;
+});
+
 onLoad((options: any) => {
   if (options?.id) {
     educationId.value = parseInt(options.id);
@@ -196,23 +213,33 @@ function handleEducationChange(e: any) {
 }
 
 function handleStartYearChange(e: any) {
-  formData.value.startYear = e.detail.value;
+  const date = e.detail.value;
+  formData.value.startYear = date.substring(0, 4);
 }
 
 function handleEndYearChange(e: any) {
-  formData.value.endYear = e.detail.value;
+  const date = e.detail.value;
+  formData.value.endYear = date.substring(0, 4);
 }
 
-function handleSwitchChange(e: any) {
-  formData.value.isCurrent = e.detail.value ? 1 : 0;
+function handleIsCurrentChange(e: any) {
+  formData.value.isCurrent = parseInt(e.detail.value);
 }
 
 async function handleSave() {
   if (saving.value) return;
 
-  if (!formData.value.schoolName || !formData.value.major) {
+  if (!formData.value.schoolName || !formData.value.major || !formData.value.startYear) {
     uni.showToast({
       title: t('pages.resume.edit.common.required'),
+      icon: 'none',
+    });
+    return;
+  }
+
+  if (!formData.value.isCurrent && formData.value.startYear && formData.value.endYear && formData.value.startYear > formData.value.endYear) {
+    uni.showToast({
+      title: t('pages.resume.edit.education.dateInvalid'),
       icon: 'none',
     });
     return;
@@ -374,11 +401,6 @@ async function handleDelete() {
   margin-left: 16rpx;
 }
 
-.switch-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
 
 .bottom-bar {
   position: fixed;

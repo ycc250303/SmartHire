@@ -103,161 +103,41 @@ export function updateUserAvatarWithFile(filePath: string): Promise<UserInfo> {
     // #endif
     
     // #ifndef H5
-    // Try to use plus.io for App platform, or fallback to uni API
-    try {
-      // #ifdef APP-PLUS
-      const fs = (plus as any).io.resolveLocalFileSystemURL(filePath, (entry: any) => {
-        entry.file((file: any) => {
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            const result = reader.result as string;
-            if (result) {
-              const base64Data = result.split(',')[1];
-              if (base64Data) {
-                sendPatchRequest(base64Data);
-              } else {
-                reject(new Error('Failed to parse file data'));
-              }
+    uni.uploadFile({
+      url: fullUrl,
+      filePath: filePath,
+      name: 'avatarFile',
+      header: {
+        'Authorization': token ? `Bearer ${token}` : '',
+      },
+      success: (res) => {
+        try {
+          let data: any;
+          if (typeof res.data === 'string') {
+            data = JSON.parse(res.data);
+          } else {
+            data = res.data;
+          }
+          
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            if (data && data.code === 0) {
+              resolve(data.data);
+            } else if (data && !data.code) {
+              resolve(data);
             } else {
-              reject(new Error('Failed to read file'));
+              reject(new Error(data?.message || 'Update failed'));
             }
-          };
-          reader.onerror = () => {
-            reject(new Error('Failed to read file'));
-          };
-          reader.readAsDataURL(file);
-        });
-      }, (error: any) => {
-        // Fallback to uni API
-        readFileWithUni();
-      });
-      // #endif
-      
-      // #ifndef APP-PLUS
-      readFileWithUni();
-      // #endif
-    } catch (error) {
-      readFileWithUni();
-    }
-    
-    function readFileWithUni() {
-      try {
-        const fsManager = uni.getFileSystemManager();
-        if (!fsManager) {
-          reject(new Error('FileSystemManager is not available'));
-          return;
+          } else {
+            reject(new Error(`Request failed with status ${res.statusCode}`));
+          }
+        } catch (error) {
+          reject(new Error('Failed to parse response: ' + (error instanceof Error ? error.message : String(error))));
         }
-        
-        fsManager.readFile({
-          filePath: filePath,
-          encoding: 'base64',
-          success: (readRes) => {
-            const data = readRes.data;
-            if (typeof data === 'string') {
-              sendPatchRequest(data);
-            } else {
-              reject(new Error('Failed to read file as base64'));
-            }
-          },
-          fail: (error) => {
-            reject(new Error(error.errMsg || 'Failed to read file'));
-          },
-        });
-      } catch (error) {
-        reject(new Error('FileSystemManager error: ' + (error instanceof Error ? error.message : String(error))));
-      }
-    }
-    
-    function sendPatchRequest(base64Data: string) {
-      console.log('Sending PATCH request with base64 data, length:', base64Data.length);
-      
-      // Try to use uni.uploadFile first (POST), if that fails, use uni.request (PATCH)
-      // Note: uni.uploadFile only supports POST, but it's more efficient for file uploads
-      uni.uploadFile({
-        url: fullUrl,
-        filePath: filePath,
-        name: 'avatarFile',
-        header: {
-          'Authorization': token ? `Bearer ${token}` : '',
-        },
-        success: (res) => {
-          console.log('Upload response status:', res.statusCode);
-          console.log('Upload response data:', res.data);
-          try {
-            let data: any;
-            if (typeof res.data === 'string') {
-              data = JSON.parse(res.data);
-            } else {
-              data = res.data;
-            }
-            
-            if (res.statusCode >= 200 && res.statusCode < 300) {
-              if (data && data.code === 0) {
-                resolve(data.data);
-              } else if (data && !data.code) {
-                resolve(data);
-              } else {
-                // If POST fails, try PATCH with base64
-                sendPatchWithBase64(base64Data);
-              }
-            } else {
-              // If POST fails, try PATCH with base64
-              sendPatchWithBase64(base64Data);
-            }
-          } catch (error) {
-            console.error('Upload response parse error:', error);
-            sendPatchWithBase64(base64Data);
-          }
-        },
-        fail: (error) => {
-          console.log('UploadFile failed, trying PATCH with base64:', error);
-          sendPatchWithBase64(base64Data);
-        },
-      });
-    }
-    
-    function sendPatchWithBase64(base64Data: string) {
-      const base64Url = `data:image/jpeg;base64,${base64Data}`;
-      
-      (uni.request as any)({
-        url: fullUrl,
-        method: 'PATCH',
-        header: {
-          'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : '',
-        },
-        data: {
-          avatarFile: base64Url,
-        },
-        timeout: 30000,
-        success: (res: any) => {
-          console.log('PATCH request response status:', res.statusCode);
-          console.log('PATCH request response data:', res.data);
-          try {
-            const response = res.data as any;
-            if (res.statusCode >= 200 && res.statusCode < 300) {
-              if (response && response.code === 0) {
-                resolve(response.data);
-              } else if (response && !response.code) {
-                resolve(response);
-              } else {
-                reject(new Error(response?.message || 'Update failed'));
-              }
-            } else {
-              reject(new Error(`Request failed with status ${res.statusCode}`));
-            }
-          } catch (error) {
-            console.error('PATCH request response parse error:', res.data);
-            reject(new Error('Failed to parse response: ' + (error instanceof Error ? error.message : String(error))));
-          }
-        },
-        fail: (error: any) => {
-          console.error('PATCH request error:', error);
-          console.error('Upload URL was:', fullUrl);
-          reject(new Error(error.errMsg || 'Upload failed'));
-        },
-      });
-    }
+      },
+      fail: (error) => {
+        reject(new Error(error.errMsg || 'Upload failed'));
+      },
+    });
     // #endif
   });
 }

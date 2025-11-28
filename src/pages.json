@@ -87,7 +87,6 @@
     {
       "path": "pages/profile/resume/edit/basic-info",
       "style": {
-        "navigationBarTitleText": "基本信息",
         "navigationBarTextStyle": "black",
         "navigationBarBackgroundColor": "#ffffff"
       }
@@ -95,7 +94,6 @@
     {
       "path": "pages/profile/resume/edit/expectation",
       "style": {
-        "navigationBarTitleText": "求职期望",
         "navigationBarTextStyle": "black",
         "navigationBarBackgroundColor": "#ffffff"
       }
@@ -103,7 +101,6 @@
     {
       "path": "pages/profile/resume/edit/work-experience",
       "style": {
-        "navigationBarTitleText": "工作经历",
         "navigationBarTextStyle": "black",
         "navigationBarBackgroundColor": "#ffffff"
       }
@@ -111,7 +108,6 @@
     {
       "path": "pages/profile/resume/edit/project-experience",
       "style": {
-        "navigationBarTitleText": "项目经历",
         "navigationBarTextStyle": "black",
         "navigationBarBackgroundColor": "#ffffff"
       }
@@ -119,7 +115,6 @@
     {
       "path": "pages/profile/resume/edit/education-experience",
       "style": {
-        "navigationBarTitleText": "教育经历",
         "navigationBarTextStyle": "black",
         "navigationBarBackgroundColor": "#ffffff"
       }
@@ -127,7 +122,20 @@
     {
       "path": "pages/profile/resume/edit/skill",
       "style": {
-        "navigationBarTitleText": "技能",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/profile/resume/edit/upload-resume",
+      "style": {
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/profile/resume/edit/edit-resume",
+      "style": {
         "navigationBarTextStyle": "black",
         "navigationBarBackgroundColor": "#ffffff"
       }

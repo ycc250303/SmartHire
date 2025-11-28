@@ -73,14 +73,22 @@
         </view>
 
         <view class="form-item">
-          <view class="switch-row">
-            <text class="form-label">{{ t('pages.resume.edit.work.isInternship') }}</text>
-            <switch
-              :checked="formData.isInternship === 1"
-              @change="handleSwitchChange"
-              color="#4ba3ff"
-            />
-          </view>
+          <text class="form-label">{{ t('pages.resume.edit.work.isInternship') }}</text>
+          <picker
+            class="form-picker"
+            mode="selector"
+            :range="workTypeOptions"
+            :range-key="'label'"
+            :value="workTypeIndex"
+            @change="handleWorkTypeChange"
+          >
+            <view class="picker-value">
+              <text :class="formData.isInternship !== undefined ? 'picker-text' : 'picker-placeholder'">
+                {{ workTypeOptions[workTypeIndex]?.label || t('pages.resume.edit.work.isInternship') }}
+              </text>
+              <text class="picker-arrow">›</text>
+            </view>
+          </picker>
         </view>
       </view>
 
@@ -127,7 +135,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { t } from '@/locales';
 import { useNavigationTitle } from '@/utils/useNavigationTitle';
@@ -156,6 +164,15 @@ const formData = ref<AddWorkExperienceParams>({
   description: '',
   achievements: '',
   isInternship: 0,
+});
+
+const workTypeOptions = [
+  { label: t('pages.resume.edit.work.isInternshipFulltime'), value: 0 },
+  { label: t('pages.resume.edit.work.isInternshipInternship'), value: 1 },
+];
+
+const workTypeIndex = computed(() => {
+  return formData.value.isInternship === 1 ? 1 : 0;
 });
 
 onLoad((options: any) => {
@@ -198,23 +215,33 @@ async function loadData() {
 }
 
 function handleStartDateChange(e: any) {
-  formData.value.startMonth = e.detail.value;
+  const date = e.detail.value;
+  formData.value.startMonth = date.substring(0, 7);
 }
 
 function handleEndDateChange(e: any) {
-  formData.value.endMonth = e.detail.value;
+  const date = e.detail.value;
+  formData.value.endMonth = date.substring(0, 7);
 }
 
-function handleSwitchChange(e: any) {
-  formData.value.isInternship = e.detail.value ? 1 : 0;
+function handleWorkTypeChange(e: any) {
+  formData.value.isInternship = parseInt(e.detail.value);
 }
 
 async function handleSave() {
   if (saving.value) return;
 
-  if (!formData.value.companyName || !formData.value.position) {
+  if (!formData.value.companyName || !formData.value.position || !formData.value.startMonth) {
     uni.showToast({
       title: t('pages.resume.edit.common.required'),
+      icon: 'none',
+    });
+    return;
+  }
+
+  if (formData.value.startMonth && formData.value.endMonth && formData.value.startMonth > formData.value.endMonth) {
+    uni.showToast({
+      title: t('pages.resume.edit.work.dateInvalid'),
       icon: 'none',
     });
     return;
@@ -390,11 +417,6 @@ async function handleDelete() {
   margin-left: 16rpx;
 }
 
-.switch-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
 
 .bottom-bar {
   position: fixed;

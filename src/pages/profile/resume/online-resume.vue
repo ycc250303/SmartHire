@@ -35,8 +35,9 @@
               </view>
             </view>
             <text class="candidate-meta">{{ displayMeta }}</text>
-            <text class="candidate-phone">{{ displayPhone }}</text>
-            <text class="candidate-status">{{ displayPhoneStatus }}</text>
+            <view v-if="displayPhone" class="candidate-contact">
+              <text class="candidate-phone">{{ displayPhone }}</text>
+            </view>
           </view>
         </view>
         <view v-if="displayStudentBadge" class="student-badge">
@@ -69,10 +70,10 @@
             @tap="handleEditExpectation(expectation)"
           >
             <view class="expectation-main">
-              <text class="expectation-position">{{ expectation.expectedPosition }}</text>
+              <text class="expectation-position">{{ expectation.expectedPosition || t('pages.resume.online.infoFallback') }}</text>
               <text class="expectation-salary">{{ formatSalaryRange(expectation) }}</text>
             </view>
-            <text class="expectation-detail">
+            <text v-if="formatExpectationDetail(expectation) !== t('pages.resume.online.infoFallback')" class="expectation-detail">
               {{ formatExpectationDetail(expectation) }}
             </text>
             <text class="expectation-location">{{ formatExpectationLocation(expectation) }}</text>
@@ -103,7 +104,7 @@
             </view>
             <view class="entry-meta">
               <text class="entry-meta-text">{{ work.position }}</text>
-              <text v-if="work.isInternship" class="entry-meta-badge">
+              <text v-if="work.isInternship === 1" class="entry-meta-badge">
                 {{ t('pages.resume.online.internship') }}
               </text>
             </view>
@@ -244,12 +245,6 @@ const displayMeta = computed(() => {
   const parts: string[] = [];
   
   if (info?.birthDate) {
-    const birthYear = new Date(info.birthDate).getFullYear();
-    const currentYear = new Date().getFullYear();
-    parts.push(`${birthYear}${t('pages.resume.online.graduateYear')}`);
-  }
-  
-  if (info?.birthDate) {
     const age = calculateAge(info.birthDate);
     if (age > 0) {
       parts.push(`${age}${t('pages.resume.online.ageUnit')}`);
@@ -257,6 +252,15 @@ const displayMeta = computed(() => {
   }
   
   if (educationList.value.length > 0) {
+    const currentEducation = educationList.value.find(edu => edu.isCurrent === 1);
+    if (currentEducation && currentEducation.endYear) {
+      const endYear = parseInt(currentEducation.endYear);
+      const currentYear = new Date().getFullYear();
+      if (endYear >= currentYear) {
+        parts.push(`${endYear}${t('pages.resume.online.graduateYear')}`);
+      }
+    }
+    
     const highestEducation = educationList.value[0];
     if (highestEducation) {
       parts.push(getDegreeLabel(highestEducation.education));
@@ -268,17 +272,12 @@ const displayMeta = computed(() => {
 
 const displayPhone = computed(() => {
   const phone = userInfo.value?.phone;
-  if (!phone) return t('pages.resume.online.infoFallback');
+  if (!phone) return null;
   
   if (phone.length === 11) {
     return `${phone.substring(0, 3)} ${'*'.repeat(6)} ${phone.substring(9)}`;
   }
   return phone;
-});
-
-const displayPhoneStatus = computed(() => {
-  const phone = userInfo.value?.phone;
-  return phone ? '' : t('pages.resume.online.infoFallback');
 });
 
 const displayStudentBadge = computed(() => {
@@ -478,7 +477,7 @@ function formatExpectationDetail(expectation: JobSeekerExpectation): string {
   const parts: string[] = [];
   
   if (expectation.expectedPosition) {
-    parts.push(`${t('pages.resume.online.positionTypes')}1，${expectation.expectedPosition}`);
+    parts.push(expectation.expectedPosition);
   }
   
   return parts.length > 0 ? parts.join('，') : t('pages.resume.online.infoFallback');
@@ -621,9 +620,17 @@ function getSkillLevelText(level?: number | null): string {
   color: vars.$text-muted;
 }
 
-.candidate-meta,
-.candidate-phone,
-.candidate-status {
+.candidate-meta {
+  font-size: 24rpx;
+  color: vars.$text-muted;
+  line-height: 1.4;
+}
+
+.candidate-contact {
+  margin-top: 4rpx;
+}
+
+.candidate-phone {
   font-size: 24rpx;
   color: vars.$text-muted;
   line-height: 1.4;

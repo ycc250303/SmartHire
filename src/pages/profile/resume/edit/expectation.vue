@@ -151,6 +151,14 @@ async function handleSave() {
     return;
   }
 
+  if (formData.value.salaryMin && formData.value.salaryMax && formData.value.salaryMin > formData.value.salaryMax) {
+    uni.showToast({
+      title: t('pages.resume.edit.expectation.salaryInvalid'),
+      icon: 'none',
+    });
+    return;
+  }
+
   saving.value = true;
 
   try {

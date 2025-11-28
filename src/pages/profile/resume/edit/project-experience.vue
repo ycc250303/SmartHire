@@ -173,19 +173,29 @@ async function loadData() {
 }
 
 function handleStartDateChange(e: any) {
-  formData.value.startMonth = e.detail.value;
+  const date = e.detail.value;
+  formData.value.startMonth = date.substring(0, 7);
 }
 
 function handleEndDateChange(e: any) {
-  formData.value.endMoneth = e.detail.value;
+  const date = e.detail.value;
+  formData.value.endMoneth = date.substring(0, 7);
 }
 
 async function handleSave() {
   if (saving.value) return;
 
-  if (!formData.value.projectName || !formData.value.projectRole) {
+  if (!formData.value.projectName || !formData.value.projectRole || !formData.value.startMonth) {
     uni.showToast({
       title: t('pages.resume.edit.common.required'),
+      icon: 'none',
+    });
+    return;
+  }
+
+  if (formData.value.startMonth && formData.value.endMoneth && formData.value.startMonth > formData.value.endMoneth) {
+    uni.showToast({
+      title: t('pages.resume.edit.project.dateInvalid'),
       icon: 'none',
     });
     return;
