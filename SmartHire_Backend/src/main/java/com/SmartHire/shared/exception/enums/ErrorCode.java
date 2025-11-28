@@ -32,6 +32,14 @@ public enum ErrorCode {
     SKILL_NOT_BELONG_TO_USER(1112, "技能不属于当前用户"),
     SKILL_LIMIT_EXCEEDED(1113, "技能数量已达上限"),
     SKILL_ALREADY_EXIST(1114, "已存在相同技能"),
+    // HR相关错误码 (1200-1299)
+    HR_NOT_EXIST(1201, "HR信息不存在"),
+    HR_NOT_BELONG_TO_USER(1202, "HR信息不属于当前用户"),
+    USER_NOT_HR(1203, "用户身份不是HR"),
+    COMPANY_NOT_EXIST(1204, "公司信息不存在"),
+    // 岗位相关错误码 (1300-1399)
+    JOB_NOT_EXIST(1301, "岗位不存在"),
+    JOB_NOT_BELONG_TO_HR(1302, "岗位不属于当前HR"),
     SYSTEM_ERROR(9999, "系统内部错误,请检查业务处理逻辑,以及是否存在未处理的异常情况");
 
     private final Integer code;

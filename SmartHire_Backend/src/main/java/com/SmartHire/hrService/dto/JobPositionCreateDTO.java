@@ -9,6 +9,7 @@ import jakarta.validation.constraints.Max;
 import java.io.Serial;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.List;
 
 /**
  * 岗位创建DTO
@@ -24,12 +25,6 @@ public class JobPositionCreateDTO implements Serializable {
      */
     @NotNull(message = "公司ID不能为空")
     private Long companyId;
-
-    /**
-     * 发布HR的ID
-     */
-    @NotNull(message = "HR ID不能为空")
-    private Long hrId;
 
     /**
      * 职位名称
@@ -78,7 +73,7 @@ public class JobPositionCreateDTO implements Serializable {
     private Integer salaryMonths;
 
     /**
-     * 学历要求：0-高中及以下 1-专科 2-本科 3-硕士 4-博士 5-不限
+     * 学历要求：0-不限 1-专科 2-本科 3-硕士 4-博士
      */
     private Integer educationRequired;
 
@@ -109,5 +104,9 @@ public class JobPositionCreateDTO implements Serializable {
      */
     private Integer status;
 
+    /**
+     * 技能要求列表
+     */
+    private List<JobSkillDTO> skills;
 }
 
