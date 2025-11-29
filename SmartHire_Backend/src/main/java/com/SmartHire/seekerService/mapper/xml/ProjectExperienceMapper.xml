@@ -6,7 +6,6 @@
     <resultMap id="BaseResultMap" type="com.SmartHire.seekerService.model.ProjectExperience">
         <id column="id" property="id" />
         <result column="job_seeker_id" property="jobSeekerId" />
-        <result column="resume_id" property="resumeId" />
         <result column="project_name" property="projectName" />
         <result column="project_role" property="projectRole" />
         <result column="start_date" property="startDate" />
@@ -21,7 +20,7 @@
 
     <!-- 通用查询结果列 -->
     <sql id="Base_Column_List">
-        id, job_seeker_id, resume_id, project_name, project_role, start_date, end_date, description, responsibilities, achievements, project_url, created_at, updated_at
+        id, job_seeker_id, project_name, project_role, start_date, end_date, description, responsibilities, achievements, project_url, created_at, updated_at
     </sql>
 
 </mapper>

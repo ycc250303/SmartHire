@@ -135,4 +135,18 @@ public class UserAuthController {
         LoginResponseDTO resp = userService.refreshToken(request.getRefreshToken());
         return Result.success("刷新成功", resp);
     }
+
+    /**
+     * 删除用户（管理员可删除任何用户，普通用户只能删除自己的账户）
+     * 如果用户是求职者，则同时删除求职者信息
+     *
+     * @param userId 要删除的用户ID
+     * @return 操作结果
+     */
+    @DeleteMapping("/user/{userId}")
+    @Operation(summary = "删除用户", description = "删除指定用户。管理员可删除任何用户，普通用户只能删除自己的账户。如果用户是求职者，则同时删除求职者信息")
+    public Result<?> deleteUser(@PathVariable Long userId) {
+        userService.deleteUser(userId);
+        return Result.success("删除用户成功");
+    }
 }

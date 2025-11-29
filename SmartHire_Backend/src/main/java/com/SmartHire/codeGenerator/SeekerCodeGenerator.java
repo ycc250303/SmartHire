@@ -41,17 +41,16 @@ public class SeekerCodeGenerator {
                         // TODO：需要修改服务文件夹名称
                         .parent("com.SmartHire.seekerService2")
                         .entity("model")
-                        .mapper("mapper")
-                        .service("service")
-                        .serviceImpl("service.impl")
-                        .controller("controller"))
+                        .mapper("mapper"))
                 .strategyConfig(builder -> {
                     // TODO：需要修改服务相关的数据库表
                     builder.addInclude("job_seeker", "job_seeker_expectation", "resume",
                             "education_experience",
                             "work_experience", "project_experience");
-                    // 禁用 controller 生成，将手动创建统一的 SeekerController
+                    // 禁用 controller、service、serviceImpl 生成，只生成 model 和 mapper
                     builder.controllerBuilder()
+                            .disable();
+                    builder.serviceBuilder()
                             .disable();
                     builder.entityBuilder()
                             .enableLombok()
@@ -59,13 +58,8 @@ public class SeekerCodeGenerator {
                     builder.mapperBuilder()
                             .enableBaseResultMap()
                             .enableBaseColumnList();
-                    builder.serviceBuilder()
-                            .formatServiceFileName("%sService"); // 移除 I 前缀，生成 JobSeekerService 而不是 IJobSeekerService
                 })
                 .execute();
-
-        // 生成统一的 SeekerController
-        generateSeekerController(projectPath);
     }
 
     @SuppressWarnings("unchecked")

@@ -22,6 +22,8 @@ public enum ErrorCode {
     ACCOUNT_DISABLED(1016, "账户已被禁用，请联系管理员"),
     REFRESH_TOKEN_EXPIRED(1017, "Refresh Token 已过期，请重新登录"),
     TOKEN_IS_REFRESH_TOKEN(1018, "JWT Token 为 refresh token"),
+    PERMISSION_DENIED(1019, "权限不足，仅管理员可执行此操作"),
+    CANNOT_DELETE_OTHER_USER(1020, "无权删除其他用户的账户，只能删除自己的账户"),
     // 求职者相关错误码 (1100-1199)
     SEEKER_ALREADY_REGISTERED(1101, "该用户已注册求职者信息，请勿重复注册"),
     SEEKER_NOT_EXIST(1102, "求职者信息不存在"),
