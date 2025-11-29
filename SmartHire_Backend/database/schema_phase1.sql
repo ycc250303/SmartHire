@@ -235,24 +235,37 @@ CREATE TABLE `job_skill_requirement` (
 -- =====================================================
 -- 4. 投递与匹配模块 (3张表)
 -- =====================================================
--- 4.1 投递记录表
+-- 4.1 投递/推荐记录表
 CREATE TABLE `application` (
-    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '投递ID',
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '记录ID',
+    
     `job_id` BIGINT NOT NULL COMMENT '职位ID',
     `job_seeker_id` BIGINT NOT NULL COMMENT '求职者ID',
-    `resume_id` BIGINT NOT NULL COMMENT '简历ID',
-    `status` TINYINT DEFAULT 0 COMMENT '状态：0-已投递 1-已查看 2-待面试 3-已面试 4-已录用 5-已拒绝 6-已撤回',
+
+    `resume_id` BIGINT DEFAULT NULL COMMENT '简历ID（投递时必填，推荐时可为空）',
+
+    `initiator` TINYINT NOT NULL COMMENT '发起方：0-求职者投递 1-HR推荐',
+
+    `status` TINYINT DEFAULT 0 COMMENT '状态：
+        0-已投递/已推荐
+        1-已查看
+        2-待面试
+        3-已面试
+        4-已录用
+        5-已拒绝
+        6-已撤回',
+    
     `match_score` DECIMAL(5, 2) COMMENT '匹配度分数（0-100）',
     `match_analysis` TEXT COMMENT '匹配分析（JSON格式）',
-    `hr_viewed_at` DATETIME COMMENT 'HR查看时间',
-    `hr_comment` TEXT COMMENT 'HR评价',
-    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '投递时间',
+
+    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_job_seeker_job` (`job_id`, `job_seeker_id`),
     KEY `idx_job_seeker_id` (`job_seeker_id`),
     KEY `idx_status` (`status`)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '投递记录表';
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '投递/推荐记录表';
 -- 4.2 职位收藏表
 CREATE TABLE `job_favorite` (
     `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '收藏ID',
@@ -277,20 +290,31 @@ CREATE TABLE `candidate_favorite` (
 -- 5.1 聊天消息表
 CREATE TABLE `chat_message` (
     `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '消息ID',
-    `application_id` BIGINT COMMENT '投递记录ID',
+    `application_id` BIGINT NOT NULL COMMENT '投递/推荐记录ID',
+
     `sender_id` BIGINT NOT NULL COMMENT '发送者用户ID',
     `receiver_id` BIGINT NOT NULL COMMENT '接收者用户ID',
-    `message_type` TINYINT DEFAULT 1 COMMENT '消息类型：1-文本 2-图片 3-文件',
-    `content` TEXT NOT NULL COMMENT '消息内容',
-    `file_url` VARCHAR(255) COMMENT '文件URL',
+
+    `message_type` TINYINT DEFAULT 1 COMMENT '消息类型：1-文本 2-图片 3-文件 4-语音 5-视频 6-系统通知 7-卡片消息',
+
+    `content` TEXT COMMENT '消息内容',
+    `file_url` VARCHAR(255) COMMENT '文件/图片/语音/视频URL',
+
+    `reply_to` BIGINT DEFAULT NULL COMMENT '引用的消息ID',
+    
     `is_read` TINYINT DEFAULT 0 COMMENT '是否已读',
-    `is_flagged` TINYINT DEFAULT 0 COMMENT '是否被标记（敏感内容）',
+    `is_flagged` TINYINT DEFAULT 0 COMMENT '是否被标记为敏感',
+    `is_deleted` TINYINT DEFAULT 0 COMMENT '是否被逻辑删除/撤回',
+
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '发送时间',
+
     PRIMARY KEY (`id`),
     KEY `idx_application_id` (`application_id`),
     KEY `idx_sender_receiver` (`sender_id`, `receiver_id`),
+    KEY `idx_application_created` (`application_id`, `created_at`),
     KEY `idx_created_at` (`created_at`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '聊天消息表';
+
 -- 5.2 面试安排表
 CREATE TABLE `interview` (
     `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '面试ID',
@@ -312,17 +336,3 @@ CREATE TABLE `interview` (
     KEY `idx_interview_time` (`interview_time`),
     KEY `idx_status` (`status`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '面试安排表';
--- =====================================================
--- 6. 
--- =====================================================
--- 6.1 国内本科高校目录表
-CREATE TABLE `cn_undergrad_college` (
-    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-    `name` VARCHAR(255) NOT NULL COMMENT '学校名称',
-    `city` VARCHAR(100) NOT NULL COMMENT '学校所在城市',
-    `rank` TINYINT DEFAULT 0 COMMENT '头衔：1-985 2-211 4-双一流 8-民办，可按位组合',
-    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    PRIMARY KEY (`id`),
-    UNIQUE KEY `uk_name_city` (`name`, `city`)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '国内本科高校目录表';
