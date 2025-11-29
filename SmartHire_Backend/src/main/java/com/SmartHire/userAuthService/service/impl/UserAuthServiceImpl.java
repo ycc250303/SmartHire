@@ -10,8 +10,10 @@ import com.SmartHire.userAuthService.model.User;
 import com.SmartHire.userAuthService.mapper.UserAuthMapper;
 import com.SmartHire.userAuthService.service.UserAuthService;
 import com.SmartHire.userAuthService.service.VerificationCodeService;
+import com.SmartHire.seekerService.service.JobSeekerService;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,6 +67,9 @@ public class UserAuthServiceImpl extends ServiceImpl<UserAuthMapper, User> imple
 
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
+
+    @Autowired(required = false)
+    private JobSeekerService jobSeekerService;
 
     @Value("${jwt.access-token-valid-time}")
     private long accessTokenValidTime;
@@ -461,5 +466,60 @@ public class UserAuthServiceImpl extends ServiceImpl<UserAuthMapper, User> imple
             return null;
         }
         return token;
+    }
+
+    /**
+     * 删除用户（管理员可删除任何用户，普通用户只能删除自己的账户）
+     * 如果用户是求职者，则同时删除求职者信息
+     *
+     * @param userId 要删除的用户ID
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteUser(Long userId) {
+        // 1. 获取当前登录用户信息
+        Map<String, Object> claims = SecurityContextUtil.getCurrentClaims();
+        Long currentUserId = jwtUtil.getUserIdFromToken(claims);
+        if (currentUserId == null) {
+            throw new BusinessException(ErrorCode.USER_ID_NOT_EXIST);
+        }
+
+        User currentUser = userMapper.selectById(currentUserId);
+        if (currentUser == null) {
+            throw new BusinessException(ErrorCode.USER_ID_NOT_EXIST);
+        }
+
+        // 2. 查询要删除的用户
+        User targetUser = userMapper.selectById(userId);
+        if (targetUser == null) {
+            throw new BusinessException(ErrorCode.USER_ID_NOT_EXIST);
+        }
+
+        // 3. 权限检查：管理员可以删除任何用户，普通用户只能删除自己的账户
+        boolean isAdmin = currentUser.getUserType() != null && currentUser.getUserType() == 3;
+        boolean isSelf = currentUserId.equals(userId);
+
+        if (!isAdmin && !isSelf) {
+            throw new BusinessException(ErrorCode.CANNOT_DELETE_OTHER_USER);
+        }
+
+        if (isAdmin) {
+            log.info("管理员 {} 开始删除用户 {}", currentUserId, userId);
+        } else {
+            log.info("用户 {} 开始删除自己的账户", currentUserId);
+        }
+
+        // 4. 如果用户是求职者，删除求职者相关信息
+        if (targetUser.getUserType() != null && targetUser.getUserType() == 1) {
+            if (jobSeekerService != null) {
+                jobSeekerService.deleteJobSeekerByUserId(userId);
+            } else {
+                log.warn("JobSeekerService 未注入，跳过删除求职者数据");
+            }
+        }
+
+        // 5. 删除用户记录
+        userMapper.deleteById(userId);
+        log.info("删除用户成功，用户ID：{}", userId);
     }
 }

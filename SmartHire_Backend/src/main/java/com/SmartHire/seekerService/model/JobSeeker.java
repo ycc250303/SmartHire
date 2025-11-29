@@ -53,11 +53,6 @@ public class JobSeeker implements Serializable {
     private String currentCity;
 
     /**
-     * 工作年限
-     */
-    private Integer workYears;
-
-    /**
      * 最高学历
      */
     private Integer education;
@@ -66,6 +61,11 @@ public class JobSeeker implements Serializable {
      * 求职状态
      */
     private Integer jobStatus;
+
+    /**
+     * 毕业年份
+     */
+    private String graduationYear;
 
     /**
      * 创建时间

@@ -19,7 +19,7 @@
 
     <!-- 通用查询结果列 -->
     <sql id="Base_Column_List">
-        id, user_id, real_name, birth_date, current_city, work_years, education, job_status, self_introduction, created_at, updated_at
+        id, user_id, real_name, birth_date, current_city, work_years, education, job_status, created_at, updated_at
     </sql>
 
 </mapper>

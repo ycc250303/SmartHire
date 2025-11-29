@@ -4,6 +4,7 @@ import com.SmartHire.seekerService.dto.seekerTableDto.EducationExperienceDTO;
 import com.SmartHire.seekerService.model.EducationExperience;
 import com.SmartHire.seekerService.mapper.EducationExperienceMapper;
 import com.SmartHire.seekerService.service.seekerTableService.EducationExperienceService;
+import com.SmartHire.seekerService.service.JobSeekerService;
 import com.SmartHire.shared.exception.enums.ErrorCode;
 import com.SmartHire.shared.exception.exception.BusinessException;
 import jakarta.validation.Valid;
@@ -11,7 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-
+import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
@@ -32,12 +33,16 @@ public class EducationExperienceServiceImpl
     @Autowired
     private EducationExperienceMapper educationExperienceMapper;
 
+    @Autowired
+    private JobSeekerService jobSeekerService;
+
     /**
      * 添加教育经历
      *
      * @param request
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void addEducationExperience(@Valid EducationExperienceDTO request) {
         Long jobSeekerId = currentSeekerId();
 
@@ -55,6 +60,12 @@ public class EducationExperienceServiceImpl
         educationExperience.setUpdatedAt(new Date());
 
         educationExperienceMapper.insert(educationExperience);
+
+        // 自动更新求职者的最高学历和毕业年份
+        if (jobSeekerService instanceof com.SmartHire.seekerService.service.impl.JobSeekerServiceImpl) {
+            ((com.SmartHire.seekerService.service.impl.JobSeekerServiceImpl) jobSeekerService)
+                    .updateEducationAndGraduationYear(jobSeekerId);
+        }
     }
 
     /**
@@ -86,6 +97,12 @@ public class EducationExperienceServiceImpl
 
         // 执行更新
         educationExperienceMapper.updateById(existingExperience);
+
+        // 自动更新求职者的最高学历和毕业年份
+        if (jobSeekerService instanceof com.SmartHire.seekerService.service.impl.JobSeekerServiceImpl) {
+            ((com.SmartHire.seekerService.service.impl.JobSeekerServiceImpl) jobSeekerService)
+                    .updateEducationAndGraduationYear(jobSeekerId);
+        }
     }
 
     /**
@@ -112,9 +129,16 @@ public class EducationExperienceServiceImpl
      */
     @Override
     public void deleteEducationExperience(Long id) {
-        getOwnedEducation(id);
+        EducationExperience educationExperience = getOwnedEducation(id);
+        Long jobSeekerId = educationExperience.getJobSeekerId();
 
         educationExperienceMapper.deleteById(id);
+
+        // 自动更新求职者的最高学历和毕业年份
+        if (jobSeekerService instanceof com.SmartHire.seekerService.service.impl.JobSeekerServiceImpl) {
+            ((com.SmartHire.seekerService.service.impl.JobSeekerServiceImpl) jobSeekerService)
+                    .updateEducationAndGraduationYear(jobSeekerId);
+        }
     }
 
     /**
@@ -200,7 +224,6 @@ public class EducationExperienceServiceImpl
                 .count() > 0;
     }
 
-    
     private EducationExperience getOwnedEducation(Long id) {
         return requireOwnedEntity(id,
                 educationExperienceMapper::selectById,

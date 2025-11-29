@@ -1,9 +1,9 @@
 package com.SmartHire.seekerService.controller;
 
+import com.SmartHire.seekerService.dto.SeekerDTO;
 import com.SmartHire.seekerService.dto.seekerTableDto.EducationExperienceDTO;
 import com.SmartHire.seekerService.dto.seekerTableDto.JobSeekerExpectationDTO;
 import com.SmartHire.seekerService.dto.seekerTableDto.ProjectExperienceDTO;
-import com.SmartHire.seekerService.dto.RegisterSeekerDTO;
 import com.SmartHire.seekerService.dto.seekerTableDto.ResumeDTO;
 import com.SmartHire.seekerService.dto.seekerTableDto.SkillDTO;
 import com.SmartHire.seekerService.dto.seekerTableDto.WorkExperienceDTO;
@@ -69,7 +69,7 @@ public class SeekerController {
      */
     @PostMapping("/register-seeker")
     @Operation(summary = "注册求职者", description = "填写求职者信息")
-    public Result<?> registerSeeker(@Valid @RequestBody RegisterSeekerDTO request) {
+    public Result<?> registerSeeker(@Valid @RequestBody SeekerDTO request) {
         jobSeekerService.registerSeeker(request);
         return Result.success("求职者信息注册成功");
     }
@@ -82,15 +82,38 @@ public class SeekerController {
     @GetMapping("/get-seeker-info")
     @Operation(summary = "获取求职者信息", description = "获取求职者信息")
     public Result<JobSeeker> getSeekerInfo() {
-        JobSeeker jobSeeker =  jobSeekerService.getSeekerInfo();
-        return Result.success("获取求职者信息成功",jobSeeker);
+        JobSeeker jobSeeker = jobSeekerService.getSeekerInfo();
+        return Result.success("获取求职者信息成功", jobSeeker);
+    }
+
+    /**
+     * 更新求职者信息
+     *
+     * @param request 更新求职者信息
+     * @return
+     */
+    @PatchMapping("/update-seeker-info")
+    @Operation(summary = "更新求职者信息", description = "更新求职者信息，只需要DTO中的一项不为空即可")
+    public Result<?> updateSeekerInfo(
+            @Validated(SeekerDTO.Update.class) @RequestBody SeekerDTO request) {
+        jobSeekerService.updateSeekerInfo(request);
+        return Result.success("更新求职者信息成功");
+    }
+
+    /**
+     * 删除求职者信息
+     *
+     */
+    @DeleteMapping("/delete-seeker")
+    @Operation(summary = "删除求职者信息", description = "删除求职者信息及所有相关数据（级联删除）")
+    public Result<?> deleteSeeker() {
+        jobSeekerService.deleteJobSeeker();
+        return Result.success("删除求职者信息成功");
     }
 
     /**
      * 添加教育经历
      *
-     * @param request
-     * @return
      */
     @PostMapping("/add-education-experience")
     @Operation(summary = "添加教育经历", description = "添加教育经历")
@@ -103,7 +126,6 @@ public class SeekerController {
     /**
      * 获取教育经历列表
      *
-     * @return
      */
     @GetMapping("/get-education-experiences")
     @Operation(summary = "获取教育经历列表", description = "获取当前用户的所有教育经历")
@@ -243,7 +265,8 @@ public class SeekerController {
      */
     @PostMapping("/add-skill")
     @Operation(summary = "添加技能", description = "新增技能信息")
-    public Result<?> addSkill(@Validated(SkillDTO.Create.class) @RequestBody SkillDTO request) {
+    public Result<?> addSkill(
+            @Validated(SkillDTO.Create.class) @RequestBody SkillDTO request) {
         skillService.addSkill(request);
         return Result.success("添加技能成功");
     }

@@ -75,4 +75,12 @@ public interface UserAuthService extends IService<User> {
      * @return 新的令牌
      */
     LoginResponseDTO refreshToken(String refreshToken);
+
+    /**
+     * 删除用户（管理员可删除任何用户，普通用户只能删除自己的账户）
+     * 如果用户是求职者，则同时删除求职者信息
+     *
+     * @param userId 要删除的用户ID
+     */
+    void deleteUser(Long userId);
 }
