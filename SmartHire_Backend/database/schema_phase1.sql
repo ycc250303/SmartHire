@@ -37,8 +37,8 @@ CREATE TABLE `job_seeker` (
     `real_name` VARCHAR(50) NOT NULL COMMENT '真实姓名',
     `birth_date` DATE COMMENT '出生日期',
     `current_city` VARCHAR(50) COMMENT '当前城市',
-    `work_years` INT COMMENT '工作年限',
     `education` TINYINT COMMENT '最高学历 0-高中及以下 1-专科 2-本科 3-硕士 4-博士',
+    `graduation_year` VARCHAR(10) COMMENT '毕业年份',
     `job_status` TINYINT COMMENT '求职状态 0-离校-尽快到岗 1-在校-尽快到岗 2-在校-考虑机会 3-在校-暂不考虑',
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
@@ -61,8 +61,7 @@ CREATE TABLE `job_seeker_expectation` (
     PRIMARY KEY (`id`),
     KEY `idx_job_seeker_id` (`job_seeker_id`),
     KEY `idx_city_status` (`work_city`),
-    KEY `idx_industry` (`expected_industry`),
-    CONSTRAINT `fk_expectation_seeker` FOREIGN KEY (`job_seeker_id`) REFERENCES `job_seeker` (`id`) ON DELETE CASCADE
+    KEY `idx_industry` (`expected_industry`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '求职者期望表';
 -- 1.4 公司信息表
 CREATE TABLE `company` (
@@ -100,9 +99,7 @@ CREATE TABLE `hr_info` (
     `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_user_id` (`user_id`),
-    KEY `idx_company_id` (`company_id`),
-    CONSTRAINT `fk_hr_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE,
-    CONSTRAINT `fk_hr_company` FOREIGN KEY (`company_id`) REFERENCES `company` (`id`) ON DELETE CASCADE
+    KEY `idx_company_id` (`company_id`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = 'HR信息表';
 -- =====================================================
 -- 2. 简历模块 (6张表)
@@ -118,8 +115,7 @@ CREATE TABLE `resume` (
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`id`),
-    KEY `idx_job_seeker_id` (`job_seeker_id`),
-    CONSTRAINT `fk_resume_seeker` FOREIGN KEY (`job_seeker_id`) REFERENCES `job_seeker` (`id`) ON DELETE CASCADE
+    KEY `idx_job_seeker_id` (`job_seeker_id`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '简历基础表（用于存储用户上传的文件简历）';
 -- 2.2 教育经历表（在线简历）
 CREATE TABLE `education_experience` (
@@ -134,8 +130,7 @@ CREATE TABLE `education_experience` (
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`id`),
-    KEY `idx_job_seeker_id` (`job_seeker_id`),
-    CONSTRAINT `fk_education_seeker` FOREIGN KEY (`job_seeker_id`) REFERENCES `job_seeker` (`id`) ON DELETE CASCADE
+    KEY `idx_job_seeker_id` (`job_seeker_id`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '教育经历表（在线简历信息）';
 -- 2.3 工作经历表（在线简历）
 CREATE TABLE `work_experience` (
@@ -152,8 +147,7 @@ CREATE TABLE `work_experience` (
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`id`),
-    KEY `idx_job_seeker_id` (`job_seeker_id`),
-    CONSTRAINT `fk_work_seeker` FOREIGN KEY (`job_seeker_id`) REFERENCES `job_seeker` (`id`) ON DELETE CASCADE
+    KEY `idx_job_seeker_id` (`job_seeker_id`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '工作经历表（在线简历信息）';
 -- 2.4 项目经历表（在线简历）
 CREATE TABLE `project_experience` (
@@ -170,8 +164,7 @@ CREATE TABLE `project_experience` (
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`id`),
-    KEY `idx_job_seeker_id` (`job_seeker_id`),
-    CONSTRAINT `fk_project_seeker` FOREIGN KEY (`job_seeker_id`) REFERENCES `job_seeker` (`id`) ON DELETE CASCADE
+    KEY `idx_job_seeker_id` (`job_seeker_id`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '项目经历表（在线简历信息）';
 -- 2.5 技能表（在线简历）
 CREATE TABLE `skill` (
@@ -183,8 +176,7 @@ CREATE TABLE `skill` (
     `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`id`),
     KEY `idx_job_seeker_id` (`job_seeker_id`),
-    KEY `idx_skill_name` (`skill_name`),
-    CONSTRAINT `fk_skill_seeker` FOREIGN KEY (`job_seeker_id`) REFERENCES `job_seeker` (`id`) ON DELETE CASCADE
+    KEY `idx_skill_name` (`skill_name`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '技能表（在线简历信息）';
 -- 2.6 证书表（在线简历）
 CREATE TABLE `certificate` (
@@ -194,8 +186,7 @@ CREATE TABLE `certificate` (
     `certificate_url` VARCHAR(255) COMMENT '证书图片URL',
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     PRIMARY KEY (`id`),
-    KEY `idx_job_seeker_id` (`job_seeker_id`),
-    CONSTRAINT `fk_certificate_seeker` FOREIGN KEY (`job_seeker_id`) REFERENCES `job_seeker` (`id`) ON DELETE CASCADE
+    KEY `idx_job_seeker_id` (`job_seeker_id`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '证书表（在线简历信息）';
 -- =====================================================
 -- 3. 职位模块 (2张表)
