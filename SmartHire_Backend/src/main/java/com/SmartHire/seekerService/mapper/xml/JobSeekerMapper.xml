@@ -9,17 +9,16 @@
         <result column="real_name" property="realName" />
         <result column="birth_date" property="birthDate" />
         <result column="current_city" property="currentCity" />
-        <result column="work_years" property="workYears" />
         <result column="education" property="education" />
+        <result column="graduation_year" property="graduationYear" />
         <result column="job_status" property="jobStatus" />
-        <result column="self_introduction" property="selfIntroduction" />
         <result column="created_at" property="createdAt" />
         <result column="updated_at" property="updatedAt" />
     </resultMap>
 
     <!-- 通用查询结果列 -->
     <sql id="Base_Column_List">
-        id, user_id, real_name, birth_date, current_city, work_years, education, job_status, created_at, updated_at
+        id, user_id, real_name, birth_date, current_city, education, graduation_year, job_status, created_at, updated_at
     </sql>
 
 </mapper>

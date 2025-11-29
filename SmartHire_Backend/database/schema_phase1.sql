@@ -126,7 +126,6 @@ CREATE TABLE `education_experience` (
     `education` TINYINT COMMENT '学历 0-高中及以下 1-专科 2-本科 3-硕士 4-博士',
     `start_date` DATE NOT NULL COMMENT '开始日期',
     `end_date` DATE COMMENT '结束日期',
-    `is_current` TINYINT DEFAULT 0 COMMENT '是否在读',
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`id`),
@@ -238,14 +237,10 @@ CREATE TABLE `job_skill_requirement` (
 -- 4.1 投递/推荐记录表
 CREATE TABLE `application` (
     `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '记录ID',
-    
     `job_id` BIGINT NOT NULL COMMENT '职位ID',
     `job_seeker_id` BIGINT NOT NULL COMMENT '求职者ID',
-
     `resume_id` BIGINT DEFAULT NULL COMMENT '简历ID（投递时必填，推荐时可为空）',
-
     `initiator` TINYINT NOT NULL COMMENT '发起方：0-求职者投递 1-HR推荐',
-
     `status` TINYINT DEFAULT 0 COMMENT '状态：
         0-已投递/已推荐
         1-已查看
@@ -254,13 +249,10 @@ CREATE TABLE `application` (
         4-已录用
         5-已拒绝
         6-已撤回',
-    
     `match_score` DECIMAL(5, 2) COMMENT '匹配度分数（0-100）',
     `match_analysis` TEXT COMMENT '匹配分析（JSON格式）',
-
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_job_seeker_job` (`job_id`, `job_seeker_id`),
     KEY `idx_job_seeker_id` (`job_seeker_id`),
@@ -291,30 +283,22 @@ CREATE TABLE `candidate_favorite` (
 CREATE TABLE `chat_message` (
     `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '消息ID',
     `application_id` BIGINT NOT NULL COMMENT '投递/推荐记录ID',
-
     `sender_id` BIGINT NOT NULL COMMENT '发送者用户ID',
     `receiver_id` BIGINT NOT NULL COMMENT '接收者用户ID',
-
     `message_type` TINYINT DEFAULT 1 COMMENT '消息类型：1-文本 2-图片 3-文件 4-语音 5-视频 6-系统通知 7-卡片消息',
-
     `content` TEXT COMMENT '消息内容',
     `file_url` VARCHAR(255) COMMENT '文件/图片/语音/视频URL',
-
     `reply_to` BIGINT DEFAULT NULL COMMENT '引用的消息ID',
-    
     `is_read` TINYINT DEFAULT 0 COMMENT '是否已读',
     `is_flagged` TINYINT DEFAULT 0 COMMENT '是否被标记为敏感',
     `is_deleted` TINYINT DEFAULT 0 COMMENT '是否被逻辑删除/撤回',
-
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '发送时间',
-
     PRIMARY KEY (`id`),
     KEY `idx_application_id` (`application_id`),
     KEY `idx_sender_receiver` (`sender_id`, `receiver_id`),
     KEY `idx_application_created` (`application_id`, `created_at`),
     KEY `idx_created_at` (`created_at`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '聊天消息表';
-
 -- 5.2 面试安排表
 CREATE TABLE `interview` (
     `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '面试ID',

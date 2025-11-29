@@ -2,6 +2,7 @@ package com.SmartHire.seekerService.model;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -11,7 +12,7 @@ import lombok.Setter;
 
 /**
  * <p>
- * 简历基础表
+ * 简历基础表（用于存储用户上传的文件简历）
  * </p>
  *
  * @author SmartHire Team
@@ -19,6 +20,7 @@ import lombok.Setter;
  */
 @Getter
 @Setter
+@TableName("resume")
 public class Resume implements Serializable {
 
     @Serial

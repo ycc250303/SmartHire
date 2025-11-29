@@ -5,7 +5,7 @@
     <!-- 通用查询映射结果 -->
     <resultMap id="BaseResultMap" type="com.SmartHire.seekerService.model.EducationExperience">
         <id column="id" property="id" />
-        <result column="resume_id" property="resumeId" />
+        <result column="job_seeker_id" property="jobSeekerId" />
         <result column="school_name" property="schoolName" />
         <result column="major" property="major" />
         <result column="education" property="education" />
@@ -18,7 +18,7 @@
 
     <!-- 通用查询结果列 -->
     <sql id="Base_Column_List">
-        id, resume_id, school_name, major, education, start_date, end_date, is_current, created_at, updated_at
+        id, job_seeker_id, school_name, major, education, start_date, end_date, is_current, created_at, updated_at
     </sql>
 
 </mapper>
