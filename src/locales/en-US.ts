@@ -24,6 +24,8 @@ export default {
     editSkill: 'Skill',
     uploadResume: 'Upload Resume',
     editResume: 'Edit Resume',
+    selectUniversity: 'Select University',
+    selectMajor: 'Select Major',
   },
   pages: {
     jobs: {
@@ -218,9 +220,9 @@ export default {
           addTitle: 'Add Education',
           editTitle: 'Edit Education',
           schoolName: 'School',
-          schoolNamePlaceholder: 'Enter school name',
+          schoolNamePlaceholder: 'Select school name',
           major: 'Major',
-          majorPlaceholder: 'Enter major',
+          majorPlaceholder: 'Select major',
           education: 'Degree',
           startYear: 'Start Year',
           endYear: 'End Year',
@@ -237,6 +239,14 @@ export default {
           deleteError: 'Delete failed',
           deleteConfirm: 'Delete this education?',
           dateInvalid: 'End year cannot be earlier than start year',
+        },
+        university: {
+          searchPlaceholder: 'Search university name',
+          noResults: 'No universities found',
+        },
+        major: {
+          searchPlaceholder: 'Search major name',
+          noResults: 'No majors found',
         },
         skill: {
           title: 'Skill',

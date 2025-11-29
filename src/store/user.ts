@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { getCurrentUserInfo, type UserInfo } from '@/services/api/user';
 import { clearToken } from '@/services/http';
+import { logout as logoutApi } from '@/services/api/auth';
 
 interface UserState {
   userInfo: UserInfo | null;
@@ -41,15 +42,21 @@ export const useUserStore = defineStore('user', {
       this.isLoaded = false;
     },
 
-    logout(): void {
-      this.clearUserInfo();
-      clearToken();
-      uni.redirectTo({
-        url: '/pages/auth/login',
-        fail: () => {
-          console.error('Failed to redirect to login page');
-        }
-      });
+    async logout(): Promise<void> {
+      try {
+        await logoutApi();
+      } catch (error) {
+        console.error('Failed to call logout API:', error);
+      } finally {
+        this.clearUserInfo();
+        clearToken();
+        uni.redirectTo({
+          url: '/pages/auth/login',
+          fail: () => {
+            console.error('Failed to redirect to login page');
+          }
+        });
+      }
     },
   },
 });

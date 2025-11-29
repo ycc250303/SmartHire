@@ -63,7 +63,7 @@ import { onLoad } from '@dcloudio/uni-app';
 import { t } from '@/locales';
 import { useNavigationTitle } from '@/utils/useNavigationTitle';
 import { login, type LoginParams } from '@/services/api/auth';
-import { setTokenWithExpiry } from '@/services/http';
+import { setTokens } from '@/services/http';
 
 useNavigationTitle('navigation.login');
 
@@ -117,12 +117,16 @@ async function handleLogin() {
   loading.value = true;
 
   try {
-    const token = await login({
+    const loginResponse = await login({
       username: formData.value.username.trim(),
       password: formData.value.password,
     });
 
-    setTokenWithExpiry(token);
+    setTokens(
+      loginResponse.accessToken,
+      loginResponse.refreshToken,
+      loginResponse.expiresIn
+    );
 
     uni.showToast({
       title: t('auth.login.loginSuccess'),

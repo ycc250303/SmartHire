@@ -148,6 +148,20 @@
         "navigationBarTextStyle": "black",
         "navigationBarBackgroundColor": "#ffffff"
       }
+    },
+    {
+      "path": "pages/profile/resume/edit/university-selector",
+      "style": {
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/profile/resume/edit/major-selector",
+      "style": {
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
     }
   ],
   "globalStyle": {

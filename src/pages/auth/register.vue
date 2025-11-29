@@ -124,7 +124,7 @@ import { onLoad } from '@dcloudio/uni-app';
 import { t } from '@/locales';
 import { useNavigationTitle } from '@/utils/useNavigationTitle';
 import { Gender, UserType, register, sendVerificationCode, login, type RegisterParams } from '@/services/api/auth';
-import { setTokenWithExpiry } from '@/services/http';
+import { setTokens } from '@/services/http';
 
 useNavigationTitle('navigation.register');
 
@@ -314,12 +314,16 @@ async function handleRegister() {
       duration: 1000,
     });
 
-    const token = await login({
+    const loginResponse = await login({
       username: params.username,
       password: params.password,
     });
 
-    setTokenWithExpiry(token);
+    setTokens(
+      loginResponse.accessToken,
+      loginResponse.refreshToken,
+      loginResponse.expiresIn
+    );
 
     uni.showToast({
       title: t('auth.login.loginSuccess'),

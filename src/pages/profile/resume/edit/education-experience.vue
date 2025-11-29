@@ -8,22 +8,22 @@
       <view class="form-group">
         <view class="form-item">
           <text class="form-label">{{ t('pages.resume.edit.education.schoolName') }}</text>
-          <input
-            class="form-input"
-            v-model="formData.schoolName"
-            :placeholder="t('pages.resume.edit.education.schoolNamePlaceholder')"
-            placeholder-class="input-placeholder"
-          />
+          <view class="picker-trigger" @tap="openUniversitySelector">
+            <text :class="formData.schoolName ? 'picker-text' : 'picker-placeholder'">
+              {{ formData.schoolName || t('pages.resume.edit.education.schoolNamePlaceholder') }}
+            </text>
+            <text class="picker-arrow">›</text>
+          </view>
         </view>
 
         <view class="form-item">
           <text class="form-label">{{ t('pages.resume.edit.education.major') }}</text>
-          <input
-            class="form-input"
-            v-model="formData.major"
-            :placeholder="t('pages.resume.edit.education.majorPlaceholder')"
-            placeholder-class="input-placeholder"
-          />
+          <view class="picker-trigger" @tap="openMajorSelector">
+            <text :class="formData.major ? 'picker-text' : 'picker-placeholder'">
+              {{ formData.major || t('pages.resume.edit.education.majorPlaceholder') }}
+            </text>
+            <text class="picker-arrow">›</text>
+          </view>
         </view>
 
         <view class="form-item">
@@ -119,7 +119,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { onLoad } from '@dcloudio/uni-app';
+import { onLoad, onShow } from '@dcloudio/uni-app';
 import { t } from '@/locales';
 import { useNavigationTitle } from '@/utils/useNavigationTitle';
 import type { AddEducationExperienceParams } from '@/services/api/seeker';
@@ -178,6 +178,42 @@ onLoad((options: any) => {
     loadData();
   }
 });
+
+const selectedUniversity = ref<string | null>(null);
+const selectedMajor = ref<string | null>(null);
+
+onShow(() => {
+  if (selectedUniversity.value) {
+    formData.value.schoolName = selectedUniversity.value;
+    selectedUniversity.value = null;
+  }
+  if (selectedMajor.value) {
+    formData.value.major = selectedMajor.value;
+    selectedMajor.value = null;
+  }
+});
+
+function openUniversitySelector() {
+  uni.navigateTo({
+    url: '/pages/profile/resume/edit/university-selector',
+    events: {
+      selectUniversity: (universityName: string) => {
+        selectedUniversity.value = universityName;
+      },
+    },
+  });
+}
+
+function openMajorSelector() {
+  uni.navigateTo({
+    url: '/pages/profile/resume/edit/major-selector',
+    events: {
+      selectMajor: (majorName: string) => {
+        selectedMajor.value = majorName;
+      },
+    },
+  });
+}
 
 async function loadData() {
   if (!educationId.value) return;
@@ -399,6 +435,25 @@ async function handleDelete() {
   color: #C6C6C8;
   font-weight: 300;
   margin-left: 16rpx;
+}
+
+.picker-trigger {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.picker-text {
+  font-size: 30rpx;
+  color: #000000;
+  flex: 1;
+}
+
+.picker-placeholder {
+  font-size: 30rpx;
+  color: #C7C7CC;
+  flex: 1;
 }
 
 

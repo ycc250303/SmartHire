@@ -35,6 +35,18 @@ export interface LoginParams {
   password: string;
 }
 
+export interface LoginResponse {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+}
+
+export interface RefreshTokenResponse {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+}
+
 /**
  * Send verification code to email
  */
@@ -73,13 +85,35 @@ export function register(params: RegisterParams): Promise<null> {
 
 /**
  * User login
- * @returns JWT token
+ * @returns Login response with accessToken, refreshToken and expiresIn
  */
-export function login(params: LoginParams): Promise<string> {
-  return http<string>({
+export function login(params: LoginParams): Promise<LoginResponse> {
+  return http<LoginResponse>({
     url: '/api/user-auth/login',
     method: 'POST',
     data: params,
+    skipAuth: true,
+  });
+}
+
+/**
+ * User logout
+ */
+export function logout(): Promise<null> {
+  return http<null>({
+    url: '/api/user-auth/logout',
+    method: 'POST',
+  });
+}
+
+/**
+ * Refresh access token using refresh token
+ * @returns New tokens with accessToken, refreshToken and expiresIn
+ */
+export function refreshToken(): Promise<RefreshTokenResponse> {
+  return http<RefreshTokenResponse>({
+    url: '/api/user-auth/refresh-token',
+    method: 'POST',
     skipAuth: true,
   });
 }

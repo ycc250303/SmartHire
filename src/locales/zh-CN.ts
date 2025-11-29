@@ -24,6 +24,9 @@ export default {
     editSkill: '技能',
     uploadResume: '上传简历',
     editResume: '编辑简历',
+    selectUniversity: '选择大学',
+    selectMajor: '选择专业',
+    selectUniversity: '选择大学',
   },
   pages: {
     jobs: {
@@ -217,7 +220,7 @@ export default {
           addTitle: '添加教育经历',
           editTitle: '编辑教育经历',
           schoolName: '学校名称',
-          schoolNamePlaceholder: '请输入学校名称',
+          schoolNamePlaceholder: '请选择学校名称',
           major: '专业',
           majorPlaceholder: '请输入专业',
           education: '学历',
@@ -236,6 +239,14 @@ export default {
           deleteError: '删除失败',
           deleteConfirm: '确定要删除这条教育经历吗？',
           dateInvalid: '结束年份不能早于开始年份',
+        },
+        university: {
+          searchPlaceholder: '搜索大学名称',
+          noResults: '未找到相关大学',
+        },
+        major: {
+          searchPlaceholder: '搜索专业名称',
+          noResults: '未找到相关专业',
         },
         skill: {
           title: '技能',
