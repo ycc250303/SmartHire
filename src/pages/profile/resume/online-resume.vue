@@ -244,12 +244,28 @@ const displayMeta = computed(() => {
   const info = resume.value?.seekerInfo;
   const parts: string[] = [];
   
+  if (info?.gender !== undefined && info.gender !== null) {
+    const genderMap: Record<number, string> = {
+      0: t('pages.resume.online.male'),
+      1: t('pages.resume.online.female'),
+      2: t('pages.resume.online.other'),
+    };
+    parts.push(genderMap[info.gender] || '');
+  }
+  
+  
   if (info?.birthDate) {
     const age = calculateAge(info.birthDate);
     if (age > 0) {
       parts.push(`${age}${t('pages.resume.online.ageUnit')}`);
     }
   }
+  
+  
+  if (info?.city) {
+    parts.push(info.city);
+  }
+  
   
   if (educationList.value.length > 0) {
     const currentEducation = educationList.value.find(edu => edu.isCurrent === 1);
@@ -275,7 +291,7 @@ const displayPhone = computed(() => {
   if (!phone) return null;
   
   if (phone.length === 11) {
-    return `${phone.substring(0, 3)} ${'*'.repeat(6)} ${phone.substring(9)}`;
+    return `${phone.substring(0, 3)} ${phone.substring(3, 7)} ${phone.substring(7)}`;
   }
   return phone;
 });
@@ -532,16 +548,16 @@ function getSkillLevelText(level?: number | null): string {
 }
 
 .resume-content {
-  padding: 32rpx;
+  padding: 2;
   flex: 1;
 }
 
 .resume-card {
   background-color: #FFFFFF;
-  border-radius: 20rpx;
-  padding: 32rpx;
-  margin-bottom: 32rpx;
-  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+  border-radius: 0;
+  padding: 0;
+  margin-bottom: 0;
+  box-shadow: none;
 }
 
 .header-card {
@@ -549,6 +565,9 @@ function getSkillLevelText(level?: number | null): string {
   justify-content: space-between;
   align-items: flex-start;
   position: relative;
+  padding: 40rpx 32rpx 32rpx;
+  margin-bottom: 20rpx;
+  background-color: #FFFFFF;
 }
 
 .header-left {
@@ -558,8 +577,8 @@ function getSkillLevelText(level?: number | null): string {
 }
 
 .header-avatar {
-  width: 112rpx;
-  height: 112rpx;
+  width: 120rpx;
+  height: 120rpx;
   border-radius: 50%;
   background-color: vars.$soft-blue;
   display: flex;
@@ -567,6 +586,7 @@ function getSkillLevelText(level?: number | null): string {
   justify-content: center;
   overflow: hidden;
   flex-shrink: 0;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.08);
 }
 
 .avatar-image {
@@ -602,17 +622,24 @@ function getSkillLevelText(level?: number | null): string {
 }
 
 .candidate-name {
-  font-size: 36rpx;
+  font-size: 40rpx;
   font-weight: 600;
-  color: vars.$text-color;
+  color: #000000;
+  letter-spacing: -0.5rpx;
 }
 
 .edit-icon {
-  width: 40rpx;
-  height: 40rpx;
+  width: 44rpx;
+  height: 44rpx;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+  
+  &:active {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
 }
 
 .icon-text {
@@ -621,9 +648,10 @@ function getSkillLevelText(level?: number | null): string {
 }
 
 .candidate-meta {
-  font-size: 24rpx;
-  color: vars.$text-muted;
-  line-height: 1.4;
+  font-size: 28rpx;
+  color: #8E8E93;
+  line-height: 1.5;
+  margin-top: 8rpx;
 }
 
 .candidate-contact {
@@ -631,18 +659,20 @@ function getSkillLevelText(level?: number | null): string {
 }
 
 .candidate-phone {
-  font-size: 24rpx;
-  color: vars.$text-muted;
-  line-height: 1.4;
+  font-size: 28rpx;
+  color: #8E8E93;
+  line-height: 1.5;
+  margin-top: 4rpx;
 }
 
 .student-badge {
   position: absolute;
-  top: vars.$spacing-lg;
-  right: vars.$spacing-lg;
+  top: 40rpx;
+  right: 32rpx;
   background: linear-gradient(135deg, vars.$primary-color, vars.$soft-blue);
-  border-radius: 32rpx;
-  padding: 8rpx 20rpx;
+  border-radius: 20rpx;
+  padding: 8rpx 16rpx;
+  box-shadow: 0 2rpx 8rpx rgba(75, 163, 255, 0.3);
 }
 
 .badge-text {
@@ -654,6 +684,9 @@ function getSkillLevelText(level?: number | null): string {
 .section {
   display: flex;
   flex-direction: column;
+  padding: 32rpx;
+  margin-bottom: 20rpx;
+  background-color: #FFFFFF;
 }
 
 .section-header {
@@ -664,9 +697,10 @@ function getSkillLevelText(level?: number | null): string {
 }
 
 .section-title {
-  font-size: 32rpx;
+  font-size: 34rpx;
   font-weight: 600;
-  color: vars.$text-color;
+  color: #000000;
+  letter-spacing: -0.5rpx;
 }
 
 .section-edit {
@@ -676,11 +710,17 @@ function getSkillLevelText(level?: number | null): string {
 }
 
 .edit-icon-small {
-  width: 36rpx;
-  height: 36rpx;
+  width: 40rpx;
+  height: 40rpx;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+  
+  &:active {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
 }
 
 .icon-text-small {
@@ -689,13 +729,19 @@ function getSkillLevelText(level?: number | null): string {
 }
 
 .add-button {
-  width: 40rpx;
-  height: 40rpx;
+  width: 48rpx;
+  height: 48rpx;
   border-radius: 50%;
   background-color: vars.$primary-color;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 2rpx 8rpx rgba(75, 163, 255, 0.3);
+  transition: transform 0.2s;
+  
+  &:active {
+    transform: scale(0.95);
+  }
 }
 
 .add-icon {
@@ -719,11 +765,13 @@ function getSkillLevelText(level?: number | null): string {
 .expectation-item {
   background-color: #F9F9F9;
   border-radius: 16rpx;
-  padding: 24rpx;
-  transition: background-color 0.2s;
+  padding: 28rpx;
+  transition: all 0.2s;
+  border: 1rpx solid #E5E5EA;
   
   &:active {
     background-color: #F2F2F7;
+    transform: scale(0.98);
   }
 }
 
@@ -763,11 +811,13 @@ function getSkillLevelText(level?: number | null): string {
 .entry-card {
   background-color: #F9F9F9;
   border-radius: 16rpx;
-  padding: 24rpx;
-  transition: background-color 0.2s;
+  padding: 28rpx;
+  transition: all 0.2s;
+  border: 1rpx solid #E5E5EA;
   
   &:active {
     background-color: #F2F2F7;
+    transform: scale(0.98);
   }
 }
 
@@ -832,10 +882,12 @@ function getSkillLevelText(level?: number | null): string {
   flex-direction: column;
   min-width: 160rpx;
   gap: 8rpx;
-  transition: background-color 0.2s;
+  transition: all 0.2s;
+  border: 1rpx solid #E5E5EA;
   
   &:active {
     background-color: #F2F2F7;
+    transform: scale(0.95);
   }
 }
 

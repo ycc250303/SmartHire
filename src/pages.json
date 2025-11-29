@@ -10,6 +10,15 @@
       }
     },
     {
+      "path": "pages/index/search/index",
+      "style": {
+        "navigationBarTitleText": "搜索",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff",
+        "navigationStyle": "custom"
+      }
+    },
+    {
       "path": "pages/chat/index",
       "style": {
         "navigationBarTitleText": "消息",

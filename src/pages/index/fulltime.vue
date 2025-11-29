@@ -8,6 +8,14 @@
 
 <script setup lang="ts">
 import { t } from '@/locales';
+
+type FilterType = 'recommended' | 'nearby' | 'latest';
+
+interface Props {
+  filter: FilterType;
+}
+
+defineProps<Props>();
 </script>
 
 <style lang="scss" scoped>

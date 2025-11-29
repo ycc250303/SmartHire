@@ -54,11 +54,9 @@
 
         <view class="form-item">
           <text class="form-label">{{ t('pages.resume.edit.basicInfo.city') }}</text>
-          <input
-            class="form-input"
+          <CityPicker
             v-model="formData.city"
             :placeholder="t('pages.resume.edit.basicInfo.cityPlaceholder')"
-            placeholder-class="input-placeholder"
           />
         </view>
       </view>
@@ -95,6 +93,7 @@ import { t } from '@/locales';
 import { useNavigationTitle } from '@/utils/useNavigationTitle';
 import type { SeekerInfo } from '@/services/api/seeker';
 import { getSeekerInfo, updateSeekerInfo, registerSeeker } from '@/services/api/seeker';
+import CityPicker from '@/components/common/CityPicker.vue';
 
 useNavigationTitle('navigation.editBasicInfo');
 

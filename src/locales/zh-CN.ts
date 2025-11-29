@@ -8,6 +8,7 @@ export default {
     jobs: '岗位',
     chat: '消息',
     profile: '我的',
+    search: '搜索',
     login: '登录',
     register: '注册',
     help: '帮助',
@@ -328,6 +329,11 @@ export default {
     bachelorDegree: '本科',
     masterDegree: '硕士',
     doctorDegree: '博士'
+  },
+  common: {
+    cancel: '取消',
+    confirm: '确定',
+    selectCity: '选择城市',
   },
   auth: {
     login: {

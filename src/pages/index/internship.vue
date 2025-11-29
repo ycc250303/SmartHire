@@ -1,17 +1,5 @@
 <template>
   <view class="internship-page">
-    <view class="filter-section">
-      <view 
-        v-for="filter in filters" 
-        :key="filter.value"
-        class="filter-item"
-        :class="{ active: currentFilter === filter.value }"
-        @click="handleFilterChange(filter.value)"
-      >
-        <text class="filter-text">{{ filter.label }}</text>
-      </view>
-    </view>
-
     <view class="job-list" v-if="jobs.length > 0">
       <JobCard
         v-for="job in jobs"
@@ -32,23 +20,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { t } from '@/locales';
 import { getInternJobRecommendations, type InternJobItem } from '@/services/api/recommendations';
 import JobCard from '@/components/common/JobCard.vue';
 
 type FilterType = 'recommended' | 'nearby' | 'latest';
 
+interface Props {
+  filter: FilterType;
+}
+
+const props = defineProps<Props>();
+
 const jobs = ref<InternJobItem[]>([]);
 const loading = ref(false);
 const error = ref<string | null>(null);
-const currentFilter = ref<FilterType>('recommended');
-
-const filters = computed(() => [
-  { value: 'recommended' as FilterType, label: t('pages.jobs.recommended') },
-  { value: 'nearby' as FilterType, label: t('pages.jobs.nearby') },
-  { value: 'latest' as FilterType, label: t('pages.jobs.latest') },
-]);
 
 const loadJobs = async () => {
   loading.value = true;
@@ -56,6 +43,8 @@ const loadJobs = async () => {
   try {
     const response = await getInternJobRecommendations();
     jobs.value = response.jobs;
+    // Filter logic will be implemented when API is ready
+    // For now, we just load all jobs
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Unknown error';
   } finally {
@@ -63,10 +52,10 @@ const loadJobs = async () => {
   }
 };
 
-const handleFilterChange = (filter: FilterType) => {
-  currentFilter.value = filter;
-  // Filter logic will be implemented when API is ready
-};
+// Watch for filter changes and reload jobs
+watch(() => props.filter, () => {
+  loadJobs();
+}, { immediate: false });
 
 onMounted(() => {
   loadJobs();
@@ -79,40 +68,6 @@ onMounted(() => {
 .internship-page {
   display: flex;
   flex-direction: column;
-}
-
-.filter-section {
-  display: flex;
-  gap: vars.$spacing-lg;
-  padding: vars.$spacing-md vars.$spacing-xl;
-  margin-bottom: vars.$spacing-sm;
-}
-
-.filter-item {
-  position: relative;
-  cursor: pointer;
-}
-
-.filter-text {
-  font-size: 28rpx;
-  color: vars.$text-muted;
-  transition: color 0.3s;
-}
-
-.filter-item.active .filter-text {
-  color: vars.$text-color;
-  font-weight: 600;
-}
-
-.filter-item.active::after {
-  content: '';
-  position: absolute;
-  bottom: -8rpx;
-  left: 0;
-  right: 0;
-  height: 6rpx;
-  background-color: vars.$primary-color;
-  border-radius: 3rpx;
 }
 
 .job-list {

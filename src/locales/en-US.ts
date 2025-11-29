@@ -8,6 +8,7 @@ export default {
     jobs: 'Jobs',
     chat: 'Messages',
     profile: 'Profile',
+    search: 'Search',
     login: 'Login',
     register: 'Register',
     help: 'Help',
@@ -330,6 +331,11 @@ export default {
     bachelorDegree: 'Bachelor',
     masterDegree: 'Master',
     doctorDegree: 'Doctor'
+  },
+  common: {
+    cancel: 'Cancel',
+    confirm: 'Confirm',
+    selectCity: 'Select City',
   },
   auth: {
     login: {

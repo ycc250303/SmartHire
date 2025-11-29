@@ -28,11 +28,9 @@
 
         <view class="form-item">
           <text class="form-label">{{ t('pages.resume.edit.expectation.workCity') }}</text>
-          <input
-            class="form-input"
+          <CityPicker
             v-model="formData.workCity"
             :placeholder="t('pages.resume.edit.expectation.workCityPlaceholder')"
-            placeholder-class="input-placeholder"
           />
         </view>
 
@@ -87,6 +85,7 @@ import {
   deleteJobSeekerExpectation,
   getJobSeekerExpectations,
 } from '@/services/api/seeker';
+import CityPicker from '@/components/common/CityPicker.vue';
 
 useNavigationTitle('navigation.editExpectation');
 
