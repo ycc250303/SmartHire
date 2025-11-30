@@ -3,6 +3,8 @@ package com.SmartHire.codeGenerator;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.generator.FastAutoGenerator;
 import com.baomidou.mybatisplus.generator.config.rules.DateType;
+import org.yaml.snakeyaml.Yaml;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -10,7 +12,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
-import org.yaml.snakeyaml.Yaml;
 
 /**
  * SeekerService 代码生成器
@@ -18,13 +19,13 @@ import org.yaml.snakeyaml.Yaml;
  * @author SmartHire Team
  *         重要提醒：生成的代码会覆盖已存在的文件，请谨慎操作！
  */
-public class SeekerCodeGenerator {
+public class RecruitmentCodeGenerator {
 
     private static final Path BASE_RESOURCE_PATH = Paths.get("src", "main", "resources");
     private static final Path APPLICATION_YML = BASE_RESOURCE_PATH.resolve("application.yml");
     private static final Path APPLICATION_LOCAL_YML = BASE_RESOURCE_PATH.resolve("application-local.yml");
     // TODO：需要修改yml文件名
-    private static final Path SEEKER_SERVICE_YML = BASE_RESOURCE_PATH.resolve("application-seeker-service.yml");
+    private static final Path SEEKER_SERVICE_YML = BASE_RESOURCE_PATH.resolve("application-recruitment-service.yml");
 
     public static void main(String[] args) {
         DatabaseConfig dbConfig = loadDatabaseConfig();
@@ -40,16 +41,14 @@ public class SeekerCodeGenerator {
                         .dateType(DateType.ONLY_DATE))
                 .packageConfig(builder -> builder
                         // TODO：需要修改服务文件夹名称
-                        .parent("com.SmartHire.seekerService2")
+                        .parent("com.SmartHire.recruitmentService")
                         .entity("model")
                         .mapper("mapper")
                         .service("service")
                         .serviceImpl("service.impl"))
                 .strategyConfig(builder -> {
                     // TODO：需要修改服务相关的数据库表
-                    builder.addInclude("job_seeker", "job_seeker_expectation", "resume",
-                            "education_experience",
-                            "work_experience", "project_experience");
+                    builder.addInclude("application");
                     builder.entityBuilder()
                             .enableLombok()
                             .idType(IdType.AUTO);
@@ -64,6 +63,8 @@ public class SeekerCodeGenerator {
                             .disable();
                 })
                 .execute();
+
+        generateRecruitmentController(projectPath);
     }
 
     @SuppressWarnings("unchecked")
@@ -119,10 +120,10 @@ public class SeekerCodeGenerator {
             String content = """
                     spring:
                       application:
-                        name: SmartHire_SeekerService
+                        name: SmartHire_RecruitmentService
 
                     server:
-                      port: 8082
+                      port: 8084
                       servlet:
                         context-path: /smarthire/api
 
@@ -134,32 +135,32 @@ public class SeekerCodeGenerator {
         }
     }
 
-    private static void generateSeekerController(String projectPath) {
+    private static void generateRecruitmentController(String projectPath) {
         // TODO:修改controller文件的路径
         Path controllerPath = Paths.get(projectPath, "src", "main", "java",
-                "com", "SmartHire", "seekerService", "controller", "SeekerController.java");
+                "com", "SmartHire", "recruitmentService", "controller", "RecruitmentController.java");
 
         try {
             Files.createDirectories(controllerPath.getParent());
 
             // TODO：需要修改controller文件内容
             String content = """
-                    package com.SmartHire.seekerService.controller;
+                    package com.SmartHire.recruitmentService.controller;
 
                     import org.springframework.web.bind.annotation.RequestMapping;
                     import org.springframework.web.bind.annotation.RestController;
 
                     /**
                      * <p>
-                     * 求职者服务统一控制器
+                     * 投递/推荐岗位服务统一控制器
                      * </p>
                      *
                      * @author SmartHire Team
-                     * @since 2025-11-19
+                     * @since 2025-11-30
                      */
                     @RestController
-                    @RequestMapping("/seeker")
-                    public class SeekerController {
+                    @RequestMapping("/recruitment")
+                    public class RecruitmentController {
 
                     }
                     """;
