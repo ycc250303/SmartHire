@@ -20,9 +20,9 @@ public class SubmitResumeDTO {
     private Long jobId;
 
     /**
-     * 简历ID
+     * 简历ID（附件简历）
+     * 如果为null，则投递在线简历；如果不为null，则投递指定的附件简历
      */
-    @NotNull(message = "简历ID不能为空")
     @Positive(message = "简历ID必须大于0")
     private Long resumeId;
 }

@@ -14,6 +14,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 
@@ -36,9 +37,10 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
     private ResumeService resumeService;
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void submitResume(SubmitResumeDTO request) {
         // 参数校验
-        if (request == null || request.getJobId() == null || request.getResumeId() == null) {
+        if (request == null || request.getJobId() == null) {
             throw new BusinessException(ErrorCode.VALIDATION_ERROR);
         }
 
@@ -51,14 +53,17 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
             throw new BusinessException(ErrorCode.SEEKER_NOT_EXIST);
         }
 
-        // 校验简历是否存在且属于当前用户
-        Resume resume = resumeService.getById(resumeId);
-        if (resume == null) {
-            throw new BusinessException(ErrorCode.RESUME_NOT_EXIST);
+        // 如果提供了简历ID，则校验附件简历是否存在且属于当前用户
+        if (resumeId != null) {
+            Resume resume = resumeService.getById(resumeId);
+            if (resume == null) {
+                throw new BusinessException(ErrorCode.RESUME_NOT_EXIST);
+            }
+            if (!resume.getJobSeekerId().equals(seekerId)) {
+                throw new BusinessException(ErrorCode.RESUME_NOT_BELONG_TO_USER);
+            }
         }
-        if (!resume.getJobSeekerId().equals(seekerId)) {
-            throw new BusinessException(ErrorCode.RESUME_NOT_BELONG_TO_USER);
-        }
+        // 如果 resumeId 为 null，则投递在线简历（不需要额外校验）
 
         // 检查是否已投递过该职位（避免重复投递）
         long existingCount = lambdaQuery()
@@ -73,7 +78,7 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
         Application application = new Application();
         application.setJobId(jobId);
         application.setJobSeekerId(seekerId);
-        application.setResumeId(resumeId);
+        application.setResumeId(resumeId); // 可能为null（在线简历）
         application.setInitiator((byte) 0); // 0-求职者投递
         application.setStatus((byte) 0); // 0-已投递/已推荐
 
@@ -88,6 +93,9 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
             throw new BusinessException(ErrorCode.SYSTEM_ERROR);
         }
 
-        log.info("投递简历成功, jobId={}, seekerId={}, resumeId={}", jobId, seekerId, resumeId);
+        String resumeType = resumeId != null ? "附件简历" : "在线简历";
+        log.info("投递{}成功, jobId={}, seekerId={}, resumeId={}", resumeType, jobId, seekerId, resumeId);
+
+        // TODO：添加消息通知并发送给HR
     }
 }

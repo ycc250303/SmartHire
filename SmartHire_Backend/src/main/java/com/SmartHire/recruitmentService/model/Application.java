@@ -39,7 +39,9 @@ public class Application implements Serializable {
     private Long jobSeekerId;
 
     /**
-     * 简历ID（投递时必填，推荐时可为空）
+     * 简历ID（附件简历ID）
+     * 如果为null，表示投递的是在线简历；如果不为null，表示投递的是指定的附件简历
+     * 推荐时可为空
      */
     private Long resumeId;
 
@@ -49,7 +51,7 @@ public class Application implements Serializable {
     private Byte initiator;
 
     /**
-     * 状态：	        0-已投递/已推荐	        1-已查看	        2-待面试	        3-已面试	        4-已录用	        5-已拒绝	        6-已撤回
+     * 状态： 0-已投递/已推荐 1-已查看 2-待面试 3-已面试 4-已录用 5-已拒绝 6-已撤回
      */
     private Byte status;
 
