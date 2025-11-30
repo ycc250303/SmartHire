@@ -50,6 +50,9 @@ public enum ErrorCode {
     RESUME_LIMIT_EXCEEDED(1123, "附件简历数量已达上限（最多5个）"),
     RESUME_FILE_EMPTY(1124, "上传的简历文件不能为空"),
     RESUME_UPLOAD_FAILED(1125, "简历上传失败"),
+    // 招聘（投递/推荐）相关错误码 (1300-1399)
+    APPLICATION_ALREADY_EXISTS(1301, "您已投递过该职位，请勿重复投递"),
+    JOB_NOT_EXIST(1302, "职位不存在"),
     SYSTEM_ERROR(9999, "系统内部错误,请检查业务处理逻辑,以及是否存在未处理的异常情况");
 
     private final Integer code;

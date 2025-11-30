@@ -277,7 +277,7 @@ CREATE TABLE `candidate_favorite` (
     UNIQUE KEY `uk_hr_seeker` (`hr_id`, `job_seeker_id`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '候选人收藏表';
 -- =====================================================
--- 5. 沟通模块 (2张表)
+-- 5. 沟通模块 (3张表)
 -- =====================================================
 -- 5.1 聊天消息表
 CREATE TABLE `chat_message` (
@@ -285,7 +285,8 @@ CREATE TABLE `chat_message` (
     `application_id` BIGINT NOT NULL COMMENT '投递/推荐记录ID',
     `sender_id` BIGINT NOT NULL COMMENT '发送者用户ID',
     `receiver_id` BIGINT NOT NULL COMMENT '接收者用户ID',
-    `message_type` TINYINT DEFAULT 1 COMMENT '消息类型：1-文本 2-图片 3-文件 4-语音 5-视频 6-系统通知 7-卡片消息',
+    `conversation_id` BIGINT NOT NULL COMMENT '会话ID',
+    `message_type` TINYINT DEFAULT 1 COMMENT '消息类型：1-文本 2-图片 3-文件 4-语音 5-视频 ',
     `content` TEXT COMMENT '消息内容',
     `file_url` VARCHAR(255) COMMENT '文件/图片/语音/视频URL',
     `reply_to` BIGINT DEFAULT NULL COMMENT '引用的消息ID',
@@ -320,3 +321,31 @@ CREATE TABLE `interview` (
     KEY `idx_interview_time` (`interview_time`),
     KEY `idx_status` (`status`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '面试安排表';
+-- 5.3 会话表
+CREATE TABLE `conversation` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '会话ID',
+    `user1_id` BIGINT NOT NULL COMMENT '用户A',
+    `user2_id` BIGINT NOT NULL COMMENT '用户B',
+
+    -- 用于显示最近消息
+    `last_message` TEXT COMMENT '最近一条消息内容预览',
+    `last_message_time` DATETIME COMMENT '最近消息时间',
+
+    -- 未读数量（每个用户分别统计）
+    `unread_count_user1` INT DEFAULT 0,
+    `unread_count_user2` INT DEFAULT 0,
+
+    -- 是否固定（置顶）
+    `pinned_by_user1` TINYINT DEFAULT 0,
+    `pinned_by_user2` TINYINT DEFAULT 0,
+
+    -- 作为通知功能的字段
+    `has_notification_user1` TINYINT DEFAULT 0 COMMENT '用户1是否有未读通知',
+    `has_notification_user2` TINYINT DEFAULT 0 COMMENT '用户2是否有未读通知',
+
+    -- 会话创建时间
+    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uniq_conversation_pair` (`user1_id`, `user2_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='一对一会话';
