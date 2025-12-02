@@ -1,0 +1,195 @@
+package com.SmartHire.hrService.service.impl;
+
+import com.SmartHire.hrService.dto.ApplicationListDTO;
+import com.SmartHire.hrService.mapper.ApplicationMapper;
+import com.SmartHire.hrService.mapper.HrInfoMapper;
+import com.SmartHire.hrService.mapper.JobPositionMapper;
+import com.SmartHire.hrService.mapper.JobSeekerSkillMapper;
+import com.SmartHire.hrService.mapper.JobSkillRequirementMapper;
+import com.SmartHire.hrService.model.HrInfo;
+import com.SmartHire.hrService.model.JobPosition;
+import com.SmartHire.hrService.service.MatchingService;
+import com.SmartHire.shared.exception.enums.ErrorCode;
+import com.SmartHire.shared.exception.exception.BusinessException;
+import com.SmartHire.shared.utils.JwtUtil;
+import com.SmartHire.shared.utils.ThreadLocalUtil;
+import com.SmartHire.userAuthService.mapper.UserAuthMapper;
+import com.SmartHire.userAuthService.model.User;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+/**
+ * 匹配服务实现类
+ */
+@Service
+public class MatchingServiceImpl implements MatchingService {
+
+    @Autowired
+    private UserAuthMapper userAuthMapper;
+
+    @Autowired
+    private HrInfoMapper hrInfoMapper;
+
+    @Autowired
+    private JobPositionMapper jobPositionMapper;
+
+    @Autowired
+    private JobSkillRequirementMapper jobSkillRequirementMapper;
+
+    @Autowired
+    private JobSeekerSkillMapper jobSeekerSkillMapper;
+
+    @Autowired
+    private ApplicationMapper applicationMapper;
+
+    /**
+     * 获取当前登录HR的ID（hr_info表ID）
+     */
+    private Long getCurrentHrId() {
+        Map<String, Object> map = ThreadLocalUtil.get();
+        Long userId = JwtUtil.getUserIdFromToken(map);
+
+        User user = userAuthMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.USER_ID_NOT_EXIST);
+        }
+        if (user.getUserType() != 2) {
+            throw new BusinessException(ErrorCode.USER_NOT_HR);
+        }
+
+        HrInfo hrInfo = hrInfoMapper.selectOne(
+                com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper.<HrInfo>lambdaQuery()
+                        .eq(HrInfo::getUserId, userId)
+        );
+
+        if (hrInfo == null) {
+            throw new BusinessException(ErrorCode.HR_NOT_EXIST);
+        }
+
+        return hrInfo.getId();
+    }
+
+    /**
+     * 校验岗位归属
+     */
+    private JobPosition validateJobOwnership(Long jobId, Long hrId) {
+        JobPosition jobPosition = jobPositionMapper.selectById(jobId);
+        if (jobPosition == null) {
+            throw new BusinessException(ErrorCode.JOB_NOT_EXIST);
+        }
+        if (!jobPosition.getHrId().equals(hrId)) {
+            throw new BusinessException(ErrorCode.JOB_NOT_BELONG_TO_HR);
+        }
+        return jobPosition;
+    }
+
+    @Override
+    @Transactional
+    public List<ApplicationListDTO> matchApplicationsForJob(Long jobId) {
+        Long hrId = getCurrentHrId();
+        validateJobOwnership(jobId, hrId);
+
+        List<String> requiredSkills = jobSkillRequirementMapper.selectSkillNamesByJobId(jobId);
+        Set<String> requiredSkillSet = requiredSkills == null ? new LinkedHashSet<>() :
+                requiredSkills.stream()
+                        .filter(StringUtils::hasText)
+                        .map(this::normalizeSkill)
+                        .collect(Collectors.toCollection(LinkedHashSet::new));
+
+        List<ApplicationListDTO> applications = applicationMapper.selectApplicationsByJob(hrId, jobId);
+        if (CollectionUtils.isEmpty(applications)) {
+            return new ArrayList<>();
+        }
+
+        Date now = new Date();
+        for (ApplicationListDTO application : applications) {
+            List<String> seekerSkills = jobSeekerSkillMapper.selectSkillNamesByJobSeekerId(application.getJobSeekerId());
+            Set<String> seekerSkillSet = seekerSkills == null ? new LinkedHashSet<>() :
+                    seekerSkills.stream()
+                            .filter(StringUtils::hasText)
+                            .map(this::normalizeSkill)
+                            .collect(Collectors.toCollection(LinkedHashSet::new));
+
+            Set<String> matchedSkills = new LinkedHashSet<>();
+            for (String req : requiredSkillSet) {
+                if (seekerSkillSet.contains(req)) {
+                    matchedSkills.add(req);
+                }
+            }
+
+            BigDecimal score = calculateScore(requiredSkillSet.size(), matchedSkills.size(), seekerSkillSet.size());
+            String analysis = buildMatchAnalysis(requiredSkills, seekerSkills, matchedSkills);
+
+            applicationMapper.updateMatchResult(application.getId(), score, analysis, now);
+            application.setMatchScore(score);
+            application.setMatchAnalysis(analysis);
+        }
+
+        Comparator<BigDecimal> scoreComparator = Comparator.nullsLast(Comparator.reverseOrder());
+        Comparator<Date> dateComparator = Comparator.nullsLast(Comparator.reverseOrder());
+
+        applications.sort(Comparator
+                .comparing(ApplicationListDTO::getMatchScore, scoreComparator)
+                .thenComparing(ApplicationListDTO::getCreatedAt, dateComparator));
+
+        return applications;
+    }
+
+    /**
+     * 规范化技能名称
+     */
+    private String normalizeSkill(String skill) {
+        return skill == null ? "" : skill.trim().toLowerCase();
+    }
+
+    /**
+     * 计算匹配得分（0-100）
+     */
+    private BigDecimal calculateScore(int requiredCount, int matchedCount, int seekerTotal) {
+        double baseScore;
+        if (requiredCount > 0) {
+            baseScore = (double) matchedCount / requiredCount * 100D;
+        } else {
+            baseScore = seekerTotal > 0 ? 70D : 50D;
+        }
+
+        double bonus = seekerTotal > matchedCount ? Math.min(20D, (seekerTotal - matchedCount) * 5D) : 0D;
+        double finalScore = Math.min(100D, baseScore + bonus);
+        return BigDecimal.valueOf(finalScore).setScale(2, RoundingMode.HALF_UP);
+    }
+
+    /**
+     * 构建匹配分析说明
+     */
+    private String buildMatchAnalysis(List<String> requiredSkills,
+                                      List<String> seekerSkills,
+                                      Set<String> matchedSkills) {
+        int requiredSize = requiredSkills == null ? 0 : requiredSkills.size();
+        int seekerSize = seekerSkills == null ? 0 : seekerSkills.size();
+        int matchedSize = matchedSkills == null ? 0 : matchedSkills.size();
+
+        String matchedStr = matchedSkills == null || matchedSkills.isEmpty()
+                ? "[]"
+                : matchedSkills.stream()
+                .map(skill -> "\"" + skill + "\"")
+                .collect(Collectors.joining(", ", "[", "]"));
+
+        return String.format("{\"required\":%d,\"seeker\":%d,\"matched\":%d,\"matchedSkills\":%s}",
+                requiredSize, seekerSize, matchedSize, matchedStr);
+    }
+}
+

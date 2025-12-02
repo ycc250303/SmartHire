@@ -10,9 +10,9 @@ spring:
   # MyBatis-Plus 配置
   mybatis-plus:
     # Mapper XML 文件位置（支持多个路径）
-    mapper-locations: classpath*:com/SmartHire/userAuthService/mapper/xml/*.xml,classpath*:mapper/**/*.xml
+    mapper-locations: classpath*:com/SmartHire/userAuthService/mapper/xml/*.xml,classpath*:com/SmartHire/hrService/mapper/xml/*.xml,classpath*:mapper/**/*.xml
     # 实体类包路径
-    type-aliases-package: com.SmartHire.userAuthService.entity
+    type-aliases-package: com.SmartHire.userAuthService.entity,com.SmartHire.hrService.model
     # 全局配置
     global-config:
       # 数据库配置
