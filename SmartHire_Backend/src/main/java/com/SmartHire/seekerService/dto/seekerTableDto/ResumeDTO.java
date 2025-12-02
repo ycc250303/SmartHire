@@ -10,17 +10,24 @@ import lombok.Data;
 @Data
 public class ResumeDTO {
 
-    public interface Create extends Default {
-    }
+  public interface Create extends Default {}
 
-    public interface Update extends Default {
-    }
+  public interface Update extends Default {}
 
-    @NotBlank(message = "简历名称不能为空", groups = Create.class)
-    @Size(max = 100, message = "简历名称长度不能超过100个字符", groups = { Create.class, Update.class })
-    private String resumeName;
+  @NotBlank(message = "简历名称不能为空", groups = Create.class)
+  @Size(
+      max = 100,
+      message = "简历名称长度不能超过100个字符",
+      groups = {Create.class, Update.class})
+  private String resumeName;
 
-    @Min(value = 1, message = "隐私级别仅支持1或2", groups = { Create.class, Update.class })
-    @Max(value = 2, message = "隐私级别仅支持1或2", groups = { Create.class, Update.class })
-    private Byte privacyLevel;
+  @Min(
+      value = 1,
+      message = "隐私级别仅支持1或2",
+      groups = {Create.class, Update.class})
+  @Max(
+      value = 2,
+      message = "隐私级别仅支持1或2",
+      groups = {Create.class, Update.class})
+  private Byte privacyLevel;
 }

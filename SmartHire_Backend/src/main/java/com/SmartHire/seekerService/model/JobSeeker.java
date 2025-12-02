@@ -10,9 +10,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * <p>
  * 求职者信息表
- * </p>
  *
  * @author SmartHire Team
  * @since 2025-11-19
@@ -22,60 +20,37 @@ import lombok.Setter;
 @TableName("job_seeker")
 public class JobSeeker implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
-    /**
-     * 求职者ID
-     */
-    @TableId(value = "id", type = IdType.AUTO)
-    @JsonIgnore
-    private Long id;
+  /** 求职者ID */
+  @TableId(value = "id", type = IdType.AUTO)
+  @JsonIgnore
+  private Long id;
 
-    /**
-     * 用户ID
-     */
-    @JsonIgnore
-    private Long userId;
+  /** 用户ID */
+  @JsonIgnore private Long userId;
 
-    /**
-     * 真实姓名
-     */
-    private String realName;
+  /** 真实姓名 */
+  private String realName;
 
-    /**
-     * 出生日期
-     */
-    private Date birthDate;
+  /** 出生日期 */
+  private Date birthDate;
 
-    /**
-     * 当前城市
-     */
-    private String currentCity;
+  /** 当前城市 */
+  private String currentCity;
 
-    /**
-     * 最高学历
-     */
-    private Integer education;
+  /** 最高学历 */
+  private Integer education;
 
-    /**
-     * 求职状态
-     */
-    private Integer jobStatus;
+  /** 求职状态 */
+  private Integer jobStatus;
 
-    /**
-     * 毕业年份
-     */
-    private String graduationYear;
+  /** 毕业年份 */
+  private String graduationYear;
 
-    /**
-     * 创建时间
-     */
-    @JsonIgnore
-    private Date createdAt;
+  /** 创建时间 */
+  @JsonIgnore private Date createdAt;
 
-    /**
-     * 更新时间
-     */
-    @JsonIgnore
-    private Date updatedAt;
+  /** 更新时间 */
+  @JsonIgnore private Date updatedAt;
 }

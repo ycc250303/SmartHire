@@ -8,8 +8,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @MapperScan("com.SmartHire.userAuthService.mapper")
 public class SmartHireBackendApplication {
 
-    public static void main(String[] args) {
-        SpringApplication.run(SmartHireBackendApplication.class, args);
-    }
-
+  public static void main(String[] args) {
+    SpringApplication.run(SmartHireBackendApplication.class, args);
+  }
 }

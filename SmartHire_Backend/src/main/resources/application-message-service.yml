@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: SmartHire_MessageService
+
+server:
+  port: 8085
+  servlet:
+    context-path: /smarthire/api
+
+# inherits datasource/redis/mail from application.yml

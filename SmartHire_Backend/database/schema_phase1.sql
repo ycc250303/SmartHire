@@ -232,7 +232,7 @@ CREATE TABLE `job_skill_requirement` (
     KEY `idx_skill_name` (`skill_name`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '职位技能要求表';
 -- =====================================================
--- 4. 投递与匹配模块 (3张表)
+-- 4. 投递与匹配模块 (2张表)
 -- =====================================================
 -- 4.1 投递/推荐记录表
 CREATE TABLE `application` (
@@ -288,7 +288,7 @@ CREATE TABLE `chat_message` (
     `conversation_id` BIGINT NOT NULL COMMENT '会话ID',
     `message_type` TINYINT DEFAULT 1 COMMENT '消息类型：1-文本 2-图片 3-文件 4-语音 5-视频 ',
     `content` TEXT COMMENT '消息内容',
-    `file_url` VARCHAR(255) COMMENT '文件/图片/语音/视频URL',
+    `file_url` VARCHAR(255) DEFAULT NULL COMMENT '文件/图片/语音/视频URL',
     `reply_to` BIGINT DEFAULT NULL COMMENT '引用的消息ID',
     `is_read` TINYINT DEFAULT 0 COMMENT '是否已读',
     `is_flagged` TINYINT DEFAULT 0 COMMENT '是否被标记为敏感',
@@ -326,26 +326,23 @@ CREATE TABLE `conversation` (
     `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '会话ID',
     `user1_id` BIGINT NOT NULL COMMENT '用户A',
     `user2_id` BIGINT NOT NULL COMMENT '用户B',
-
     -- 用于显示最近消息
     `last_message` TEXT COMMENT '最近一条消息内容预览',
     `last_message_time` DATETIME COMMENT '最近消息时间',
-
     -- 未读数量（每个用户分别统计）
     `unread_count_user1` INT DEFAULT 0,
     `unread_count_user2` INT DEFAULT 0,
-
     -- 是否固定（置顶）
     `pinned_by_user1` TINYINT DEFAULT 0,
     `pinned_by_user2` TINYINT DEFAULT 0,
-
+    -- 是否删除
+    `deleted_by_user1` TINYINT DEFAULT 0,
+    `deleted_by_user2` TINYINT DEFAULT 0,
     -- 作为通知功能的字段
     `has_notification_user1` TINYINT DEFAULT 0 COMMENT '用户1是否有未读通知',
     `has_notification_user2` TINYINT DEFAULT 0 COMMENT '用户2是否有未读通知',
-
     -- 会话创建时间
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-
     PRIMARY KEY (`id`),
     UNIQUE KEY `uniq_conversation_pair` (`user1_id`, `user2_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='一对一会话';
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '一对一会话';
