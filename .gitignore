@@ -1,0 +1,47 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+lerna-debug.log*
+
+# Dependency directories
+node_modules/
+
+# Build output
+dist/
+dist-ssr/
+*.local
+coverage/
+
+# Uni-app / platform specific build artifacts
+unpackage/
+*.app-plus/
+*.mp-weixin/
+
+# TypeScript
+*.tsbuildinfo
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+.cursor/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# AI tooling artifacts
+claude.md
+
+
+
