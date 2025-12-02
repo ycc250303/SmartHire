@@ -4,13 +4,9 @@ import com.SmartHire.seekerService.model.WorkExperience;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
 /**
- * <p>
  * 工作经历表 Mapper 接口
- * </p>
  *
  * @author SmartHire Team
  * @since 2025-11-19
  */
-public interface WorkExperienceMapper extends BaseMapper<WorkExperience> {
-
-}
+public interface WorkExperienceMapper extends BaseMapper<WorkExperience> {}

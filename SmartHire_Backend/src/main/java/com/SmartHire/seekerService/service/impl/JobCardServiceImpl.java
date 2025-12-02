@@ -1,0 +1,127 @@
+package com.SmartHire.seekerService.service.impl;
+
+import com.SmartHire.seekerService.dto.JobCardDTO;
+import com.SmartHire.seekerService.mapper.EducationExperienceMapper;
+import com.SmartHire.seekerService.mapper.JobSeekerMapper;
+import com.SmartHire.seekerService.model.EducationExperience;
+import com.SmartHire.seekerService.model.JobSeeker;
+import com.SmartHire.seekerService.service.JobCardService;
+import com.SmartHire.shared.exception.enums.ErrorCode;
+import com.SmartHire.shared.exception.exception.BusinessException;
+import com.SmartHire.userAuthService.mapper.UserAuthMapper;
+import com.SmartHire.userAuthService.model.User;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.Period;
+import java.time.ZoneId;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+/** 求职卡片查询服务实现。 */
+@Slf4j
+@Service
+public class JobCardServiceImpl implements JobCardService {
+  private static final Map<Integer, String> EDUCATION_LABEL =
+      Map.ofEntries(
+          Map.entry(0, "高中"),
+          Map.entry(1, "大专"),
+          Map.entry(2, "本科"),
+          Map.entry(3, "硕士"),
+          Map.entry(4, "博士"));
+
+  @Autowired private UserAuthMapper userAuthMapper;
+
+  @Autowired private JobSeekerMapper jobSeekerMapper;
+
+  @Autowired private EducationExperienceMapper educationExperienceMapper;
+
+  @Override
+  public JobCardDTO getJobCard(Long userId) {
+    if (userId == null || userId <= 0) {
+      throw new BusinessException(ErrorCode.VALIDATION_ERROR);
+    }
+
+    try {
+      User user = userAuthMapper.selectById(userId);
+      if (user == null) {
+        throw new BusinessException(ErrorCode.USER_ID_NOT_EXIST);
+      }
+      if (!Objects.equals(user.getUserType(), 1)) {
+        throw new BusinessException(ErrorCode.USER_NOT_SEEKER);
+      }
+
+      JobSeeker jobSeeker =
+          jobSeekerMapper.selectOne(
+              new LambdaQueryWrapper<JobSeeker>().eq(JobSeeker::getUserId, userId));
+      if (jobSeeker == null) {
+        throw new BusinessException(ErrorCode.SEEKER_NOT_EXIST);
+      }
+
+      EducationExperience highestEducation = findHighestEducation(jobSeeker.getId());
+      JobCardDTO dto = new JobCardDTO();
+      dto.setUsername(user.getUsername());
+      dto.setAge(calculateAge(jobSeeker.getBirthDate()));
+      dto.setJobStatus(jobSeeker.getJobStatus());
+
+      if (highestEducation != null) {
+        dto.setMajor(highestEducation.getMajor());
+        dto.setGraduationYear(formatGraduationYear(highestEducation.getEndYear()));
+        dto.setHighestEducation(resolveEducationName(highestEducation.getEducation()));
+      } else {
+        dto.setMajor(null);
+        dto.setGraduationYear(null);
+        dto.setHighestEducation(resolveEducationName(jobSeeker.getEducation()));
+      }
+
+      return dto;
+    } catch (BusinessException ex) {
+      throw ex;
+    } catch (Exception ex) {
+      log.error("获取求职卡片失败, userId={}", userId, ex);
+      throw new BusinessException(ErrorCode.SYSTEM_ERROR);
+    }
+  }
+
+  private EducationExperience findHighestEducation(Long jobSeekerId) {
+    if (jobSeekerId == null) {
+      return null;
+    }
+    List<EducationExperience> educationExperiences =
+        educationExperienceMapper.selectList(
+            new LambdaQueryWrapper<EducationExperience>()
+                .eq(EducationExperience::getJobSeekerId, jobSeekerId)
+                .orderByDesc(EducationExperience::getEducation)
+                .orderByDesc(EducationExperience::getEndYear));
+    return educationExperiences.isEmpty() ? null : educationExperiences.get(0);
+  }
+
+  private Integer calculateAge(java.util.Date birthDate) {
+    if (birthDate == null) {
+      return null;
+    }
+    LocalDate birth =
+        Instant.ofEpochMilli(birthDate.getTime()).atZone(ZoneId.systemDefault()).toLocalDate();
+    LocalDate today = LocalDate.now();
+    if (birth.isAfter(today)) {
+      return null;
+    }
+    return Period.between(birth, today).getYears();
+  }
+
+  private String formatGraduationYear(LocalDate endYear) {
+    return Optional.ofNullable(endYear)
+        .map(LocalDate::getYear)
+        .map(year -> year + "年应届生")
+        .orElse(null);
+  }
+
+  private String resolveEducationName(Integer education) {
+    return education == null ? "未知" : EDUCATION_LABEL.getOrDefault(education, "未知");
+  }
+}
