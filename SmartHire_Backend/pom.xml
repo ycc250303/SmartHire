@@ -145,6 +145,11 @@
             <version>4.4.0</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
+
         <!--阿里云 OSS 文件存储服务-->
         <dependency>
             <groupId>com.aliyun.oss</groupId>
@@ -179,6 +184,8 @@
             <artifactId>swagger-annotations</artifactId>
             <version>2.2.15</version>
         </dependency>
+
+        
 
 
 
@@ -255,6 +262,20 @@
                         <version>9.4.0</version>
                     </dependency>
                 </dependencies>
+            </plugin>
+
+            <!-- Spotless Maven 插件，用于格式化代码 -->
+            <plugin>
+                <groupId>com.diffplug.spotless</groupId>
+                <artifactId>spotless-maven-plugin</artifactId>
+                <version>2.43.0</version>
+                <configuration>
+                    <java>
+                        <googleJavaFormat>
+                            <version>1.17.0</version>
+                        </googleJavaFormat>
+                    </java>
+                </configuration>
             </plugin>
         </plugins>
     </build>

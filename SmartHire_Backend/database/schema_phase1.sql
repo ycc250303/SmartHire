@@ -288,7 +288,7 @@ CREATE TABLE `chat_message` (
     `conversation_id` BIGINT NOT NULL COMMENT '会话ID',
     `message_type` TINYINT DEFAULT 1 COMMENT '消息类型：1-文本 2-图片 3-文件 4-语音 5-视频 ',
     `content` TEXT COMMENT '消息内容',
-    `file_url` VARCHAR(255) COMMENT '文件/图片/语音/视频URL',
+    `file_url` VARCHAR(255) DEFAULT NULL COMMENT '文件/图片/语音/视频URL',
     `reply_to` BIGINT DEFAULT NULL COMMENT '引用的消息ID',
     `is_read` TINYINT DEFAULT 0 COMMENT '是否已读',
     `is_flagged` TINYINT DEFAULT 0 COMMENT '是否被标记为敏感',

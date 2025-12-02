@@ -12,17 +12,12 @@ import lombok.Data;
 @Data
 public class SubmitResumeDTO {
 
-    /**
-     * 职位ID
-     */
-    @NotNull(message = "职位ID不能为空")
-    @Positive(message = "职位ID必须大于0")
-    private Long jobId;
+  /** 职位ID */
+  @NotNull(message = "职位ID不能为空")
+  @Positive(message = "职位ID必须大于0")
+  private Long jobId;
 
-    /**
-     * 简历ID（附件简历）
-     * 如果为null，则投递在线简历；如果不为null，则投递指定的附件简历
-     */
-    @Positive(message = "简历ID必须大于0")
-    private Long resumeId;
+  /** 简历ID（附件简历） 如果为null，则投递在线简历；如果不为null，则投递指定的附件简历 */
+  @Positive(message = "简历ID必须大于0")
+  private Long resumeId;
 }
