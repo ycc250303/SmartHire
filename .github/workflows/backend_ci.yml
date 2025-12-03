@@ -62,11 +62,11 @@ jobs:
           tag_name: v${{ env.VERSION }}
           name: Release v${{ env.VERSION }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.SMARTHIRE_TOKEN }}
 
       - name: Upload JAR to Release
         uses: softprops/action-gh-release@v1
         with:
           files: SmartHire_Backend/target/*.jar
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.SMARTHIRE_TOKEN }}
