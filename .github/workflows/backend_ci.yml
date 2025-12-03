@@ -14,6 +14,8 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false  # 用于推送自定义 tag
 
       - name: Setup JDK 21
         uses: actions/setup-java@v4
@@ -45,24 +47,31 @@ jobs:
 
       - name: Install xmllint
         run: sudo apt-get update && sudo apt-get install -y libxml2-utils
-          
+
       - name: Get version from pom.xml
         id: get_version
         shell: bash
         run: |
           VERSION=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='version']/text()" SmartHire_Backend/pom.xml)
-          # 去掉 SNAPSHOT 后缀
           CLEAN_VERSION="${VERSION/-SNAPSHOT/}"
           echo "VERSION=$CLEAN_VERSION" >> $GITHUB_ENV
           echo "Original version: $VERSION, Release version: $CLEAN_VERSION"
-      
+
       - name: Create Git tag
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.SMARTHIRE_TOKEN }}
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
-          git tag v${{ env.VERSION }}
-          git push origin v${{ env.VERSION }}
-            
+          TAG="v${VERSION}"
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists, skipping tag creation"
+          else
+            git tag "$TAG"
+            git push https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git "$TAG"
+          fi
+
       - name: Create GitHub Release
         id: create_release
         uses: softprops/action-gh-release@v1
