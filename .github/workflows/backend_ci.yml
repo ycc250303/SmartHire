@@ -43,6 +43,12 @@ jobs:
           name: smarthire-backend-jar
           path: SmartHire_Backend/target/*.jar
 
+      - name: Get version from pom.xml
+        id: get_version
+        run: |
+           VERSION=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='version']/text()" SmartHire_Backend/pom.xml)
+           echo "VERSION=$VERSION" >> $GITHUB_ENV
+
       - name: Create GitHub Release
         id: create_release
         uses: softprops/action-gh-release@v1
