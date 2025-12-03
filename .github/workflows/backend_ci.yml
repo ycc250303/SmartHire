@@ -31,12 +31,14 @@ jobs:
 
       - name: Run Tests
         run: mvn -B test
+        working-directory: SmartHire_Backend
 
       - name: Build JAR
         run: mvn -B clean package -DskipTests=true
+        working-directory: SmartHire_Backend
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: smarthire-backend-jar
-          path: target/*.jar
+          path: SmartHire_Backend/target/*.jar
