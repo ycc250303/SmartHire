@@ -49,8 +49,11 @@ jobs:
       - name: Get version from pom.xml
         id: get_version
         run: |
-           VERSION=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='version']/text()" SmartHire_Backend/pom.xml)
-           echo "VERSION=$VERSION" >> $GITHUB_ENV
+            VERSION=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='version']/text()" SmartHire_Backend/pom.xml)
+            # 去掉 SNAPSHOT 后缀
+            CLEAN_VERSION=${VERSION/-SNAPSHOT/}
+            echo "VERSION=$CLEAN_VERSION" >> $GITHUB_ENV
+            echo "Original version: $VERSION, Release version: $CLEAN_VERSION"
 
       - name: Create GitHub Release
         id: create_release
