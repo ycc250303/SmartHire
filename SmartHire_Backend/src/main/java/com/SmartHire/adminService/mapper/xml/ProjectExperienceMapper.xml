@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.SmartHire.adminService.mapper.ProjectExperienceMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.SmartHire.adminService.model.ProjectExperience">
+        <id column="id" property="id" />
+        <result column="job_seeker_id" property="jobSeekerId" />
+        <result column="project_name" property="projectName" />
+        <result column="project_role" property="projectRole" />
+        <result column="start_date" property="startDate" />
+        <result column="end_date" property="endDate" />
+        <result column="description" property="description" />
+        <result column="responsibility" property="responsibility" />
+        <result column="achievement" property="achievement" />
+        <result column="project_url" property="projectUrl" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, job_seeker_id, project_name, project_role, start_date, end_date, description, responsibility, achievement, project_url, created_at, updated_at
+    </sql>
+
+</mapper>

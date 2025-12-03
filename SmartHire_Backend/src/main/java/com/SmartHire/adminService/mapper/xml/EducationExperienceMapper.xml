@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.SmartHire.adminService.mapper.EducationExperienceMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.SmartHire.adminService.model.EducationExperience">
+        <id column="id" property="id" />
+        <result column="job_seeker_id" property="jobSeekerId" />
+        <result column="school_name" property="schoolName" />
+        <result column="major" property="major" />
+        <result column="education" property="education" />
+        <result column="start_year" property="startYear" />
+        <result column="end_year" property="endYear" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, job_seeker_id, school_name, major, education, start_year, end_year, created_at, updated_at
+    </sql>
+
+</mapper>

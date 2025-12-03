@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.SmartHire.adminService.mapper.CompanyMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.SmartHire.adminService.model.Company">
+        <id column="id" property="id" />
+        <result column="company_name" property="companyName" />
+        <result column="company_code" property="companyCode" />
+        <result column="industry" property="industry" />
+        <result column="company_scale" property="companyScale" />
+        <result column="financing_stage" property="financingStage" />
+        <result column="city" property="city" />
+        <result column="address" property="address" />
+        <result column="website" property="website" />
+        <result column="logo_url" property="logoUrl" />
+        <result column="description" property="description" />
+        <result column="main_business" property="mainBusiness" />
+        <result column="benefits" property="benefits" />
+        <result column="status" property="status" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, company_name, company_code, industry, company_scale, financing_stage, city, address, website, logo_url, description, main_business, benefits, status, created_at, updated_at
+    </sql>
+
+</mapper>
