@@ -42,7 +42,7 @@ public interface ApplicationService extends IService<Application> {
    * 更新投递状态（HR端）
    *
    * @param applicationId 投递ID
-   * @param status        新状态
+   * @param status 新状态
    */
   void updateApplicationStatus(Long applicationId, Byte status);
 }

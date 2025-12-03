@@ -1,8 +1,8 @@
 package com.SmartHire.recruitmentService.controller;
 
+import com.SmartHire.common.entity.Result;
 import com.SmartHire.recruitmentService.dto.SubmitResumeDTO;
 import com.SmartHire.recruitmentService.service.ApplicationService;
-import com.SmartHire.common.entity.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;

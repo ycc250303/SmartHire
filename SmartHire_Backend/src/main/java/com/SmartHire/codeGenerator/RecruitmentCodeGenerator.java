@@ -21,11 +21,9 @@ public class RecruitmentCodeGenerator {
 
   private static final Path BASE_RESOURCE_PATH = Paths.get("src", "main", "resources");
   private static final Path APPLICATION_YML = BASE_RESOURCE_PATH.resolve("application.yml");
-  private static final Path APPLICATION_LOCAL_YML =
-      BASE_RESOURCE_PATH.resolve("application-local.yml");
+  private static final Path APPLICATION_LOCAL_YML = BASE_RESOURCE_PATH.resolve("application-local.yml");
   // TODO：需要修改yml文件名
-  private static final Path SEEKER_SERVICE_YML =
-      BASE_RESOURCE_PATH.resolve("application-recruitment-service.yml");
+  private static final Path SEEKER_SERVICE_YML = BASE_RESOURCE_PATH.resolve("application-recruitment-service.yml");
 
   public static void main(String[] args) {
     DatabaseConfig dbConfig = loadDatabaseConfig();
@@ -35,21 +33,19 @@ public class RecruitmentCodeGenerator {
 
     FastAutoGenerator.create(dbConfig.url, dbConfig.username, dbConfig.password)
         .globalConfig(
-            builder ->
-                builder
-                    .author("SmartHire Team")
-                    .outputDir(projectPath + "/src/main/java")
-                    .disableOpenDir()
-                    .dateType(DateType.ONLY_DATE))
+            builder -> builder
+                .author("SmartHire Team")
+                .outputDir(projectPath + "/src/main/java")
+                .disableOpenDir()
+                .dateType(DateType.ONLY_DATE))
         .packageConfig(
-            builder ->
-                builder
-                    // TODO：需要修改服务文件夹名称
-                    .parent("com.SmartHire.recruitmentService")
-                    .entity("model")
-                    .mapper("mapper")
-                    .service("service")
-                    .serviceImpl("service.impl"))
+            builder -> builder
+                // TODO：需要修改服务文件夹名称
+                .parent("com.SmartHire.recruitmentService")
+                .entity("model")
+                .mapper("mapper")
+                .service("service")
+                .serviceImpl("service.impl"))
         .strategyConfig(
             builder -> {
               // TODO：需要修改服务相关的数据库表
@@ -96,15 +92,15 @@ public class RecruitmentCodeGenerator {
       String password = String.valueOf(datasource.get("password"));
 
       // 验证配置是否有效
-      if (url == null || "null".equals(url) || url.isEmpty()) {
+      if ("null".equals(url) || url.isEmpty()) {
         throw new IllegalStateException(
             "Database URL is missing or invalid in " + configFile.getFileName());
       }
-      if (username == null || "null".equals(username) || username.isEmpty()) {
+      if ("null".equals(username) || username.isEmpty()) {
         throw new IllegalStateException(
             "Database username is missing or invalid in " + configFile.getFileName());
       }
-      if (password == null || "null".equals(password)) {
+      if ("null".equals(password)) {
         throw new IllegalStateException(
             "Database password is missing or invalid in " + configFile.getFileName());
       }
@@ -117,23 +113,23 @@ public class RecruitmentCodeGenerator {
 
   private static void generateServiceProfile() {
     try {
-      if (Files.notExists(SEEKER_SERVICE_YML)) {
-        Files.createDirectories(SEEKER_SERVICE_YML.getParent());
+      Path parent = SEEKER_SERVICE_YML.getParent();
+      if (parent != null && Files.notExists(parent)) {
+        Files.createDirectories(parent);
       }
       // TODO：需要修改yml文件内容，需要修改port
-      String content =
-          """
-                    spring:
-                      application:
-                        name: SmartHire_RecruitmentService
+      String content = """
+          spring:
+            application:
+              name: SmartHire_RecruitmentService
 
-                    server:
-                      port: 8084
-                      servlet:
-                        context-path: /smarthire/api
+          server:
+            port: 8084
+            servlet:
+              context-path: /smarthire/api
 
-                    # inherits datasource/redis/mail from application.yml
-                    """;
+          # inherits datasource/redis/mail from application.yml
+          """;
       Files.writeString(SEEKER_SERVICE_YML, content, StandardCharsets.UTF_8);
     } catch (IOException e) {
       throw new IllegalStateException("Failed to create seeker service profile yml", e);
@@ -142,43 +138,44 @@ public class RecruitmentCodeGenerator {
 
   private static void generateRecruitmentController(String projectPath) {
     // TODO:修改controller文件的路径
-    Path controllerPath =
-        Paths.get(
-            projectPath,
-            "src",
-            "main",
-            "java",
-            "com",
-            "SmartHire",
-            "recruitmentService",
-            "controller",
-            "RecruitmentController.java");
+    Path controllerPath = Paths.get(
+        projectPath,
+        "src",
+        "main",
+        "java",
+        "com",
+        "SmartHire",
+        "recruitmentService",
+        "controller",
+        "RecruitmentController.java");
 
     try {
-      Files.createDirectories(controllerPath.getParent());
+      Path parent = controllerPath.getParent();
+      if (parent != null && Files.notExists(parent)) {
+        Files.createDirectories(parent);
+      }
 
       // TODO：需要修改controller文件内容
-      String content =
-          """
-                    package com.SmartHire.recruitmentService.controller;
+      String content = """
+          package com.SmartHire.recruitmentService.controller;
 
-                    import org.springframework.web.bind.annotation.RequestMapping;
-                    import org.springframework.web.bind.annotation.RestController;
+          import org.springframework.web.bind.annotation.RequestMapping;
+          import org.springframework.web.bind.annotation.RestController;
 
-                    /**
-                     * <p>
-                     * 投递/推荐岗位服务统一控制器
-                     * </p>
-                     *
-                     * @author SmartHire Team
-                     * @since 2025-11-30
-                     */
-                    @RestController
-                    @RequestMapping("/recruitment")
-                    public class RecruitmentController {
+          /**
+           * <p>
+           * 投递/推荐岗位服务统一控制器
+           * </p>
+           *
+           * @author SmartHire Team
+           * @since 2025-11-30
+           */
+          @RestController
+          @RequestMapping("/recruitment")
+          public class RecruitmentController {
 
-                    }
-                    """;
+          }
+          """;
 
       Files.writeString(controllerPath, content, StandardCharsets.UTF_8);
       System.out.println("SeekerController generated at: " + controllerPath.toAbsolutePath());
@@ -187,5 +184,6 @@ public class RecruitmentCodeGenerator {
     }
   }
 
-  private record DatabaseConfig(String url, String username, String password) {}
+  private record DatabaseConfig(String url, String username, String password) {
+  }
 }

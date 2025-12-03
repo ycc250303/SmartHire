@@ -1,11 +1,11 @@
 package com.SmartHire.seekerService.service.impl.seekerTableImpl;
 
+import com.SmartHire.common.exception.enums.ErrorCode;
+import com.SmartHire.common.exception.exception.BusinessException;
 import com.SmartHire.seekerService.dto.seekerTableDto.JobSeekerExpectationDTO;
 import com.SmartHire.seekerService.mapper.JobSeekerExpectationMapper;
 import com.SmartHire.seekerService.model.JobSeekerExpectation;
 import com.SmartHire.seekerService.service.seekerTableService.JobSeekerExpectationService;
-import com.SmartHire.common.exception.enums.ErrorCode;
-import com.SmartHire.common.exception.exception.BusinessException;
 import jakarta.validation.Valid;
 import java.math.BigDecimal;
 import java.util.Date;

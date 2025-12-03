@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+    <!--
+      说明：
+      1. 下面这些排除项主要用于屏蔽与 JPA/MyBatis 实体和简单 DTO 有关的
+         “暴露内部可变状态”（EI_EXPOSE_REP / EI_EXPOSE_REP2）告警。
+         在当前项目中，这些类大多只是数据载体，且在应用内部使用，风险较低。
+      2. 如果后续有需要，可以按类名逐步移除排除项，并在对应 getter/setter 中
+         做防御性拷贝（Date / List）。
+    -->
+
+    <!-- DTOs -->
+    <Match>
+        <Class name="com.SmartHire.hrService.dto.HrInfoDTO"/>
+        <Or>
+            <Bug code="EI"/>
+            <Bug code="EI2"/>
+        </Or>
+    </Match>
+    <Match>
+        <Class name="com.SmartHire.hrService.dto.JobPositionCreateDTO"/>
+        <Or>
+            <Bug code="EI"/>
+            <Bug code="EI2"/>
+        </Or>
+    </Match>
+    <Match>
+        <Class name="com.SmartHire.hrService.dto.JobPositionListDTO"/>
+        <Or>
+            <Bug code="EI"/>
+            <Bug code="EI2"/>
+        </Or>
+    </Match>
+    <Match>
+        <Class name="com.SmartHire.messageService.dto.ConversationDTO"/>
+        <Or>
+            <Bug code="EI"/>
+            <Bug code="EI2"/>
+        </Or>
+    </Match>
+    <Match>
+        <Class name="com.SmartHire.messageService.dto.MessageDTO"/>
+        <Or>
+            <Bug code="EI"/>
+            <Bug code="EI2"/>
+        </Or>
+    </Match>
+    <Match>
+        <Class name="com.SmartHire.recruitmentService.dto.ApplicationListDTO"/>
+        <Or>
+            <Bug code="EI"/>
+            <Bug code="EI2"/>
+        </Or>
+    </Match>
+    <Match>
+        <Class name="com.SmartHire.seekerService.dto.SeekerDTO"/>
+        <Or>
+            <Bug code="EI"/>
+            <Bug code="EI2"/>
+        </Or>
+    </Match>
+
+    <!-- HR / Recruitment / Seeker / User 实体模型 -->
+    <Match>
+        <Or>
+            <Class name="com.SmartHire.hrService.model.Company"/>
+            <Class name="com.SmartHire.hrService.model.Complaint"/>
+            <Class name="com.SmartHire.hrService.model.HrInfo"/>
+            <Class name="com.SmartHire.hrService.model.JobPosition"/>
+            <Class name="com.SmartHire.hrService.model.JobSkillRequirement"/>
+            <Class name="com.SmartHire.messageService.model.ChatMessage"/>
+            <Class name="com.SmartHire.messageService.model.Conversation"/>
+            <Class name="com.SmartHire.recruitmentService.model.Application"/>
+            <Class name="com.SmartHire.seekerService.model.EducationExperience"/>
+            <Class name="com.SmartHire.seekerService.model.JobSeeker"/>
+            <Class name="com.SmartHire.seekerService.model.JobSeekerExpectation"/>
+            <Class name="com.SmartHire.seekerService.model.ProjectExperience"/>
+            <Class name="com.SmartHire.seekerService.model.Resume"/>
+            <Class name="com.SmartHire.seekerService.model.Skill"/>
+            <Class name="com.SmartHire.seekerService.model.WorkExperience"/>
+            <Class name="com.SmartHire.userAuthService.model.User"/>
+        </Or>
+        <Or>
+            <Bug code="EI"/>
+            <Bug code="EI2"/>
+        </Or>
+    </Match>
+
+    <!-- WebSocket 中静态注入 JwtUtil 的告警：目前架构需要保留该模式 -->
+    <Match>
+        <Class name="com.SmartHire.messageService.websocket.MessageWebSocket"/>
+        <Bug pattern="ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD"/>
+    </Match>
+
+    <!-- JwtUtil 构造方法中关于“构造函数可能抛异常”的告警：当前设计可接受 -->
+    <Match>
+        <Class name="com.SmartHire.common.utils.JwtUtil"/>
+        <Bug pattern="CT_CONSTRUCTOR_THROW"/>
+    </Match>
+</FindBugsFilter>
+
+

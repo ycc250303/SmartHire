@@ -1,11 +1,11 @@
 package com.SmartHire.seekerService.service.impl;
 
-import com.SmartHire.seekerService.mapper.*;
-import com.SmartHire.seekerService.model.*;
-import com.SmartHire.seekerService.service.OnlineResumeService;
 import com.SmartHire.common.api.UserAuthApi;
 import com.SmartHire.common.exception.enums.ErrorCode;
 import com.SmartHire.common.exception.exception.BusinessException;
+import com.SmartHire.seekerService.mapper.*;
+import com.SmartHire.seekerService.model.*;
+import com.SmartHire.seekerService.service.OnlineResumeService;
 import com.SmartHire.userAuthService.model.User;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import java.util.LinkedHashMap;
@@ -21,26 +21,19 @@ import org.springframework.stereotype.Service;
 @Service
 public class OnlineResumeServiceImpl implements OnlineResumeService {
 
-  @Autowired
-  private UserAuthApi userAuthApi;
+  @Autowired private UserAuthApi userAuthApi;
 
-  @Autowired
-  private JobSeekerMapper jobSeekerMapper;
+  @Autowired private JobSeekerMapper jobSeekerMapper;
 
-  @Autowired
-  private EducationExperienceMapper educationExperienceMapper;
+  @Autowired private EducationExperienceMapper educationExperienceMapper;
 
-  @Autowired
-  private JobSeekerExpectationMapper jobSeekerExpectationMapper;
+  @Autowired private JobSeekerExpectationMapper jobSeekerExpectationMapper;
 
-  @Autowired
-  private ProjectExperienceMapper projectExperienceMapper;
+  @Autowired private ProjectExperienceMapper projectExperienceMapper;
 
-  @Autowired
-  private WorkExperienceMapper workExperienceMapper;
+  @Autowired private WorkExperienceMapper workExperienceMapper;
 
-  @Autowired
-  private SkillMapper skillMapper;
+  @Autowired private SkillMapper skillMapper;
 
   @Override
   public Map<String, Object> getOnlineResumeByUserId(Long userId) {
@@ -54,35 +47,41 @@ public class OnlineResumeServiceImpl implements OnlineResumeService {
         throw new BusinessException(ErrorCode.USER_NOT_SEEKER);
       }
 
-      JobSeeker jobSeeker = jobSeekerMapper.selectOne(
-          new LambdaQueryWrapper<JobSeeker>().eq(JobSeeker::getUserId, userId));
+      JobSeeker jobSeeker =
+          jobSeekerMapper.selectOne(
+              new LambdaQueryWrapper<JobSeeker>().eq(JobSeeker::getUserId, userId));
       if (jobSeeker == null) {
         throw new BusinessException(ErrorCode.SEEKER_NOT_EXIST);
       }
       Long jobSeekerId = jobSeeker.getId();
 
-      List<EducationExperience> educationExperiences = educationExperienceMapper.selectList(
-          new LambdaQueryWrapper<EducationExperience>()
-              .eq(EducationExperience::getJobSeekerId, jobSeekerId)
-              .orderByDesc(EducationExperience::getStartYear));
+      List<EducationExperience> educationExperiences =
+          educationExperienceMapper.selectList(
+              new LambdaQueryWrapper<EducationExperience>()
+                  .eq(EducationExperience::getJobSeekerId, jobSeekerId)
+                  .orderByDesc(EducationExperience::getStartYear));
 
-      List<JobSeekerExpectation> jobSeekerExpectations = jobSeekerExpectationMapper.selectList(
-          new LambdaQueryWrapper<JobSeekerExpectation>()
-              .eq(JobSeekerExpectation::getJobSeekerId, jobSeekerId)
-              .orderByDesc(JobSeekerExpectation::getCreatedAt));
+      List<JobSeekerExpectation> jobSeekerExpectations =
+          jobSeekerExpectationMapper.selectList(
+              new LambdaQueryWrapper<JobSeekerExpectation>()
+                  .eq(JobSeekerExpectation::getJobSeekerId, jobSeekerId)
+                  .orderByDesc(JobSeekerExpectation::getCreatedAt));
 
-      List<ProjectExperience> projectExperiences = projectExperienceMapper.selectList(
-          new LambdaQueryWrapper<ProjectExperience>()
-              .eq(ProjectExperience::getJobSeekerId, jobSeekerId)
-              .orderByDesc(ProjectExperience::getStartDate));
+      List<ProjectExperience> projectExperiences =
+          projectExperienceMapper.selectList(
+              new LambdaQueryWrapper<ProjectExperience>()
+                  .eq(ProjectExperience::getJobSeekerId, jobSeekerId)
+                  .orderByDesc(ProjectExperience::getStartDate));
 
-      List<WorkExperience> workExperiences = workExperienceMapper.selectList(
-          new LambdaQueryWrapper<WorkExperience>()
-              .eq(WorkExperience::getJobSeekerId, jobSeekerId)
-              .orderByDesc(WorkExperience::getStartDate));
+      List<WorkExperience> workExperiences =
+          workExperienceMapper.selectList(
+              new LambdaQueryWrapper<WorkExperience>()
+                  .eq(WorkExperience::getJobSeekerId, jobSeekerId)
+                  .orderByDesc(WorkExperience::getStartDate));
 
-      List<Skill> skills = skillMapper.selectList(
-          new LambdaQueryWrapper<Skill>().eq(Skill::getJobSeekerId, jobSeekerId));
+      List<Skill> skills =
+          skillMapper.selectList(
+              new LambdaQueryWrapper<Skill>().eq(Skill::getJobSeekerId, jobSeekerId));
 
       Map<String, Object> resume = new LinkedHashMap<>();
       resume.put("userBase", buildUserBaseInfo(user));

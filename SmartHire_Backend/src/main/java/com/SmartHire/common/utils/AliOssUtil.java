@@ -32,7 +32,7 @@ public class AliOssUtil {
    * 上传文件
    *
    * @param objectName 文件名
-   * @param in 文件输入流
+   * @param in         文件输入流
    * @return 文件访问url
    */
   public String uploadFile(String objectName, InputStream in) throws IOException {
@@ -69,8 +69,8 @@ public class AliOssUtil {
    * 根据目录键组装 objectName 并上传
    *
    * @param directoryKey 目录键（如 avatar、resume 等）
-   * @param fileName 原始文件名（或生成的唯一名）
-   * @param in 文件输入流
+   * @param fileName     原始文件名（或生成的唯一名）
+   * @param in           文件输入流
    */
   public String uploadFile(String directoryKey, String fileName, InputStream in)
       throws IOException {
@@ -147,7 +147,7 @@ public class AliOssUtil {
    * 构建带目录前缀的 objectName
    *
    * @param directoryKey 目录键
-   * @param fileName 文件名
+   * @param fileName     文件名
    */
   public String buildObjectName(String directoryKey, String fileName) {
     String prefix = resolveDirectoryPrefix(directoryKey);
@@ -214,5 +214,22 @@ public class AliOssUtil {
       return rawEndpoint.substring(idx + 1);
     }
     return rawEndpoint;
+  }
+
+  /**
+   * 为避免暴露内部可变 Map，返回一个副本
+   */
+  public Map<String, String> getDirectoryPrefixes() {
+    return new HashMap<>(directoryPrefixes);
+  }
+
+  /**
+   * 为避免持有外部可变 Map 的引用，仅拷贝内容
+   */
+  public void setDirectoryPrefixes(Map<String, String> directoryPrefixes) {
+    this.directoryPrefixes.clear();
+    if (directoryPrefixes != null) {
+      this.directoryPrefixes.putAll(directoryPrefixes);
+    }
   }
 }

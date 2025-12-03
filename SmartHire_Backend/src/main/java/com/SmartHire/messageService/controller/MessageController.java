@@ -1,13 +1,13 @@
 package com.SmartHire.messageService.controller;
 
+import com.SmartHire.common.entity.Result;
+import com.SmartHire.common.utils.JwtUtil;
+import com.SmartHire.common.utils.SecurityContextUtil;
 import com.SmartHire.messageService.dto.ConversationDTO;
 import com.SmartHire.messageService.dto.MessageDTO;
 import com.SmartHire.messageService.dto.SendMessageDTO;
 import com.SmartHire.messageService.service.ChatMessageService;
 import com.SmartHire.messageService.service.ConversationService;
-import com.SmartHire.common.entity.Result;
-import com.SmartHire.common.utils.JwtUtil;
-import com.SmartHire.common.utils.SecurityContextUtil;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;

@@ -1,8 +1,8 @@
 package com.SmartHire.seekerService.service.impl.seekerTableImpl;
 
-import com.SmartHire.seekerService.service.JobSeekerService;
 import com.SmartHire.common.exception.enums.ErrorCode;
 import com.SmartHire.common.exception.exception.BusinessException;
+import com.SmartHire.seekerService.service.JobSeekerService;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import java.util.Objects;

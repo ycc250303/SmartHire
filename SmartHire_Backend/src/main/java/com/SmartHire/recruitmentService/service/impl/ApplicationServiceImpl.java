@@ -14,7 +14,6 @@ import com.SmartHire.recruitmentService.mapper.ApplicationMapper;
 import com.SmartHire.recruitmentService.model.Application;
 import com.SmartHire.recruitmentService.service.ApplicationService;
 import com.SmartHire.userAuthService.model.User;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import java.util.Date;
@@ -70,10 +69,8 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
     Long seekerId = seekerApi.getJobSeekerIdByUserId(userId);
 
     // 如果提供了简历ID，则校验附件简历是否存在且属于当前用户
-    if (resumeId != null) {
-      if (!seekerApi.validateResumeOwnership(resumeId, seekerId)) {
-        throw new BusinessException(ErrorCode.RESUME_NOT_BELONG_TO_USER);
-      }
+    if (resumeId != null && !seekerApi.validateResumeOwnership(resumeId, seekerId)) {
+      throw new BusinessException(ErrorCode.RESUME_NOT_BELONG_TO_USER);
     }
     // 如果 resumeId 为 null，则投递在线简历（不需要额外校验）
 
@@ -111,9 +108,7 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
     // TODO：添加消息通知并发送给HR
   }
 
-  /**
-   * 获取当前登录HR的ID（hr_info表的id）
-   */
+  /** 获取当前登录HR的ID（hr_info表的id） */
   private Long getCurrentHrId() {
     Map<String, Object> map = SecurityContextUtil.getCurrentClaims();
     Long userId = jwtUtil.getUserIdFromToken(map);
@@ -134,9 +129,7 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
     return hrId;
   }
 
-  /**
-   * 校验投递是否属于当前HR
-   */
+  /** 校验投递是否属于当前HR */
   private Application validateApplicationOwnership(Long applicationId, Long hrId) {
     Application application = getById(applicationId);
     if (application == null) {
@@ -164,8 +157,8 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
     Page<ApplicationListDTO> page = new Page<>(pageNum, pageSize);
     String keyword = StringUtils.hasText(queryDTO.getKeyword()) ? queryDTO.getKeyword().trim() : null;
 
-    Byte status = queryDTO.getStatus() != null ? queryDTO.getStatus().byteValue() : null;
-    return baseMapper.selectApplicationList(page, hrId, queryDTO.getJobId(), status, keyword);
+    return baseMapper.selectApplicationList(
+        page, hrId, queryDTO.getJobId(), queryDTO.getStatus(), keyword);
   }
 
   @Override

@@ -1,12 +1,12 @@
 package com.SmartHire.seekerService.service.impl.seekerTableImpl;
 
+import com.SmartHire.common.exception.enums.ErrorCode;
+import com.SmartHire.common.exception.exception.BusinessException;
+import com.SmartHire.common.utils.AliOssUtil;
 import com.SmartHire.seekerService.dto.seekerTableDto.ResumeDTO;
 import com.SmartHire.seekerService.mapper.ResumeMapper;
 import com.SmartHire.seekerService.model.Resume;
 import com.SmartHire.seekerService.service.seekerTableService.ResumeService;
-import com.SmartHire.common.exception.enums.ErrorCode;
-import com.SmartHire.common.exception.exception.BusinessException;
-import com.SmartHire.common.utils.AliOssUtil;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;

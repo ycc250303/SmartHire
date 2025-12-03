@@ -1,7 +1,6 @@
 package com.SmartHire.common.exception.enums;
 
 public enum ErrorCode {
-
   VALIDATION_ERROR(1, "参数校验异常"),
   // 用户注册登录相关错误码 (1000-1999)
   USER_AUTH_USER_HAS_EXISTED(1001, "用户名已存在"),
@@ -24,7 +23,7 @@ public enum ErrorCode {
   TOKEN_IS_REFRESH_TOKEN(1018, "JWT Token 为 refresh token"),
   PERMISSION_DENIED(1019, "权限不足，仅管理员可执行此操作"),
   CANNOT_DELETE_OTHER_USER(1020, "无权删除其他用户的账户，只能删除自己的账户"),
-  
+
   // 求职者相关错误码 (1100-1199)
   SEEKER_ALREADY_REGISTERED(1101, "该用户已注册求职者信息，请勿重复注册"),
   SEEKER_NOT_EXIST(1102, "求职者信息不存在"),
@@ -51,7 +50,7 @@ public enum ErrorCode {
   RESUME_LIMIT_EXCEEDED(1123, "附件简历数量已达上限（最多5个）"),
   RESUME_FILE_EMPTY(1124, "上传的简历文件不能为空"),
   RESUME_UPLOAD_FAILED(1125, "简历上传失败"),
-  
+
   // HR和岗位相关错误码 (1200-1299)
   HR_NOT_EXIST(1201, "HR信息不存在"),
   HR_NOT_BELONG_TO_USER(1202, "HR信息不属于当前用户"),
@@ -62,7 +61,7 @@ public enum ErrorCode {
 
   // 招聘（投递/推荐）相关错误码 (1300-1399)
   APPLICATION_ALREADY_EXISTS(1301, "您已投递过该职位，请勿重复投递"),
-  
+
   APPLICATION_NOT_EXIST(1303, "投递记录不存在"),
   APPLICATION_NOT_BELONG_TO_HR(1304, "投递记录不属于当前HR"),
   // 会话/聊天相关错误码 (1400-1499)
