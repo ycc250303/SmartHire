@@ -1,11 +1,12 @@
 package com.SmartHire.userAuthService.service.impl;
 
 import com.SmartHire.common.api.SeekerApi;
+import com.SmartHire.common.auth.JwtTokenExtractor;
+import com.SmartHire.common.auth.UserContext;
 import com.SmartHire.common.exception.enums.ErrorCode;
 import com.SmartHire.common.exception.exception.BusinessException;
 import com.SmartHire.common.utils.AliOssUtil;
 import com.SmartHire.common.utils.JwtUtil;
-import com.SmartHire.common.utils.SecurityContextUtil;
 import com.SmartHire.userAuthService.dto.*;
 import com.SmartHire.userAuthService.mapper.UserAuthMapper;
 import com.SmartHire.userAuthService.model.User;
@@ -26,8 +27,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
@@ -58,6 +57,10 @@ public class UserAuthServiceImpl extends ServiceImpl<UserAuthMapper, User>
   @Autowired private AliOssUtil aliOssUtil;
 
   @Autowired private JwtUtil jwtUtil;
+
+  @Autowired private UserContext userContext;
+
+  @Autowired private JwtTokenExtractor tokenExtractor;
 
   @Autowired private RedisTemplate<String, String> redisTemplate;
 
@@ -140,11 +143,7 @@ public class UserAuthServiceImpl extends ServiceImpl<UserAuthMapper, User>
    */
   @Override
   public UserInfoDTO getUserInfo() {
-    Map<String, Object> map = SecurityContextUtil.getCurrentClaims();
-    Long userId = jwtUtil.getUserIdFromToken(map);
-    if (userId == null) {
-      throw new BusinessException(ErrorCode.USER_ID_NOT_EXIST);
-    }
+    Long userId = userContext.getCurrentUserId();
     User user = userMapper.selectById(userId);
     if (user == null) {
       throw new BusinessException(ErrorCode.USER_ID_NOT_EXIST);
@@ -185,12 +184,7 @@ public class UserAuthServiceImpl extends ServiceImpl<UserAuthMapper, User>
    */
   @Override
   public String updateUserAvatar(MultipartFile avatarFile) throws IOException {
-    Map<String, Object> map = SecurityContextUtil.getCurrentClaims();
-    Long userId = jwtUtil.getUserIdFromToken(map);
-    if (userId == null) {
-      throw new BusinessException(ErrorCode.USER_ID_NOT_EXIST);
-    }
-
+    Long userId = userContext.getCurrentUserId();
     User user = userMapper.selectById(userId);
     if (user == null) {
       throw new BusinessException(ErrorCode.USER_ID_NOT_EXIST);
@@ -227,12 +221,10 @@ public class UserAuthServiceImpl extends ServiceImpl<UserAuthMapper, User>
    */
   @Override
   public void logout() {
-    String accessToken = getTokenFromRequest();
-
-    Map<String, Object> claims = jwtUtil.parseToken(accessToken);
-    Long userId = jwtUtil.getUserIdFromToken(claims);
-
+    Long userId = userContext.getCurrentUserId();
+    String accessToken = tokenExtractor.extractToken();
     String refreshToken = getCurrentRefreshToken(userId);
+
     blacklistToken(accessToken, ACCESS_BLACKLIST_PREFIX, accessTokenValidTime);
     if (refreshToken != null) {
       blacklistToken(refreshToken, REFRESH_BLACKLIST_PREFIX, refreshTokenValidTime);
@@ -267,7 +259,7 @@ public class UserAuthServiceImpl extends ServiceImpl<UserAuthMapper, User>
     ensureSingleLogin(refreshToken, userId);
 
     // 旧 access token 加入黑名单，防止旧 token 继续使用
-    String oldAccessToken = getTokenFromRequestNullable();
+    String oldAccessToken = tokenExtractor.extractTokenNullable();
     if (oldAccessToken != null) {
       blacklistToken(oldAccessToken, ACCESS_BLACKLIST_PREFIX, accessTokenValidTime);
     }
@@ -432,34 +424,6 @@ public class UserAuthServiceImpl extends ServiceImpl<UserAuthMapper, User>
     }
   }
 
-  /** 从当前请求中获取 Authorization Header */
-  private String getTokenFromRequest() {
-    ServletRequestAttributes attributes =
-        (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-    if (attributes == null) {
-      throw new BusinessException(ErrorCode.USER_NOT_LOGIN);
-    }
-    String token = attributes.getRequest().getHeader("Authorization");
-    if (token == null || token.isBlank()) {
-      throw new BusinessException(ErrorCode.TOKEN_IS_NULL);
-    }
-    return token;
-  }
-
-  /** 尝试从当前请求获取 Authorization Header，不存在时返回 null */
-  private String getTokenFromRequestNullable() {
-    ServletRequestAttributes attributes =
-        (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-    if (attributes == null) {
-      return null;
-    }
-    String token = attributes.getRequest().getHeader("Authorization");
-    if (token == null || token.isBlank()) {
-      return null;
-    }
-    return token;
-  }
-
   /**
    * 删除用户（管理员可删除任何用户，普通用户只能删除自己的账户） 如果用户是求职者，则同时删除求职者信息
    *
@@ -469,12 +433,7 @@ public class UserAuthServiceImpl extends ServiceImpl<UserAuthMapper, User>
   @Transactional(rollbackFor = Exception.class)
   public void deleteUser(Long userId) {
     // 1. 获取当前登录用户信息
-    Map<String, Object> claims = SecurityContextUtil.getCurrentClaims();
-    Long currentUserId = jwtUtil.getUserIdFromToken(claims);
-    if (currentUserId == null) {
-      throw new BusinessException(ErrorCode.USER_ID_NOT_EXIST);
-    }
-
+    Long currentUserId = userContext.getCurrentUserId();
     User currentUser = userMapper.selectById(currentUserId);
     if (currentUser == null) {
       throw new BusinessException(ErrorCode.USER_ID_NOT_EXIST);

@@ -1,11 +1,10 @@
 package com.SmartHire.seekerService.service.impl;
 
 import com.SmartHire.common.api.UserAuthApi;
+import com.SmartHire.common.auth.UserContext;
 import com.SmartHire.common.exception.enums.ErrorCode;
 import com.SmartHire.common.exception.exception.BusinessException;
 import com.SmartHire.common.utils.AliOssUtil;
-import com.SmartHire.common.utils.JwtUtil;
-import com.SmartHire.common.utils.SecurityContextUtil;
 import com.SmartHire.seekerService.dto.SeekerDTO;
 import com.SmartHire.seekerService.mapper.EducationExperienceMapper;
 import com.SmartHire.seekerService.mapper.JobSeekerExpectationMapper;
@@ -22,7 +21,6 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -43,7 +41,7 @@ public class JobSeekerServiceImpl extends ServiceImpl<JobSeekerMapper, JobSeeker
 
   @Autowired private UserAuthApi userAuthApi;
 
-  @Autowired private JwtUtil jwtUtil;
+  @Autowired private UserContext userContext;
 
   @Autowired private ResumeMapper resumeMapper;
 
@@ -66,8 +64,7 @@ public class JobSeekerServiceImpl extends ServiceImpl<JobSeekerMapper, JobSeeker
    */
   @Override
   public void registerSeeker(SeekerDTO request) {
-    Map<String, Object> map = SecurityContextUtil.getCurrentClaims();
-    Long userId = jwtUtil.getUserIdFromToken(map);
+    Long userId = userContext.getCurrentUserId();
     log.info("用户ID：{}", userId);
 
     // 检查该用户是否已经注册过求职者信息
@@ -96,8 +93,7 @@ public class JobSeekerServiceImpl extends ServiceImpl<JobSeekerMapper, JobSeeker
    */
   @Override
   public JobSeeker getSeekerInfo() {
-    Map<String, Object> map = SecurityContextUtil.getCurrentClaims();
-    Long userId = jwtUtil.getUserIdFromToken(map);
+    Long userId = userContext.getCurrentUserId();
 
     // 验证用户是否存在和身份
     User user = userAuthApi.getUserById(userId);
@@ -122,11 +118,7 @@ public class JobSeekerServiceImpl extends ServiceImpl<JobSeekerMapper, JobSeeker
    */
   @Override
   public Long getJobSeekerId() {
-    Map<String, Object> map = SecurityContextUtil.getCurrentClaims();
-    Long userId = jwtUtil.getUserIdFromToken(map);
-    if (userId == null) {
-      throw new BusinessException(ErrorCode.USER_ID_NOT_EXIST);
-    }
+    Long userId = userContext.getCurrentUserId();
     JobSeeker jobSeeker = lambdaQuery().eq(JobSeeker::getUserId, userId).one();
 
     if (jobSeeker == null) {

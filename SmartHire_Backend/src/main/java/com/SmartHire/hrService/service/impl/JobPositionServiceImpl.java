@@ -1,10 +1,9 @@
 package com.SmartHire.hrService.service.impl;
 
 import com.SmartHire.common.api.UserAuthApi;
+import com.SmartHire.common.auth.UserContext;
 import com.SmartHire.common.exception.enums.ErrorCode;
 import com.SmartHire.common.exception.exception.BusinessException;
-import com.SmartHire.common.utils.JwtUtil;
-import com.SmartHire.common.utils.SecurityContextUtil;
 import com.SmartHire.hrService.dto.JobPositionCreateDTO;
 import com.SmartHire.hrService.dto.JobPositionListDTO;
 import com.SmartHire.hrService.dto.JobPositionUpdateDTO;
@@ -19,7 +18,6 @@ import com.SmartHire.userAuthService.model.User;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,16 +36,11 @@ public class JobPositionServiceImpl extends ServiceImpl<JobPositionMapper, JobPo
 
   @Autowired private JobSkillRequirementMapper jobSkillRequirementMapper;
 
-  @Autowired private JwtUtil jwtUtil;
+  @Autowired private UserContext userContext;
 
   /** 获取当前登录HR的ID（hr_info表的id） */
   private Long getCurrentHrId() {
-    Map<String, Object> map = SecurityContextUtil.getCurrentClaims();
-    Long userId = jwtUtil.getUserIdFromToken(map);
-    if (userId == null) {
-      throw new BusinessException(ErrorCode.USER_ID_NOT_EXIST);
-    }
-
+    Long userId = userContext.getCurrentUserId();
     User user = userAuthApi.getUserById(userId);
     if (user.getUserType() != 2) {
       throw new BusinessException(ErrorCode.USER_NOT_HR);

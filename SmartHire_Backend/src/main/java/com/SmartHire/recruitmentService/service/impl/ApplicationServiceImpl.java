@@ -3,10 +3,9 @@ package com.SmartHire.recruitmentService.service.impl;
 import com.SmartHire.common.api.HrApi;
 import com.SmartHire.common.api.SeekerApi;
 import com.SmartHire.common.api.UserAuthApi;
+import com.SmartHire.common.auth.UserContext;
 import com.SmartHire.common.exception.enums.ErrorCode;
 import com.SmartHire.common.exception.exception.BusinessException;
-import com.SmartHire.common.utils.JwtUtil;
-import com.SmartHire.common.utils.SecurityContextUtil;
 import com.SmartHire.recruitmentService.dto.ApplicationListDTO;
 import com.SmartHire.recruitmentService.dto.ApplicationQueryDTO;
 import com.SmartHire.recruitmentService.dto.SubmitResumeDTO;
@@ -17,7 +16,6 @@ import com.SmartHire.userAuthService.model.User;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import java.util.Date;
-import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -41,7 +39,7 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
 
   @Autowired private UserAuthApi userAuthApi;
 
-  @Autowired private JwtUtil jwtUtil;
+  @Autowired private UserContext userContext;
 
   @Override
   @Transactional(rollbackFor = Exception.class)
@@ -54,12 +52,8 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
     Long jobId = request.getJobId();
     Long resumeId = request.getResumeId();
 
-    // 获取当前用户ID（从JWT token中获取）
-    Map<String, Object> map = SecurityContextUtil.getCurrentClaims();
-    Long userId = jwtUtil.getUserIdFromToken(map);
-    if (userId == null) {
-      throw new BusinessException(ErrorCode.USER_ID_NOT_EXIST);
-    }
+    // 获取当前用户ID
+    Long userId = userContext.getCurrentUserId();
 
     // 获取当前求职者ID
     Long seekerId = seekerApi.getJobSeekerIdByUserId(userId);
@@ -107,12 +101,7 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
 
   /** 获取当前登录HR的ID（hr_info表的id） */
   private Long getCurrentHrId() {
-    Map<String, Object> map = SecurityContextUtil.getCurrentClaims();
-    Long userId = jwtUtil.getUserIdFromToken(map);
-    if (userId == null) {
-      throw new BusinessException(ErrorCode.USER_ID_NOT_EXIST);
-    }
-
+    Long userId = userContext.getCurrentUserId();
     User user = userAuthApi.getUserById(userId);
     if (user.getUserType() != 2) {
       throw new BusinessException(ErrorCode.USER_NOT_HR);

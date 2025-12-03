@@ -1,5 +1,6 @@
 package com.SmartHire.common.filters;
 
+import com.SmartHire.common.auth.JwtTokenExtractor;
 import com.SmartHire.common.exception.enums.ErrorCode;
 import com.SmartHire.common.exception.exception.BusinessException;
 import com.SmartHire.common.utils.JwtUtil;
@@ -20,7 +21,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-/** JWT 认证过滤器 */
+/** JWT 认证过滤器 统一处理JWT Token的验证和用户信息提取 */
 @Slf4j
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -36,32 +37,45 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
   @Autowired private JwtUtil jwtUtil;
 
+  @Autowired private JwtTokenExtractor tokenExtractor;
+
   @Autowired private RedisTemplate<String, String> redisTemplate;
 
-  /** 过滤器内部逻辑 */
+  /** 过滤器内部处理 */
   @Override
   protected void doFilterInternal(
       HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
       throws ServletException, IOException {
     String path = request.getServletPath();
+
+    // 公开路径直接放行
     if (PUBLIC_PATHS.contains(path)) {
       filterChain.doFilter(request, response);
       return;
     }
 
-    String token = request.getHeader("Authorization");
     try {
+      // 从HTTP请求中提取Token
+      String token = tokenExtractor.extractToken(request);
+
+      // 检查黑名单
       ensureNotBlacklisted(token);
+
+      // 验证Token
       DecodedJWT decoded = jwtUtil.verifyToken(token);
+
+      // 确保是Access Token
       if (!jwtUtil.isAccessToken(decoded)) {
-        log.warn("refresh token 访问受保护接口, path={} token={}", path, token);
+        log.warn("refresh token 访问受保护接口, path={}", path);
         throw new BusinessException(ErrorCode.TOKEN_IS_REFRESH_TOKEN);
       }
-      Map<String, Object> claims = jwtUtil.getClaims(decoded);
 
+      // 提取Claims并设置到SecurityContext
+      Map<String, Object> claims = jwtUtil.getClaims(decoded);
       UsernamePasswordAuthenticationToken authentication =
           new UsernamePasswordAuthenticationToken(claims, null, Collections.emptyList());
       SecurityContextHolder.getContext().setAuthentication(authentication);
+
       filterChain.doFilter(request, response);
     } catch (BusinessException ex) {
       SecurityContextHolder.clearContext();
@@ -71,7 +85,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
   }
 
-  /** 确保 token 不在黑名单中 */
+  /** 确保Token不在黑名单中 */
   private void ensureNotBlacklisted(String token) {
     if (token == null || token.isBlank()) {
       throw new BusinessException(ErrorCode.TOKEN_IS_NULL);

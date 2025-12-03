@@ -1,10 +1,9 @@
 package com.SmartHire.hrService.service.impl;
 
 import com.SmartHire.common.api.UserAuthApi;
+import com.SmartHire.common.auth.UserContext;
 import com.SmartHire.common.exception.enums.ErrorCode;
 import com.SmartHire.common.exception.exception.BusinessException;
-import com.SmartHire.common.utils.JwtUtil;
-import com.SmartHire.common.utils.SecurityContextUtil;
 import com.SmartHire.hrService.dto.HrInfoDTO;
 import com.SmartHire.hrService.dto.HrInfoUpdateDTO;
 import com.SmartHire.hrService.mapper.HrInfoMapper;
@@ -13,7 +12,6 @@ import com.SmartHire.hrService.service.HrInfoService;
 import com.SmartHire.userAuthService.model.User;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import java.util.Date;
-import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -24,16 +22,11 @@ public class HrInfoServiceImpl extends ServiceImpl<HrInfoMapper, HrInfo> impleme
 
   @Autowired private UserAuthApi userAuthApi;
 
-  @Autowired private JwtUtil jwtUtil;
+  @Autowired private UserContext userContext;
 
   /** 获取当前登录用户ID并校验HR身份 */
   private Long validateAndGetCurrentHrUserId() {
-    Map<String, Object> map = SecurityContextUtil.getCurrentClaims();
-    Long userId = jwtUtil.getUserIdFromToken(map);
-    if (userId == null) {
-      throw new BusinessException(ErrorCode.USER_ID_NOT_EXIST);
-    }
-
+    Long userId = userContext.getCurrentUserId();
     // 验证用户是否存在和身份
     User user = userAuthApi.getUserById(userId);
     if (user.getUserType() != 2) {
