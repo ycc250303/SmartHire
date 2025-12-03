@@ -67,25 +67,22 @@ CREATE TABLE `job_seeker_expectation` (
 CREATE TABLE `company` (
     `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '公司ID',
     `company_name` VARCHAR(100) NOT NULL COMMENT '公司名称',
-    `company_code` VARCHAR(50) COMMENT '统一社会信用代码',
     `industry` VARCHAR(50) COMMENT '所属行业',
-    `company_scale` VARCHAR(20) COMMENT '公司规模',
-    `financing_stage` VARCHAR(20) COMMENT '融资阶段',
-    `city` VARCHAR(50) COMMENT '所在城市',
-    `address` VARCHAR(255) COMMENT '详细地址',
+    `company_scale` TINYINT COMMENT '公司规模 1:0-20 2：20-99 3:100-499 4:500-999 5:1000-3000 6:3000-10000 7:10000以上',
+    `financing_stage` TINYINT COMMENT '融资阶段 0:无融资 1:天使轮 2:A轮 3:B轮 4:C轮 5:D轮',
     `website` VARCHAR(255) COMMENT '公司网站',
     `logo_url` VARCHAR(255) COMMENT '公司Logo',
     `description` TEXT COMMENT '公司简介',
     `main_business` TEXT COMMENT '主要业务',
     `benefits` TEXT COMMENT '福利待遇',
     `status` TINYINT DEFAULT 1 COMMENT '状态：0-未认证 1-已认证',
+    `company_created_at` DATETIME NOT NULL COMMENT '公司创建时间',
+    `registered_capital` VARCHAR(20) not null COMMENT `注册资本` ,
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`id`),
-    UNIQUE KEY `uk_company_code` (`company_code`),
     KEY `idx_company_name` (`company_name`),
-    KEY `idx_industry` (`industry`),
-    KEY `idx_city` (`city`)
+    KEY `idx_industry` (`industry`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '公司信息表';
 -- 1.5 HR信息表
 CREATE TABLE `hr_info` (
@@ -232,7 +229,7 @@ CREATE TABLE `job_skill_requirement` (
     KEY `idx_skill_name` (`skill_name`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '职位技能要求表';
 -- =====================================================
--- 4. 投递与匹配模块 (3张表)
+-- 4. 投递与匹配模块 (2张表)
 -- =====================================================
 -- 4.1 投递/推荐记录表
 CREATE TABLE `application` (
@@ -288,7 +285,7 @@ CREATE TABLE `chat_message` (
     `conversation_id` BIGINT NOT NULL COMMENT '会话ID',
     `message_type` TINYINT DEFAULT 1 COMMENT '消息类型：1-文本 2-图片 3-文件 4-语音 5-视频 ',
     `content` TEXT COMMENT '消息内容',
-    `file_url` VARCHAR(255) COMMENT '文件/图片/语音/视频URL',
+    `file_url` VARCHAR(255) DEFAULT NULL COMMENT '文件/图片/语音/视频URL',
     `reply_to` BIGINT DEFAULT NULL COMMENT '引用的消息ID',
     `is_read` TINYINT DEFAULT 0 COMMENT '是否已读',
     `is_flagged` TINYINT DEFAULT 0 COMMENT '是否被标记为敏感',
@@ -326,26 +323,23 @@ CREATE TABLE `conversation` (
     `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '会话ID',
     `user1_id` BIGINT NOT NULL COMMENT '用户A',
     `user2_id` BIGINT NOT NULL COMMENT '用户B',
-
     -- 用于显示最近消息
     `last_message` TEXT COMMENT '最近一条消息内容预览',
     `last_message_time` DATETIME COMMENT '最近消息时间',
-
     -- 未读数量（每个用户分别统计）
     `unread_count_user1` INT DEFAULT 0,
     `unread_count_user2` INT DEFAULT 0,
-
     -- 是否固定（置顶）
     `pinned_by_user1` TINYINT DEFAULT 0,
     `pinned_by_user2` TINYINT DEFAULT 0,
-
+    -- 是否删除
+    `deleted_by_user1` TINYINT DEFAULT 0,
+    `deleted_by_user2` TINYINT DEFAULT 0,
     -- 作为通知功能的字段
     `has_notification_user1` TINYINT DEFAULT 0 COMMENT '用户1是否有未读通知',
     `has_notification_user2` TINYINT DEFAULT 0 COMMENT '用户2是否有未读通知',
-
     -- 会话创建时间
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-
     PRIMARY KEY (`id`),
     UNIQUE KEY `uniq_conversation_pair` (`user1_id`, `user2_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='一对一会话';
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '一对一会话';

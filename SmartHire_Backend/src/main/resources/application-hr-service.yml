@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: SmartHire_HrService
+
+  # 只覆盖需要不同的配置，其他配置从 application.yml 继承
+  # Redis 和 Mail 配置会从 application.yml 继承
+
+# 服务器配置（与 spring 同级）
+server:
+  port: 8083
+  servlet:
+    context-path: /smarthire/api
+

@@ -3,7 +3,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <!-- Maven 项目模型版本 -->
     <modelVersion>4.0.0</modelVersion>
-    
+
     <!-- 继承 Spring Boot 父项目，提供默认的依赖管理和插件配置 -->
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -11,7 +11,7 @@
         <version>3.5.7</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
-    
+
     <!-- 项目基本信息 -->
     <groupId>com.example</groupId>
     <artifactId>SmartHire_Backend</artifactId>
@@ -31,7 +31,7 @@
         <tag/>
         <url/>
     </scm>
-    
+
     <!-- 项目属性配置 -->
     <properties>
         <!-- Java 版本 -->
@@ -44,7 +44,7 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
-        
+
         <!-- Spring Boot Web 支持，提供 RESTful API 和 MVC 功能 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -58,14 +58,14 @@
             <scope>runtime</scope>
             <optional>true</optional>
         </dependency>
-        
+
         <!-- MySQL 数据库连接驱动 -->
         <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
             <scope>runtime</scope>
         </dependency>
-        
+
         <!-- Lombok 注解处理器，简化 Java 代码（如 getter/setter、构造函数等） -->
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -86,7 +86,7 @@
             <artifactId>mybatis-spring-boot-starter</artifactId>
             <version>3.0.5</version>
         </dependency>
-        
+
         <!-- MyBatis-Plus Spring Boot 集成，提供增强的 MyBatis 功能 -->
         <dependency>
             <groupId>com.baomidou</groupId>
@@ -145,6 +145,11 @@
             <version>4.4.0</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
+
         <!--阿里云 OSS 文件存储服务-->
         <dependency>
             <groupId>com.aliyun.oss</groupId>
@@ -179,9 +184,6 @@
             <artifactId>swagger-annotations</artifactId>
             <version>2.2.15</version>
         </dependency>
-
-
-
     </dependencies>
 
     <!-- 构建配置 -->
@@ -218,7 +220,7 @@
                     </annotationProcessorPaths>
                 </configuration>
             </plugin>
-            
+
             <!-- Spring Boot Maven 插件，用于打包可执行 JAR 和运行应用 -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
@@ -255,6 +257,71 @@
                         <version>9.4.0</version>
                     </dependency>
                 </dependencies>
+            </plugin>
+
+            <!-- PMD Maven 插件，用于检查代码质量 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-pmd-plugin</artifactId>
+                <version>3.22.0</version>
+                <executions>
+                    <execution>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- Spotless Maven 插件，用于格式化代码 -->
+            <plugin>
+                <groupId>com.diffplug.spotless</groupId>
+                <artifactId>spotless-maven-plugin</artifactId>
+                <version>2.43.0</version>
+                <configuration>
+                    <java>
+                        <googleJavaFormat>
+                            <version>1.17.0</version>
+                        </googleJavaFormat>
+                    </java>
+                </configuration>
+            </plugin>
+
+            <!-- SpotBugs + FindSecBugs 插件，用于静态代码与安全扫描 -->
+            <plugin>
+                <groupId>com.github.spotbugs</groupId>
+                <artifactId>spotbugs-maven-plugin</artifactId>
+                <version>4.8.6.4</version>
+                <configuration>
+                    <!-- 扫描强度：Min | Default | Max -->
+                    <effort>Max</effort>
+                    <!-- 报告级别：High | Default | Low，Low 会报告更多问题 -->
+                    <threshold>Low</threshold>
+                    <!-- 发现 Bug 时在构建失败（CI 场景建议保持为 true） -->
+                    <failOnError>true</failOnError>
+                    <!-- 输出 XML 报告，方便在 CI 中归档 -->
+                    <xmlOutput>true</xmlOutput>
+                    <xmlOutputDirectory>${project.build.directory}/spotbugs</xmlOutputDirectory>
+                    <!-- SpotBugs 排除配置 -->
+                    <excludeFilterFile>${project.basedir}/config/spotbugs/exclude.xml</excludeFilterFile>
+                </configuration>
+                <dependencies>
+                    <!-- 引入 FindSecBugs 作为 SpotBugs 插件 -->
+                    <dependency>
+                        <groupId>com.h3xstream.findsecbugs</groupId>
+                        <artifactId>findsecbugs-plugin</artifactId>
+                        <version>1.13.0</version>
+                    </dependency>
+                </dependencies>
+                <executions>
+                    <execution>
+                        <!-- 在 verify 阶段自动执行 -->
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

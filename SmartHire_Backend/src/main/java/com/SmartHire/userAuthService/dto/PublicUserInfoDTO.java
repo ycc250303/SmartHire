@@ -9,23 +9,15 @@ import lombok.Data;
  */
 @Data
 public class PublicUserInfoDTO {
-    /**
-     * 用户ID
-     */
-    private Long id;
+  /** 用户ID */
+  private Long id;
 
-    /**
-     * 用户名
-     */
-    private String username;
+  /** 用户名 */
+  private String username;
 
-    /**
-     * 用户类型：1-求职者 2-HR
-     */
-    private Integer userType;
+  /** 用户类型：1-求职者 2-HR */
+  private Integer userType;
 
-    /**
-     * 头像URL
-     */
-    private String avatarUrl;
+  /** 头像URL */
+  private String avatarUrl;
 }

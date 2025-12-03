@@ -663,8 +663,8 @@ jwt:
 
 ### 相关文件
 
-- **JWT 工具类**：`com.SmartHire.shared.utils.JwtUtil`
-- **认证过滤器**：`com.SmartHire.shared.filters.JwtAuthenticationFilter`
+- **JWT 工具类**：`com.SmartHire.common.utils.JwtUtil`
+- **认证过滤器**：`com.SmartHire.common.filters.JwtAuthenticationFilter`
 - **用户认证服务**：`com.SmartHire.userAuthService.service.impl.UserAuthServiceImpl`
-- **安全上下文工具**：`com.SmartHire.shared.utils.SecurityContextUtil`
+- **安全上下文工具**：`com.SmartHire.common.utils.SecurityContextUtil`
 - **配置文件**：`application-local.yml`
