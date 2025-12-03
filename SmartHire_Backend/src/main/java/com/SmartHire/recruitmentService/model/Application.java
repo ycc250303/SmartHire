@@ -2,11 +2,11 @@ package com.SmartHire.recruitmentService.model;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
 /**
  * 投递/推荐记录表
@@ -14,8 +14,8 @@ import lombok.Setter;
  * @author SmartHire Team
  * @since 2025-11-30
  */
-@Getter
-@Setter
+@Data
+@TableName("application")
 public class Application implements Serializable {
 
   private static final long serialVersionUID = 1L;
@@ -36,7 +36,7 @@ public class Application implements Serializable {
   /** 发起方：0-求职者投递 1-HR推荐 */
   private Byte initiator;
 
-  /** 状态： 0-已投递/已推荐 1-已查看 2-待面试 3-已面试 4-已录用 5-已拒绝 6-已撤回 */
+  /** 状态：0-已投递/已推荐 1-已查看 2-待面试 3-已面试 4-已录用 5-已拒绝 6-已撤回 */
   private Byte status;
 
   /** 匹配度分数（0-100） */

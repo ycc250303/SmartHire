@@ -10,7 +10,7 @@ import com.SmartHire.seekerService.dto.seekerTableDto.WorkExperienceDTO;
 import com.SmartHire.seekerService.model.JobSeeker;
 import com.SmartHire.seekerService.service.*;
 import com.SmartHire.seekerService.service.seekerTableService.*;
-import com.SmartHire.shared.entity.Result;
+import com.SmartHire.common.entity.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;

@@ -1,9 +1,9 @@
 package com.SmartHire.hrService.service.impl;
 
+import com.SmartHire.common.utils.SecurityContextUtil;
 import com.SmartHire.hrService.dto.JobPositionCreateDTO;
 import com.SmartHire.hrService.dto.JobPositionListDTO;
 import com.SmartHire.hrService.dto.JobPositionUpdateDTO;
-import com.SmartHire.hrService.dto.JobSkillDTO;
 import com.SmartHire.hrService.mapper.HrInfoMapper;
 import com.SmartHire.hrService.mapper.JobPositionMapper;
 import com.SmartHire.hrService.mapper.JobSkillRequirementMapper;
@@ -11,11 +11,10 @@ import com.SmartHire.hrService.model.HrInfo;
 import com.SmartHire.hrService.model.JobPosition;
 import com.SmartHire.hrService.model.JobSkillRequirement;
 import com.SmartHire.hrService.service.JobPositionService;
-import com.SmartHire.shared.exception.enums.ErrorCode;
-import com.SmartHire.shared.exception.exception.BusinessException;
-import com.SmartHire.shared.utils.JwtUtil;
-import com.SmartHire.shared.utils.ThreadLocalUtil;
-import com.SmartHire.userAuthService.mapper.UserAuthMapper;
+import com.SmartHire.common.exception.enums.ErrorCode;
+import com.SmartHire.common.exception.exception.BusinessException;
+import com.SmartHire.common.api.UserAuthApi;
+import com.SmartHire.common.utils.JwtUtil;
 import com.SmartHire.userAuthService.model.User;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.BeanUtils;
@@ -36,7 +35,7 @@ import java.util.stream.Collectors;
 public class JobPositionServiceImpl extends ServiceImpl<JobPositionMapper, JobPosition> implements JobPositionService {
 
     @Autowired
-    private UserAuthMapper userAuthMapper;
+    private UserAuthApi userAuthApi;
 
     @Autowired
     private HrInfoMapper hrInfoMapper;
@@ -44,28 +43,29 @@ public class JobPositionServiceImpl extends ServiceImpl<JobPositionMapper, JobPo
     @Autowired
     private JobSkillRequirementMapper jobSkillRequirementMapper;
 
+    @Autowired
+    private JwtUtil jwtUtil;
+
     /**
      * 获取当前登录HR的ID（hr_info表的id）
      */
     private Long getCurrentHrId() {
-        Map<String, Object> map = ThreadLocalUtil.get();
-        Long userId = JwtUtil.getUserIdFromToken(map);
-
-        User user = userAuthMapper.selectById(userId);
-        if (user == null) {
+        Map<String, Object> map = SecurityContextUtil.getCurrentClaims();
+        Long userId = jwtUtil.getUserIdFromToken(map);
+        if (userId == null) {
             throw new BusinessException(ErrorCode.USER_ID_NOT_EXIST);
         }
 
+        User user = userAuthApi.getUserById(userId);
         if (user.getUserType() != 2) {
             throw new BusinessException(ErrorCode.USER_NOT_HR);
         }
 
         // 通过user_id查询hr_info表获取hr_id（hr_info.id）
         HrInfo hrInfo = hrInfoMapper.selectOne(
-                com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper.<HrInfo>lambdaQuery()
-                        .eq(HrInfo::getUserId, userId)
-        );
-        
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<HrInfo>()
+                        .eq(HrInfo::getUserId, userId));
+
         if (hrInfo == null) {
             throw new BusinessException(ErrorCode.HR_NOT_EXIST);
         }
@@ -97,7 +97,7 @@ public class JobPositionServiceImpl extends ServiceImpl<JobPositionMapper, JobPo
         JobPosition jobPosition = new JobPosition();
         BeanUtils.copyProperties(createDTO, jobPosition);
         jobPosition.setHrId(currentHrId);
-        
+
         // 设置默认值
         if (jobPosition.getStatus() == null) {
             jobPosition.setStatus(1); // 默认招聘中
@@ -134,7 +134,7 @@ public class JobPositionServiceImpl extends ServiceImpl<JobPositionMapper, JobPo
                         return requirement;
                     })
                     .collect(Collectors.toList());
-            
+
             for (JobSkillRequirement requirement : skillRequirements) {
                 jobSkillRequirementMapper.insert(requirement);
             }
@@ -149,7 +149,7 @@ public class JobPositionServiceImpl extends ServiceImpl<JobPositionMapper, JobPo
         validateJobOwnership(jobId);
 
         JobPosition jobPosition = getById(jobId);
-        
+
         // 更新字段（只更新非空字段）
         if (StringUtils.hasText(updateDTO.getJobTitle())) {
             jobPosition.setJobTitle(updateDTO.getJobTitle());
@@ -232,11 +232,11 @@ public class JobPositionServiceImpl extends ServiceImpl<JobPositionMapper, JobPo
                 .map(job -> {
                     JobPositionListDTO dto = new JobPositionListDTO();
                     BeanUtils.copyProperties(job, dto);
-                    
+
                     // 查询技能要求
                     List<String> skills = jobSkillRequirementMapper.selectSkillNamesByJobId(job.getId());
                     dto.setSkills(skills);
-                    
+
                     return dto;
                 })
                 .collect(Collectors.toList());
@@ -252,12 +252,12 @@ public class JobPositionServiceImpl extends ServiceImpl<JobPositionMapper, JobPo
 
         JobPosition jobPosition = getById(jobId);
         jobPosition.setStatus(status);
-        
+
         // 如果状态改为招聘中且之前没有发布时间，设置发布时间
         if (status == 1 && jobPosition.getPublishedAt() == null) {
             jobPosition.setPublishedAt(new Date());
         }
-        
+
         jobPosition.setUpdatedAt(new Date());
         updateById(jobPosition);
     }
@@ -281,4 +281,3 @@ public class JobPositionServiceImpl extends ServiceImpl<JobPositionMapper, JobPo
         return dto;
     }
 }
-

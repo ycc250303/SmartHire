@@ -1,6 +1,6 @@
 package com.SmartHire.hrService.service;
 
-import com.SmartHire.hrService.dto.ApplicationListDTO;
+import com.SmartHire.recruitmentService.dto.ApplicationListDTO;
 
 import java.util.List;
 

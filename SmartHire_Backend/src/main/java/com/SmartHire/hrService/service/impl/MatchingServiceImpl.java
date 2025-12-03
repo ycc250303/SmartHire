@@ -1,7 +1,8 @@
 package com.SmartHire.hrService.service.impl;
 
-import com.SmartHire.hrService.dto.ApplicationListDTO;
-import com.SmartHire.hrService.mapper.ApplicationMapper;
+import com.SmartHire.common.utils.SecurityContextUtil;
+import com.SmartHire.recruitmentService.dto.ApplicationListDTO;
+import com.SmartHire.recruitmentService.mapper.ApplicationMapper;
 import com.SmartHire.hrService.mapper.HrInfoMapper;
 import com.SmartHire.hrService.mapper.JobPositionMapper;
 import com.SmartHire.hrService.mapper.JobSeekerSkillMapper;
@@ -9,11 +10,10 @@ import com.SmartHire.hrService.mapper.JobSkillRequirementMapper;
 import com.SmartHire.hrService.model.HrInfo;
 import com.SmartHire.hrService.model.JobPosition;
 import com.SmartHire.hrService.service.MatchingService;
-import com.SmartHire.shared.exception.enums.ErrorCode;
-import com.SmartHire.shared.exception.exception.BusinessException;
-import com.SmartHire.shared.utils.JwtUtil;
-import com.SmartHire.shared.utils.ThreadLocalUtil;
-import com.SmartHire.userAuthService.mapper.UserAuthMapper;
+import com.SmartHire.common.exception.enums.ErrorCode;
+import com.SmartHire.common.exception.exception.BusinessException;
+import com.SmartHire.common.api.UserAuthApi;
+import com.SmartHire.common.utils.JwtUtil;
 import com.SmartHire.userAuthService.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -39,7 +39,7 @@ import java.util.stream.Collectors;
 public class MatchingServiceImpl implements MatchingService {
 
     @Autowired
-    private UserAuthMapper userAuthMapper;
+    private UserAuthApi userAuthApi;
 
     @Autowired
     private HrInfoMapper hrInfoMapper;
@@ -56,25 +56,27 @@ public class MatchingServiceImpl implements MatchingService {
     @Autowired
     private ApplicationMapper applicationMapper;
 
+    @Autowired
+    private JwtUtil jwtUtil;
+
     /**
      * 获取当前登录HR的ID（hr_info表ID）
      */
     private Long getCurrentHrId() {
-        Map<String, Object> map = ThreadLocalUtil.get();
-        Long userId = JwtUtil.getUserIdFromToken(map);
-
-        User user = userAuthMapper.selectById(userId);
-        if (user == null) {
+        Map<String, Object> map = SecurityContextUtil.getCurrentClaims();
+        Long userId = jwtUtil.getUserIdFromToken(map);
+        if (userId == null) {
             throw new BusinessException(ErrorCode.USER_ID_NOT_EXIST);
         }
+
+        User user = userAuthApi.getUserById(userId);
         if (user.getUserType() != 2) {
             throw new BusinessException(ErrorCode.USER_NOT_HR);
         }
 
         HrInfo hrInfo = hrInfoMapper.selectOne(
-                com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper.<HrInfo>lambdaQuery()
-                        .eq(HrInfo::getUserId, userId)
-        );
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<HrInfo>()
+                        .eq(HrInfo::getUserId, userId));
 
         if (hrInfo == null) {
             throw new BusinessException(ErrorCode.HR_NOT_EXIST);
@@ -104,8 +106,8 @@ public class MatchingServiceImpl implements MatchingService {
         validateJobOwnership(jobId, hrId);
 
         List<String> requiredSkills = jobSkillRequirementMapper.selectSkillNamesByJobId(jobId);
-        Set<String> requiredSkillSet = requiredSkills == null ? new LinkedHashSet<>() :
-                requiredSkills.stream()
+        Set<String> requiredSkillSet = requiredSkills == null ? new LinkedHashSet<>()
+                : requiredSkills.stream()
                         .filter(StringUtils::hasText)
                         .map(this::normalizeSkill)
                         .collect(Collectors.toCollection(LinkedHashSet::new));
@@ -117,9 +119,10 @@ public class MatchingServiceImpl implements MatchingService {
 
         Date now = new Date();
         for (ApplicationListDTO application : applications) {
-            List<String> seekerSkills = jobSeekerSkillMapper.selectSkillNamesByJobSeekerId(application.getJobSeekerId());
-            Set<String> seekerSkillSet = seekerSkills == null ? new LinkedHashSet<>() :
-                    seekerSkills.stream()
+            List<String> seekerSkills = jobSeekerSkillMapper
+                    .selectSkillNamesByJobSeekerId(application.getJobSeekerId());
+            Set<String> seekerSkillSet = seekerSkills == null ? new LinkedHashSet<>()
+                    : seekerSkills.stream()
                             .filter(StringUtils::hasText)
                             .map(this::normalizeSkill)
                             .collect(Collectors.toCollection(LinkedHashSet::new));
@@ -192,4 +195,3 @@ public class MatchingServiceImpl implements MatchingService {
                 requiredSize, seekerSize, matchedSize, matchedStr);
     }
 }
-

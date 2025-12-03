@@ -1,8 +1,8 @@
 package com.SmartHire.userAuthService.service.impl;
 
-import com.SmartHire.shared.exception.enums.ErrorCode;
-import com.SmartHire.shared.exception.exception.BusinessException;
-import com.SmartHire.shared.utils.VerificationCodeGeneratorUtil;
+import com.SmartHire.common.exception.enums.ErrorCode;
+import com.SmartHire.common.exception.exception.BusinessException;
+import com.SmartHire.common.utils.VerificationCodeGeneratorUtil;
 import com.SmartHire.userAuthService.service.EmailService;
 import com.SmartHire.userAuthService.service.VerificationCodeService;
 import jakarta.validation.constraints.Email;

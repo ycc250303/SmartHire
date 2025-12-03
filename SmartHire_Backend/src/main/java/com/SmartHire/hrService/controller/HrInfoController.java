@@ -1,9 +1,9 @@
 package com.SmartHire.hrService.controller;
 
+import com.SmartHire.common.entity.Result;
 import com.SmartHire.hrService.dto.HrInfoDTO;
 import com.SmartHire.hrService.dto.HrInfoUpdateDTO;
 import com.SmartHire.hrService.service.HrInfoService;
-import com.SmartHire.shared.entity.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +20,19 @@ public class HrInfoController {
 
     @Autowired
     private HrInfoService hrInfoService;
+
+    /**
+     * 新增当前登录HR的信息（若已存在则进行更新）
+     *
+     * @param dto HR信息
+     * @return 操作结果
+     */
+    @PostMapping
+    @Operation(summary = "新增HR信息", description = "为当前登录HR创建信息记录，若已存在则视为更新操作")
+    public Result<?> createHrInfo(@Valid @RequestBody HrInfoUpdateDTO dto) {
+        hrInfoService.createHrInfo(dto);
+        return Result.success("新增HR信息成功");
+    }
 
     /**
      * 获取当前登录HR的信息
@@ -46,4 +59,3 @@ public class HrInfoController {
         return Result.success("更新HR信息成功");
     }
 }
-

@@ -18,10 +18,16 @@ public interface HrInfoService extends IService<HrInfo> {
     HrInfoDTO getHrInfo();
 
     /**
+     * 新增当前登录HR的信息（若已存在则进行更新）
+     *
+     * @param updateDTO HR信息
+     */
+    void createHrInfo(HrInfoUpdateDTO updateDTO);
+
+    /**
      * 更新当前登录HR的信息
      *
      * @param updateDTO 更新DTO
      */
     void updateHrInfo(HrInfoUpdateDTO updateDTO);
 }
-

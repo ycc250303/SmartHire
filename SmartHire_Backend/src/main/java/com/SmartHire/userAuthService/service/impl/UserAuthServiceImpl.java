@@ -1,11 +1,11 @@
 package com.SmartHire.userAuthService.service.impl;
 
-import com.SmartHire.seekerService.service.JobSeekerService;
-import com.SmartHire.shared.exception.enums.ErrorCode;
-import com.SmartHire.shared.exception.exception.BusinessException;
-import com.SmartHire.shared.utils.AliOssUtil;
-import com.SmartHire.shared.utils.JwtUtil;
-import com.SmartHire.shared.utils.SecurityContextUtil;
+import com.SmartHire.common.api.SeekerApi;
+import com.SmartHire.common.exception.enums.ErrorCode;
+import com.SmartHire.common.exception.exception.BusinessException;
+import com.SmartHire.common.utils.AliOssUtil;
+import com.SmartHire.common.utils.JwtUtil;
+import com.SmartHire.common.utils.SecurityContextUtil;
 import com.SmartHire.userAuthService.dto.*;
 import com.SmartHire.userAuthService.mapper.UserAuthMapper;
 import com.SmartHire.userAuthService.model.User;
@@ -42,27 +42,32 @@ public class UserAuthServiceImpl extends ServiceImpl<UserAuthMapper, User>
     implements UserAuthService {
 
   private static final String AVATAR_DIRECTORY_KEY = "avatar";
-  private static final String DEFAULT_AVATAR_URL =
-      "https://smart-hire.oss-cn-shanghai.aliyuncs.com/default-avatar.png";
+  private static final String DEFAULT_AVATAR_URL = "https://smart-hire.oss-cn-shanghai.aliyuncs.com/default-avatar.png";
 
   private static final String ACCESS_BLACKLIST_PREFIX = "token:blacklist:access:";
   private static final String REFRESH_BLACKLIST_PREFIX = "token:blacklist:refresh:";
   private static final String REFRESH_SINGLE_LOGIN_PREFIX = "token:refresh:single:";
 
-  @Autowired private UserAuthMapper userMapper;
+  @Autowired
+  private UserAuthMapper userMapper;
 
-  @Autowired private VerificationCodeService verificationCodeService;
+  @Autowired
+  private VerificationCodeService verificationCodeService;
 
-  @Autowired private PasswordEncoder passwordEncoder;
+  @Autowired
+  private PasswordEncoder passwordEncoder;
 
-  @Autowired private AliOssUtil aliOssUtil;
+  @Autowired
+  private AliOssUtil aliOssUtil;
 
-  @Autowired private JwtUtil jwtUtil;
+  @Autowired
+  private JwtUtil jwtUtil;
 
-  @Autowired private RedisTemplate<String, String> redisTemplate;
+  @Autowired
+  private RedisTemplate<String, String> redisTemplate;
 
   @Autowired(required = false)
-  private JobSeekerService jobSeekerService;
+  private SeekerApi seekerApi;
 
   @Value("${jwt.access-token-valid-time}")
   private long accessTokenValidTime;
@@ -115,11 +120,10 @@ public class UserAuthServiceImpl extends ServiceImpl<UserAuthMapper, User>
     user.setLastLoginAt(new Date());
     userMapper.updateById(user);
 
-    Map<String, Object> claims =
-        Map.of(
-            "id", user.getId(),
-            "username", user.getUsername(),
-            "userType", user.getUserType());
+    Map<String, Object> claims = Map.of(
+        "id", user.getId(),
+        "username", user.getUsername(),
+        "userType", user.getUserType());
 
     String accessToken = jwtUtil.generateAccessToken(claims);
     String refreshToken = jwtUtil.generateRefreshToken(claims);
@@ -209,8 +213,7 @@ public class UserAuthServiceImpl extends ServiceImpl<UserAuthMapper, User>
 
     String fileName = UUID.randomUUID().toString() + fileExtension;
     try {
-      String avatarUrl =
-          aliOssUtil.uploadFile(AVATAR_DIRECTORY_KEY, fileName, avatarFile.getInputStream());
+      String avatarUrl = aliOssUtil.uploadFile(AVATAR_DIRECTORY_KEY, fileName, avatarFile.getInputStream());
       userMapper.updateUserAvator(avatarUrl, userId);
       removeOldAvatar(oldAvatarUrl, avatarUrl);
       return avatarUrl;
@@ -273,8 +276,7 @@ public class UserAuthServiceImpl extends ServiceImpl<UserAuthMapper, User>
     }
 
     long refreshExpiresInSeconds = jwtUtil.getExpiresInSeconds(decoded);
-    boolean needRenewRefreshToken =
-        TimeUnit.SECONDS.toMillis(refreshExpiresInSeconds) <= refreshTokenRenewThreshold;
+    boolean needRenewRefreshToken = TimeUnit.SECONDS.toMillis(refreshExpiresInSeconds) <= refreshTokenRenewThreshold;
 
     String effectiveRefreshToken = refreshToken;
     if (needRenewRefreshToken) {
@@ -434,8 +436,7 @@ public class UserAuthServiceImpl extends ServiceImpl<UserAuthMapper, User>
 
   /** 从当前请求中获取 Authorization Header */
   private String getTokenFromRequest() {
-    ServletRequestAttributes attributes =
-        (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+    ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
     if (attributes == null) {
       throw new BusinessException(ErrorCode.USER_NOT_LOGIN);
     }
@@ -448,8 +449,7 @@ public class UserAuthServiceImpl extends ServiceImpl<UserAuthMapper, User>
 
   /** 尝试从当前请求获取 Authorization Header，不存在时返回 null */
   private String getTokenFromRequestNullable() {
-    ServletRequestAttributes attributes =
-        (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+    ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
     if (attributes == null) {
       return null;
     }
@@ -502,10 +502,10 @@ public class UserAuthServiceImpl extends ServiceImpl<UserAuthMapper, User>
 
     // 4. 如果用户是求职者，删除求职者相关信息
     if (targetUser.getUserType() != null && targetUser.getUserType() == 1) {
-      if (jobSeekerService != null) {
-        jobSeekerService.deleteJobSeekerByUserId(userId);
+      if (seekerApi != null) {
+        seekerApi.deleteJobSeekerByUserId(userId);
       } else {
-        log.warn("JobSeekerService 未注入，跳过删除求职者数据");
+        log.warn("SeekerApi 未注入，跳过删除求职者数据");
       }
     }
 

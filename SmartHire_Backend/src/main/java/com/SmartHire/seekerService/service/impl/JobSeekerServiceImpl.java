@@ -11,12 +11,12 @@ import com.SmartHire.seekerService.mapper.WorkExperienceMapper;
 import com.SmartHire.seekerService.model.JobSeeker;
 import com.SmartHire.seekerService.model.Resume;
 import com.SmartHire.seekerService.service.JobSeekerService;
-import com.SmartHire.shared.exception.enums.ErrorCode;
-import com.SmartHire.shared.exception.exception.BusinessException;
-import com.SmartHire.shared.utils.AliOssUtil;
-import com.SmartHire.shared.utils.JwtUtil;
-import com.SmartHire.shared.utils.SecurityContextUtil;
-import com.SmartHire.userAuthService.mapper.UserAuthMapper;
+import com.SmartHire.common.exception.enums.ErrorCode;
+import com.SmartHire.common.exception.exception.BusinessException;
+import com.SmartHire.common.api.UserAuthApi;
+import com.SmartHire.common.utils.AliOssUtil;
+import com.SmartHire.common.utils.JwtUtil;
+import com.SmartHire.common.utils.SecurityContextUtil;
 import com.SmartHire.userAuthService.model.User;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -39,25 +39,35 @@ import org.springframework.util.StringUtils;
 @Service
 public class JobSeekerServiceImpl extends ServiceImpl<JobSeekerMapper, JobSeeker>
     implements JobSeekerService {
-  @Autowired private JobSeekerMapper jobSeekerMapper;
+  @Autowired
+  private JobSeekerMapper jobSeekerMapper;
 
-  @Autowired private UserAuthMapper userAuthMapper;
+  @Autowired
+  private UserAuthApi userAuthApi;
 
-  @Autowired private JwtUtil jwtUtil;
+  @Autowired
+  private JwtUtil jwtUtil;
 
-  @Autowired private ResumeMapper resumeMapper;
+  @Autowired
+  private ResumeMapper resumeMapper;
 
-  @Autowired private JobSeekerExpectationMapper jobSeekerExpectationMapper;
+  @Autowired
+  private JobSeekerExpectationMapper jobSeekerExpectationMapper;
 
-  @Autowired private EducationExperienceMapper educationExperienceMapper;
+  @Autowired
+  private EducationExperienceMapper educationExperienceMapper;
 
-  @Autowired private WorkExperienceMapper workExperienceMapper;
+  @Autowired
+  private WorkExperienceMapper workExperienceMapper;
 
-  @Autowired private ProjectExperienceMapper projectExperienceMapper;
+  @Autowired
+  private ProjectExperienceMapper projectExperienceMapper;
 
-  @Autowired private SkillMapper skillMapper;
+  @Autowired
+  private SkillMapper skillMapper;
 
-  @Autowired private AliOssUtil aliOssUtil;
+  @Autowired
+  private AliOssUtil aliOssUtil;
 
   /**
    * 注册求职者
@@ -69,11 +79,6 @@ public class JobSeekerServiceImpl extends ServiceImpl<JobSeekerMapper, JobSeeker
     Map<String, Object> map = SecurityContextUtil.getCurrentClaims();
     Long userId = jwtUtil.getUserIdFromToken(map);
     log.info("用户ID：{}", userId);
-    // 验证用户是否存在
-    User user = userAuthMapper.findById(userId);
-    if (user == null) {
-      throw new BusinessException(ErrorCode.USER_ID_NOT_EXIST);
-    }
 
     // 检查该用户是否已经注册过求职者信息
     JobSeeker existingSeeker = lambdaQuery().eq(JobSeeker::getUserId, userId).one();
@@ -104,13 +109,8 @@ public class JobSeekerServiceImpl extends ServiceImpl<JobSeekerMapper, JobSeeker
     Map<String, Object> map = SecurityContextUtil.getCurrentClaims();
     Long userId = jwtUtil.getUserIdFromToken(map);
 
-    // 验证用户是否存在
-    User user = userAuthMapper.selectById(userId);
-    if (user == null) {
-      throw new BusinessException(ErrorCode.USER_ID_NOT_EXIST);
-    }
-
-    // 验证用户身份是否为求职者
+    // 验证用户是否存在和身份
+    User user = userAuthApi.getUserById(userId);
     if (user.getUserType() != 1) {
       throw new BusinessException(ErrorCode.USER_NOT_SEEKER);
     }
@@ -261,13 +261,19 @@ public class JobSeekerServiceImpl extends ServiceImpl<JobSeekerMapper, JobSeeker
   /**
    * 删除简历模块相关数据
    *
-   * <p>效率分析： 1. 直接使用Mapper批量删除（当前实现）： - 每条表：1条SQL批量删除所有记录 - Resume特殊处理：1次查询获取fileUrl + 1次批量删除SQL +
+   * <p>
+   * 效率分析： 1. 直接使用Mapper批量删除（当前实现）： - 每条表：1条SQL批量删除所有记录 - Resume特殊处理：1次查询获取fileUrl
+   * + 1次批量删除SQL +
    * N次OSS删除 - 总操作数：查询次数 + 删除SQL次数 + OSS删除次数
    *
-   * <p>2. 复用Service接口（不推荐）： - 每条表：1次查询获取ID列表 + N次deleteById（N条SQL）+ N次权限验证 - Resume：1次查询获取ID列表 +
+   * <p>
+   * 2. 复用Service接口（不推荐）： - 每条表：1次查询获取ID列表 + N次deleteById（N条SQL）+ N次权限验证 -
+   * Resume：1次查询获取ID列表 +
    * N次deleteById + N次权限验证 + N次OSS删除 - 总操作数：查询次数 + N*删除SQL次数 + N*权限验证 + N*OSS删除
    *
-   * <p>结论：直接使用Mapper批量删除效率更高，因为： - 批量删除：1条SQL vs N条SQL（N是记录数） - 不需要权限验证（删除求职者时已经是自己的数据） - 代码更简洁
+   * <p>
+   * 结论：直接使用Mapper批量删除效率更高，因为： - 批量删除：1条SQL vs N条SQL（N是记录数） -
+   * 不需要权限验证（删除求职者时已经是自己的数据） - 代码更简洁
    *
    * @param jobSeekerId 求职者ID
    */
@@ -275,11 +281,10 @@ public class JobSeekerServiceImpl extends ServiceImpl<JobSeekerMapper, JobSeeker
     log.info("删除简历模块相关数据，求职者ID：{}", jobSeekerId);
 
     // 1. 删除简历文件记录（需要先查询获取fileUrl，然后删除OSS文件）
-    List<Resume> resumes =
-        resumeMapper.selectList(
-            new LambdaQueryWrapper<Resume>()
-                .eq(Resume::getJobSeekerId, jobSeekerId)
-                .select(Resume::getFileUrl)); // 只查询fileUrl字段，提高效率
+    List<Resume> resumes = resumeMapper.selectList(
+        new LambdaQueryWrapper<Resume>()
+            .eq(Resume::getJobSeekerId, jobSeekerId)
+            .select(Resume::getFileUrl)); // 只查询fileUrl字段，提高效率
 
     // 批量删除OSS文件
     for (Resume resume : resumes) {
@@ -340,14 +345,13 @@ public class JobSeekerServiceImpl extends ServiceImpl<JobSeekerMapper, JobSeeker
    */
   public void updateEducationAndGraduationYear(Long jobSeekerId) {
     // 查询该求职者的所有教育经历，按学历和结束年份排序
-    List<com.SmartHire.seekerService.model.EducationExperience> educations =
-        educationExperienceMapper.selectList(
-            new LambdaQueryWrapper<com.SmartHire.seekerService.model.EducationExperience>()
-                .eq(
-                    com.SmartHire.seekerService.model.EducationExperience::getJobSeekerId,
-                    jobSeekerId)
-                .orderByDesc(com.SmartHire.seekerService.model.EducationExperience::getEducation)
-                .orderByDesc(com.SmartHire.seekerService.model.EducationExperience::getEndYear));
+    List<com.SmartHire.seekerService.model.EducationExperience> educations = educationExperienceMapper.selectList(
+        new LambdaQueryWrapper<com.SmartHire.seekerService.model.EducationExperience>()
+            .eq(
+                com.SmartHire.seekerService.model.EducationExperience::getJobSeekerId,
+                jobSeekerId)
+            .orderByDesc(com.SmartHire.seekerService.model.EducationExperience::getEducation)
+            .orderByDesc(com.SmartHire.seekerService.model.EducationExperience::getEndYear));
 
     if (educations == null || educations.isEmpty()) {
       // 如果没有教育经历，清空最高学历和毕业年份
@@ -362,21 +366,19 @@ public class JobSeekerServiceImpl extends ServiceImpl<JobSeekerMapper, JobSeeker
     }
 
     // 找到最高学历（education值最大的）
-    Integer maxEducation =
-        educations.stream()
-            .map(com.SmartHire.seekerService.model.EducationExperience::getEducation)
-            .filter(edu -> edu != null)
-            .max(Integer::compareTo)
-            .orElse(null);
+    Integer maxEducation = educations.stream()
+        .map(com.SmartHire.seekerService.model.EducationExperience::getEducation)
+        .filter(edu -> edu != null)
+        .max(Integer::compareTo)
+        .orElse(null);
 
     // 找到最高学历对应的最晚毕业年份
-    String latestGraduationYear =
-        educations.stream()
-            .filter(edu -> maxEducation != null && maxEducation.equals(edu.getEducation()))
-            .filter(edu -> edu.getEndYear() != null)
-            .map(edu -> String.valueOf(edu.getEndYear().getYear()))
-            .max(String::compareTo)
-            .orElse(null);
+    String latestGraduationYear = educations.stream()
+        .filter(edu -> maxEducation != null && maxEducation.equals(edu.getEducation()))
+        .filter(edu -> edu.getEndYear() != null)
+        .map(edu -> String.valueOf(edu.getEndYear().getYear()))
+        .max(String::compareTo)
+        .orElse(null);
 
     // 更新求职者信息
     JobSeeker jobSeeker = jobSeekerMapper.selectById(jobSeekerId);

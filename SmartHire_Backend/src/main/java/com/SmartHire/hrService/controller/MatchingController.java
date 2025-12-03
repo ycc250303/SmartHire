@@ -1,8 +1,8 @@
 package com.SmartHire.hrService.controller;
 
-import com.SmartHire.hrService.dto.ApplicationListDTO;
+import com.SmartHire.recruitmentService.dto.ApplicationListDTO;
 import com.SmartHire.hrService.service.MatchingService;
-import com.SmartHire.shared.entity.Result;
+import com.SmartHire.common.entity.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.constraints.Min;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,4 +36,3 @@ public class MatchingController {
         return Result.success("匹配完成", results);
     }
 }
-
