@@ -65,8 +65,8 @@ jobs:
           echo "VERSION=$CLEAN_VERSION" >> $GITHUB_ENV
           echo "Original version: $VERSION, Release version: $CLEAN_VERSION"
 
-      # 9. Only for main branch: create tag & release
-      - name: Create Git tag and Release
+      # 9. Only for main branch: create tag
+      - name: Create Git tag (main only)
         if: github.ref == 'refs/heads/main'
         shell: bash
         env:
@@ -74,29 +74,22 @@ jobs:
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
-          TAG="v${VERSION}"
-
-          # 检查远程是否已存在 tag
-          if git ls-remote --tags origin | grep -q "refs/tags/$TAG"; then
+          git fetch --tags
+          TAG="v${{ env.VERSION }}"
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
             echo "Tag $TAG already exists, skipping tag creation"
           else
             git tag "$TAG"
             git push https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git "$TAG"
           fi
 
-          # 创建 Release（如果已存在也不会报错）
-          echo "Creating GitHub Release for $TAG"
-          curl -s -X POST \
-            -H "Authorization: token $GITHUB_TOKEN" \
-            -H "Content-Type: application/json" \
-            -d "{\"tag_name\":\"$TAG\",\"name\":\"Release $TAG\"}" \
-            https://api.github.com/repos/${GITHUB_REPOSITORY}/releases
-
-      # 10. Upload JAR to Release (main branch only)
-      - name: Upload JAR to Release
+      # 10. Only for main branch: create Release and upload JAR
+      - name: Create Release & Upload JAR (main only)
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v1
         with:
+          tag_name: v${{ env.VERSION }}
+          name: Release v${{ env.VERSION }}
           files: SmartHire_Backend/target/*.jar
         env:
           GITHUB_TOKEN: ${{ secrets.SMARTHIRE_TOKEN }}
