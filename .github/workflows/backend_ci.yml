@@ -46,9 +46,9 @@ jobs:
       - name: Get version from pom.xml
         id: get_version
         run: |
-           VERSION=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='version']/text()" SmartHire_Backend/pom.xml)
-           echo "VERSION=$VERSION" >> $GITHUB_ENV
-
+          VERSION=$(grep -m1 '<version>' SmartHire_Backend/pom.xml | sed 's/.*<version>\(.*\)<\/version>.*/\1/')
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          
       - name: Create GitHub Release
         id: create_release
         uses: softprops/action-gh-release@v1
