@@ -21,9 +21,11 @@ public class MessageCodeGenerator {
 
   private static final Path BASE_RESOURCE_PATH = Paths.get("src", "main", "resources");
   private static final Path APPLICATION_YML = BASE_RESOURCE_PATH.resolve("application.yml");
-  private static final Path APPLICATION_LOCAL_YML = BASE_RESOURCE_PATH.resolve("application-local.yml");
+  private static final Path APPLICATION_LOCAL_YML =
+      BASE_RESOURCE_PATH.resolve("application-local.yml");
   // TODO：需要修改yml文件名
-  private static final Path SEEKER_SERVICE_YML = BASE_RESOURCE_PATH.resolve("application-message-service.yml");
+  private static final Path SEEKER_SERVICE_YML =
+      BASE_RESOURCE_PATH.resolve("application-message-service.yml");
 
   public static void main(String[] args) {
     DatabaseConfig dbConfig = loadDatabaseConfig();
@@ -33,19 +35,21 @@ public class MessageCodeGenerator {
 
     FastAutoGenerator.create(dbConfig.url, dbConfig.username, dbConfig.password)
         .globalConfig(
-            builder -> builder
-                .author("SmartHire Team")
-                .outputDir(projectPath + "/src/main/java")
-                .disableOpenDir()
-                .dateType(DateType.ONLY_DATE))
+            builder ->
+                builder
+                    .author("SmartHire Team")
+                    .outputDir(projectPath + "/src/main/java")
+                    .disableOpenDir()
+                    .dateType(DateType.ONLY_DATE))
         .packageConfig(
-            builder -> builder
-                // TODO：需要修改服务文件夹名称
-                .parent("com.SmartHire.messageService")
-                .entity("model")
-                .mapper("mapper")
-                .service("service")
-                .serviceImpl("service.impl"))
+            builder ->
+                builder
+                    // TODO：需要修改服务文件夹名称
+                    .parent("com.SmartHire.messageService")
+                    .entity("model")
+                    .mapper("mapper")
+                    .service("service")
+                    .serviceImpl("service.impl"))
         .strategyConfig(
             builder -> {
               // TODO：需要修改服务相关的数据库表
@@ -118,7 +122,8 @@ public class MessageCodeGenerator {
         Files.createDirectories(parent);
       }
       // TODO：需要修改yml文件内容，需要修改port
-      String content = """
+      String content =
+          """
           spring:
             application:
               name: SmartHire_MessageService
@@ -138,16 +143,17 @@ public class MessageCodeGenerator {
 
   private static void generateRecruitmentController(String projectPath) {
     // TODO:修改controller文件的路径
-    Path controllerPath = Paths.get(
-        projectPath,
-        "src",
-        "main",
-        "java",
-        "com",
-        "SmartHire",
-        "messageService",
-        "controller",
-        "MessageController.java");
+    Path controllerPath =
+        Paths.get(
+            projectPath,
+            "src",
+            "main",
+            "java",
+            "com",
+            "SmartHire",
+            "messageService",
+            "controller",
+            "MessageController.java");
 
     try {
       Path parent = controllerPath.getParent();
@@ -156,7 +162,8 @@ public class MessageCodeGenerator {
       }
 
       // TODO：需要修改controller文件内容
-      String content = """
+      String content =
+          """
           package com.SmartHire.messageService.controller;
 
           import org.springframework.web.bind.annotation.RequestMapping;
@@ -184,6 +191,5 @@ public class MessageCodeGenerator {
     }
   }
 
-  private record DatabaseConfig(String url, String username, String password) {
-  }
+  private record DatabaseConfig(String url, String username, String password) {}
 }

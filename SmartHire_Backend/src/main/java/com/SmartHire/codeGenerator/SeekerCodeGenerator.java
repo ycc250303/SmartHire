@@ -21,9 +21,11 @@ public class SeekerCodeGenerator {
 
   private static final Path BASE_RESOURCE_PATH = Paths.get("src", "main", "resources");
   private static final Path APPLICATION_YML = BASE_RESOURCE_PATH.resolve("application.yml");
-  private static final Path APPLICATION_LOCAL_YML = BASE_RESOURCE_PATH.resolve("application-local.yml");
+  private static final Path APPLICATION_LOCAL_YML =
+      BASE_RESOURCE_PATH.resolve("application-local.yml");
   // TODO：需要修改yml文件名
-  private static final Path SEEKER_SERVICE_YML = BASE_RESOURCE_PATH.resolve("application-seeker-service.yml");
+  private static final Path SEEKER_SERVICE_YML =
+      BASE_RESOURCE_PATH.resolve("application-seeker-service.yml");
 
   public static void main(String[] args) {
     DatabaseConfig dbConfig = loadDatabaseConfig();
@@ -33,19 +35,21 @@ public class SeekerCodeGenerator {
 
     FastAutoGenerator.create(dbConfig.url, dbConfig.username, dbConfig.password)
         .globalConfig(
-            builder -> builder
-                .author("SmartHire Team")
-                .outputDir(projectPath + "/src/main/java")
-                .disableOpenDir()
-                .dateType(DateType.ONLY_DATE))
+            builder ->
+                builder
+                    .author("SmartHire Team")
+                    .outputDir(projectPath + "/src/main/java")
+                    .disableOpenDir()
+                    .dateType(DateType.ONLY_DATE))
         .packageConfig(
-            builder -> builder
-                // TODO：需要修改服务文件夹名称
-                .parent("com.SmartHire.seekerService2")
-                .entity("model")
-                .mapper("mapper")
-                .service("service")
-                .serviceImpl("service.impl"))
+            builder ->
+                builder
+                    // TODO：需要修改服务文件夹名称
+                    .parent("com.SmartHire.seekerService2")
+                    .entity("model")
+                    .mapper("mapper")
+                    .service("service")
+                    .serviceImpl("service.impl"))
         .strategyConfig(
             builder -> {
               // TODO：需要修改服务相关的数据库表
@@ -124,7 +128,8 @@ public class SeekerCodeGenerator {
         Files.createDirectories(parent);
       }
       // TODO：需要修改yml文件内容，需要修改port
-      String content = """
+      String content =
+          """
           spring:
             application:
               name: SmartHire_SeekerService
@@ -144,16 +149,17 @@ public class SeekerCodeGenerator {
 
   private static void generateSeekerController(String projectPath) {
     // TODO:修改controller文件的路径
-    Path controllerPath = Paths.get(
-        projectPath,
-        "src",
-        "main",
-        "java",
-        "com",
-        "SmartHire",
-        "seekerService",
-        "controller",
-        "SeekerController.java");
+    Path controllerPath =
+        Paths.get(
+            projectPath,
+            "src",
+            "main",
+            "java",
+            "com",
+            "SmartHire",
+            "seekerService",
+            "controller",
+            "SeekerController.java");
 
     try {
       Path parent = controllerPath.getParent();
@@ -162,7 +168,8 @@ public class SeekerCodeGenerator {
       }
 
       // TODO：需要修改controller文件内容
-      String content = """
+      String content =
+          """
           package com.SmartHire.seekerService.controller;
 
           import org.springframework.web.bind.annotation.RequestMapping;
@@ -190,6 +197,5 @@ public class SeekerCodeGenerator {
     }
   }
 
-  private record DatabaseConfig(String url, String username, String password) {
-  }
+  private record DatabaseConfig(String url, String username, String password) {}
 }

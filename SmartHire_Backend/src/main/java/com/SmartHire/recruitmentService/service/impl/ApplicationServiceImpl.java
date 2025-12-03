@@ -35,17 +35,13 @@ import org.springframework.util.StringUtils;
 public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Application>
     implements ApplicationService {
 
-  @Autowired
-  private SeekerApi seekerApi;
+  @Autowired private SeekerApi seekerApi;
 
-  @Autowired
-  private HrApi hrApi;
+  @Autowired private HrApi hrApi;
 
-  @Autowired
-  private UserAuthApi userAuthApi;
+  @Autowired private UserAuthApi userAuthApi;
 
-  @Autowired
-  private JwtUtil jwtUtil;
+  @Autowired private JwtUtil jwtUtil;
 
   @Override
   @Transactional(rollbackFor = Exception.class)
@@ -75,10 +71,11 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
     // 如果 resumeId 为 null，则投递在线简历（不需要额外校验）
 
     // 检查是否已投递过该职位（避免重复投递）
-    long existingCount = lambdaQuery()
-        .eq(Application::getJobId, jobId)
-        .eq(Application::getJobSeekerId, seekerId)
-        .count();
+    long existingCount =
+        lambdaQuery()
+            .eq(Application::getJobId, jobId)
+            .eq(Application::getJobSeekerId, seekerId)
+            .count();
     if (existingCount > 0) {
       throw new BusinessException(ErrorCode.APPLICATION_ALREADY_EXISTS);
     }
@@ -155,7 +152,8 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
     int pageSize = queryDTO.getPageSize() == null ? 10 : queryDTO.getPageSize();
 
     Page<ApplicationListDTO> page = new Page<>(pageNum, pageSize);
-    String keyword = StringUtils.hasText(queryDTO.getKeyword()) ? queryDTO.getKeyword().trim() : null;
+    String keyword =
+        StringUtils.hasText(queryDTO.getKeyword()) ? queryDTO.getKeyword().trim() : null;
 
     return baseMapper.selectApplicationList(
         page, hrId, queryDTO.getJobId(), queryDTO.getStatus(), keyword);
