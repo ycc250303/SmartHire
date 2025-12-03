@@ -48,19 +48,21 @@ jobs:
           
       - name: Get version from pom.xml
         id: get_version
+        shell: bash
         run: |
-            VERSION=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='version']/text()" SmartHire_Backend/pom.xml)
-            # 去掉 SNAPSHOT 后缀
-            CLEAN_VERSION=${VERSION/-SNAPSHOT/}
-            echo "VERSION=$CLEAN_VERSION" >> $GITHUB_ENV
-            echo "Original version: $VERSION, Release version: $CLEAN_VERSION"
-            - name: Create Git tag
-            run: |
-              git config user.name "github-actions"
-              git config user.email "github-actions@github.com"
-              git tag v${{ env.VERSION }}
-              git push origin v${{ env.VERSION }}
-          
+          VERSION=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='version']/text()" SmartHire_Backend/pom.xml)
+          # 去掉 SNAPSHOT 后缀
+          CLEAN_VERSION="${VERSION/-SNAPSHOT/}"
+          echo "VERSION=$CLEAN_VERSION" >> $GITHUB_ENV
+          echo "Original version: $VERSION, Release version: $CLEAN_VERSION"
+      
+      - name: Create Git tag
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git tag v${{ env.VERSION }}
+          git push origin v${{ env.VERSION }}
+            
       - name: Create GitHub Release
         id: create_release
         uses: softprops/action-gh-release@v1
