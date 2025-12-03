@@ -34,28 +34,33 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-m2-
 
-      # 4. Run tests
-      - name: Run Tests
-        run: mvn -B test
+      # 4. Check code format (Spotless) - 仅检查，不自动修改
+      - name: Check code format (Spotless)
+        run: mvn -B spotless:check
         working-directory: SmartHire_Backend
 
-      # 5. Build JAR
+      # 5. Run tests + PMD + SpotBugs + FindSecBugs（verify 会执行完整流水线）
+      - name: Run tests & static analysis (verify)
+        run: mvn -B clean verify
+        working-directory: SmartHire_Backend
+
+      # 6. Build JAR（在 verify 通过后再次打包，跳过测试以加快速度）
       - name: Build JAR
-        run: mvn -B clean package -DskipTests=true
+        run: mvn -B package -DskipTests=true
         working-directory: SmartHire_Backend
 
-      # 6. Upload artifact (both main & dev)
+      # 7. Upload artifact (both main & dev)
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: smarthire-backend-jar
           path: SmartHire_Backend/target/*.jar
 
-      # 7. Install xmllint
+      # 8. Install xmllint
       - name: Install xmllint
         run: sudo apt-get update && sudo apt-get install -y libxml2-utils
 
-      # 8. Get version from pom.xml
+      # 9. Get version from pom.xml
       - name: Get version from pom.xml
         id: get_version
         shell: bash
@@ -65,7 +70,7 @@ jobs:
           echo "VERSION=$CLEAN_VERSION" >> $GITHUB_ENV
           echo "Original version: $VERSION, Release version: $CLEAN_VERSION"
 
-      # 9. Only for main branch: create tag
+      # 10. Only for main branch: create tag
       - name: Create Git tag (main only)
         if: github.ref == 'refs/heads/main'
         shell: bash
@@ -83,7 +88,7 @@ jobs:
             git push https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git "$TAG"
           fi
 
-      # 10. Only for main branch: create Release and upload JAR
+      # 11. Only for main branch: create Release and upload JAR
       - name: Create Release & Upload JAR (main only)
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v1
