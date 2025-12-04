@@ -139,17 +139,19 @@ jobs:
             echo "=== 部署完成 ==="
           EOF
 
-      # 5. 健康检查（可选）
+      # 5. 健康检查
       - name: Health check
         run: |
           echo "等待服务启动..."
           sleep 10
           
-          # 检查服务是否响应（根据你的实际健康检查接口调整）
-          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://${{ secrets.SERVER_HOST }}:8080/smarthire/api/ || echo "000")
+          # 使用健康检查接口
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://${{ secrets.SERVER_HOST }}:8080/smarthire/api/health || echo "000")
           
-          if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "401" ] || [ "$HTTP_CODE" = "403" ]; then
+          if [ "$HTTP_CODE" = "200" ]; then
             echo "✅ 服务健康检查通过 (HTTP $HTTP_CODE)"
+            # 显示健康检查响应内容
+            curl -s http://${{ secrets.SERVER_HOST }}:8080/smarthire/api/health | head -20
           else
             echo "⚠️  服务可能未正常启动 (HTTP $HTTP_CODE)"
             echo "请手动检查服务器日志：docker logs ${{ secrets.IMAGE_NAME }}"
