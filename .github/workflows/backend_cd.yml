@@ -1,0 +1,111 @@
+name: SmartHire Backend CD
+
+on:
+  # 当 main 分支打 tag 时触发（格式：v*.*.*）
+  # CI 流水线会在 main 分支 push 时自动创建 tag，CD 会自动触发
+  push:
+    tags:
+      - 'v*'
+  # 手动触发（可选）
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Docker image tag (默认使用 latest)'
+        required: false
+        default: 'latest'
+
+jobs:
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. 设置镜像标签（从 tag 或手动输入）
+      - name: Set Docker image tag
+        id: image_tag
+        run: |
+          if [ "${{ github.ref_type }}" == "tag" ]; then
+            TAG="${{ github.ref_name }}"
+          elif [ "${{ github.event.inputs.image_tag }}" != "" ]; then
+            TAG="${{ github.event.inputs.image_tag }}"
+          else
+            TAG="latest"
+          fi
+          echo "IMAGE_TAG=$TAG" >> $GITHUB_OUTPUT
+          echo "IMAGE_NAME=${{ secrets.IMAGE_NAME || 'smarthire-backend' }}" >> $GITHUB_OUTPUT
+          echo "Deploying image: ghcr.io/${{ github.repository_owner }}/${{ secrets.IMAGE_NAME || 'smarthire-backend' }}:$TAG"
+
+      # 2. 配置 SSH
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
+
+      # 3. 添加服务器到 known_hosts（避免首次连接确认）
+      - name: Add server to known_hosts
+        run: |
+          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+
+      # 4. 部署到服务器
+      - name: Deploy to server
+        env:
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN || secrets.GITHUB_TOKEN }}
+          IMAGE_NAME: ${{ secrets.IMAGE_NAME || 'smarthire-backend' }}
+        run: |
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << EOF
+            set -e
+            echo "=== 开始部署 ==="
+            echo "镜像: ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:${{ steps.image_tag.outputs.IMAGE_TAG }}"
+            
+            # 进入项目目录
+            cd ~/SmartHire/SmartHire/SmartHire_Backend
+            
+            # 登录 GitHub Container Registry（在服务器上）
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            
+            # 拉取最新镜像
+            echo "拉取 Docker 镜像..."
+            docker pull ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:${{ steps.image_tag.outputs.IMAGE_TAG }}
+            
+            # 停止旧容器
+            echo "停止旧容器..."
+            docker-compose down || true
+            
+            # 更新镜像标签为 latest（docker-compose.yml 里用的是 smarthire-backend:latest）
+            docker tag ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:${{ steps.image_tag.outputs.IMAGE_TAG }} $IMAGE_NAME:latest
+            
+            # 启动新容器
+            echo "启动新容器..."
+            docker-compose up -d
+            
+            # 等待容器启动
+            sleep 5
+            
+            # 检查容器状态
+            echo "检查容器状态..."
+            docker ps | grep $IMAGE_NAME || echo "⚠️  容器未运行"
+            
+            # 查看日志（最后 30 行）
+            echo "=== 容器日志（最后 30 行）==="
+            docker logs --tail 30 $IMAGE_NAME || echo "无法获取日志"
+            
+            echo "=== 部署完成 ==="
+          EOF
+
+      # 5. 健康检查（可选）
+      - name: Health check
+        run: |
+          echo "等待服务启动..."
+          sleep 10
+          
+          # 检查服务是否响应（根据你的实际健康检查接口调整）
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://${{ secrets.SERVER_HOST }}:8080/smarthire/api/ || echo "000")
+          
+          if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "401" ] || [ "$HTTP_CODE" = "403" ]; then
+            echo "✅ 服务健康检查通过 (HTTP $HTTP_CODE)"
+          else
+            echo "⚠️  服务可能未正常启动 (HTTP $HTTP_CODE)"
+            echo "请手动检查服务器日志：docker logs ${{ secrets.IMAGE_NAME || 'smarthire-backend' }}"
+            # 这里不 fail，只是警告
+          fi
+
