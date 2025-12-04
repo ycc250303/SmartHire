@@ -74,9 +74,9 @@ jobs:
           
           # 设置最终的 IMAGE_TAG
           echo "IMAGE_TAG=$TAG" >> $GITHUB_OUTPUT
-          echo "IMAGE_NAME=${{ secrets.IMAGE_NAME || 'smarthire-backend' }}" >> $GITHUB_OUTPUT
+          echo "IMAGE_NAME=${{ secrets.IMAGE_NAME }}" >> $GITHUB_OUTPUT
           echo "Final image tag: $TAG"
-          echo "Deploying image: ghcr.io/${{ github.repository_owner }}/${{ secrets.IMAGE_NAME || 'smarthire-backend' }}:$TAG"
+          echo "Deploying image: ghcr.io/${{ github.repository_owner }}/${{ secrets.IMAGE_NAME }}:$TAG"
 
       # 2. 配置 SSH
       - name: Setup SSH
@@ -93,32 +93,33 @@ jobs:
       - name: Deploy to server
         env:
           SMARTHIRE_TOKEN: ${{ secrets.SMARTHIRE_TOKEN }}
-          IMAGE_NAME: ${{ secrets.IMAGE_NAME || 'smarthire-backend' }}
+          IMAGE_NAME: ${{ secrets.IMAGE_NAME }}
+          IMAGE_TAG: ${{ steps.get_version.outputs.IMAGE_TAG || 'latest' }}
+          REPO_OWNER: ${{ github.repository_owner }}
           # workflow_run 触发时使用 workflow_run.actor，否则使用 github.actor
           GH_ACTOR: ${{ github.event.workflow_run.actor.login || github.actor }}
         run: |
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << EOF
             set -e
             echo "=== 开始部署 ==="
-            IMAGE_TAG="${{ steps.get_version.outputs.IMAGE_TAG || 'latest' }}"
-            echo "镜像: ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:$IMAGE_TAG"
+            echo "镜像: ghcr.io/$REPO_OWNER/$IMAGE_NAME:$IMAGE_TAG"
             
             # 进入项目目录
-            cd ~/SmartHire/SmartHire/SmartHire_Backend
+            cd /opt/SmartHire/SmartHire_Backend
             
             # 登录 GitHub Container Registry（在服务器上）
             echo "$SMARTHIRE_TOKEN" | docker login ghcr.io -u $GH_ACTOR --password-stdin
             
             # 拉取最新镜像
             echo "拉取 Docker 镜像..."
-            docker pull ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:$IMAGE_TAG
+            docker pull ghcr.io/$REPO_OWNER/$IMAGE_NAME:$IMAGE_TAG
             
             # 停止旧容器
             echo "停止旧容器..."
             docker-compose down || true
             
             # 更新镜像标签为 latest（docker-compose.yml 里用的是 smarthire-backend:latest）
-            docker tag ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:$IMAGE_TAG $IMAGE_NAME:latest
+            docker tag ghcr.io/$REPO_OWNER/$IMAGE_NAME:$IMAGE_TAG $IMAGE_NAME:latest
             
             # 启动新容器
             echo "启动新容器..."
@@ -151,7 +152,7 @@ jobs:
             echo "✅ 服务健康检查通过 (HTTP $HTTP_CODE)"
           else
             echo "⚠️  服务可能未正常启动 (HTTP $HTTP_CODE)"
-            echo "请手动检查服务器日志：docker logs ${{ secrets.IMAGE_NAME || 'smarthire-backend' }}"
+            echo "请手动检查服务器日志：docker logs ${{ secrets.IMAGE_NAME }}"
             # 这里不 fail，只是警告
           fi
 

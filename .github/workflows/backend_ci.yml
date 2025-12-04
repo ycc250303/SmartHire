@@ -92,8 +92,8 @@ jobs:
           context: SmartHire_Backend
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/${{ secrets.IMAGE_NAME || 'smarthire-backend' }}:v${{ env.VERSION }}
-            ghcr.io/${{ github.repository_owner }}/${{ secrets.IMAGE_NAME || 'smarthire-backend' }}:latest
+            ghcr.io/${{ github.repository_owner }}/${{ secrets.IMAGE_NAME }}:v${{ env.VERSION }}
+            ghcr.io/${{ github.repository_owner }}/${{ secrets.IMAGE_NAME }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
