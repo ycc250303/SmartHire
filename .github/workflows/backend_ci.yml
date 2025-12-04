@@ -82,7 +82,8 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          # 使用 SMARTHIRE_TOKEN（需要 write:packages 权限）
+          password: ${{ secrets.SMARTHIRE_TOKEN }}
 
       - name: Build and push Docker image (main only)
         if: github.ref == 'refs/heads/main'

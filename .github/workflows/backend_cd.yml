@@ -49,7 +49,7 @@ jobs:
       # 4. 部署到服务器
       - name: Deploy to server
         env:
-          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN || secrets.GITHUB_TOKEN }}
+          SMARTHIRE_TOKEN: ${{ secrets.SMARTHIRE_TOKEN }}
           IMAGE_NAME: ${{ secrets.IMAGE_NAME || 'smarthire-backend' }}
         run: |
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << EOF
@@ -61,7 +61,7 @@ jobs:
             cd ~/SmartHire/SmartHire/SmartHire_Backend
             
             # 登录 GitHub Container Registry（在服务器上）
-            echo "$GHCR_TOKEN" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            echo "$SMARTHIRE_TOKEN" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             
             # 拉取最新镜像
             echo "拉取 Docker 镜像..."
