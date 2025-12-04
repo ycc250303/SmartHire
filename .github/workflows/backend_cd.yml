@@ -1,0 +1,160 @@
+name: SmartHire Backend CD
+
+on:
+  # 方式1: 当 main 分支打 tag 时触发（格式：v*.*.*）
+  push:
+    tags:
+      - 'v*'
+  # 方式2: 当 CI 流水线在 main 分支成功完成时触发（更可靠，即使 tag 已存在也会触发）
+  workflow_run:
+    workflows: ["SmartHire Backend CI"]
+    types:
+      - completed
+    branches:
+      - main
+  # 手动触发（可选）
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Docker image tag (默认使用 latest)'
+        required: false
+        default: 'latest'
+
+jobs:
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    # 只在 CI 成功完成时执行（workflow_run 触发时）
+    if: |
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
+      github.event_name == 'push' ||
+      github.event_name == 'workflow_dispatch'
+
+    steps:
+      # 1. 获取版本号（从 tag 或 pom.xml）
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 需要获取所有 tag 信息
+
+      - name: Install xmllint (if needed)
+        if: github.event_name == 'workflow_run'
+        run: sudo apt-get update && sudo apt-get install -y libxml2-utils
+
+      - name: Get version from tag or pom.xml
+        id: get_version
+        shell: bash
+        run: |
+          TAG=""
+          if [ "${{ github.event_name }}" == "push" ] && [ "${{ github.ref_type }}" == "tag" ]; then
+            # 从 tag 获取版本（格式：v0.0.1）
+            TAG="${{ github.ref_name }}"
+            VERSION="${TAG#v}"  # 去掉 v 前缀
+            echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+            echo "Using tag: $TAG"
+          elif [ "${{ github.event_name }}" == "workflow_dispatch" ] && [ "${{ github.event.inputs.image_tag }}" != "" ] && [ "${{ github.event.inputs.image_tag }}" != "latest" ]; then
+            # 手动触发时使用指定的 tag
+            TAG="${{ github.event.inputs.image_tag }}"
+            echo "VERSION=${TAG#v}" >> $GITHUB_OUTPUT
+            echo "Using manual tag: $TAG"
+          elif [ "${{ github.event_name }}" == "workflow_run" ]; then
+            # 从 pom.xml 获取最新版本（workflow_run 触发时）
+            VERSION=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='version']/text()" SmartHire_Backend/pom.xml)
+            CLEAN_VERSION="${VERSION/-SNAPSHOT/}"
+            TAG="v$CLEAN_VERSION"
+            echo "VERSION=$CLEAN_VERSION" >> $GITHUB_OUTPUT
+            echo "Using version from pom.xml: $TAG"
+          fi
+          
+          # 如果还是没有 tag，使用 latest
+          if [ -z "$TAG" ]; then
+            TAG="latest"
+            echo "Using default: latest"
+          fi
+          
+          # 设置最终的 IMAGE_TAG
+          echo "IMAGE_TAG=$TAG" >> $GITHUB_OUTPUT
+          echo "IMAGE_NAME=${{ secrets.IMAGE_NAME }}" >> $GITHUB_OUTPUT
+          echo "Final image tag: $TAG"
+          echo "Deploying image: ghcr.io/${{ github.repository_owner }}/${{ secrets.IMAGE_NAME }}:$TAG"
+
+      # 2. 配置 SSH
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
+
+      # 3. 添加服务器到 known_hosts（避免首次连接确认）
+      - name: Add server to known_hosts
+        run: |
+          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+
+      # 4. 部署到服务器
+      - name: Deploy to server
+        env:
+          SMARTHIRE_TOKEN: ${{ secrets.SMARTHIRE_TOKEN }}
+          IMAGE_NAME: ${{ secrets.IMAGE_NAME }}
+          IMAGE_TAG: ${{ steps.get_version.outputs.IMAGE_TAG || 'latest' }}
+          REPO_OWNER: ${{ github.repository_owner }}
+          # workflow_run 触发时使用 workflow_run.actor，否则使用 github.actor
+          GH_ACTOR: ${{ github.event.workflow_run.actor.login || github.actor }}
+        run: |
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << EOF
+            set -e
+            echo "=== 开始部署 ==="
+            echo "镜像: ghcr.io/$REPO_OWNER/$IMAGE_NAME:$IMAGE_TAG"
+            
+            # 进入项目目录
+            cd /opt/SmartHire/SmartHire_Backend
+            
+            # 登录 GitHub Container Registry（在服务器上）
+            echo "$SMARTHIRE_TOKEN" | docker login ghcr.io -u $GH_ACTOR --password-stdin
+            
+            # 拉取最新镜像
+            echo "拉取 Docker 镜像..."
+            docker pull ghcr.io/$REPO_OWNER/$IMAGE_NAME:$IMAGE_TAG
+            
+            # 停止旧容器
+            echo "停止旧容器..."
+            docker-compose down || true
+            
+            # 更新镜像标签为 latest（docker-compose.yml 里用的是 smarthire-backend:latest）
+            docker tag ghcr.io/$REPO_OWNER/$IMAGE_NAME:$IMAGE_TAG $IMAGE_NAME:latest
+            
+            # 启动新容器
+            echo "启动新容器..."
+            docker-compose up -d
+            
+            # 等待容器启动
+            sleep 5
+            
+            # 检查容器状态
+            echo "检查容器状态..."
+            docker ps | grep $IMAGE_NAME || echo "⚠️  容器未运行"
+            
+            # 查看日志（最后 30 行）
+            echo "=== 容器日志（最后 30 行）==="
+            docker logs --tail 30 $IMAGE_NAME || echo "无法获取日志"
+            
+            echo "=== 部署完成 ==="
+          EOF
+
+      # 5. 健康检查
+      - name: Health check
+        run: |
+          echo "等待服务启动..."
+          sleep 10
+          
+          # 使用健康检查接口
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://${{ secrets.SERVER_HOST }}:8080/smarthire/api/health || echo "000")
+          
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "✅ 服务健康检查通过 (HTTP $HTTP_CODE)"
+            # 显示健康检查响应内容
+            curl -s http://${{ secrets.SERVER_HOST }}:8080/smarthire/api/health | head -20
+          else
+            echo "⚠️  服务可能未正常启动 (HTTP $HTTP_CODE)"
+            echo "请手动检查服务器日志：docker logs ${{ secrets.IMAGE_NAME }}"
+            # 这里不 fail，只是警告
+          fi
+

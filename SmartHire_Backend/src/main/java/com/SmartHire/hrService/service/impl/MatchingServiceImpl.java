@@ -1,10 +1,9 @@
 package com.SmartHire.hrService.service.impl;
 
 import com.SmartHire.common.api.UserAuthApi;
+import com.SmartHire.common.auth.UserContext;
 import com.SmartHire.common.exception.enums.ErrorCode;
 import com.SmartHire.common.exception.exception.BusinessException;
-import com.SmartHire.common.utils.JwtUtil;
-import com.SmartHire.common.utils.SecurityContextUtil;
 import com.SmartHire.hrService.mapper.HrInfoMapper;
 import com.SmartHire.hrService.mapper.JobPositionMapper;
 import com.SmartHire.hrService.mapper.JobSeekerSkillMapper;
@@ -23,7 +22,6 @@ import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,16 +46,11 @@ public class MatchingServiceImpl implements MatchingService {
 
   @Autowired private ApplicationMapper applicationMapper;
 
-  @Autowired private JwtUtil jwtUtil;
+  @Autowired private UserContext userContext;
 
   /** 获取当前登录HR的ID（hr_info表ID） */
   private Long getCurrentHrId() {
-    Map<String, Object> map = SecurityContextUtil.getCurrentClaims();
-    Long userId = jwtUtil.getUserIdFromToken(map);
-    if (userId == null) {
-      throw new BusinessException(ErrorCode.USER_ID_NOT_EXIST);
-    }
-
+    Long userId = userContext.getCurrentUserId();
     User user = userAuthApi.getUserById(userId);
     if (user.getUserType() != 2) {
       throw new BusinessException(ErrorCode.USER_NOT_HR);

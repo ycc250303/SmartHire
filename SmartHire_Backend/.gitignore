@@ -34,3 +34,6 @@ build/
 
 # Local configuration overrides
 src/main/resources/application-local.yml
+
+smarthire_deploy
+smarthire_deploy.pub
