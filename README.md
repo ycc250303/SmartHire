@@ -94,6 +94,7 @@ npm install -g pnpm
 
 # 安装项目依赖
 pnpm install
+pnpm install u-charts
 ```
 
 #### 启动开发服务器

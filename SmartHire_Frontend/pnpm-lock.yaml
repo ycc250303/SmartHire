@@ -56,6 +56,9 @@ importers:
       '@dcloudio/uni-quickapp-webview':
         specifier: 3.0.0-4080420251103001
         version: 3.0.0-4080420251103001(postcss@8.5.6)(rollup@4.53.3)(vue@3.5.24(typescript@5.9.3))
+      '@qiun/uni-ucharts':
+        specifier: 2.5.0-20230101
+        version: 2.5.0-20230101
       '@vue/devtools-api':
         specifier: ^6.6.1
         version: 6.6.4
@@ -1342,6 +1345,9 @@ packages:
   '@parcel/watcher@2.5.1':
     resolution: {integrity: sha512-dfUnCxiN9H4ap84DvD2ubjw+3vUNpstxa0TneY/Paat8a3R4uQZDLSvWjmznAY/DoahqTHl9V46HF/Zs3F29pg==}
     engines: {node: '>= 10.0.0'}
+
+  '@qiun/uni-ucharts@2.5.0-20230101':
+    resolution: {integrity: sha512-qpgzAUgrShgKNn0uMoN54n6/MkFeQQpK2gur0Fzokn8oTIMCVjTfnt8C2UhD20pPlm6MFxwkWF+bsJ3qd4QMvg==}
 
   '@rollup/pluginutils@5.1.0':
     resolution: {integrity: sha512-XTIWOPPcpvyKI6L1NHo0lFlCyznUEyPmPY1mc3KpPVDYulHSTvyeLNVW00QTLIAFNhR3kYnJTQHeGqU4M3n09g==}
@@ -5773,6 +5779,8 @@ snapshots:
       '@parcel/watcher-win32-ia32': 2.5.1
       '@parcel/watcher-win32-x64': 2.5.1
     optional: true
+
+  '@qiun/uni-ucharts@2.5.0-20230101': {}
 
   '@rollup/pluginutils@5.1.0(rollup@4.53.3)':
     dependencies:

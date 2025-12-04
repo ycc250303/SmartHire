@@ -1,73 +1,89 @@
 ﻿{
   "pages": [
     {
-      "path": "pages/hr/home/index",
+      "path": "pages/admin/home/index",
       "style": {
-        "navigationBarTitleText": "工作台",
+        "navigationBarTitleText": "管理台",
         "navigationBarTextStyle": "black",
         "navigationBarBackgroundColor": "#ffffff"
       }
     },
     {
-      "path": "pages/hr/jobs/index",
+      "path": "pages/admin/statistics/index",
       "style": {
-        "navigationBarTitleText": "岗位管理",
+        "navigationBarTitleText": "数据统计",
         "navigationBarTextStyle": "black",
         "navigationBarBackgroundColor": "#ffffff"
       }
     },
     {
-      "path": "pages/hr/jobs/detail",
+      "path": "pages/admin/review/index",
       "style": {
-        "navigationBarTitleText": "岗位详情",
+        "navigationBarTitleText": "招聘审核",
         "navigationBarTextStyle": "black",
         "navigationBarBackgroundColor": "#ffffff"
       }
     },
     {
-      "path": "pages/hr/jobs/edit",
+      "path": "pages/admin/review/detail",
       "style": {
-        "navigationBarTitleText": "编辑岗位",
+        "navigationBarTitleText": "审核详情",
         "navigationBarTextStyle": "black",
         "navigationBarBackgroundColor": "#ffffff"
       }
     },
     {
-      "path": "pages/hr/messages/index",
+      "path": "pages/admin/users/index",
       "style": {
-        "navigationBarTitleText": "消息中心",
+        "navigationBarTitleText": "用户管理",
         "navigationBarTextStyle": "black",
         "navigationBarBackgroundColor": "#ffffff"
       }
     },
     {
-      "path": "pages/hr/messages/chat",
+      "path": "pages/admin/users/detail",
       "style": {
-        "navigationBarTitleText": "与候选人对话",
+        "navigationBarTitleText": "用户详情",
         "navigationBarTextStyle": "black",
         "navigationBarBackgroundColor": "#ffffff"
       }
     },
     {
-      "path": "pages/hr/profile/index",
+      "path": "pages/admin/system/index",
       "style": {
-        "navigationBarTitleText": "我的",
+        "navigationBarTitleText": "系统管理",
         "navigationBarTextStyle": "black",
         "navigationBarBackgroundColor": "#ffffff"
       }
     },
     {
-      "path": "pages/hr/analytics/index",
+      "path": "pages/admin/system/announcement",
       "style": {
-        "navigationBarTitleText": "数据分析",
+        "navigationBarTitleText": "公告管理",
         "navigationBarTextStyle": "black",
         "navigationBarBackgroundColor": "#ffffff"
       }
     },
     {
-      "path": "pages/hr/candidate/detail",
+      "path": "pages/admin/system/logs",
       "style": {
-        "navigationBarTitleText": "候选人详情",
+        "navigationBarTitleText": "操作日志",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/admin/system/announcement-edit",
+      "style": {
+        "navigationBarTitleText": "发布公告",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/admin/system/announcement-preview",
+      "style": {
+        "navigationBarTitleText": "公告预览",
         "navigationBarTextStyle": "black",
         "navigationBarBackgroundColor": "#ffffff"
       }
@@ -91,33 +107,45 @@
   ],
   "globalStyle": {
     "navigationBarTextStyle": "black",
-    "navigationBarTitleText": "SmartHire+ HR",
+    "navigationBarTitleText": "SmartHire+ admin",
     "navigationBarBackgroundColor": "#ffffff",
     "backgroundColor": "#f6f7fb"
   },
-  "tabBar": {
+"tabBar": {
     "color": "#7a869a",
     "selectedColor": "#2f7cff",
     "backgroundColor": "#ffffff",
     "borderStyle": "white",
     "list": [
       {
-        "pagePath": "pages/hr/home/index",
-        "text": "工作台",
+        "pagePath": "pages/admin/home/index",
+        "text": "管理台",
         "iconPath": "static/tab-home.png",
         "selectedIconPath": "static/tab-home-active.png"
       },
       {
-        "pagePath": "pages/hr/jobs/index",
-        "text": "岗位",
+        "pagePath": "pages/admin/statistics/index",
+        "text": "数据统计",
         "iconPath": "static/tab-jobs.png",
         "selectedIconPath": "static/tab-jobs-active.png"
       },
       {
-        "pagePath": "pages/hr/messages/index",
-        "text": "消息",
+        "pagePath": "pages/admin/review/index",
+        "text": "招聘审核",
         "iconPath": "static/tab-chat.png",
         "selectedIconPath": "static/tab-chat-active.png"
+      },
+      {
+        "pagePath": "pages/admin/users/index",
+        "text": "用户管理",
+        "iconPath": "static/tab-profile.png",
+        "selectedIconPath": "static/tab-profile-active.png"
+      },
+      {
+        "pagePath": "pages/admin/system/index",
+        "text": "系统管理",
+        "iconPath": "static/tab-profile.png",
+        "selectedIconPath": "static/tab-profile-active.png"
       }
     ]
   }
