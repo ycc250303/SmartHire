@@ -14,8 +14,7 @@ import lombok.Data;
 @Data
 public class JobInfoCreateDTO implements Serializable {
 
-  @Serial
-  private static final long serialVersionUID = 1L;
+  @Serial private static final long serialVersionUID = 1L;
 
   /** 公司ID */
   @NotNull(message = "公司ID不能为空")

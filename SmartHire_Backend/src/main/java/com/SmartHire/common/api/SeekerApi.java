@@ -34,7 +34,7 @@ public interface SeekerApi {
   /**
    * 验证简历是否属于指定求职者
    *
-   * @param resumeId    简历ID
+   * @param resumeId 简历ID
    * @param jobSeekerId 求职者ID
    * @return 是否属于
    */

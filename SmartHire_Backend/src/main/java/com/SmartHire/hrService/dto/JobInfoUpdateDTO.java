@@ -11,8 +11,7 @@ import lombok.Data;
 @Data
 public class JobInfoUpdateDTO implements Serializable {
 
-  @Serial
-  private static final long serialVersionUID = 1L;
+  @Serial private static final long serialVersionUID = 1L;
 
   /** 职位名称 */
   private String jobTitle;

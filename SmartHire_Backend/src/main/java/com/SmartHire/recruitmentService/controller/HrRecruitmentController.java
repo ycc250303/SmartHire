@@ -1,9 +1,9 @@
 package com.SmartHire.recruitmentService.controller;
 
-import com.SmartHire.common.entity.Result;
 import com.SmartHire.common.api.SeekerApi;
-import com.SmartHire.common.exception.exception.BusinessException;
+import com.SmartHire.common.entity.Result;
 import com.SmartHire.common.exception.enums.ErrorCode;
+import com.SmartHire.common.exception.exception.BusinessException;
 import com.SmartHire.recruitmentService.dto.ApplicationListDTO;
 import com.SmartHire.recruitmentService.dto.ApplicationQueryDTO;
 import com.SmartHire.recruitmentService.dto.ApplicationStatusUpdateDTO;
@@ -24,11 +24,9 @@ import org.springframework.web.bind.annotation.*;
 @Validated
 public class HrRecruitmentController {
 
-  @Autowired
-  private ApplicationService applicationService;
+  @Autowired private ApplicationService applicationService;
 
-  @Autowired
-  private SeekerApi seekerApi;
+  @Autowired private SeekerApi seekerApi;
 
   /** 投递列表查询 */
   @GetMapping("/application")
@@ -60,7 +58,8 @@ public class HrRecruitmentController {
   @GetMapping("/seeker-card")
   @Operation(summary = "获取求职者卡片", description = "根据用户ID获取求职者卡片信息（包含用户名、年龄、学历、专业等）")
   public Result<SeekerCardDTO> getSeekerCard(
-      @RequestParam("userId") @NotNull(message = "用户ID不能为空") @Min(value = 1, message = "用户ID必须为正整数") Long userId) {
+      @RequestParam("userId") @NotNull(message = "用户ID不能为空") @Min(value = 1, message = "用户ID必须为正整数")
+          Long userId) {
     // SeekerApi.getSeekerCard() 会抛出 USER_NOT_SEEKER 异常，或返回 null（表示求职者不存在）
     SeekerCardDTO seekerCard = seekerApi.getSeekerCard(userId);
     if (seekerCard == null) {

@@ -20,8 +20,7 @@ import org.springframework.web.bind.annotation.*;
 @Validated
 public class JobInfoController {
 
-  @Autowired
-  private JobInfoService jobInfoService;
+  @Autowired private JobInfoService jobInfoService;
 
   /**
    * 发布岗位
@@ -39,7 +38,7 @@ public class JobInfoController {
   /**
    * 更新岗位信息
    *
-   * @param jobId     岗位ID
+   * @param jobId 岗位ID
    * @param updateDTO 更新信息
    * @return 操作结果
    */
@@ -73,7 +72,10 @@ public class JobInfoController {
   @GetMapping
   @Operation(summary = "岗位列表查询", description = "查询当前HR的岗位列表，支持按状态筛选")
   public Result<List<JobInfoListDTO>> getJobInfoList(
-      @RequestParam(required = false) @Min(value = 0, message = "状态值必须在0-2之间") @Max(value = 2, message = "状态值必须在0-2之间") Integer status) {
+      @RequestParam(required = false)
+          @Min(value = 0, message = "状态值必须在0-2之间")
+          @Max(value = 2, message = "状态值必须在0-2之间")
+          Integer status) {
     List<JobInfoListDTO> list = jobInfoService.getJobInfoList(status);
     return Result.success("查询成功", list);
   }
@@ -81,7 +83,7 @@ public class JobInfoController {
   /**
    * 更新岗位状态
    *
-   * @param jobId  岗位ID
+   * @param jobId 岗位ID
    * @param status 状态：0-已下线 1-招聘中 2-已暂停
    * @return 操作结果
    */
@@ -89,7 +91,10 @@ public class JobInfoController {
   @Operation(summary = "岗位状态管理", description = "更新岗位状态（招聘中、已结束等）")
   public Result<?> updateJobInfoStatus(
       @PathVariable Long jobId,
-      @RequestParam @Min(value = 0, message = "状态值必须在0-2之间") @Max(value = 2, message = "状态值必须在0-2之间") Integer status) {
+      @RequestParam
+          @Min(value = 0, message = "状态值必须在0-2之间")
+          @Max(value = 2, message = "状态值必须在0-2之间")
+          Integer status) {
     jobInfoService.updateJobInfoStatus(jobId, status);
     return Result.success("状态更新成功");
   }

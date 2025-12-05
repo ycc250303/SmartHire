@@ -6,5 +6,4 @@ import org.apache.ibatis.annotations.Mapper;
 
 /** 投诉 Mapper 接口 */
 @Mapper
-public interface CompanyMapper extends BaseMapper<Company> {
-}
+public interface CompanyMapper extends BaseMapper<Company> {}

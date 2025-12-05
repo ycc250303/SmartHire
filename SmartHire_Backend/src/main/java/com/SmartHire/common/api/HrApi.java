@@ -17,7 +17,7 @@ public interface HrApi {
    * 验证岗位是否属于指定HR
    *
    * @param jobId 岗位ID
-   * @param hrId  HR ID
+   * @param hrId HR ID
    * @return 是否属于
    */
   boolean validateJobOwnership(Long jobId, Long hrId);
