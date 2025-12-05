@@ -9,9 +9,10 @@ import lombok.Data;
 
 /** 岗位更新DTO */
 @Data
-public class JobPositionUpdateDTO implements Serializable {
+public class JobInfoUpdateDTO implements Serializable {
 
-  @Serial private static final long serialVersionUID = 1L;
+  @Serial
+  private static final long serialVersionUID = 1L;
 
   /** 职位名称 */
   private String jobTitle;
@@ -44,8 +45,23 @@ public class JobPositionUpdateDTO implements Serializable {
   /** 学历要求：0-高中及以下 1-专科 2-本科 3-硕士 4-博士 5-不限 */
   private Integer educationRequired;
 
-  /** 工作类型：0-全职 1-兼职 2-实习 */
+  /** 工作类型：0-全职 1-实习 */
   private Integer jobType;
+
+  /** 经验要求（仅全职类型需要）0-应届生 1-1年以内 2-1-3年 3-3-5年 4-5-10年 5-10年以上 */
+  @Min(value = 0, message = "经验要求值必须在0-5之间")
+  @Max(value = 5, message = "经验要求值必须在0-5之间")
+  private Integer experienceRequired;
+
+  /** 每周实习天数（仅实习类型需要） */
+  @Min(value = 1, message = "每周实习天数不能小于1")
+  @Max(value = 7, message = "每周实习天数不能大于7")
+  private Integer internshipDaysPerWeek;
+
+  /** 实习时长（月为单位，仅实习类型需要） */
+  @Min(value = 1, message = "实习时长不能小于1个月")
+  @Max(value = 24, message = "实习时长不能大于24个月")
+  private Integer internshipDurationMonths;
 
   /** 职位描述 */
   private String description;

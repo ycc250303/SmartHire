@@ -26,17 +26,16 @@ public class Company implements Serializable {
   /** 公司简介 */
   private String description;
 
-  /** 公司规模 */
-  private String scale;
+  /**
+   * 公司规模：1-0-20 2-20-99 3-100-499 4-500-999 5-1000-3000 6-3000-10000 7-10000以上
+   */
+  private Integer companyScale;
+
+  /** 融资阶段：0-无融资 1-天使轮 2-A轮 3-B轮 4-C轮 5-D轮 6-已上市 */
+  private Integer financingStage;
 
   /** 公司行业 */
   private String industry;
-
-  /** 公司地址 */
-  private String address;
-
-  /** 公司城市 */
-  private String city;
 
   /** 创建时间 */
   private Date createdAt;

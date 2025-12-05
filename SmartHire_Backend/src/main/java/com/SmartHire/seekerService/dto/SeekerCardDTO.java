@@ -4,7 +4,7 @@ import lombok.Data;
 
 /** 求职卡片展示 DTO。 */
 @Data
-public class JobCardDTO {
+public class SeekerCardDTO {
   /** 用户名 */
   private String username;
 

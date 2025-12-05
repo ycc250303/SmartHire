@@ -32,23 +32,29 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequestMapping("/seeker")
 public class SeekerController {
-  @Autowired private EducationExperienceService educationExperienceService;
+  @Autowired
+  private EducationExperienceService educationExperienceService;
 
-  @Autowired private JobSeekerService jobSeekerService;
+  @Autowired
+  private JobSeekerService jobSeekerService;
 
-  @Autowired private JobSeekerExpectationService jobSeekerExpectationService;
+  @Autowired
+  private JobSeekerExpectationService jobSeekerExpectationService;
 
-  @Autowired private ProjectExperienceService projectExperienceService;
+  @Autowired
+  private ProjectExperienceService projectExperienceService;
 
-  @Autowired private ResumeService resumeService;
+  @Autowired
+  private ResumeService resumeService;
 
-  @Autowired private WorkExperienceService workExperienceService;
+  @Autowired
+  private WorkExperienceService workExperienceService;
 
-  @Autowired private SkillService skillService;
+  @Autowired
+  private SkillService skillService;
 
-  @Autowired private OnlineResumeService onlineResumeService;
-
-  @Autowired private JobCardService jobCardService;
+  @Autowired
+  private OnlineResumeService onlineResumeService;
 
   /**
    * 注册求职者
@@ -312,8 +318,7 @@ public class SeekerController {
   @PostMapping("/add-job-seeker-expectation")
   @Operation(summary = "添加求职期望", description = "添加求职期望，最多5个")
   public Result<?> addJobSeekerExpectation(
-      @Validated(JobSeekerExpectationDTO.Create.class) @RequestBody
-          JobSeekerExpectationDTO request) {
+      @Validated(JobSeekerExpectationDTO.Create.class) @RequestBody JobSeekerExpectationDTO request) {
     jobSeekerExpectationService.addJobSeekerExpectation(request);
     return Result.success("添加求职期望成功");
   }
@@ -340,8 +345,7 @@ public class SeekerController {
   @Operation(summary = "修改求职期望", description = "修改求职期望，只需要DTO中的一项不为空即可")
   public Result<?> updateJobSeekerExpectation(
       @PathVariable Long id,
-      @Validated(JobSeekerExpectationDTO.Update.class) @RequestBody
-          JobSeekerExpectationDTO request) {
+      @Validated(JobSeekerExpectationDTO.Update.class) @RequestBody JobSeekerExpectationDTO request) {
     jobSeekerExpectationService.updateJobSeekerExpectation(id, request);
     return Result.success("修改求职期望成功");
   }
@@ -368,22 +372,8 @@ public class SeekerController {
   @GetMapping("/online-resume")
   @Operation(summary = "获取在线简历", description = "HR或内部系统查看指定用户的在线简历")
   public Result<?> getOnlineResume(
-      @RequestParam("userId") @NotNull(message = "用户ID不能为空") @Positive(message = "用户ID必须为正整数")
-          Long userId) {
+      @RequestParam("userId") @NotNull(message = "用户ID不能为空") @Positive(message = "用户ID必须为正整数") Long userId) {
     return Result.success("获取在线简历成功", onlineResumeService.getOnlineResumeByUserId(userId));
   }
 
-  /**
-   * 获取指定用户的求职卡片
-   *
-   * @param userId 用户ID
-   * @return 求职卡片信息
-   */
-  @GetMapping("/job-card")
-  @Operation(summary = "获取求职卡片", description = "HR或内部系统查看指定用户的求职卡片")
-  public Result<?> getJobCard(
-      @RequestParam("userId") @NotNull(message = "用户ID不能为空") @Positive(message = "用户ID必须为正整数")
-          Long userId) {
-    return Result.success("获取求职卡片成功", jobCardService.getJobCard(userId));
-  }
 }

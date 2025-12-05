@@ -1,14 +1,14 @@
 package com.SmartHire.hrService.service;
 
-import com.SmartHire.hrService.dto.JobPositionCreateDTO;
-import com.SmartHire.hrService.dto.JobPositionListDTO;
-import com.SmartHire.hrService.dto.JobPositionUpdateDTO;
-import com.SmartHire.hrService.model.JobPosition;
+import com.SmartHire.hrService.dto.JobInfoCreateDTO;
+import com.SmartHire.hrService.dto.JobInfoListDTO;
+import com.SmartHire.hrService.dto.JobInfoUpdateDTO;
+import com.SmartHire.hrService.model.JobInfo;
 import com.baomidou.mybatisplus.extension.service.IService;
 import java.util.List;
 
 /** 岗位服务接口 */
-public interface JobPositionService extends IService<JobPosition> {
+public interface JobInfoService extends IService<JobInfo> {
 
   /**
    * 发布岗位
@@ -16,7 +16,7 @@ public interface JobPositionService extends IService<JobPosition> {
    * @param createDTO 岗位创建DTO
    * @return 岗位ID
    */
-  Long createJobPosition(JobPositionCreateDTO createDTO);
+  Long createJobInfo(JobInfoCreateDTO createDTO);
 
   /**
    * 更新岗位信息
@@ -24,14 +24,14 @@ public interface JobPositionService extends IService<JobPosition> {
    * @param jobId 岗位ID
    * @param updateDTO 更新DTO
    */
-  void updateJobPosition(Long jobId, JobPositionUpdateDTO updateDTO);
+  void updateJobInfo(Long jobId, JobInfoUpdateDTO updateDTO);
 
   /**
    * 岗位下线
    *
    * @param jobId 岗位ID
    */
-  void offlineJobPosition(Long jobId);
+  void offlineJobInfo(Long jobId);
 
   /**
    * 查询当前HR的岗位列表
@@ -39,7 +39,7 @@ public interface JobPositionService extends IService<JobPosition> {
    * @param status 状态筛选（可选）：0-已下线 1-招聘中 2-已暂停
    * @return 岗位列表
    */
-  List<JobPositionListDTO> getJobPositionList(Integer status);
+  List<JobInfoListDTO> getJobInfoList(Integer status);
 
   /**
    * 更新岗位状态
@@ -47,7 +47,7 @@ public interface JobPositionService extends IService<JobPosition> {
    * @param jobId 岗位ID
    * @param status 状态：0-已下线 1-招聘中 2-已暂停
    */
-  void updateJobPositionStatus(Long jobId, Integer status);
+  void updateJobInfoStatus(Long jobId, Integer status);
 
   /**
    * 根据ID获取岗位详情（包含技能要求）
@@ -55,5 +55,5 @@ public interface JobPositionService extends IService<JobPosition> {
    * @param jobId 岗位ID
    * @return 岗位详情
    */
-  JobPositionListDTO getJobPositionById(Long jobId);
+  JobInfoListDTO getJobInfoById(Long jobId);
 }

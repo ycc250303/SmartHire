@@ -27,19 +27,21 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
   private static final String ACCESS_BLACKLIST_PREFIX = "token:blacklist:access:";
-  private static final Set<String> PUBLIC_PATHS =
-      Set.of(
-          "/user-auth/login",
-          "/user-auth/register",
-          "/user-auth/send-verification-code",
-          "/user-auth/verify-code",
-          "/user-auth/refresh-token");
+  private static final Set<String> PUBLIC_PATHS = Set.of(
+      "/user-auth/login",
+      "/user-auth/register",
+      "/user-auth/send-verification-code",
+      "/user-auth/verify-code",
+      "/user-auth/refresh-token");
 
-  @Autowired private JwtUtil jwtUtil;
+  @Autowired
+  private JwtUtil jwtUtil;
 
-  @Autowired private JwtTokenExtractor tokenExtractor;
+  @Autowired
+  private JwtTokenExtractor tokenExtractor;
 
-  @Autowired private RedisTemplate<String, String> redisTemplate;
+  @Autowired
+  private RedisTemplate<String, String> redisTemplate;
 
   /** 过滤器内部处理 */
   @Override
@@ -72,16 +74,29 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
       // 提取Claims并设置到SecurityContext
       Map<String, Object> claims = jwtUtil.getClaims(decoded);
-      UsernamePasswordAuthenticationToken authentication =
-          new UsernamePasswordAuthenticationToken(claims, null, Collections.emptyList());
+      UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(claims, null,
+          Collections.emptyList());
       SecurityContextHolder.getContext().setAuthentication(authentication);
 
       filterChain.doFilter(request, response);
     } catch (BusinessException ex) {
       SecurityContextHolder.clearContext();
-      throw ex;
-    } finally {
+      // 将BusinessException转换为AuthenticationException，让Spring Security处理
+      throw new org.springframework.security.core.AuthenticationException(ex.getMessage()) {
+        @Override
+        public String getMessage() {
+          return ex.getMessage();
+        }
+      };
+    } catch (Exception ex) {
       SecurityContextHolder.clearContext();
+      // 其他异常也转换为AuthenticationException
+      throw new org.springframework.security.core.AuthenticationException("认证失败: " + ex.getMessage()) {
+        @Override
+        public String getMessage() {
+          return ex.getMessage();
+        }
+      };
     }
   }
 

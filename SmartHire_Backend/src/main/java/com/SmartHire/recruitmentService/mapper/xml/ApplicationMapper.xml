@@ -36,7 +36,7 @@
             a.created_at,
             a.updated_at
         FROM application a
-        INNER JOIN job_position jp ON a.job_id = jp.id
+        INNER JOIN job_info jp ON a.job_id = jp.id
         LEFT JOIN job_seeker js ON a.job_seeker_id = js.id
         WHERE jp.hr_id = #{hrId}
         <if test="jobId != null">
@@ -69,7 +69,7 @@
             a.created_at,
             a.updated_at
         FROM application a
-        INNER JOIN job_position jp ON a.job_id = jp.id
+        INNER JOIN job_info jp ON a.job_id = jp.id
         LEFT JOIN job_seeker js ON a.job_seeker_id = js.id
         WHERE jp.hr_id = #{hrId}
           AND a.job_id = #{jobId}
@@ -91,7 +91,7 @@
             a.created_at,
             a.updated_at
         FROM application a
-        INNER JOIN job_position jp ON a.job_id = jp.id
+        INNER JOIN job_info jp ON a.job_id = jp.id
         LEFT JOIN job_seeker js ON a.job_seeker_id = js.id
         WHERE a.id = #{applicationId}
           AND jp.hr_id = #{hrId}

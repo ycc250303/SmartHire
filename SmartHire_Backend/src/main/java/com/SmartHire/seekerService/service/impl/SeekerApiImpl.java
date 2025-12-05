@@ -3,10 +3,12 @@ package com.SmartHire.seekerService.service.impl;
 import com.SmartHire.common.api.SeekerApi;
 import com.SmartHire.common.exception.enums.ErrorCode;
 import com.SmartHire.common.exception.exception.BusinessException;
+import com.SmartHire.seekerService.dto.SeekerCardDTO;
 import com.SmartHire.seekerService.mapper.JobSeekerMapper;
 import com.SmartHire.seekerService.mapper.ResumeMapper;
 import com.SmartHire.seekerService.model.JobSeeker;
 import com.SmartHire.seekerService.model.Resume;
+import com.SmartHire.seekerService.service.SeekerCardService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -15,18 +17,22 @@ import org.springframework.stereotype.Service;
 @Service
 public class SeekerApiImpl implements SeekerApi {
 
-  @Autowired private JobSeekerMapper jobSeekerMapper;
+  @Autowired
+  private JobSeekerMapper jobSeekerMapper;
 
-  @Autowired private ResumeMapper resumeMapper;
+  @Autowired
+  private ResumeMapper resumeMapper;
+
+  @Autowired
+  private SeekerCardService seekerCardService;
 
   @Override
   public Long getJobSeekerIdByUserId(Long userId) {
     if (userId == null) {
       throw new BusinessException(ErrorCode.VALIDATION_ERROR);
     }
-    JobSeeker jobSeeker =
-        jobSeekerMapper.selectOne(
-            new LambdaQueryWrapper<JobSeeker>().eq(JobSeeker::getUserId, userId));
+    JobSeeker jobSeeker = jobSeekerMapper.selectOne(
+        new LambdaQueryWrapper<JobSeeker>().eq(JobSeeker::getUserId, userId));
     if (jobSeeker == null) {
       throw new BusinessException(ErrorCode.SEEKER_NOT_EXIST);
     }
@@ -66,7 +72,8 @@ public class SeekerApiImpl implements SeekerApi {
     return resume != null && jobSeekerId.equals(resume.getJobSeekerId());
   }
 
-  @Autowired private com.SmartHire.seekerService.service.JobSeekerService jobSeekerService;
+  @Autowired
+  private com.SmartHire.seekerService.service.JobSeekerService jobSeekerService;
 
   @Override
   public void deleteJobSeekerByUserId(Long userId) {
@@ -74,5 +81,22 @@ public class SeekerApiImpl implements SeekerApi {
       return;
     }
     jobSeekerService.deleteJobSeekerByUserId(userId);
+  }
+
+  @Override
+  public SeekerCardDTO getSeekerCard(Long userId) {
+    if (userId == null) {
+      return null;
+    }
+    try {
+      return seekerCardService.getJobCard(userId);
+    } catch (BusinessException e) {
+      // 如果用户不是求职者，重新抛出异常，让调用方知道具体原因
+      if (e.getCode().equals(ErrorCode.USER_NOT_SEEKER.getCode())) {
+        throw e;
+      }
+      // 其他业务异常（如 SEEKER_NOT_EXIST）返回null，让调用方处理
+      return null;
+    }
   }
 }

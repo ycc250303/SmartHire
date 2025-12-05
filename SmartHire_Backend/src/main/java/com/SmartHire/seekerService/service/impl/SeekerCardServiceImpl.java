@@ -3,12 +3,12 @@ package com.SmartHire.seekerService.service.impl;
 import com.SmartHire.common.api.UserAuthApi;
 import com.SmartHire.common.exception.enums.ErrorCode;
 import com.SmartHire.common.exception.exception.BusinessException;
-import com.SmartHire.seekerService.dto.JobCardDTO;
+import com.SmartHire.seekerService.dto.SeekerCardDTO;
 import com.SmartHire.seekerService.mapper.EducationExperienceMapper;
 import com.SmartHire.seekerService.mapper.JobSeekerMapper;
 import com.SmartHire.seekerService.model.EducationExperience;
 import com.SmartHire.seekerService.model.JobSeeker;
-import com.SmartHire.seekerService.service.JobCardService;
+import com.SmartHire.seekerService.service.SeekerCardService;
 import com.SmartHire.userAuthService.model.User;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import java.time.Instant;
@@ -17,7 +17,6 @@ import java.time.Period;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,42 +25,48 @@ import org.springframework.stereotype.Service;
 /** 求职卡片查询服务实现。 */
 @Slf4j
 @Service
-public class JobCardServiceImpl implements JobCardService {
-  private static final Map<Integer, String> EDUCATION_LABEL =
-      Map.ofEntries(
-          Map.entry(0, "高中"),
-          Map.entry(1, "大专"),
-          Map.entry(2, "本科"),
-          Map.entry(3, "硕士"),
-          Map.entry(4, "博士"));
+public class SeekerCardServiceImpl implements SeekerCardService {
+  private static final Map<Integer, String> EDUCATION_LABEL = Map.ofEntries(
+      Map.entry(0, "高中"),
+      Map.entry(1, "大专"),
+      Map.entry(2, "本科"),
+      Map.entry(3, "硕士"),
+      Map.entry(4, "博士"));
 
-  @Autowired private UserAuthApi userAuthApi;
+  @Autowired
+  private UserAuthApi userAuthApi;
 
-  @Autowired private JobSeekerMapper jobSeekerMapper;
+  @Autowired
+  private JobSeekerMapper jobSeekerMapper;
 
-  @Autowired private EducationExperienceMapper educationExperienceMapper;
+  @Autowired
+  private EducationExperienceMapper educationExperienceMapper;
 
   @Override
-  public JobCardDTO getJobCard(Long userId) {
+  public SeekerCardDTO getJobCard(Long userId) {
     if (userId == null || userId <= 0) {
       throw new BusinessException(ErrorCode.VALIDATION_ERROR);
     }
 
     try {
       User user = userAuthApi.getUserById(userId);
-      if (!Objects.equals(user.getUserType(), 1)) {
+      if (user == null) {
+        throw new BusinessException(ErrorCode.USER_ID_NOT_EXIST);
+      }
+      Integer userType = user.getUserType();
+
+      if (!Integer.valueOf(1).equals(userType)) {
         throw new BusinessException(ErrorCode.USER_NOT_SEEKER);
       }
 
-      JobSeeker jobSeeker =
-          jobSeekerMapper.selectOne(
-              new LambdaQueryWrapper<JobSeeker>().eq(JobSeeker::getUserId, userId));
+      JobSeeker jobSeeker = jobSeekerMapper.selectOne(
+          new LambdaQueryWrapper<JobSeeker>().eq(JobSeeker::getUserId, userId));
       if (jobSeeker == null) {
         throw new BusinessException(ErrorCode.SEEKER_NOT_EXIST);
       }
 
       EducationExperience highestEducation = findHighestEducation(jobSeeker.getId());
-      JobCardDTO dto = new JobCardDTO();
+      SeekerCardDTO dto = new SeekerCardDTO();
       dto.setUsername(user.getUsername());
       dto.setAge(calculateAge(jobSeeker.getBirthDate()));
       dto.setJobStatus(jobSeeker.getJobStatus());
@@ -89,12 +94,11 @@ public class JobCardServiceImpl implements JobCardService {
     if (jobSeekerId == null) {
       return null;
     }
-    List<EducationExperience> educationExperiences =
-        educationExperienceMapper.selectList(
-            new LambdaQueryWrapper<EducationExperience>()
-                .eq(EducationExperience::getJobSeekerId, jobSeekerId)
-                .orderByDesc(EducationExperience::getEducation)
-                .orderByDesc(EducationExperience::getEndYear));
+    List<EducationExperience> educationExperiences = educationExperienceMapper.selectList(
+        new LambdaQueryWrapper<EducationExperience>()
+            .eq(EducationExperience::getJobSeekerId, jobSeekerId)
+            .orderByDesc(EducationExperience::getEducation)
+            .orderByDesc(EducationExperience::getEndYear));
     return educationExperiences.isEmpty() ? null : educationExperiences.get(0);
   }
 
@@ -102,8 +106,7 @@ public class JobCardServiceImpl implements JobCardService {
     if (birthDate == null) {
       return null;
     }
-    LocalDate birth =
-        Instant.ofEpochMilli(birthDate.getTime()).atZone(ZoneId.systemDefault()).toLocalDate();
+    LocalDate birth = Instant.ofEpochMilli(birthDate.getTime()).atZone(ZoneId.systemDefault()).toLocalDate();
     LocalDate today = LocalDate.now();
     if (birth.isAfter(today)) {
       return null;

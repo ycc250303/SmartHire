@@ -9,9 +9,10 @@ import lombok.Data;
 
 /** 岗位列表DTO */
 @Data
-public class JobPositionListDTO implements Serializable {
+public class JobInfoListDTO implements Serializable {
 
-  @Serial private static final long serialVersionUID = 1L;
+  @Serial
+  private static final long serialVersionUID = 1L;
 
   /** 职位ID */
   private Long id;
@@ -42,6 +43,15 @@ public class JobPositionListDTO implements Serializable {
 
   /** 工作类型 */
   private Integer jobType;
+
+  /** 经验要求（仅全职类型需要）0-应届生 1-1年以内 2-1-3年 3-3-5年 4-5-10年 5-10年以上 */
+  private Integer experienceRequired;
+
+  /** 每周实习天数（仅实习类型需要） */
+  private Integer internshipDaysPerWeek;
+
+  /** 实习时长（月为单位，仅实习类型需要） */
+  private Integer internshipDurationMonths;
 
   /** 状态：0-已下线 1-招聘中 2-已暂停 */
   private Integer status;

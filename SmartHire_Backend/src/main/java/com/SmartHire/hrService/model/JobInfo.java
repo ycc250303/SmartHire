@@ -12,8 +12,8 @@ import lombok.EqualsAndHashCode;
 /** 职位实体类 */
 @Data
 @EqualsAndHashCode(callSuper = false)
-@TableName("job_position")
-public class JobPosition implements Serializable {
+@TableName("job_info")
+public class JobInfo implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
@@ -56,6 +56,15 @@ public class JobPosition implements Serializable {
 
   /** 工作类型 */
   private Integer jobType;
+
+  /** 经验要求（仅全职类型需要）0-应届生 1-1年以内 2-1-3年 3-3-5年 4-5-10年 5-10年以上 */
+  private Integer experienceRequired;
+
+  /** 每周实习天数（仅实习类型需要） */
+  private Integer internshipDaysPerWeek;
+
+  /** 实习时长（月为单位，仅实习类型需要） */
+  private Integer internshipDurationMonths;
 
   /** 职位描述 */
   private String description;
