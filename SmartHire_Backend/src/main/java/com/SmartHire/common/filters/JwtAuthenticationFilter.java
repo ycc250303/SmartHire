@@ -80,22 +80,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     } catch (BusinessException ex) {
       SecurityContextHolder.clearContext();
       // 将BusinessException转换为AuthenticationException，让Spring Security处理
-      throw new org.springframework.security.core.AuthenticationException(ex.getMessage()) {
-        @Override
-        public String getMessage() {
-          return ex.getMessage();
-        }
-      };
+      throw new BusinessAuthenticationException(ex.getMessage());
     } catch (Exception ex) {
       SecurityContextHolder.clearContext();
       // 其他异常也转换为AuthenticationException
-      throw new org.springframework.security.core.AuthenticationException(
-          "认证失败: " + ex.getMessage()) {
-        @Override
-        public String getMessage() {
-          return ex.getMessage();
-        }
-      };
+      throw new GeneralAuthenticationException("认证失败: " + ex.getMessage());
     }
   }
 
@@ -106,6 +95,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
     if (Boolean.TRUE.equals(redisTemplate.hasKey(ACCESS_BLACKLIST_PREFIX + token))) {
       throw new BusinessException(ErrorCode.TOKEN_IS_INVALID);
+    }
+  }
+
+  /** 业务异常转换的认证异常 */
+  private static class BusinessAuthenticationException
+      extends org.springframework.security.core.AuthenticationException {
+    public BusinessAuthenticationException(String message) {
+      super(message);
+    }
+  }
+
+  /** 通用认证异常 */
+  private static class GeneralAuthenticationException
+      extends org.springframework.security.core.AuthenticationException {
+    public GeneralAuthenticationException(String message) {
+      super(message);
     }
   }
 }
