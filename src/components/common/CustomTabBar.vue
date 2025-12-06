@@ -37,19 +37,19 @@ const tabList = computed(() => {
   const localeMessages = messages[localeRef.value];
   return [
     {
-      pagePath: 'pages/index/index',
+      pagePath: 'pages/seeker/index/index',
       text: localeMessages.tabBar.jobs,
       iconPath: '/static/tab-jobs.png',
       selectedIconPath: '/static/tab-jobs-active.png'
     },
     {
-      pagePath: 'pages/chat/index',
+      pagePath: 'pages/seeker/chat/index',
       text: localeMessages.tabBar.chat,
       iconPath: '/static/tab-chat.png',
       selectedIconPath: '/static/tab-chat-active.png'
     },
     {
-      pagePath: 'pages/profile/index',
+      pagePath: 'pages/seeker/profile/index',
       text: localeMessages.tabBar.profile,
       iconPath: '/static/tab-profile.png',
       selectedIconPath: '/static/tab-profile-active.png'
@@ -58,9 +58,9 @@ const tabList = computed(() => {
 });
 
 const tabPages = [
-  'pages/index/index',
-  'pages/chat/index',
-  'pages/profile/index'
+  'pages/seeker/index/index',
+  'pages/seeker/chat/index',
+  'pages/seeker/profile/index'
 ];
 
 function switchTab(index: number, url: string) {

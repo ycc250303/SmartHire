@@ -1,7 +1,7 @@
 {
   "pages": [
     {
-      "path": "pages/index/index",
+      "path": "pages/seeker/index/index",
       "style": {
         "navigationBarTitleText": "岗位",
         "navigationBarTextStyle": "black",
@@ -10,7 +10,7 @@
       }
     },
     {
-      "path": "pages/index/search/index",
+      "path": "pages/seeker/index/search/index",
       "style": {
         "navigationBarTitleText": "搜索",
         "navigationBarTextStyle": "black",
@@ -19,7 +19,7 @@
       }
     },
     {
-      "path": "pages/chat/index",
+      "path": "pages/seeker/chat/index",
       "style": {
         "navigationBarTitleText": "消息",
         "navigationBarTextStyle": "black",
@@ -28,7 +28,7 @@
       }
     },
     {
-      "path": "pages/profile/index",
+      "path": "pages/seeker/profile/index",
       "style": {
         "navigationBarTitleText": "我的",
         "navigationBarTextStyle": "black",
@@ -37,7 +37,7 @@
       }
     },
     {
-      "path": "pages/auth/login",
+      "path": "pages/seeker/auth/login",
       "style": {
         "navigationBarTitleText": "登录",
         "navigationBarTextStyle": "black",
@@ -45,7 +45,7 @@
       }
     },
     {
-      "path": "pages/auth/register",
+      "path": "pages/seeker/auth/register",
       "style": {
         "navigationBarTitleText": "注册",
         "navigationBarTextStyle": "black",
@@ -53,7 +53,7 @@
       }
     },
     {
-      "path": "pages/auth/help",
+      "path": "pages/seeker/auth/help",
       "style": {
         "navigationBarTitleText": "帮助",
         "navigationBarTextStyle": "black",
@@ -61,7 +61,7 @@
       }
     },
     {
-      "path": "pages/profile/settings",
+      "path": "pages/seeker/profile/settings",
       "style": {
         "navigationBarTitleText": "设置",
         "navigationBarTextStyle": "black",
@@ -69,7 +69,7 @@
       }
     },
     {
-      "path": "pages/profile/self",
+      "path": "pages/seeker/profile/self",
       "style": {
         "navigationBarTitleText": "个人资料",
         "navigationBarTextStyle": "black",
@@ -77,7 +77,7 @@
       }
     },
     {
-      "path": "pages/profile/resume/online-resume",
+      "path": "pages/seeker/profile/resume/online-resume",
       "style": {
         "navigationBarTitleText": "在线简历",
         "navigationBarTextStyle": "black",
@@ -86,7 +86,7 @@
       }
     },
     {
-      "path": "pages/profile/resume/attachment-resume",
+      "path": "pages/seeker/profile/resume/attachment-resume",
       "style": {
         "navigationBarTitleText": "附件简历",
         "navigationBarTextStyle": "black",
@@ -94,70 +94,70 @@
       }
     },
     {
-      "path": "pages/profile/resume/edit/basic-info",
+      "path": "pages/seeker/profile/resume/edit/basic-info",
       "style": {
         "navigationBarTextStyle": "black",
         "navigationBarBackgroundColor": "#ffffff"
       }
     },
     {
-      "path": "pages/profile/resume/edit/expectation",
+      "path": "pages/seeker/profile/resume/edit/expectation",
       "style": {
         "navigationBarTextStyle": "black",
         "navigationBarBackgroundColor": "#ffffff"
       }
     },
     {
-      "path": "pages/profile/resume/edit/work-experience",
+      "path": "pages/seeker/profile/resume/edit/work-experience",
       "style": {
         "navigationBarTextStyle": "black",
         "navigationBarBackgroundColor": "#ffffff"
       }
     },
     {
-      "path": "pages/profile/resume/edit/project-experience",
+      "path": "pages/seeker/profile/resume/edit/project-experience",
       "style": {
         "navigationBarTextStyle": "black",
         "navigationBarBackgroundColor": "#ffffff"
       }
     },
     {
-      "path": "pages/profile/resume/edit/education-experience",
+      "path": "pages/seeker/profile/resume/edit/education-experience",
       "style": {
         "navigationBarTextStyle": "black",
         "navigationBarBackgroundColor": "#ffffff"
       }
     },
     {
-      "path": "pages/profile/resume/edit/skill",
+      "path": "pages/seeker/profile/resume/edit/skill",
       "style": {
         "navigationBarTextStyle": "black",
         "navigationBarBackgroundColor": "#ffffff"
       }
     },
     {
-      "path": "pages/profile/resume/edit/upload-resume",
+      "path": "pages/seeker/profile/resume/edit/upload-resume",
       "style": {
         "navigationBarTextStyle": "black",
         "navigationBarBackgroundColor": "#ffffff"
       }
     },
     {
-      "path": "pages/profile/resume/edit/edit-resume",
+      "path": "pages/seeker/profile/resume/edit/edit-resume",
       "style": {
         "navigationBarTextStyle": "black",
         "navigationBarBackgroundColor": "#ffffff"
       }
     },
     {
-      "path": "pages/profile/resume/edit/university-selector",
+      "path": "pages/seeker/profile/resume/edit/university-selector",
       "style": {
         "navigationBarTextStyle": "black",
         "navigationBarBackgroundColor": "#ffffff"
       }
     },
     {
-      "path": "pages/profile/resume/edit/major-selector",
+      "path": "pages/seeker/profile/resume/edit/major-selector",
       "style": {
         "navigationBarTextStyle": "black",
         "navigationBarBackgroundColor": "#ffffff"
@@ -178,19 +178,19 @@
     "borderStyle": "white",
     "list": [
       {
-        "pagePath": "pages/index/index",
+        "pagePath": "pages/seeker/index/index",
         "text": "岗位",
         "iconPath": "static/tab-jobs.png",
         "selectedIconPath": "static/tab-jobs-active.png"
       },
       {
-        "pagePath": "pages/chat/index",
+        "pagePath": "pages/seeker/chat/index",
         "text": "消息",
         "iconPath": "static/tab-chat.png",
         "selectedIconPath": "static/tab-chat-active.png"
       },
       {
-        "pagePath": "pages/profile/index",
+        "pagePath": "pages/seeker/profile/index",
         "text": "我的",
         "iconPath": "static/tab-profile.png",
         "selectedIconPath": "static/tab-profile-active.png"

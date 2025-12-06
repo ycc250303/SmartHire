@@ -39,7 +39,7 @@ async function checkAuthStatus() {
   if (!valid) {
     clearToken();
     uni.redirectTo({
-      url: '/pages/auth/login',
+      url: '/pages/seeker/auth/login',
       fail: () => {
         console.error('Failed to redirect to login page');
       }
@@ -54,7 +54,7 @@ async function checkAuthStatus() {
     console.error('Failed to load user info:', error);
     clearToken();
     uni.redirectTo({
-      url: '/pages/auth/login',
+      url: '/pages/seeker/auth/login',
       fail: () => {
         console.error('Failed to redirect to login page');
       }
