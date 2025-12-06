@@ -51,7 +51,7 @@ export const useUserStore = defineStore('user', {
         this.clearUserInfo();
         clearToken();
         uni.redirectTo({
-          url: '/pages/seeker/auth/login',
+          url: '/pages/auth/login',
           fail: () => {
             console.error('Failed to redirect to login page');
           }

@@ -84,7 +84,7 @@ function showLanguagePicker() {
 
 function goToHelpCenter() {
   uni.navigateTo({
-    url: '/pages/seeker/auth/help'
+    url: '/pages/auth/help'
   });
 }
 

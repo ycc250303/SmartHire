@@ -27,7 +27,7 @@ onShow(() => {
 function handleLogout() {
   clearToken();
   uni.redirectTo({
-    url: '/pages/seeker/auth/login',
+    url: '/pages/auth/login',
   });
 }
 

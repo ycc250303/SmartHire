@@ -262,7 +262,7 @@ export function http<TResponse = unknown, TData extends RequestData = RequestDat
                 console.error(`Token refresh failed [${config.url}]:`, error);
                 clearToken();
                 uni.redirectTo({
-                  url: '/pages/seeker/auth/login',
+                  url: '/pages/auth/login',
                   fail: () => {
                     console.error('Failed to redirect to login page');
                   }

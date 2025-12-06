@@ -100,7 +100,7 @@ const logout = () => {
     content: '确认退出当前账号吗？',
     success: (res) => {
       if (res.confirm) {
-        uni.reLaunch({ url: '/pages/hr/auth/login' });
+        uni.reLaunch({ url: '/pages/auth/login' });
       }
     },
   });

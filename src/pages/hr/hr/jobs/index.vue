@@ -50,13 +50,17 @@
     <view class="loading" v-if="loading">
       <text>加载中...</text>
     </view>
+    
+    <CustomTabBar />
   </view>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import { onShow } from '@dcloudio/uni-app';
 import dayjs from 'dayjs';
 import { getJobPositionList, type JobPosition } from '@/services/api/hr';
+import CustomTabBar from '@/components/common/CustomTabBar.vue';
 
 type FilterStatus = 'all' | number;
 
@@ -132,6 +136,10 @@ const formatTime = (time?: string) => (time ? dayjs(time).format('MM月DD日 HH:
 
 onMounted(() => {
   loadJobs();
+});
+
+onShow(() => {
+  uni.hideTabBar();
 });
 </script>
 

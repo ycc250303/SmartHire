@@ -33,6 +33,8 @@
         <view class="notice-time">{{ formatTime(item.timestamp) }}</view>
       </view>
     </view>
+    
+    <CustomTabBar />
   </view>
 </template>
 
@@ -41,6 +43,7 @@ import { ref, onMounted } from 'vue';
 import { onLoad, onShow } from '@dcloudio/uni-app';
 import dayjs from 'dayjs';
 import { fetchConversations, fetchNotifications, type ConversationPreview, type NotificationItem } from '@/mock/hr';
+import CustomTabBar from '@/components/common/CustomTabBar.vue';
 
 const activeTab = ref<'chat' | 'notice'>('chat');
 const conversations = ref<ConversationPreview[]>([]);
@@ -83,6 +86,7 @@ onLoad((options) => {
 });
 
 onShow(() => {
+  uni.hideTabBar();
   syncStoredTab();
 });
 

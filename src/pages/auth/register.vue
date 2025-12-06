@@ -332,9 +332,15 @@ async function handleRegister() {
     });
 
     setTimeout(() => {
-      uni.switchTab({
-        url: '/pages/seeker/index/index',
-      });
+      if (formData.value.userType === UserType.Seeker) {
+        uni.switchTab({
+          url: '/pages/seeker/index/index',
+        });
+      } else {
+        uni.switchTab({
+          url: '/pages/hr/hr/home/index',
+        });
+      }
     }, 1000);
   } catch (err) {
     errorMessage.value = err instanceof Error ? err.message : 'Registration failed';

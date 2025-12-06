@@ -21,14 +21,14 @@ export interface HrInfoUpdatePayload {
 
 export function getHrInfo(): Promise<HrInfo> {
   return http<HrInfo>({
-    url: "/smarthire/api/hr/info",
+    url: "/api/hr/info",
     method: "GET",
   });
 }
 
 export function updateHrInfo(payload: HrInfoUpdatePayload): Promise<null> {
   return http<null>({
-    url: "/smarthire/api/hr/info",
+    url: "/api/hr/info",
     method: "PATCH",
     data: payload,
   });
@@ -88,7 +88,7 @@ export type JobPositionUpdatePayload = Partial<JobPositionCreatePayload>;
 
 export function createJobPosition(payload: JobPositionCreatePayload): Promise<number> {
   return http<number>({
-    url: "/smarthire/api/hr/job-position",
+    url: "/api/hr/job-position",
     method: "POST",
     data: payload,
   });
@@ -96,7 +96,7 @@ export function createJobPosition(payload: JobPositionCreatePayload): Promise<nu
 
 export function updateJobPosition(jobId: number, payload: JobPositionUpdatePayload): Promise<null> {
   return http<null>({
-    url: `/smarthire/api/hr/job-position/${jobId}`,
+    url: `/api/hr/job-position/${jobId}`,
     method: "PATCH",
     data: payload,
   });
@@ -104,7 +104,7 @@ export function updateJobPosition(jobId: number, payload: JobPositionUpdatePaylo
 
 export function getJobPositionList(status?: number): Promise<JobPosition[]> {
   return http<JobPosition[]>({
-    url: "/smarthire/api/hr/job-position",
+    url: "/api/hr/job-position",
     method: "GET",
     data: typeof status === "number" ? { status } : undefined,
   });
@@ -112,14 +112,14 @@ export function getJobPositionList(status?: number): Promise<JobPosition[]> {
 
 export function getJobPositionById(jobId: number): Promise<JobPosition> {
   return http<JobPosition>({
-    url: `/smarthire/api/hr/job-position/${jobId}`,
+    url: `/api/hr/job-position/${jobId}`,
     method: "GET",
   });
 }
 
 export function updateJobPositionStatus(jobId: number, status: number): Promise<null> {
   return http<null>({
-    url: `/smarthire/api/hr/job-position/${jobId}/status`,
+    url: `/api/hr/job-position/${jobId}/status`,
     method: "PATCH",
     data: { status },
   });
@@ -127,7 +127,7 @@ export function updateJobPositionStatus(jobId: number, status: number): Promise<
 
 export function offlineJobPosition(jobId: number): Promise<null> {
   return http<null>({
-    url: `/smarthire/api/hr/job-position/${jobId}/offline`,
+    url: `/api/hr/job-position/${jobId}/offline`,
     method: "PATCH",
   });
 }
@@ -145,7 +145,7 @@ export interface SeekerCard {
 
 export function getSeekerCards(params?: { userId?: number }): Promise<SeekerCard[]> {
   return http<SeekerCard[]>({
-    url: "/smarthire/api/recruitment/hr/seeker-card",
+    url: "/api/recruitment/hr/seeker-card",
     method: "GET",
     data: params,
   });

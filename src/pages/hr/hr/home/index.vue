@@ -62,13 +62,17 @@
         <button class="secondary" @click="goAnalytics">查看数据分析</button>
       </view>
     </view>
+    
+    <CustomTabBar />
   </view>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import { onShow } from '@dcloudio/uni-app';
 import { fetchDashboardData, type DashboardTodoItem, type RecruitStatistic, type InsightCardItem } from '@/mock/hr';
 import avatarImg from '@/static/user-avatar.png';
+import CustomTabBar from '@/components/common/CustomTabBar.vue';
 
 const todos = ref<DashboardTodoItem[]>([]);
 const stats = ref<RecruitStatistic[]>([]);
@@ -98,7 +102,9 @@ const parseQuery = (queryString?: string) => {
   if (!queryString) return {} as Record<string, string>;
   return queryString.split('&').reduce((acc, pair) => {
     const [key, value] = pair.split('=');
-    acc[key] = decodeURIComponent(value || '');
+    if (key) {
+      acc[key] = decodeURIComponent(value || '');
+    }
     return acc;
   }, {} as Record<string, string>);
 };
@@ -134,6 +140,10 @@ const trendText = (trend: RecruitStatistic['trend']) => {
 
 onMounted(() => {
   loadDashboard();
+});
+
+onShow(() => {
+  uni.hideTabBar();
 });
 </script>
 

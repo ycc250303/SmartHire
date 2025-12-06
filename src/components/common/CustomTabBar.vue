@@ -1,5 +1,5 @@
 <template>
-  <view class="custom-tab-bar">
+  <view class="custom-tab-bar" v-if="currentRole !== null">
     <view 
       v-for="(item, index) in tabList" 
       :key="index"
@@ -23,6 +23,8 @@ import { onShow } from '@dcloudio/uni-app';
 import { getLocaleRef } from '@/locales';
 import zhCN from '@/locales/zh-CN';
 import enUS from '@/locales/en-US';
+import { useUserStore } from '@/store/user';
+import { UserType } from '@/services/api/auth';
 
 const messages = {
   'zh-CN': zhCN,
@@ -30,10 +32,12 @@ const messages = {
 };
 
 const localeRef = getLocaleRef();
+const userStore = useUserStore();
 
 const currentIndex = ref(0);
+const currentRole = ref<'seeker' | 'hr' | null>(null);
 
-const tabList = computed(() => {
+const seekerTabList = computed(() => {
   const localeMessages = messages[localeRef.value];
   return [
     {
@@ -57,11 +61,53 @@ const tabList = computed(() => {
   ];
 });
 
-const tabPages = [
-  'pages/seeker/index/index',
-  'pages/seeker/chat/index',
-  'pages/seeker/profile/index'
-];
+const hrTabList = computed(() => {
+  const localeMessages = messages[localeRef.value];
+  return [
+    {
+      pagePath: 'pages/hr/hr/home/index',
+      text: '工作台',
+      iconPath: '/static/tab-home.png',
+      selectedIconPath: '/static/tab-home-active.png'
+    },
+    {
+      pagePath: 'pages/hr/hr/jobs/index',
+      text: '岗位',
+      iconPath: '/static/tab-jobs.png',
+      selectedIconPath: '/static/tab-jobs-active.png'
+    },
+    {
+      pagePath: 'pages/hr/hr/messages/index',
+      text: '消息',
+      iconPath: '/static/tab-chat.png',
+      selectedIconPath: '/static/tab-chat-active.png'
+    }
+  ];
+});
+
+const tabList = computed(() => {
+  if (currentRole.value === 'hr') {
+    return hrTabList.value;
+  } else {
+    return seekerTabList.value;
+  }
+});
+
+const tabPages = computed(() => {
+  if (currentRole.value === 'hr') {
+    return [
+      'pages/hr/hr/home/index',
+      'pages/hr/hr/jobs/index',
+      'pages/hr/hr/messages/index'
+    ];
+  } else {
+    return [
+      'pages/seeker/index/index',
+      'pages/seeker/chat/index',
+      'pages/seeker/profile/index'
+    ];
+  }
+});
 
 function switchTab(index: number, url: string) {
   if (currentIndex.value === index) {
@@ -82,7 +128,43 @@ function updateSelectedIndex() {
   if (!currentPage || !currentPage.route) return;
   
   const route = currentPage.route;
-  const index = tabPages.findIndex(page => page === route);
+  
+  // Determine role based on user's actual role (userType)
+  // UserType: Seeker = 0, HR = 1
+  // userType is number, UserType is enum
+  const userRole = userStore.userInfo?.userType;
+  
+  if (userRole === UserType.HR || userRole === 1) {
+    currentRole.value = 'hr';
+    // Prevent HR from accessing seeker pages
+    if (route.startsWith('pages/seeker/')) {
+      uni.reLaunch({
+        url: '/pages/hr/hr/home/index'
+      });
+      return;
+    }
+  } else if (userRole === UserType.Seeker || userRole === 0) {
+    currentRole.value = 'seeker';
+    // Prevent Seeker from accessing HR pages
+    if (route.startsWith('pages/hr/hr/') || route.startsWith('pages/hr/')) {
+      uni.reLaunch({
+        url: '/pages/seeker/index/index'
+      });
+      return;
+    }
+  } else {
+    // Fallback: determine role based on route if userInfo not loaded yet
+    if (route.startsWith('pages/hr/hr/') || route.startsWith('pages/hr/')) {
+      currentRole.value = 'hr';
+    } else if (route.startsWith('pages/seeker/')) {
+      currentRole.value = 'seeker';
+    } else {
+      currentRole.value = null;
+      return;
+    }
+  }
+  
+  const index = tabPages.value.findIndex(page => page === route);
   
   if (index !== -1) {
     currentIndex.value = index;
@@ -100,6 +182,11 @@ onShow(() => {
 watch(localeRef, () => {
   updateSelectedIndex();
 });
+
+// Watch userInfo changes to update role
+watch(() => userStore.userInfo, () => {
+  updateSelectedIndex();
+}, { deep: true });
 </script>
 
 <style lang="scss" scoped>
@@ -147,4 +234,3 @@ watch(localeRef, () => {
   font-weight: 500;
 }
 </style>
-

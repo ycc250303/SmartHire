@@ -42,6 +42,15 @@
           <text v-else>{{ t('auth.login.loginButton') }}</text>
         </button>
 
+        <!-- Role Selection (Simple, no CSS for debugging) -->
+        <view class="role-selection">
+          <picker mode="selector" :range="roleOptions" :value="selectedRoleIndex" @change="onRoleChange">
+            <view class="role-picker">
+              <text>选择角色: {{ selectedRole }}</text>
+            </view>
+          </picker>
+        </view>
+
         <!-- Bottom Links -->
         <view class="bottom-links">
           <view class="link-item" @click="goToHelp">
@@ -62,14 +71,19 @@ import { ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { t } from '@/locales';
 import { useNavigationTitle } from '@/utils/useNavigationTitle';
-import { login, type LoginParams } from '@/services/api/auth';
+import { login, type LoginParams, UserType } from '@/services/api/auth';
 import { setTokens } from '@/services/http';
+import { useUserStore } from '@/store/user';
 
 useNavigationTitle('navigation.login');
 
+const userStore = useUserStore();
 const loading = ref(false);
 const errorMessage = ref('');
 const showPassword = ref(false);
+const selectedRole = ref<'求职者' | 'HR'>('求职者');
+const selectedRoleIndex = ref(0);
+const roleOptions = ['求职者', 'HR'];
 
 const formData = ref<LoginParams>({
   username: '',
@@ -82,16 +96,15 @@ onLoad(() => {
   });
 });
 
-/**
- * Toggle password visibility
- */
+function onRoleChange(e: any) {
+  selectedRoleIndex.value = e.detail.value;
+  selectedRole.value = roleOptions[e.detail.value] as '求职者' | 'HR';
+}
+
 function togglePassword() {
   showPassword.value = !showPassword.value;
 }
 
-/**
- * Validate form data
- */
 function validateForm(): string | null {
   if (!formData.value.username.trim()) {
     return t('auth.login.validation.usernameRequired');
@@ -102,9 +115,6 @@ function validateForm(): string | null {
   return null;
 }
 
-/**
- * Handle login
- */
 async function handleLogin() {
   errorMessage.value = '';
 
@@ -128,6 +138,9 @@ async function handleLogin() {
       loginResponse.expiresIn
     );
 
+    // Load user info
+    await userStore.loadUserInfo();
+
     uni.showToast({
       title: t('auth.login.loginSuccess'),
       icon: 'success',
@@ -135,9 +148,16 @@ async function handleLogin() {
     });
 
     setTimeout(() => {
-      uni.switchTab({
-        url: '/pages/seeker/index/index',
-      });
+      // Use selected role from picker to determine navigation
+      if (selectedRole.value === 'HR') {
+        uni.switchTab({
+          url: '/pages/hr/hr/home/index',
+        });
+      } else {
+        uni.switchTab({
+          url: '/pages/seeker/index/index',
+        });
+      }
     }, 1000);
   } catch (err) {
     errorMessage.value = err instanceof Error ? err.message : 'Login failed';
@@ -146,18 +166,12 @@ async function handleLogin() {
   }
 }
 
-/**
- * Navigate to register page
- */
 function goToRegister() {
   uni.navigateTo({
     url: '/pages/auth/register',
   });
 }
 
-/**
- * Navigate to help page
- */
 function goToHelp() {
   uni.navigateTo({
     url: '/pages/auth/help',
@@ -319,6 +333,16 @@ function goToHelp() {
   &::after {
     border: none;
   }
+}
+
+.role-selection {
+  margin-bottom: vars.$spacing-lg;
+}
+
+.role-picker {
+  padding: vars.$spacing-md;
+  background-color: vars.$bg-color;
+  border-radius: vars.$border-radius;
 }
 
 .bottom-links {
