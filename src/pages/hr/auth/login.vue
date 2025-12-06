@@ -82,7 +82,7 @@ const handleLogin = async () => {
     
     setTimeout(() => {
       uni.switchTab({
-        url: '/pages/dashboard/index',
+        url: '/pages/hr/dashboard/index',
       });
     }, 1500);
   } catch (error) {
@@ -98,13 +98,13 @@ const handleLogin = async () => {
 
 const handleHelp = () => {
   uni.navigateTo({
-    url: '/pages/auth/help',
+    url: '/pages/hr/auth/help',
   });
 };
 
 const handleRegister = () => {
   uni.navigateTo({
-    url: '/pages/auth/register',
+    url: '/pages/hr/auth/register',
   });
 };
 </script>
@@ -195,4 +195,3 @@ const handleRegister = () => {
   color: vars.$primary-color;
 }
 </style>
-

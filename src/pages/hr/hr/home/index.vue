@@ -83,15 +83,15 @@ const loadDashboard = async () => {
 };
 
 const goProfile = () => {
-  uni.navigateTo({ url: '/pages/hr/profile/index' });
+  uni.navigateTo({ url: '/pages/hr/hr/profile/index' });
 };
 
 const goCreateJob = () => {
-  uni.navigateTo({ url: '/pages/hr/jobs/edit?mode=create' });
+  uni.navigateTo({ url: '/pages/hr/hr/jobs/edit?mode=create' });
 };
 
 const goAnalytics = () => {
-  uni.navigateTo({ url: '/pages/hr/analytics/index' });
+  uni.navigateTo({ url: '/pages/hr/hr/analytics/index' });
 };
 
 const parseQuery = (queryString?: string) => {
@@ -106,7 +106,7 @@ const parseQuery = (queryString?: string) => {
 const handleTodoClick = (route?: string) => {
   if (!route) return;
   const [path, query] = route.split('?');
-  if (path === '/pages/hr/messages/index') {
+  if (path === '/pages/hr/hr/messages/index') {
     const params = parseQuery(query);
     if (params.tab) {
       uni.setStorageSync('hr_messages_tab', params.tab);
@@ -114,7 +114,7 @@ const handleTodoClick = (route?: string) => {
     uni.switchTab({ url: path });
     return;
   }
-  if (path === '/pages/hr/home/index' || path === '/pages/hr/jobs/index') {
+  if (path === '/pages/hr/hr/home/index' || path === '/pages/hr/hr/jobs/index') {
     uni.switchTab({ url: path });
     return;
   }

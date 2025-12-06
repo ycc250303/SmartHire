@@ -112,21 +112,21 @@ export const mockDashboardTodos: DashboardTodoItem[] = [
     title: '新投递',
     desc: '需要初筛的候选人',
     count: 8,
-    route: '/pages/hr/jobs/detail?jobId=101&section=candidates',
+    route: '/pages/hr/hr/jobs/detail?jobId=101&section=candidates',
   },
   {
     id: 'pending-interview',
     title: '待安排面试',
     desc: '需要协调时间的候选人',
     count: 3,
-    route: '/pages/hr/interview/index',
+    route: '/pages/hr/hr/jobs/detail?jobId=101&section=interview',
   },
   {
     id: 'unread-messages',
     title: '未读消息',
     desc: '候选人已回复等待处理',
     count: 5,
-    route: '/pages/hr/messages/index?tab=chat',
+    route: '/pages/hr/hr/messages/index?tab=chat',
   },
 ];
 
@@ -143,7 +143,7 @@ export const mockInsights: InsightCardItem[] = [
     desc: '2 个 JD 检测到潜在敏感描述，建议优化表述。',
     severity: 'warning',
     actionText: '查看详情',
-    route: '/pages/hr/jobs/detail?jobId=101&section=jdQuality',
+    route: '/pages/hr/hr/jobs/detail?jobId=101&section=jdQuality',
   },
   {
     id: 'anti-fraud',
@@ -151,14 +151,14 @@ export const mockInsights: InsightCardItem[] = [
     desc: '后端开发岗位曝光高于行业均值，请确认岗位信息。',
     severity: 'danger',
     actionText: '查看风险',
-    route: '/pages/hr/jobs/detail?jobId=102&section=risk',
+    route: '/pages/hr/hr/jobs/detail?jobId=102&section=risk',
   },
   {
     id: 'match-efficiency',
     title: '匹配效率建议',
     desc: '前端开发岗位面试通过率 18%，建议优化 JD 或筛选条件。',
     severity: 'info',
-    route: '/pages/hr/analytics/index',
+    route: '/pages/hr/hr/analytics/index',
   },
 ];
 
@@ -279,7 +279,7 @@ export const mockNotifications: NotificationItem[] = [
     title: '新的候选人投递',
     desc: '王晨投递了 高级前端工程师 岗位',
     timestamp: dayjs().subtract(1, 'hour').toISOString(),
-    route: '/pages/hr/jobs/detail?jobId=101&section=candidates',
+    route: '/pages/hr/hr/jobs/detail?jobId=101&section=candidates',
   },
   {
     id: 'notice-2',
@@ -287,7 +287,7 @@ export const mockNotifications: NotificationItem[] = [
     title: '面试提醒',
     desc: '张琪 今日 14:00 二面，请提前确认',
     timestamp: dayjs().subtract(3, 'hour').toISOString(),
-    route: '/pages/hr/interview/detail?id=2001',
+    route: '/pages/hr/hr/jobs/detail?jobId=101&section=interview',
   },
   {
     id: 'notice-3',
@@ -295,7 +295,7 @@ export const mockNotifications: NotificationItem[] = [
     title: '风控提示',
     desc: '智能风控检测到 后端开发岗 有异常举报',
     timestamp: dayjs().subtract(1, 'day').toISOString(),
-    route: '/pages/hr/jobs/detail?jobId=102&section=risk',
+    route: '/pages/hr/hr/jobs/detail?jobId=102&section=risk',
   },
 ];
 

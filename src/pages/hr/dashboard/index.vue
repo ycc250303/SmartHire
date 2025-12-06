@@ -78,7 +78,7 @@ const loadData = async () => {
 
 const handleCandidateClick = (candidate: CandidateListItem) => {
   uni.navigateTo({
-    url: `/pages/candidates/detail?candidateId=${candidate.candidateId}`,
+    url: `/pages/hr/candidates/detail?candidateId=${candidate.candidateId}`,
   });
 };
 
@@ -175,6 +175,8 @@ onLoad(() => {
   color: vars.$text-muted;
 }
 </style>
+
+
 
 
 

@@ -1,18 +1,168 @@
-import { http } from '../http';
+import { http } from "../http";
 
-// ============ 候选人相关接口 ============
+// ============ HR 信息 ============
+export interface HrInfo {
+  id: number;
+  userId: number;
+  companyId: number;
+  companyName: string;
+  realName: string;
+  position: string;
+  workPhone: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
 
+export interface HrInfoUpdatePayload {
+  realName?: string;
+  position?: string;
+  workPhone?: string;
+}
+
+export function getHrInfo(): Promise<HrInfo> {
+  return http<HrInfo>({
+    url: "/smarthire/api/hr/info",
+    method: "GET",
+  });
+}
+
+export function updateHrInfo(payload: HrInfoUpdatePayload): Promise<null> {
+  return http<null>({
+    url: "/smarthire/api/hr/info",
+    method: "PATCH",
+    data: payload,
+  });
+}
+
+// ============ 职位相关 ============
+export interface JobSkill {
+  skillName: string;
+  isRequired?: number; // 0/1
+}
+
+export interface JobPosition {
+  id: number;
+  companyId: number;
+  jobTitle: string;
+  jobCategory?: string;
+  department?: string;
+  city: string;
+  address?: string;
+  salaryMin?: number;
+  salaryMax?: number;
+  salaryMonths?: number;
+  educationRequired?: number;
+  jobType: number;
+  description?: string;
+  responsibilities?: string;
+  requirements?: string;
+  status: number; // 0-已下线 1-招聘中 2-已暂停
+  viewCount?: number;
+  applicationCount?: number;
+  publishedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  skills?: JobSkill[];
+}
+
+export interface JobPositionCreatePayload {
+  companyId: number;
+  jobTitle: string;
+  jobCategory?: string;
+  department?: string;
+  city: string;
+  address?: string;
+  salaryMin?: number;
+  salaryMax?: number;
+  salaryMonths?: number;
+  educationRequired?: number;
+  jobType: number;
+  description: string;
+  responsibilities?: string;
+  requirements?: string;
+  status?: number;
+  skills?: JobSkill[];
+}
+
+export type JobPositionUpdatePayload = Partial<JobPositionCreatePayload>;
+
+export function createJobPosition(payload: JobPositionCreatePayload): Promise<number> {
+  return http<number>({
+    url: "/smarthire/api/hr/job-position",
+    method: "POST",
+    data: payload,
+  });
+}
+
+export function updateJobPosition(jobId: number, payload: JobPositionUpdatePayload): Promise<null> {
+  return http<null>({
+    url: `/smarthire/api/hr/job-position/${jobId}`,
+    method: "PATCH",
+    data: payload,
+  });
+}
+
+export function getJobPositionList(status?: number): Promise<JobPosition[]> {
+  return http<JobPosition[]>({
+    url: "/smarthire/api/hr/job-position",
+    method: "GET",
+    data: typeof status === "number" ? { status } : undefined,
+  });
+}
+
+export function getJobPositionById(jobId: number): Promise<JobPosition> {
+  return http<JobPosition>({
+    url: `/smarthire/api/hr/job-position/${jobId}`,
+    method: "GET",
+  });
+}
+
+export function updateJobPositionStatus(jobId: number, status: number): Promise<null> {
+  return http<null>({
+    url: `/smarthire/api/hr/job-position/${jobId}/status`,
+    method: "PATCH",
+    data: { status },
+  });
+}
+
+export function offlineJobPosition(jobId: number): Promise<null> {
+  return http<null>({
+    url: `/smarthire/api/hr/job-position/${jobId}/offline`,
+    method: "PATCH",
+  });
+}
+
+// ============ HR 侧求职卡片 ============
+export interface SeekerCard {
+  username: string;
+  graduationYear?: string;
+  age?: number;
+  highestEducation?: string;
+  major?: string;
+  jobStatus?: number;
+  userId?: number;
+}
+
+export function getSeekerCards(params?: { userId?: number }): Promise<SeekerCard[]> {
+  return http<SeekerCard[]>({
+    url: "/smarthire/api/recruitment/hr/seeker-card",
+    method: "GET",
+    data: params,
+  });
+}
+
+// ============ 兼容旧页面的占位接口（仍可接入后端时复用） ============
 export interface CandidateListItem {
   candidateId: number;
   name: string;
   position: string;
-  status: string; // 候选人池A、面试邀约、待经理沟通等
-  overallMatch: number; // 总体匹配度
-  skillMatch: number; // 技能匹配
-  experienceFit: number; // 经验契合
-  cultureMatch: number; // 文化匹配
-  skills: string[]; // 技能标签
-  avatar?: string; // 头像字符
+  status: string;
+  overallMatch: number;
+  skillMatch: number;
+  experienceFit: number;
+  cultureMatch: number;
+  skills: string[];
+  avatar?: string;
 }
 
 export interface PriorityListResponse {
@@ -25,24 +175,19 @@ export interface PriorityListResponse {
   };
 }
 
-/**
- * 获取优先处理列表
- */
 export function getPriorityList(): Promise<PriorityListResponse> {
   return http<PriorityListResponse>({
-    url: '/api/hr/candidates/priority-list',
-    method: 'GET',
+    url: "/api/hr/candidates/priority-list",
+    method: "GET",
   });
 }
-
-// ============ 候选人详情相关接口 ============
 
 export interface CandidateDetail {
   candidateId: number;
   name: string;
   position: string;
   location: string;
-  salary: string; // 如 "25-45K · 16薪"
+  salary: string;
   overallMatch: number;
   technicalMatch: {
     score: number;
@@ -66,148 +211,39 @@ export interface CandidateDetail {
   };
 }
 
-/**
- * 获取候选人匹配详情
- */
 export function getCandidateDetail(candidateId: number): Promise<CandidateDetail> {
   return http<CandidateDetail>({
     url: `/api/hr/candidates/${candidateId}/detail`,
-    method: 'GET',
+    method: "GET",
   });
 }
 
-// ============ 岗位相关接口 ============
+// ============ 旧命名兼容（新接口别名） ============
+export type JobPosting = JobPosition;
 
-export interface JobPosting {
-  jobId: number;
-  version: string; // 发布版本
-  title: string;
-  description: string;
-  location: string; // 如 "上海·张江/远程"
-  salary: string; // 如 "30-45K · 16薪"
-  headcount: number; // HC数量
-  exposureStatus: string; // 如 "金牌曝光位已锁定"
-  status: 'draft' | 'published' | 'closed';
-  autoSaved: boolean;
-  coreFields: {
-    jobTitle: {
-      value: string;
-      keywordHitRate: string; // 如 "4/5"
-    };
-    experienceRequirement: {
-      value: string; // 如 "5-8年・ToB 产品策略"
-      candidateHeat: string; // 如 "+12%"
-    };
-    salaryRange: {
-      value: string;
-      transparencyIndex: number;
-    };
-    jobSummary: {
-      value: string;
-      isAiGenerated: boolean;
-    };
-  };
-  placementChannels: string[]; // 投放渠道
-  keySkills: Array<{
-    name: string;
-    selected: boolean;
-  }>;
-  aiSuggestions: Array<{
-    type: 'exposure' | 'salary' | 'other';
-    title: string;
-    content: string;
-    linkText?: string;
-    linkUrl?: string;
-  }>;
-  complianceReminder?: string;
-}
-
-/**
- * 获取岗位详情（用于编辑）
- */
 export function getJobPosting(jobId: number): Promise<JobPosting> {
-  return http<JobPosting>({
-    url: `/api/hr/jobs/${jobId}`,
-    method: 'GET',
-  });
+  return getJobPositionById(jobId);
 }
 
-export interface JobListFilter {
-  status?: JobPosting['status'] | 'all';
-  keyword?: string;
-  channel?: string;
+export function getJobList(params?: { status?: number | "all" }): Promise<JobPosting[]> {
+  const status = typeof params?.status === "number" ? params.status : undefined;
+  return getJobPositionList(status);
 }
 
-/**
- * 获取岗位列表
- */
-export function getJobList(params?: JobListFilter): Promise<JobPosting[]> {
-  return http<JobPosting[]>({
-    url: '/api/hr/jobs',
-    method: 'GET',
-    data: params,
-  });
+export function createJobPosting(payload: JobPositionCreatePayload): Promise<number> {
+  return createJobPosition(payload);
 }
 
-/**
- * 创建新岗位（草稿）
- */
-export function createJobPosting(data: Partial<JobPosting>): Promise<JobPosting> {
-  return http<JobPosting>({
-    url: '/api/hr/jobs',
-    method: 'POST',
-    data,
-  });
+export function updateJobPosting(jobId: number, payload: JobPositionUpdatePayload): Promise<null> {
+  return updateJobPosition(jobId, payload);
 }
 
-/**
- * 更新岗位
- */
-export function updateJobPosting(jobId: number, data: Partial<JobPosting>): Promise<JobPosting> {
-  return http<JobPosting>({
-    url: `/api/hr/jobs/${jobId}`,
-    method: 'PUT',
-    data,
-  });
+export function publishJobPosting(jobId: number): Promise<null> {
+  // 后端未提供单独“发布”接口，使用状态更新为招聘中（1）
+  return updateJobPositionStatus(jobId, 1);
 }
 
-/**
- * 发布岗位
- */
-export function publishJobPosting(jobId: number): Promise<JobPosting> {
-  return http<JobPosting>({
-    url: `/api/hr/jobs/${jobId}/publish`,
-    method: 'POST',
-  });
+export function syncPlacementChannels(): Promise<null> {
+  // 未提供渠道同步接口，占位返回
+  return Promise.resolve(null);
 }
-
-export interface UpdateJobStatusPayload {
-  status: JobPosting['status'];
-  reason?: string;
-}
-
-/**
- * 更新岗位状态（如关闭、重新激活）
- */
-export function updateJobStatus(jobId: number, payload: UpdateJobStatusPayload): Promise<JobPosting> {
-  return http<JobPosting>({
-    url: `/api/hr/jobs/${jobId}/status`,
-    method: 'PUT',
-    data: payload,
-  });
-}
-
-/**
- * 同步投放渠道
- */
-export function syncPlacementChannels(jobId: number, channels: string[]): Promise<null> {
-  return http<null>({
-    url: `/api/hr/jobs/${jobId}/sync-channels`,
-    method: 'POST',
-    data: { channels },
-  });
-}
-
-
-
-

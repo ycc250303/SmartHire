@@ -1,18 +1,23 @@
-﻿import { defineStore } from 'pinia';
+import { defineStore } from "pinia";
 
 interface HrState {
   companyName: string;
+  companyId: number | null;
   darkMode: boolean;
 }
 
-export const useHrStore = defineStore('hr', {
+export const useHrStore = defineStore("hr", {
   state: (): HrState => ({
-    companyName: '鏅鸿仒鏄熺鎶€',
+    companyName: "智聘星科技",
+    companyId: null,
     darkMode: false,
   }),
   actions: {
     setCompanyName(name: string) {
       this.companyName = name;
+    },
+    setCompanyId(id: number | null) {
+      this.companyId = id;
     },
     toggleDarkMode(enabled: boolean) {
       this.darkMode = enabled;

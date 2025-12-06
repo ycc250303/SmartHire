@@ -45,7 +45,7 @@ export const useUserStore = defineStore('user', {
       this.clearUserInfo();
       clearToken();
       uni.redirectTo({
-        url: '/pages/auth/login',
+        url: '/pages/hr/auth/login',
         fail: () => {
           console.error('Failed to redirect to login page');
         }
@@ -53,6 +53,8 @@ export const useUserStore = defineStore('user', {
     },
   },
 });
+
+
 
 
 

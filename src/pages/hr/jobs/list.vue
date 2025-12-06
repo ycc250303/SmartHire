@@ -8,17 +8,17 @@
       <view 
         class="job-card" 
         v-for="job in jobs" 
-        :key="job.jobId"
+        :key="job.id"
         @click="handleJobClick(job)"
       >
         <view class="job-header">
-          <text class="job-title">{{ job.title }}</text>
-          <view class="job-status" :class="job.status">
+          <text class="job-title">{{ job.jobTitle }}</text>
+          <view class="job-status" :class="statusClass(job.status)">
             {{ getStatusText(job.status) }}
           </view>
         </view>
-        <text class="job-meta">{{ job.location }} · {{ job.salary }} · {{ job.headcount }}个HC</text>
-        <text class="job-description">{{ job.description }}</text>
+        <text class="job-meta">{{ job.city }} · {{ salaryText(job) }}</text>
+        <text class="job-description">{{ job.description || '暂无描述' }}</text>
       </view>
     </view>
     
@@ -61,13 +61,27 @@ const loadJobs = async () => {
   }
 };
 
-const getStatusText = (status: string) => {
-  const statusMap: Record<string, string> = {
-    draft: '草稿',
-    published: '已发布',
-    closed: '已关闭',
+const getStatusText = (status: number) => {
+  const statusMap: Record<number, string> = {
+    1: '招聘中',
+    2: '已暂停',
+    0: '已下线',
   };
-  return statusMap[status] || status;
+  return statusMap[status] || '未知';
+};
+
+const statusClass = (status: number) => {
+  if (status === 1) return 'published';
+  if (status === 2) return 'paused';
+  return 'closed';
+};
+
+const salaryText = (job: JobPosting) => {
+  if (job.salaryMin == null && job.salaryMax == null) return '薪资面议';
+  const min = job.salaryMin ?? 0;
+  const max = job.salaryMax ?? min;
+  const months = job.salaryMonths ? `${job.salaryMonths}薪` : '月薪';
+  return `${min}-${max}k·${months}`;
 };
 
 const handleCreateJob = () => {
@@ -78,7 +92,7 @@ const handleCreateJob = () => {
 
 const handleJobClick = (job: JobPosting) => {
   uni.navigateTo({
-    url: `/pages/jobs/create?jobId=${job.jobId}`,
+    url: `/pages/jobs/create?jobId=${job.id}`,
   });
 };
 
@@ -203,7 +217,3 @@ onPullDownRefresh(() => {
   color: vars.$text-muted;
 }
 </style>
-
-
-
-

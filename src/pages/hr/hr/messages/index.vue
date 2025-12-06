@@ -53,13 +53,13 @@ const loadData = async () => {
 };
 
 const openChat = (id: string) => {
-  uni.navigateTo({ url: `/pages/hr/messages/chat?id=${id}` });
+  uni.navigateTo({ url: `/pages/hr/hr/messages/chat?id=${id}` });
 };
 
 const handleNotification = (item: NotificationItem) => {
   if (item.route) {
-    if (item.route.includes('/pages/hr/messages/index')) {
-      uni.switchTab({ url: '/pages/hr/messages/index' });
+    if (item.route.includes('/pages/hr/hr/messages/index')) {
+      uni.switchTab({ url: '/pages/hr/hr/messages/index' });
     } else {
       uni.navigateTo({ url: item.route });
     }

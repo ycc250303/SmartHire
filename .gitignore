@@ -6,16 +6,14 @@ pnpm-debug.log*
 yarn-debug.log*
 lerna-debug.log*
 
-# Dependency directories
-node_modules/
+# Dependencies
+node_modules
 
 # Build output
-dist/
-dist-ssr/
+dist
+dist-ssr
 *.local
-coverage/
-
-# Uni-app / platform specific build artifacts
+coverage
 unpackage/
 *.app-plus/
 *.mp-weixin/
@@ -28,11 +26,11 @@ unpackage/
 .env.*
 !.env.example
 
-# OS / Editor
+# Editor / OS
 .DS_Store
 Thumbs.db
+.idea
 .vscode/
-.idea/
 .cursor/
 *.suo
 *.ntvs*
@@ -40,8 +38,6 @@ Thumbs.db
 *.sln
 *.sw?
 
-# AI tooling artifacts
+# AI tooling
 claude.md
-
-
 

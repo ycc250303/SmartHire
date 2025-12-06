@@ -1,180 +1,152 @@
-﻿<template>
-  <view class="profile-page">
-    <view class="card">
-      <view class="name-row">
-        <view class="profile-info">
-          <view class="avatar-wrapper">
-            <image :src="avatarImg" mode="aspectFill" />
-          </view>
-          <view>
-            <view class="name">{{ profile.name }}</view>
-            <view class="role">{{ profile.role }} · {{ profile.company }}</view>
-          </view>
-        </view>
-        <view class="badge">{{ profile.companyStatus }}</view>
-      </view>
-      <view class="info">邮箱：{{ profile.email }}</view>
-      <view class="info">手机号：{{ profile.phone }}</view>
+<template>
+  <view class="page">
+    <view class="profile-header" v-if="userInfo">
+      <view class="avatar">{{ userInfo.username.charAt(0).toUpperCase() }}</view>
+      <text class="username">{{ userInfo.username }}</text>
+      <text class="email">{{ userInfo.email }}</text>
     </view>
-
-    <view class="card">
-      <view class="section-title">设置</view>
-      <view class="setting-item">
-        <text>接收推送通知</text>
-        <switch :checked="profile.notifyEnabled" @change="toggleNotify" color="#2f7cff" />
-      </view>
-      <view class="setting-item">
-        <text>深色模式</text>
-        <switch :checked="profile.darkMode" @change="toggleDarkMode" color="#2f7cff" />
+    
+    <view class="menu-list">
+      <view class="menu-item" @click="handleLogout">
+        <text class="menu-text">退出登录</text>
+        <text class="menu-arrow">></text>
       </view>
     </view>
-
-    <view class="card logout-card">
-      <button class="logout" @click="logout">退出登录</button>
+    
+    <view class="loading-state" v-if="loading">
+      <text class="loading-text">加载中...</text>
     </view>
   </view>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { fetchProfile, type HRProfile } from '@/mock/hr';
-import { useHrStore } from '@/store/hr';
-import avatarImg from '@/static/user-avatar.png';
+import { onLoad } from '@dcloudio/uni-app';
+import { useUserStore } from '@/store/user';
 
-const profile = ref<HRProfile>({
-  name: '',
-  role: '',
-  email: '',
-  phone: '',
-  company: '',
-  companyStatus: '未认证',
-  notifyEnabled: true,
-  darkMode: false,
-});
+const userInfo = ref(useUserStore().userInfo);
+const loading = ref(false);
 
-const hrStore = useHrStore();
-
-const loadProfile = async () => {
-  // TODO: GET /api/hr/profile
-  profile.value = await fetchProfile();
-  hrStore.setCompanyName(profile.value.company);
-  hrStore.toggleDarkMode(profile.value.darkMode);
+const loadUserInfo = async () => {
+  loading.value = true;
+  try {
+    const userStore = useUserStore();
+    if (!userStore.isLoaded) {
+      await userStore.loadUserInfo();
+    }
+    userInfo.value = userStore.userInfo;
+  } catch (error) {
+    console.error('Failed to load user info:', error);
+  } finally {
+    loading.value = false;
+  }
 };
 
-const toggleNotify = (event: any) => {
-  profile.value.notifyEnabled = event.detail.value;
-  // TODO: PATCH /api/hr/profile/notify
-};
-
-const toggleDarkMode = (event: any) => {
-  profile.value.darkMode = event.detail.value;
-  hrStore.toggleDarkMode(event.detail.value);
-  // TODO: PATCH /api/hr/profile/preferences
-};
-
-const logout = () => {
-  // TODO: 调用退出登录接口
+const handleLogout = () => {
   uni.showModal({
-    title: '提示',
-    content: '确认退出当前账号吗？',
+    title: '确认退出',
+    content: '确定要退出登录吗？',
     success: (res) => {
       if (res.confirm) {
-        uni.reLaunch({ url: '/pages/auth/login' });
+        const userStore = useUserStore();
+        userStore.logout();
       }
     },
   });
 };
 
-onMounted(() => {
-  loadProfile();
+onLoad(() => {
+  loadUserInfo();
 });
 </script>
 
-<style scoped lang="scss">
-.profile-page {
-  padding: 24rpx;
-  background: #f6f7fb;
+<style lang="scss" scoped>
+@use "@/styles/variables.scss" as vars;
+
+.page {
   min-height: 100vh;
+  background-color: vars.$bg-color;
 }
 
-.card {
-  background: #fff;
-  border-radius: 24rpx;
-  padding: 28rpx;
-  margin-bottom: 24rpx;
+.profile-header {
+  background-color: vars.$surface-color;
+  padding: vars.$spacing-xl;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: vars.$spacing-md;
 }
 
-.name-row {
+.avatar {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 50%;
+  background-color: vars.$primary-color-soft;
+  color: vars.$primary-color;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 64rpx;
+  font-weight: 600;
+  margin-bottom: vars.$spacing-md;
+}
+
+.username {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: vars.$text-color;
+  margin-bottom: vars.$spacing-sm;
+}
+
+.email {
+  font-size: 28rpx;
+  color: vars.$text-muted;
+}
+
+.menu-list {
+  background-color: vars.$surface-color;
+}
+
+.menu-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: vars.$spacing-lg;
+  border-bottom: 1rpx solid #f0f0f0;
 }
 
-.profile-info {
+.menu-item:last-child {
+  border-bottom: none;
+}
+
+.menu-text {
+  font-size: 32rpx;
+  color: vars.$text-color;
+}
+
+.menu-arrow {
+  font-size: 32rpx;
+  color: vars.$text-muted;
+}
+
+.loading-state {
   display: flex;
+  justify-content: center;
   align-items: center;
+  min-height: 400rpx;
+  padding: vars.$spacing-xl;
 }
 
-.avatar-wrapper {
-  width: 112rpx;
-  height: 112rpx;
-  border-radius: 16rpx;
-  background: #eef2ff;
-  margin-right: 24rpx;
-  overflow: hidden;
-}
-
-.avatar-wrapper image {
-  width: 100%;
-  height: 100%;
-}
-
-.name {
-  font-size: 34rpx;
-  font-weight: 600;
-}
-
-.role {
-  color: #8a92a7;
-  margin-top: 8rpx;
-}
-
-.badge {
-  padding: 8rpx 20rpx;
-  background: #e8f3ff;
-  color: #2f7cff;
-  border-radius: 999rpx;
-}
-
-.info {
-  margin-top: 10rpx;
-  color: #6f788f;
-}
-
-.section-title {
-  font-size: 30rpx;
-  font-weight: 600;
-  margin-bottom: 16rpx;
-}
-
-.setting-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20rpx 0;
-  border-top: 2rpx solid #f1f2f6;
-}
-
-.logout-card {
-  text-align: center;
-}
-
-.logout {
-  width: 100%;
-  height: 90rpx;
-  background: #ff4d4f;
-  color: #fff;
-  border: none;
-  border-radius: 18rpx;
+.loading-text {
+  font-size: 28rpx;
+  color: vars.$text-muted;
 }
 </style>
+
+
+
+
+
+
+
+
