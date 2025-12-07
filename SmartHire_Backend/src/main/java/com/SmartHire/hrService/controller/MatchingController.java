@@ -2,7 +2,6 @@ package com.SmartHire.hrService.controller;
 
 import com.SmartHire.hrService.dto.ApplicationListDTO;
 import com.SmartHire.hrService.service.MatchingService;
-import com.SmartHire.shared.annotation.RequireHr;
 import com.SmartHire.shared.entity.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.constraints.Min;
@@ -21,7 +20,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/hr/matching")
 @Validated
-@RequireHr
 public class MatchingController {
 
     @Autowired

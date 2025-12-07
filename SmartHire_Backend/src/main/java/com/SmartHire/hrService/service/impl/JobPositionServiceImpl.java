@@ -15,6 +15,8 @@ import com.SmartHire.shared.exception.enums.ErrorCode;
 import com.SmartHire.shared.exception.exception.BusinessException;
 import com.SmartHire.shared.utils.JwtUtil;
 import com.SmartHire.shared.utils.SecurityContextUtil;
+import com.SmartHire.userAuthService.mapper.UserAuthMapper;
+import com.SmartHire.userAuthService.model.User;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +36,9 @@ import java.util.stream.Collectors;
 public class JobPositionServiceImpl extends ServiceImpl<JobPositionMapper, JobPosition> implements JobPositionService {
 
     @Autowired
+    private UserAuthMapper userAuthMapper;
+
+    @Autowired
     private HrInfoMapper hrInfoMapper;
 
     @Autowired
@@ -44,11 +49,19 @@ public class JobPositionServiceImpl extends ServiceImpl<JobPositionMapper, JobPo
 
     /**
      * 获取当前登录HR的ID（hr_info表的id）
-     * 注意：用户身份验证已由AOP切面统一处理
      */
     private Long getCurrentHrId() {
         Map<String, Object> map = SecurityContextUtil.getCurrentClaims();
         Long userId = jwtUtil.getUserIdFromToken(map);
+
+        User user = userAuthMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.USER_ID_NOT_EXIST);
+        }
+
+        if (user.getUserType() != 2) {
+            throw new BusinessException(ErrorCode.USER_NOT_HR);
+        }
 
         // 通过user_id查询hr_info表获取hr_id（hr_info.id）
         HrInfo hrInfo = hrInfoMapper.selectOne(

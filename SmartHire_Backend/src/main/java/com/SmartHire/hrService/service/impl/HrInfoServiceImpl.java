@@ -12,6 +12,8 @@ import com.SmartHire.shared.exception.enums.ErrorCode;
 import com.SmartHire.shared.exception.exception.BusinessException;
 import com.SmartHire.shared.utils.JwtUtil;
 import com.SmartHire.shared.utils.SecurityContextUtil;
+import com.SmartHire.userAuthService.mapper.UserAuthMapper;
+import com.SmartHire.userAuthService.model.User;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -28,6 +30,9 @@ import java.util.Map;
 public class HrInfoServiceImpl extends ServiceImpl<HrInfoMapper, HrInfo> implements HrInfoService {
 
     @Autowired
+    private UserAuthMapper userAuthMapper;
+
+    @Autowired
     private CompanyMapper companyMapper;
 
     @Autowired
@@ -35,12 +40,22 @@ public class HrInfoServiceImpl extends ServiceImpl<HrInfoMapper, HrInfo> impleme
 
     /**
      * 获取当前登录HR的信息
-     * 注意：用户身份验证已由AOP切面统一处理
      */
     @Override
     public HrInfoDTO getHrInfo() {
         Map<String, Object> map = SecurityContextUtil.getCurrentClaims();
         Long userId = jwtUtil.getUserIdFromToken(map);
+
+        // 验证用户是否存在
+        User user = userAuthMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.USER_ID_NOT_EXIST);
+        }
+
+        // 验证用户身份是否为HR
+        if (user.getUserType() != 2) {
+            throw new BusinessException(ErrorCode.USER_NOT_HR);
+        }
 
         // 查询HR信息（包含公司名称）
         HrInfoDTO hrInfoDTO = baseMapper.selectHrInfoWithCompanyByUserId(userId);
@@ -53,12 +68,22 @@ public class HrInfoServiceImpl extends ServiceImpl<HrInfoMapper, HrInfo> impleme
 
     /**
      * 更新当前登录HR的信息
-     * 注意：用户身份验证已由AOP切面统一处理
      */
     @Override
     public void updateHrInfo(HrInfoUpdateDTO updateDTO) {
         Map<String, Object> map = SecurityContextUtil.getCurrentClaims();
         Long userId = jwtUtil.getUserIdFromToken(map);
+
+        // 验证用户是否存在
+        User user = userAuthMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.USER_ID_NOT_EXIST);
+        }
+
+        // 验证用户身份是否为HR
+        if (user.getUserType() != 2) {
+            throw new BusinessException(ErrorCode.USER_NOT_HR);
+        }
 
         // 查询HR信息
         HrInfo hrInfo = lambdaQuery()
@@ -92,13 +117,23 @@ public class HrInfoServiceImpl extends ServiceImpl<HrInfoMapper, HrInfo> impleme
 
     /**
      * 注册HR信息
-     * 注意：用户身份验证已由AOP切面统一处理
      */
     @Override
     @Transactional
     public Long createHrInfo(HrInfoCreateDTO createDTO) {
         Map<String, Object> map = SecurityContextUtil.getCurrentClaims();
         Long userId = jwtUtil.getUserIdFromToken(map);
+
+        // 验证用户是否存在
+        User user = userAuthMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.USER_ID_NOT_EXIST);
+        }
+
+        // 验证用户身份是否为HR
+        if (user.getUserType() != 2) {
+            throw new BusinessException(ErrorCode.USER_NOT_HR);
+        }
 
         // 检查是否已经注册过HR信息
         HrInfo existingHrInfo = lambdaQuery()

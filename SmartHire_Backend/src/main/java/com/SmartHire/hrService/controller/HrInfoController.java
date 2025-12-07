@@ -4,7 +4,6 @@ import com.SmartHire.hrService.dto.HrInfoCreateDTO;
 import com.SmartHire.hrService.dto.HrInfoDTO;
 import com.SmartHire.hrService.dto.HrInfoUpdateDTO;
 import com.SmartHire.hrService.service.HrInfoService;
-import com.SmartHire.shared.annotation.RequireHr;
 import com.SmartHire.shared.entity.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
@@ -18,7 +17,6 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/hr/info")
 @Validated
-@RequireHr
 public class HrInfoController {
 
     @Autowired
