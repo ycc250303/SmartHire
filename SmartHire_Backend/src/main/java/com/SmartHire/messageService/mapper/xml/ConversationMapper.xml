@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.SmartHire.messageService.mapper.ConversationMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.SmartHire.messageService.model.Conversation">
+        <id column="id" property="id" />
+        <result column="user1_id" property="user1Id" />
+        <result column="user2_id" property="user2Id" />
+        <result column="last_message" property="lastMessage" />
+        <result column="last_message_time" property="lastMessageTime" />
+        <result column="unread_count_user1" property="unreadCountUser1" />
+        <result column="unread_count_user2" property="unreadCountUser2" />
+        <result column="pinned_by_user1" property="pinnedByUser1" />
+        <result column="pinned_by_user2" property="pinnedByUser2" />
+        <result column="has_notification_user1" property="hasNotificationUser1" />
+        <result column="has_notification_user2" property="hasNotificationUser2" />
+        <result column="created_at" property="createdAt" />
+        <result column="deleted_by_user1" property="deletedByUser1" />
+        <result column="deleted_by_user2" property="deletedByUser2" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, user1_id, user2_id, last_message, last_message_time, unread_count_user1, unread_count_user2, pinned_by_user1, pinned_by_user2, has_notification_user1, has_notification_user2, created_at, deleted_by_user1, deleted_by_user2
+    </sql>
+
+</mapper>

@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.SmartHire.recruitmentService.mapper.ApplicationMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.SmartHire.recruitmentService.model.Application">
+        <id column="id" property="id" />
+        <result column="job_id" property="jobId" />
+        <result column="job_seeker_id" property="jobSeekerId" />
+        <result column="resume_id" property="resumeId" />
+        <result column="initiator" property="initiator" />
+        <result column="status" property="status" />
+        <result column="match_score" property="matchScore" />
+        <result column="match_analysis" property="matchAnalysis" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, job_id, job_seeker_id, resume_id, initiator, status, match_score, match_analysis, created_at, updated_at
+    </sql>
+
+    <!-- 投递列表查询（HR端） -->
+    <select id="selectApplicationList" resultType="com.SmartHire.recruitmentService.dto.ApplicationListDTO">
+        SELECT
+            a.id,
+            a.job_id,
+            jp.job_title,
+            a.job_seeker_id,
+            js.real_name AS job_seeker_name,
+            a.resume_id,
+            a.status,
+            a.match_score,
+            a.match_analysis,
+            a.created_at,
+            a.updated_at
+        FROM application a
+        INNER JOIN job_info jp ON a.job_id = jp.id
+        LEFT JOIN job_seeker js ON a.job_seeker_id = js.id
+        WHERE jp.hr_id = #{hrId}
+        <if test="jobId != null">
+            AND a.job_id = #{jobId}
+        </if>
+        <if test="status != null">
+            AND a.status = #{status}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND (
+                jp.job_title LIKE CONCAT('%', #{keyword}, '%')
+                OR js.real_name LIKE CONCAT('%', #{keyword}, '%')
+            )
+        </if>
+        ORDER BY a.created_at DESC
+    </select>
+
+    <!-- 岗位下所有投递（用于匹配计算） -->
+    <select id="selectApplicationsByJob" resultType="com.SmartHire.recruitmentService.dto.ApplicationListDTO">
+        SELECT
+            a.id,
+            a.job_id,
+            jp.job_title,
+            a.job_seeker_id,
+            js.real_name AS job_seeker_name,
+            a.resume_id,
+            a.status,
+            a.match_score,
+            a.match_analysis,
+            a.created_at,
+            a.updated_at
+        FROM application a
+        INNER JOIN job_info jp ON a.job_id = jp.id
+        LEFT JOIN job_seeker js ON a.job_seeker_id = js.id
+        WHERE jp.hr_id = #{hrId}
+          AND a.job_id = #{jobId}
+        ORDER BY a.created_at DESC
+    </select>
+
+    <!-- 投递详情（HR端） -->
+    <select id="selectApplicationDetail" resultType="com.SmartHire.recruitmentService.dto.ApplicationListDTO">
+        SELECT
+            a.id,
+            a.job_id,
+            jp.job_title,
+            a.job_seeker_id,
+            js.real_name AS job_seeker_name,
+            a.resume_id,
+            a.status,
+            a.match_score,
+            a.match_analysis,
+            a.created_at,
+            a.updated_at
+        FROM application a
+        INNER JOIN job_info jp ON a.job_id = jp.id
+        LEFT JOIN job_seeker js ON a.job_seeker_id = js.id
+        WHERE a.id = #{applicationId}
+          AND jp.hr_id = #{hrId}
+        LIMIT 1
+    </select>
+
+    <!-- 更新匹配结果 -->
+    <update id="updateMatchResult">
+        UPDATE application
+        SET match_score = #{score},
+            match_analysis = #{analysis},
+            updated_at = #{updatedAt}
+        WHERE id = #{applicationId}
+    </update>
+
+</mapper>

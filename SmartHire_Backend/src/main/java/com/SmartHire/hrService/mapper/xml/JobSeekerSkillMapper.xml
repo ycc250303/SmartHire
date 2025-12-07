@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.SmartHire.hrService.mapper.JobSeekerSkillMapper">
+
+    <select id="selectSkillNamesByJobSeekerId" resultType="java.lang.String">
+        SELECT skill_name
+        FROM skill
+        WHERE job_seeker_id = #{jobSeekerId}
+        ORDER BY updated_at DESC
+    </select>
+
+</mapper>
+
+
