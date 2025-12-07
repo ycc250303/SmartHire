@@ -1,6 +1,5 @@
 package com.SmartHire.seekerService.service.impl;
 
-import com.SmartHire.common.api.UserAuthApi;
 import com.SmartHire.common.auth.UserContext;
 import com.SmartHire.common.exception.enums.ErrorCode;
 import com.SmartHire.common.exception.exception.BusinessException;
@@ -16,7 +15,6 @@ import com.SmartHire.seekerService.mapper.WorkExperienceMapper;
 import com.SmartHire.seekerService.model.JobSeeker;
 import com.SmartHire.seekerService.model.Resume;
 import com.SmartHire.seekerService.service.JobSeekerService;
-import com.SmartHire.userAuthService.model.User;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import java.util.Date;
@@ -38,8 +36,6 @@ import org.springframework.util.StringUtils;
 public class JobSeekerServiceImpl extends ServiceImpl<JobSeekerMapper, JobSeeker>
     implements JobSeekerService {
   @Autowired private JobSeekerMapper jobSeekerMapper;
-
-  @Autowired private UserAuthApi userAuthApi;
 
   @Autowired private UserContext userContext;
 
@@ -94,12 +90,6 @@ public class JobSeekerServiceImpl extends ServiceImpl<JobSeekerMapper, JobSeeker
   @Override
   public JobSeeker getSeekerInfo() {
     Long userId = userContext.getCurrentUserId();
-
-    // 验证用户是否存在和身份
-    User user = userAuthApi.getUserById(userId);
-    if (user.getUserType() != 1) {
-      throw new BusinessException(ErrorCode.USER_NOT_SEEKER);
-    }
 
     // 通过用户ID获取（job_seeker表有user_id字段，且是唯一索引）
     JobSeeker jobSeeker = lambdaQuery().eq(JobSeeker::getUserId, userId).one();

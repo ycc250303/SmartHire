@@ -1,6 +1,9 @@
 package com.SmartHire.seekerService.controller;
 
+import com.SmartHire.common.auth.RequireUserType;
 import com.SmartHire.common.entity.Result;
+import com.SmartHire.common.enums.UserType;
+import com.SmartHire.seekerService.dto.JobFavoriteDTO;
 import com.SmartHire.seekerService.dto.SeekerDTO;
 import com.SmartHire.seekerService.dto.seekerTableDto.EducationExperienceDTO;
 import com.SmartHire.seekerService.dto.seekerTableDto.JobSeekerExpectationDTO;
@@ -15,6 +18,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -23,7 +27,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
- * 求职者服务统一控制器
+ * 求职者服务控制器（对内） 仅限求职者本人使用，用于管理自己的个人信息、简历、技能等
  *
  * @author SmartHire Team
  * @since 2025-11-19
@@ -31,6 +35,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Slf4j
 @RestController
 @RequestMapping("/seeker")
+@RequireUserType(UserType.SEEKER)
 public class SeekerController {
   @Autowired private EducationExperienceService educationExperienceService;
 
@@ -46,7 +51,7 @@ public class SeekerController {
 
   @Autowired private SkillService skillService;
 
-  @Autowired private OnlineResumeService onlineResumeService;
+  @Autowired private JobFavoriteService jobFavoriteService;
 
   /**
    * 注册求职者
@@ -358,16 +363,42 @@ public class SeekerController {
   }
 
   /**
-   * 获取指定用户的在线简历
+   * 收藏岗位
    *
-   * @param userId 用户ID
-   * @return 在线简历聚合数据
+   * @param jobId 岗位ID
+   * @return 操作结果
    */
-  @GetMapping("/online-resume")
-  @Operation(summary = "获取在线简历", description = "HR或内部系统查看指定用户的在线简历")
-  public Result<?> getOnlineResume(
-      @RequestParam("userId") @NotNull(message = "用户ID不能为空") @Positive(message = "用户ID必须为正整数")
-          Long userId) {
-    return Result.success("获取在线简历成功", onlineResumeService.getOnlineResumeByUserId(userId));
+  @PostMapping("/favorite-job/{jobId}")
+  @Operation(summary = "收藏岗位", description = "求职者收藏指定岗位")
+  public Result<?> addJobFavorite(
+      @PathVariable @NotNull(message = "岗位ID不能为空") @Positive(message = "岗位ID必须为正整数") Long jobId) {
+    jobFavoriteService.addJobFavorite(jobId);
+    return Result.success("收藏岗位成功");
+  }
+
+  /**
+   * 取消收藏岗位
+   *
+   * @param jobId 岗位ID
+   * @return 操作结果
+   */
+  @DeleteMapping("/favorite-job/{jobId}")
+  @Operation(summary = "取消收藏岗位", description = "求职者取消收藏指定岗位")
+  public Result<?> removeJobFavorite(
+      @PathVariable @NotNull(message = "岗位ID不能为空") @Positive(message = "岗位ID必须为正整数") Long jobId) {
+    jobFavoriteService.removeJobFavorite(jobId);
+    return Result.success("取消收藏成功");
+  }
+
+  /**
+   * 获取收藏岗位列表
+   *
+   * @return 收藏岗位列表
+   */
+  @GetMapping("/favorite-jobs")
+  @Operation(summary = "获取收藏岗位列表", description = "获取当前求职者的所有收藏岗位")
+  public Result<List<JobFavoriteDTO>> getJobFavoriteList() {
+    List<JobFavoriteDTO> favorites = jobFavoriteService.getJobFavoriteList();
+    return Result.success("获取收藏岗位列表成功", favorites);
   }
 }

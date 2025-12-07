@@ -27,10 +27,7 @@ public class MessageApiImpl implements MessageApi {
 
     // 1. 删除用户发送或接收的所有消息
     LambdaQueryWrapper<ChatMessage> messageWrapper = new LambdaQueryWrapper<>();
-    messageWrapper
-        .eq(ChatMessage::getSenderId, userId)
-        .or()
-        .eq(ChatMessage::getReceiverId, userId);
+    messageWrapper.eq(ChatMessage::getSenderId, userId).or().eq(ChatMessage::getReceiverId, userId);
     int deletedMessages = chatMessageMapper.delete(messageWrapper);
     log.info("删除用户消息记录数：{}", deletedMessages);
 
@@ -46,4 +43,3 @@ public class MessageApiImpl implements MessageApi {
     log.info("删除用户消息和会话完成，用户ID：{}", userId);
   }
 }
-

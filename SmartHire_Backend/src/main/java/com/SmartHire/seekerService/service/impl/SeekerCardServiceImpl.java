@@ -48,14 +48,6 @@ public class SeekerCardServiceImpl implements SeekerCardService {
 
     try {
       User user = userAuthApi.getUserById(userId);
-      if (user == null) {
-        throw new BusinessException(ErrorCode.USER_ID_NOT_EXIST);
-      }
-      Integer userType = user.getUserType();
-
-      if (!Integer.valueOf(1).equals(userType)) {
-        throw new BusinessException(ErrorCode.USER_NOT_SEEKER);
-      }
 
       JobSeeker jobSeeker =
           jobSeekerMapper.selectOne(
