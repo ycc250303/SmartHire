@@ -66,6 +66,17 @@ public enum ErrorCode {
   APPLICATION_NOT_BELONG_TO_HR(1304, "投递记录不属于当前HR"),
   // 会话/聊天相关错误码 (1400-1499)
   CONVERSATION_NOT_EXIST(1401, "沟通记录不存在"),
+
+  // 管理员相关错误码 (1500-1599)
+  ADMIN_USER_NOT_FOUND(1501, "用户不存在"),
+  ADMIN_USER_ALREADY_BANNED(1502, "用户已被封禁"),
+  ADMIN_USER_NOT_BANNED(1503, "用户当前未被封禁"),
+  ADMIN_CANNOT_BAN_ADMIN(1504, "不能封禁管理员账户"),
+  ADMIN_CANNOT_MODIFY_ADMIN_STATUS(1505, "不能修改管理员账户状态"),
+  ADMIN_INVALID_BAN_TYPE(1506, "无效的封禁类型"),
+  ADMIN_BAN_DAYS_MUST_BE_POSITIVE(1507, "封禁天数必须大于0"),
+  ADMIN_OPERATION_FAILED(1508, "管理员操作失败"),
+
   SYSTEM_ERROR(9999, "系统内部错误,请检查业务处理逻辑,以及是否存在未处理的异常情况");
 
   private final Integer code;

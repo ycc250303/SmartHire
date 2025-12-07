@@ -8,9 +8,11 @@ import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import java.util.Date;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 public class JwtUtil {
 
@@ -51,11 +53,23 @@ public class JwtUtil {
    */
   public DecodedJWT verifyToken(String token) {
     if (token == null || token.isBlank()) {
+      log.error("❌ Token验证失败: token为空");
       throw new BusinessException(ErrorCode.TOKEN_IS_NULL);
     }
+    
+    log.info("🔐 开始验证token，长度: {}, 前缀: {}", 
+        token.length(), 
+        token.substring(0, Math.min(20, token.length())) + "...");
+    
     try {
-      return JWT.require(algorithm).build().verify(token);
+      DecodedJWT decoded = JWT.require(algorithm).build().verify(token);
+      log.info("✅ Token验证成功");
+      log.info("- Token类型: {}", decoded.getClaim("type").asString());
+      log.info("- 过期时间: {}", decoded.getExpiresAt());
+      return decoded;
     } catch (JWTVerificationException e) {
+      log.error("❌ Token验证失败: {}", e.getMessage());
+      log.error("失败的token前缀: {}", token.substring(0, Math.min(30, token.length())));
       throw new BusinessException(ErrorCode.TOKEN_IS_INVALID);
     }
   }

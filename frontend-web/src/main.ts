@@ -9,6 +9,7 @@ import '@/styles/index.css'
 import App from './App.vue'
 import router from './router'
 import { useThemeStore } from '@/store/theme'
+import { useUserStore } from '@/store/user'
 
 const app = createApp(App)
 const pinia = createPinia()
@@ -18,6 +19,35 @@ app.use(pinia)
 // 初始化主题
 const themeStore = useThemeStore()
 themeStore.initTheme()
+
+// 初始化用户认证状态
+const userStore = useUserStore()
+userStore.initAuth()
+
+// 监控localStorage变化
+const originalSetItem = localStorage.setItem
+const originalRemoveItem = localStorage.removeItem
+const originalClear = localStorage.clear
+
+localStorage.setItem = function (key, value) {
+  if (key.startsWith('auth-')) {
+    console.log('📝 localStorage.setItem 被调用:', key, value)
+  }
+  return originalSetItem.call(this, key, value)
+}
+
+localStorage.removeItem = function (key) {
+  if (key.startsWith('auth-')) {
+    console.log('🗑️ localStorage.removeItem 被调用:', key)
+  }
+  return originalRemoveItem.call(this, key)
+}
+
+localStorage.clear = function () {
+  console.log('🧹 localStorage.clear 被调用!')
+  console.trace('调用堆栈:')
+  return originalClear.call(this)
+}
 
 // 配置 Naive UI
 const { message, notification, dialog, loadingBar } = createDiscreteApi(

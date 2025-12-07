@@ -178,6 +178,42 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   const userStore = useUserStore()
 
+  // 详细调试localStorage状态
+  console.log('=== 路由守卫调试 ===')
+  console.log('访问页面:', to.name)
+  console.log('localStorage完整状态:')
+  console.log('- auth-token:', localStorage.getItem('auth-token'))
+  console.log('- auth-user:', localStorage.getItem('auth-user'))
+  console.log('- auth-permissions:', localStorage.getItem('auth-permissions'))
+
+  // 安全地获取用户信息
+  const getUserType = () => {
+    try {
+      // 直接从localStorage获取用户数据，避免响应式系统问题
+      const savedUser = localStorage.getItem('auth-user')
+      if (savedUser) {
+        const userData = JSON.parse(savedUser)
+        console.log('- 解析的用户数据:', userData)
+        return userData.userType
+      }
+      console.log('- localStorage中没有用户数据')
+      return undefined
+    } catch (error) {
+      console.warn('获取用户类型时出错:', error)
+      return undefined
+    }
+  }
+
+  const userType = getUserType()
+  const isLoggedIn = userStore.isLoggedIn()
+  const isAdmin = userStore.isAdmin()
+
+  console.log('计算结果:')
+  console.log('- 用户类型:', userType)
+  console.log('- 登录状态:', isLoggedIn)
+  console.log('- 管理员权限:', isAdmin)
+  console.log('=================')
+
   // 设置页面标题
   if (to.meta.title) {
     document.title = `${to.meta.title} - SmartHire Admin`
@@ -185,7 +221,8 @@ router.beforeEach(async (to, from, next) => {
 
   // 检查是否需要认证
   if (to.meta.requiresAuth !== false) {
-    if (!userStore.isLoggedIn()) {
+    if (!isLoggedIn) {
+      console.log('用户未登录，重定向到登录页面')
       // 未登录，重定向到登录页
       next({
         name: 'Login',
@@ -193,14 +230,24 @@ router.beforeEach(async (to, from, next) => {
       })
       return
     }
+
+    // 检查管理员权限 - 某些页面需要管理员权限
+    const adminOnlyRoutes = ['Users', 'System', 'Reports', 'Announcement']
+    if (adminOnlyRoutes.includes(to.name as string) && !isAdmin) {
+      console.warn('访问管理员专用页面被拒绝:', to.name, '用户类型:', userType)
+      next({ name: 'DashboardHome' })
+      return
+    }
   }
 
   // 已登录访问登录页，重定向到首页
-  if (to.name === 'Login' && userStore.isLoggedIn()) {
+  if (to.name === 'Login' && isLoggedIn) {
+    console.log('已登录用户访问登录页，重定向到首页')
     next({ name: 'DashboardHome' })
     return
   }
 
+  console.log('路由守卫通过，允许访问:', to.name)
   next()
 })
 

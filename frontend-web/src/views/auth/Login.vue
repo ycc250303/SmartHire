@@ -111,8 +111,10 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { NForm, NFormItem, NInput, NButton, NCheckbox, FormInst, useMessage } from 'naive-ui'
+import { login, type LoginParams } from '@/api/auth'
 import { useUserStore } from '@/store/user'
 import { useThemeStore } from '@/store/theme'
+import { generatePermissionsByUserType } from '@/utils/userType'
 
 const router = useRouter()
 const route = useRoute()
@@ -196,8 +198,69 @@ const handleSubmit = async () => {
   loading.value = true
 
   try {
-    // 模拟登录请求
-    await simulateLogin(formData.value.username, formData.value.password)
+    // 真实登录请求
+    const loginParams: LoginParams = {
+      username: formData.value.username,
+      password: formData.value.password
+    }
+
+    const response = await login(loginParams)
+
+    console.log('登录响应:', response)
+    
+    // ❌ 后端LoginResponseDTO不包含user字段，只有accessToken和refreshToken
+    // ✅ 必须从JWT token的payload中解析用户信息
+    let userData: any = null
+    
+    try {
+      // 解析JWT token的payload部分
+      const tokenPayload = JSON.parse(atob(response.accessToken.split('.')[1]))
+      console.log('JWT token解析结果:', tokenPayload)
+
+      // 根据token中的claims构建用户数据
+      if (tokenPayload.claims) {
+        userData = {
+          id: tokenPayload.claims.id || 0,
+          username: tokenPayload.claims.username || 'unknown',
+          userType: tokenPayload.claims.userType || 1,
+          status: 1
+        }
+        console.log('从token解析的用户数据:', userData)
+        console.log('用户类型:', userData.userType, '(1=求职者, 2=HR, 3=管理员)')
+      } else {
+        throw new Error('Token中没有claims字段')
+      }
+    } catch (error) {
+      console.error('❌ 解析JWT token失败:', error)
+      message.error('登录失败：无法解析用户信息')
+      loading.value = false
+      return
+    }
+    
+    // 验证用户数据有效性
+    if (!userData || !userData.username || userData.username === 'unknown') {
+      console.error('❌ 用户数据无效:', userData)
+      message.error('登录失败：用户信息无效')
+      loading.value = false
+      return
+    }
+
+    // 保存登录信息 - 根据userType动态生成权限
+    const permissions = generatePermissionsByUserType(userData.userType)
+    console.log('生成的权限列表:', permissions)
+    
+    userStore.login(response.accessToken, userData, permissions)
+    
+    // 保存 refreshToken（修复401错误后无法刷新的问题）
+    if (response.refreshToken) {
+      localStorage.setItem('refresh-token', response.refreshToken)
+      console.log('✅ refreshToken 已保存')
+    } else {
+      console.warn('⚠️ 登录响应中没有 refreshToken')
+    }
+
+    console.log('登录后用户状态:', userStore.isLoggedIn())
+    console.log('用户是否为管理员:', userStore.isAdmin())
 
     message.success('登录成功')
 
@@ -212,40 +275,15 @@ const handleSubmit = async () => {
     const redirect = route.query.redirect as string
     router.push(redirect || '/dashboard')
   } catch (error: any) {
+    console.error('=== 登录过程发生错误 ===')
+    console.error('错误对象:', error)
+    console.error('错误消息:', error.message)
+    console.error('错误堆栈:', error.stack)
+    console.error('=======================')
     message.error(error.message || '登录失败，请检查用户名和密码')
   } finally {
     loading.value = false
   }
-}
-
-// 模拟登录请求
-const simulateLogin = async (username: string, password: string) => {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      // 简单的模拟验证
-      if (username === 'admin' && password === 'admin123') {
-        const user = {
-          id: '1',
-          username: 'admin',
-          nickname: '系统管理员',
-          email: 'admin@smarthire.com',
-          phone: '13800138000',
-          avatar: '',
-          status: 'active' as const,
-          role: 'admin' as const,
-          createTime: new Date().toISOString()
-        }
-
-        const token = 'mock-jwt-token-' + Date.now()
-        const permissions = ['admin', 'user:read', 'user:write', 'job:read', 'job:write']
-
-        userStore.login(token, user, permissions)
-        resolve(user)
-      } else {
-        reject(new Error('用户名或密码错误'))
-      }
-    }, 1000)
-  })
 }
 
 // 忘记密码

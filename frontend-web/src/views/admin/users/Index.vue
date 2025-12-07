@@ -344,12 +344,101 @@
         </template>
       </NCard>
     </NModal>
+
+    <!-- 封禁用户弹窗 -->
+    <NModal v-model:show="showBanModal" :mask-closable="false">
+      <NCard
+        style="max-width: 500px"
+        title="封禁用户"
+        :bordered="false"
+        size="huge"
+        role="dialog"
+        aria-modal
+      >
+        <template #header-extra>
+          <NButton
+            quaternary
+            circle
+            @click="showBanModal = false"
+          >
+            <template #icon>
+              <span class="close-icon">×</span>
+            </template>
+          </NButton>
+        </template>
+
+        <div v-if="currentUserForBan" class="ban-form">
+          <div class="user-info">
+            <p><strong>用户：</strong>{{ currentUserForBan.name }} ({{ currentUserForBan.username }})</p>
+            <p><strong>用户类型：</strong>{{ getUserTypeText(currentUserForBan.userType) }}</p>
+          </div>
+
+          <NForm
+            ref="banFormRef"
+            :model="banFormData"
+            :rules="banRules"
+            label-placement="top"
+            style="margin-top: 20px"
+          >
+            <NFormItem label="封禁类型" path="banType">
+              <NRadioGroup v-model:value="banFormData.banType">
+                <NRadio value="temporary">临时封禁</NRadio>
+                <NRadio value="permanent">永久封禁</NRadio>
+              </NRadioGroup>
+            </NFormItem>
+
+            <NFormItem
+              v-if="banFormData.banType === 'temporary'"
+              label="封禁天数"
+              path="banDays"
+            >
+              <NInputNumber
+                v-model:value="banFormData.banDays"
+                :min="1"
+                :max="365"
+                style="width: 100%"
+                placeholder="请输入封禁天数"
+              />
+            </NFormItem>
+
+            <NFormItem label="封禁原因" path="banReason">
+              <NInput
+                v-model:value="banFormData.banReason"
+                type="textarea"
+                placeholder="请输入封禁原因"
+                :rows="4"
+                maxlength="500"
+                show-count
+              />
+            </NFormItem>
+
+            <NFormItem>
+              <NCheckbox v-model:checked="banFormData.sendNotification">
+                发送通知给用户
+              </NCheckbox>
+            </NFormItem>
+          </NForm>
+        </div>
+
+        <template #footer>
+          <div class="modal-actions">
+            <NButton @click="showBanModal = false">取消</NButton>
+            <NButton
+              type="warning"
+              :loading="loading"
+              @click="handleBanUser"
+            >
+              确认封禁
+            </NButton>
+          </div>
+        </template>
+      </NCard>
+    </NModal>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import {
   NCard,
   NSelect,
@@ -360,22 +449,24 @@ import {
   NPagination,
   NModal,
   NDropdown,
+  NForm,
+  NFormItem,
+  NRadioGroup,
+  NRadio,
+  NInputNumber,
+  NCheckbox,
   useMessage,
   useDialog
 } from 'naive-ui'
+import type { FormInst } from 'naive-ui'
 import dayjs from 'dayjs'
+import { getUserList, banUser, unbanUser, type User, type UserQueryParams } from '@/api/user'
 
-interface User {
-  id: string
+// 扩展User接口以支持前端特有的字段
+interface ExtendedUser extends User {
   name: string
-  phone: string
-  email: string
-  userType: 'jobseeker' | 'hr' | 'admin'
-  status: 'active' | 'inactive' | 'banned'
   company?: string
   position?: string
-  registerTime: string
-  lastLoginTime: string
   loginCount: number
   activityStats?: {
     jobsPosted?: number
@@ -396,9 +487,35 @@ interface Filters {
   registerTime: [number, number] | null
 }
 
-const router = useRouter()
 const message = useMessage()
 const dialog = useDialog()
+
+// 表单引用
+const banFormRef = ref<FormInst | null>(null)
+
+// 表单验证规则
+const banRules = {
+  banReason: [
+    {
+      required: true,
+      message: '请输入封禁原因',
+      trigger: ['input', 'blur']
+    },
+    {
+      min: 5,
+      max: 500,
+      message: '封禁原因长度应在 5-500 个字符之间',
+      trigger: ['input', 'blur']
+    }
+  ],
+  banDays: [
+    {
+      required: true,
+      message: '请输入封禁天数',
+      trigger: ['input', 'blur']
+    }
+  ]
+}
 
 // 筛选选项
 const userTypeOptions = [
@@ -408,8 +525,8 @@ const userTypeOptions = [
 ]
 
 const statusOptions = [
+  { label: '全部', value: '' },
   { label: '正常', value: 'active' },
-  { label: '禁用', value: 'inactive' },
   { label: '封禁', value: 'banned' }
 ]
 
@@ -423,8 +540,8 @@ const moreActions = [
 // 状态管理
 const searchKeyword = ref('')
 const filters = ref<Filters>({
-  userType: null,
-  status: null,
+  userType: '',
+  status: '',
   registerTime: null
 })
 const currentPage = ref(1)
@@ -432,126 +549,12 @@ const pageSize = ref(20)
 
 // 弹窗状态
 const showDetailModal = ref(false)
-const selectedUser = ref<User | null>(null)
+const selectedUser = ref<ExtendedUser | null>(null)
 
-// 模拟用户数据
-const usersData = ref<User[]>([
-  {
-    id: '1',
-    name: '张三',
-    phone: '13812345678',
-    email: 'zhangsan@example.com',
-    userType: 'jobseeker',
-    status: 'active',
-    registerTime: '2024-01-10 09:30:00',
-    lastLoginTime: '2024-01-15 14:20:00',
-    loginCount: 15,
-    activityStats: {
-      jobsPosted: 0,
-      applicationsSent: 8,
-      viewsReceived: 23
-    },
-    recentActivities: [
-      {
-        id: '1',
-        type: 'application',
-        title: '投递了"高级前端开发工程师"职位',
-        time: '2024-01-15 14:20:00'
-      },
-      {
-        id: '2',
-        type: 'profile_update',
-        title: '更新了个人简历',
-        time: '2024-01-14 10:15:00'
-      }
-    ]
-  },
-  {
-    id: '2',
-    name: '李四',
-    phone: '13987654321',
-    email: 'lisi@company.com',
-    userType: 'hr',
-    status: 'active',
-    company: '北京字节跳动科技有限公司',
-    position: 'HR经理',
-    registerTime: '2024-01-08 11:20:00',
-    lastLoginTime: '2024-01-15 16:45:00',
-    loginCount: 32,
-    activityStats: {
-      jobsPosted: 5,
-      applicationsSent: 0,
-      viewsReceived: 0
-    },
-    recentActivities: [
-      {
-        id: '3',
-        type: 'job_post',
-        title: '发布了"高级前端开发工程师"职位',
-        time: '2024-01-15 16:45:00'
-      },
-      {
-        id: '4',
-        type: 'login',
-        title: '登录系统',
-        time: '2024-01-15 09:00:00'
-      }
-    ]
-  },
-  {
-    id: '3',
-    name: '王五',
-    phone: '13666666666',
-    email: 'wangwu@example.com',
-    userType: 'jobseeker',
-    status: 'inactive',
-    registerTime: '2024-01-05 15:30:00',
-    lastLoginTime: '2024-01-12 10:20:00',
-    loginCount: 8,
-    activityStats: {
-      jobsPosted: 0,
-      applicationsSent: 3,
-      viewsReceived: 5
-    },
-    recentActivities: [
-      {
-        id: '5',
-        type: 'application',
-        title: '投递了"产品经理"职位',
-        time: '2024-01-12 10:20:00'
-      }
-    ]
-  },
-  {
-    id: '4',
-    name: '赵六',
-    phone: '13888888888',
-    email: 'zhaoliu@tech.com',
-    userType: 'hr',
-    status: 'active',
-    company: '阿里巴巴集团控股有限公司',
-    position: '技术招聘官',
-    registerTime: '2024-01-03 14:10:00',
-    lastLoginTime: '2024-01-15 13:30:00',
-    loginCount: 28,
-    activityStats: {
-      jobsPosted: 8,
-      applicationsSent: 0,
-      viewsReceived: 0
-    }
-  },
-  {
-    id: '5',
-    name: 'admin',
-    phone: '13999999999',
-    email: 'admin@smarthire.com',
-    userType: 'admin',
-    status: 'active',
-    registerTime: '2024-01-01 00:00:00',
-    lastLoginTime: '2024-01-15 18:00:00',
-    loginCount: 156
-  }
-])
+// 用户数据和加载状态
+const usersData = ref<ExtendedUser[]>([])
+const loading = ref(false)
+const total = ref(0)
 
 // 计算属性
 const filteredUsers = computed(() => {
@@ -597,49 +600,47 @@ const paginatedUsers = computed(() => {
 })
 
 // 辅助方法
-const getUserIcon = (userType: string) => {
-  const iconMap: Record<string, string> = {
-    jobseeker: '👤',
-    hr: '💼',
-    admin: '👑'
+const getUserIcon = (userType: number) => {
+  const iconMap: Record<number, string> = {
+    1: '👤', // 求职者
+    2: '💼', // HR
+    3: '👑'  // 管理员
   }
   return iconMap[userType] || '👤'
 }
 
-const getUserTypeType = (userType: string) => {
-  const typeMap: Record<string, string> = {
-    jobseeker: 'info',
-    hr: 'warning',
-    admin: 'error'
+const getUserTypeType = (userType: number) => {
+  const typeMap: Record<number, string> = {
+    1: 'info', // 求职者
+    2: 'warning', // HR
+    3: 'error'  // 管理员
   }
   return typeMap[userType] || 'default'
 }
 
-const getUserTypeText = (userType: string) => {
-  const textMap: Record<string, string> = {
-    jobseeker: '求职者',
-    hr: 'HR',
-    admin: '管理员'
+const getUserTypeText = (userType: number) => {
+  const textMap: Record<number, string> = {
+    1: '求职者',
+    2: 'HR',
+    3: '管理员'
   }
-  return textMap[userType] || userType
+  return textMap[userType] || '未知'
 }
 
-const getStatusType = (status: string) => {
-  const typeMap: Record<string, string> = {
-    active: 'success',
-    inactive: 'warning',
-    banned: 'error'
+const getStatusType = (status: number) => {
+  const typeMap: Record<number, string> = {
+    1: 'success', // 正常
+    0: 'error'    // 禁用/封禁
   }
   return typeMap[status] || 'default'
 }
 
-const getStatusText = (status: string) => {
-  const textMap: Record<string, string> = {
-    active: '正常',
-    inactive: '禁用',
-    banned: '封禁'
+const getStatusText = (status: number) => {
+  const textMap: Record<number, string> = {
+    1: '正常',
+    0: '禁用'
   }
-  return textMap[status] || status
+  return textMap[status] || '未知'
 }
 
 const getActivityIcon = (type: string) => {
@@ -660,65 +661,70 @@ const formatTime = (time: string) => {
 // 事件处理
 const handleFilter = () => {
   currentPage.value = 1
+  loadUsers()
 }
 
 const handleSearch = (value: string) => {
   searchKeyword.value = value
   currentPage.value = 1
+  loadUsers()
 }
 
 const handleRefresh = () => {
-  message.success('数据已刷新')
+  loadUsers()
 }
 
 const resetFilters = () => {
   filters.value = {
-    userType: null,
-    status: null,
+    userType: '',
+    status: '',
     registerTime: null
   }
   searchKeyword.value = ''
   currentPage.value = 1
+  loadUsers()
 }
 
 const handlePageChange = (page: number) => {
   currentPage.value = page
+  loadUsers()
 }
 
 const handlePageSizeChange = (size: number) => {
   pageSize.value = size
   currentPage.value = 1
+  loadUsers()
 }
 
 // 查看用户详情
-const viewUserDetail = (user: User) => {
+const viewUserDetail = (user: ExtendedUser) => {
   selectedUser.value = user
   showDetailModal.value = true
 }
 
 // 切换用户状态
-const toggleUserStatus = (user: User) => {
-  const action = user.status === 'active' ? '禁用' : '启用'
-  const targetType = user.status === 'active' ? 'inactive' : 'active'
+const toggleUserStatus = (user: ExtendedUser) => {
+  const action = user.status === 1 ? '封禁' : '解封'
 
-  dialog.warning({
-    title: `确认${action}`,
-    content: `确定要${action}用户"${user.name}"吗？`,
-    positiveText: `确定${action}`,
-    negativeText: '取消',
-    onPositiveClick: () => {
-      // 更新用户状态
-      const userIndex = usersData.value.findIndex(u => u.id === user.id)
-      if (userIndex !== -1) {
-        usersData.value[userIndex].status = targetType as any
-        message.success(`用户已${action}`)
+  if (user.status === 1) {
+    // 封禁用户 - 显示封禁表单
+    showBanUserDialog(user)
+  } else {
+    // 解封用户 - 直接确认
+    dialog.warning({
+      title: `确认${action}`,
+      content: `确定要${action}用户"${user.name}"吗？`,
+      positiveText: `确定${action}`,
+      negativeText: '取消',
+      onPositiveClick: () => {
+        handleUnbanUser(user)
       }
-    }
-  })
+    })
+  }
 }
 
 // 更多操作
-const handleMoreAction = (key: string, user: User) => {
+const handleMoreAction = (key: string, user: ExtendedUser) => {
   switch (key) {
     case 'notify':
       sendNotification(user)
@@ -735,13 +741,112 @@ const handleMoreAction = (key: string, user: User) => {
   }
 }
 
+// 封禁弹窗相关状态
+const showBanModal = ref(false)
+const banFormData = ref({
+  banType: 'temporary' as 'permanent' | 'temporary',
+  banDays: 7,
+  banReason: '',
+  sendNotification: true
+})
+const currentUserForBan = ref<ExtendedUser | null>(null)
+
+// 显示封禁用户弹窗
+const showBanUserDialog = (user: ExtendedUser) => {
+  currentUserForBan.value = user
+  banFormData.value = {
+    banType: 'temporary',
+    banDays: 7,
+    banReason: '',
+    sendNotification: true
+  }
+  showBanModal.value = true
+}
+
+// 处理封禁用户
+const handleBanUser = async () => {
+  if (!banFormRef.value || !currentUserForBan.value) return
+
+  try {
+    await banFormRef.value.validate()
+  } catch (error) {
+    return
+  }
+
+  try {
+    loading.value = true
+    await banUser(currentUserForBan.value.id, {
+      banType: banFormData.value.banType,
+      banDays: banFormData.value.banType === 'temporary' ? banFormData.value.banDays : undefined,
+      banReason: banFormData.value.banReason,
+      sendNotification: banFormData.value.sendNotification
+    })
+
+    message.success(`用户"${currentUserForBan.value.name}"已封禁`)
+    showBanModal.value = false
+    // 刷新用户列表
+    await loadUsers()
+  } catch (error: any) {
+    message.error(error.message || '封禁用户失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+// 处理解封用户
+const handleUnbanUser = async (user: ExtendedUser) => {
+  try {
+    loading.value = true
+    await unbanUser(user.id, {
+      reason: '管理员解封',
+      sendNotification: true
+    })
+
+    message.success(`用户"${user.name}"已解封`)
+    // 刷新用户列表
+    await loadUsers()
+  } catch (error: any) {
+    message.error(error.message || '解封用户失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+// 加载用户列表
+const loadUsers = async () => {
+  try {
+    loading.value = true
+    const params: UserQueryParams = {
+      page: currentPage.value,
+      size: pageSize.value,
+      keyword: searchKeyword.value || undefined,
+      userType: filters.value.userType ? parseInt(filters.value.userType) : undefined,
+      status: filters.value.status || undefined
+    }
+
+    const result = await getUserList(params)
+    usersData.value = result.records.map(user => ({
+      ...user,
+      name: user.username, // 使用username作为name
+      loginCount: 0, // 后端暂无此字段，设为默认值
+      activityStats: undefined, // 后端暂无此字段，设为默认值
+      recentActivities: [] // 后端暂无此字段，设为默认值
+    }))
+    total.value = result.total
+  } catch (error: any) {
+    message.error(error.message || '加载用户列表失败')
+  } finally {
+    loading.value = false
+  }
+}
+
 // 发送通知
-const sendNotification = (user: User) => {
+const sendNotification = (user: ExtendedUser) => {
   message.info(`发送通知功能开发中 - 用户：${user.name}`)
 }
 
 // 重置密码
-const resetPassword = (user: User) => {
+const resetPassword = (user: ExtendedUser) => {
   dialog.warning({
     title: '确认重置密码',
     content: `确定要重置用户"${user.name}"的密码吗？`,
@@ -754,12 +859,12 @@ const resetPassword = (user: User) => {
 }
 
 // 查看操作记录
-const viewUserLogs = (user: User) => {
+const viewUserLogs = (user: ExtendedUser) => {
   message.info(`查看用户记录功能开发中 - 用户：${user.name}`)
 }
 
 // 导出用户数据
-const exportUserData = (user: User) => {
+const exportUserData = (user: ExtendedUser) => {
   message.info(`导出用户数据功能开发中 - 用户：${user.name}`)
 }
 
@@ -770,7 +875,7 @@ const exportUsers = () => {
 
 // 页面初始化
 onMounted(() => {
-  // 这里可以调用API获取真实数据
+  loadUsers()
 })
 </script>
 

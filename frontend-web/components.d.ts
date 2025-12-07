@@ -7,18 +7,11 @@ export {}
 
 declare module 'vue' {
   export interface GlobalComponents {
-    NButton: typeof import('naive-ui')['NButton']
     NCard: typeof import('naive-ui')['NCard']
     NDialogProvider: typeof import('naive-ui')['NDialogProvider']
-    NForm: typeof import('naive-ui')['NForm']
-    NFormItem: typeof import('naive-ui')['NFormItem']
-    NGi: typeof import('naive-ui')['NGi']
-    NGrid: typeof import('naive-ui')['NGrid']
-    NInput: typeof import('naive-ui')['NInput']
     NLoadingBarProvider: typeof import('naive-ui')['NLoadingBarProvider']
     NMessageProvider: typeof import('naive-ui')['NMessageProvider']
     NNotificationProvider: typeof import('naive-ui')['NNotificationProvider']
-    NSelect: typeof import('naive-ui')['NSelect']
     NTable: typeof import('naive-ui')['NTable']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']

@@ -1,7 +1,23 @@
 package com.SmartHire.adminService.controller;
 
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import com.SmartHire.adminService.dto.UserBanDTO;
+import com.SmartHire.adminService.dto.UserStatusUpdateDTO;
+import com.SmartHire.adminService.dto.UserManagementDTO;
+import com.SmartHire.adminService.model.BanRecord;
+import com.SmartHire.adminService.service.BanRecordService;
+import com.SmartHire.adminService.service.UserService;
+import com.SmartHire.common.entity.Result;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import java.util.List;
+import java.util.Map;
 
 /**
  * <p>
@@ -11,8 +27,187 @@ import org.springframework.web.bind.annotation.RestController;
  * @author SmartHire Team
  * @since 2025-12-02
  */
+@Slf4j
 @RestController
 @RequestMapping("/admin")
+@Validated
 public class AdminController {
 
+    @Autowired
+    private UserService userService;
+
+    @Autowired
+    private BanRecordService banRecordService;
+
+    // ==================== 用户管理接口 ====================
+
+    /**
+     * 分页查询用户列表
+     */
+    @GetMapping("/users")
+    public Result<Page<UserManagementDTO>> getUserList(
+            @RequestParam(defaultValue = "1") @Min(1) Integer current,
+            @RequestParam(defaultValue = "20") @Min(1) Integer size,
+            @RequestParam(required = false) String userType,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String keyword) {
+
+        Page<UserManagementDTO> page = new Page<>(current, size);
+        Page<UserManagementDTO> result = userService.getUserManagementList(page, userType, status, keyword);
+
+        return Result.success(result);
+    }
+
+    /**
+     * 根据用户ID获取用户详情
+     */
+    @GetMapping("/users/{userId}")
+    public Result<UserManagementDTO> getUserDetail(@PathVariable @NotNull Long userId) {
+        UserManagementDTO userInfo = userService.getUserManagementInfo(userId);
+        return Result.success(userInfo);
+    }
+
+    /**
+     * 更新用户状态
+     */
+    @PutMapping("/users/{userId}/status")
+    public Result<Boolean> updateUserStatus(
+            @PathVariable @NotNull Long userId,
+            @Valid @RequestBody UserStatusUpdateDTO userStatusUpdateDTO) {
+
+        // 确保用户ID匹配
+        userStatusUpdateDTO.setUserId(userId);
+        boolean result = userService.updateUserStatus(userStatusUpdateDTO);
+
+        if (result) {
+            return Result.success("用户状态更新成功", true);
+        } else {
+            return Result.error(500, "用户状态更新失败");
+        }
+    }
+
+    /**
+     * 批量更新用户状态
+     */
+    @PutMapping("/users/batch-status")
+    public Result<Integer> batchUpdateUserStatus(
+            @RequestParam @NotNull List<Long> userIds,
+            @RequestParam @NotNull Byte status,
+            @RequestParam @NotNull Long operatorId,
+            @RequestParam String operatorName,
+            @RequestParam String reason) {
+
+        int affectedRows = userService.batchUpdateUserStatus(userIds, status, operatorId, operatorName, reason);
+        return Result.success("批量更新用户状态成功", affectedRows);
+    }
+
+    /**
+     * 获取用户统计信息
+     */
+    @GetMapping("/users/statistics")
+    public Result<Map<String, Object>> getUserStatistics() {
+        Map<String, Object> statistics = userService.getUserStatistics();
+        return Result.success(statistics);
+    }
+
+    // ==================== 用户封禁接口 ====================
+
+    /**
+     * 封禁用户
+     */
+    @PostMapping("/users/{userId}/ban")
+    public Result<BanRecord> banUser(
+            @PathVariable @NotNull Long userId,
+            @Valid @RequestBody UserBanDTO userBanDTO) {
+
+        // 确保用户ID匹配
+        userBanDTO.setUserId(userId);
+        BanRecord banRecord = banRecordService.banUser(userBanDTO);
+
+        return Result.success("用户封禁成功", banRecord);
+    }
+
+    /**
+     * 解除用户封禁
+     */
+    @PostMapping("/users/{userId}/unban")
+    public Result<Boolean> liftUserBan(
+            @PathVariable @NotNull Long userId,
+            @RequestParam @NotNull Long operatorId,
+            @RequestParam String operatorName,
+            @RequestParam String liftReason) {
+
+        boolean result = banRecordService.liftUserBan(userId, operatorId, operatorName, liftReason);
+
+        if (result) {
+            return Result.success("解除封禁成功", true);
+        } else {
+            return Result.error(500, "解除封禁失败");
+        }
+    }
+
+    /**
+     * 检查用户是否被封禁
+     */
+    @GetMapping("/users/{userId}/ban-status")
+    public Result<Boolean> checkUserBanStatus(@PathVariable @NotNull Long userId) {
+        boolean isBanned = banRecordService.isUserBanned(userId);
+        return Result.success(isBanned);
+    }
+
+    /**
+     * 获取用户封禁记录
+     */
+    @GetMapping("/users/{userId}/ban-history")
+    public Result<List<BanRecord>> getUserBanHistory(@PathVariable @NotNull Long userId) {
+        List<BanRecord> banHistory = banRecordService.findBanHistoryByUserId(userId);
+        return Result.success(banHistory);
+    }
+
+    /**
+     * 处理过期封禁记录
+     */
+    @PostMapping("/bans/process-expired")
+    public Result<Integer> processExpiredBans() {
+        int processedCount = banRecordService.processExpiredBans();
+        return Result.success("处理过期封禁记录完成", processedCount);
+    }
+
+    /**
+     * 获取封禁统计信息
+     */
+    @GetMapping("/bans/statistics")
+    public Result<Map<String, Object>> getBanStatistics() {
+        Map<String, Object> statistics = banRecordService.getBanStatistics();
+        return Result.success("获取封禁统计信息成功", statistics);
+    }
+
+    /**
+     * 获取管理员的封禁记录
+     */
+    @GetMapping("/bans/operator/{operatorId}")
+    public Result<List<BanRecord>> getBansByOperatorId(@PathVariable @NotNull Long operatorId) {
+        List<BanRecord> banRecords = banRecordService.findBansByOperatorId(operatorId);
+        return Result.success("获取管理员封禁记录成功", banRecords);
+    }
+
+    // ==================== 系统管理接口 ====================
+
+    /**
+     * 获取系统概览信息
+     */
+    @GetMapping("/overview")
+    public Result<Map<String, Object>> getSystemOverview() {
+        Map<String, Object> overview = new java.util.HashMap<>();
+
+        // 用户统计
+        Map<String, Object> userStats = userService.getUserStatistics();
+        overview.put("users", userStats);
+
+        // 封禁统计
+        Map<String, Object> banStats = banRecordService.getBanStatistics();
+        overview.put("bans", banStats);
+
+        return Result.success(overview);
+    }
 }

@@ -23,16 +23,19 @@ export interface PaginationResponse<T> {
 
 // 用户相关类型
 export interface User {
-  id: string
+  id: number  // 后端返回的是number类型
   username: string
-  nickname: string
-  email: string
-  phone: string
+  nickname?: string  // 可选字段
+  email?: string
+  phone?: string
   avatar?: string
-  status: 'active' | 'disabled' | 'pending'
-  role: 'admin' | 'hr' | 'user'
-  createTime: string
+  userType: number // 1-求职者 2-HR 3-管理员
+  status: number // 0-禁用 1-正常
+  avatarUrl?: string
+  createTime?: string
   lastLoginTime?: string
+  // 为了兼容前端逻辑，添加计算属性
+  role?: 'admin' | 'hr' | 'user'  // 根据userType计算
 }
 
 // 招聘相关类型
@@ -119,4 +122,38 @@ export interface ThemeSettings {
   primaryColor: string
   compact: boolean
   followSystem: boolean
+}
+
+// 用户管理DTO - 匹配后端UserManagementDTO
+export interface UserManagementDTO {
+  userId: number
+  username: string
+  email: string
+  userType: string        // "job_seeker" | "hr" | "admin"
+  status: number          // 0=禁用, 1=启用
+  createTime: string
+  lastLoginTime: string
+}
+
+// 封禁记录 - 匹配后端BanRecord
+export interface BanRecord {
+  id: number
+  userId: number
+  username: string
+  email: string
+  userType: number         // 1=求职者, 2=HR
+  banReason: string
+  banType: 'permanent' | 'temporary'
+  banDays?: number
+  banStartTime: string
+  banEndTime?: string
+  banStatus: 'active' | 'expired' | 'lifted'
+  operatorId: number
+  operatorName: string
+  liftedByOperatorId?: number
+  liftedByOperatorName?: string
+  liftReason?: string
+  liftedAt?: string
+  createdAt: string
+  updatedAt: string
 }

@@ -54,6 +54,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       return;
     }
 
+    // OPTIONS请求直接放行（用于CORS预检）
+    if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+      filterChain.doFilter(request, response);
+      return;
+    }
+
     try {
       // 从HTTP请求中提取Token
       String token = tokenExtractor.extractToken(request);
