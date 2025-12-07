@@ -36,16 +36,12 @@ public class JobFavorite implements Serializable {
   /** 收藏时间 */
   @JsonIgnore private Date createdAt;
 
-  /**
-   * 获取收藏时间（返回防御性拷贝）
-   */
+  /** 获取收藏时间（返回防御性拷贝） */
   public Date getCreatedAt() {
     return createdAt == null ? null : new Date(createdAt.getTime());
   }
 
-  /**
-   * 设置收藏时间（存储防御性拷贝）
-   */
+  /** 设置收藏时间（存储防御性拷贝） */
   public void setCreatedAt(Date createdAt) {
     this.createdAt = createdAt == null ? null : new Date(createdAt.getTime());
   }

@@ -11,6 +11,9 @@ public class JobSeekerExpectationDTO {
 
   public interface Update extends Default {}
 
+  /** 求职期望ID（用于响应） */
+  private Long id;
+
   @NotBlank(message = "期望职位不能为空", groups = Create.class)
   @Size(max = 100, message = "期望职位长度不能超过100个字符")
   private String expectedPosition;

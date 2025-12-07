@@ -5,6 +5,7 @@ import com.SmartHire.common.exception.enums.ErrorCode;
 import com.SmartHire.common.exception.exception.BusinessException;
 import com.SmartHire.common.utils.AliOssUtil;
 import com.SmartHire.seekerService.dto.SeekerDTO;
+import com.SmartHire.seekerService.dto.SeekerInfoDTO;
 import com.SmartHire.seekerService.mapper.EducationExperienceMapper;
 import com.SmartHire.seekerService.mapper.JobSeekerExpectationMapper;
 import com.SmartHire.seekerService.mapper.JobSeekerMapper;
@@ -88,7 +89,17 @@ public class JobSeekerServiceImpl extends ServiceImpl<JobSeekerMapper, JobSeeker
    * @return 求职者信息
    */
   @Override
-  public JobSeeker getSeekerInfo() {
+  public SeekerInfoDTO getSeekerInfo() {
+    JobSeeker jobSeeker = getJobSeekerEntity();
+    return toSeekerInfoDTO(jobSeeker);
+  }
+
+  /**
+   * 获取JobSeeker实体（内部方法，用于需要操作数据库的场景）
+   *
+   * @return JobSeeker实体
+   */
+  private JobSeeker getJobSeekerEntity() {
     Long userId = userContext.getCurrentUserId();
 
     // 通过用户ID获取（job_seeker表有user_id字段，且是唯一索引）
@@ -99,6 +110,23 @@ public class JobSeekerServiceImpl extends ServiceImpl<JobSeekerMapper, JobSeeker
     }
 
     return jobSeeker;
+  }
+
+  /**
+   * 将JobSeeker转换为SeekerInfoDTO
+   *
+   * @param jobSeeker 求职者信息
+   * @return SeekerInfoDTO
+   */
+  private SeekerInfoDTO toSeekerInfoDTO(JobSeeker jobSeeker) {
+    SeekerInfoDTO dto = new SeekerInfoDTO();
+    dto.setRealName(jobSeeker.getRealName());
+    dto.setBirthDate(jobSeeker.getBirthDate());
+    dto.setCurrentCity(jobSeeker.getCurrentCity());
+    dto.setEducation(jobSeeker.getEducation());
+    dto.setJobStatus(jobSeeker.getJobStatus());
+    dto.setGraduationYear(jobSeeker.getGraduationYear());
+    return dto;
   }
 
   /**
@@ -127,7 +155,7 @@ public class JobSeekerServiceImpl extends ServiceImpl<JobSeekerMapper, JobSeeker
   @Transactional(rollbackFor = Exception.class)
   public void updateSeekerInfo(SeekerDTO request) {
     // 获取当前求职者信息
-    JobSeeker jobSeeker = getSeekerInfo();
+    JobSeeker jobSeeker = getJobSeekerEntity();
     if (jobSeeker == null) {
       throw new BusinessException(ErrorCode.SEEKER_NOT_EXIST);
     }
@@ -172,7 +200,7 @@ public class JobSeekerServiceImpl extends ServiceImpl<JobSeekerMapper, JobSeeker
   @Transactional(rollbackFor = Exception.class)
   public void deleteJobSeeker() {
     // 获取当前求职者信息
-    JobSeeker jobSeeker = getSeekerInfo();
+    JobSeeker jobSeeker = getJobSeekerEntity();
     if (jobSeeker == null) {
       throw new BusinessException(ErrorCode.SEEKER_NOT_EXIST);
     }

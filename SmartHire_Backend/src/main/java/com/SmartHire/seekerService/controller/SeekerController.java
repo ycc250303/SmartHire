@@ -5,13 +5,13 @@ import com.SmartHire.common.entity.Result;
 import com.SmartHire.common.enums.UserType;
 import com.SmartHire.seekerService.dto.JobFavoriteDTO;
 import com.SmartHire.seekerService.dto.SeekerDTO;
+import com.SmartHire.seekerService.dto.SeekerInfoDTO;
 import com.SmartHire.seekerService.dto.seekerTableDto.EducationExperienceDTO;
 import com.SmartHire.seekerService.dto.seekerTableDto.JobSeekerExpectationDTO;
 import com.SmartHire.seekerService.dto.seekerTableDto.ProjectExperienceDTO;
 import com.SmartHire.seekerService.dto.seekerTableDto.ResumeDTO;
 import com.SmartHire.seekerService.dto.seekerTableDto.SkillDTO;
 import com.SmartHire.seekerService.dto.seekerTableDto.WorkExperienceDTO;
-import com.SmartHire.seekerService.model.JobSeeker;
 import com.SmartHire.seekerService.service.*;
 import com.SmartHire.seekerService.service.seekerTableService.*;
 import io.swagger.v3.oas.annotations.Operation;
@@ -73,9 +73,9 @@ public class SeekerController {
    */
   @GetMapping("/get-seeker-info")
   @Operation(summary = "获取求职者信息", description = "获取求职者信息")
-  public Result<JobSeeker> getSeekerInfo() {
-    JobSeeker jobSeeker = jobSeekerService.getSeekerInfo();
-    return Result.success("获取求职者信息成功", jobSeeker);
+  public Result<SeekerInfoDTO> getSeekerInfo() {
+    SeekerInfoDTO seekerInfo = jobSeekerService.getSeekerInfo();
+    return Result.success("获取求职者信息成功", seekerInfo);
   }
 
   /**

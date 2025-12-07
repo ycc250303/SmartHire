@@ -9,6 +9,7 @@ import com.SmartHire.seekerService.service.seekerTableService.SkillService;
 import jakarta.validation.Valid;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -70,12 +71,29 @@ public class SkillServiceImpl extends AbstractSeekerOwnedService<SkillMapper, Sk
   }
 
   @Override
-  public List<Skill> getSkills() {
+  public List<SkillDTO> getSkills() {
     Long jobSeekerId = currentSeekerId();
     return lambdaQuery()
         .eq(Skill::getJobSeekerId, jobSeekerId)
         .orderByDesc(Skill::getUpdatedAt)
-        .list();
+        .list()
+        .stream()
+        .map(this::toDto)
+        .collect(Collectors.toList());
+  }
+
+  /**
+   * 将Skill转换为SkillDTO
+   *
+   * @param skill 技能
+   * @return SkillDTO
+   */
+  private SkillDTO toDto(Skill skill) {
+    SkillDTO dto = new SkillDTO();
+    dto.setId(skill.getId());
+    dto.setSkillName(skill.getSkillName());
+    dto.setLevel(skill.getLevel() != null ? skill.getLevel().intValue() : null);
+    return dto;
   }
 
   @Override
