@@ -137,4 +137,25 @@ public class JwtUtil {
     long remaining = decodedJWT.getExpiresAt().getTime() - System.currentTimeMillis();
     return Math.max(remaining / 1000, 0);
   }
+
+  /**
+   * 从 JWT token 解析的 Map 中安全地获取用户类型（Integer类型）
+   * 处理 Integer 类型兼容问题
+   *
+   * @param map JWT token 解析后的 Map
+   * @return 用户类型（Integer类型），1=求职者, 2=HR, 3=管理员
+   */
+  public Integer getUserTypeFromToken(Map<String, Object> map) {
+    Object userTypeObj = map.get("userType");
+    if (userTypeObj == null) {
+      return null;
+    }
+    if (userTypeObj instanceof Integer) {
+      return (Integer) userTypeObj;
+    } else if (userTypeObj instanceof Number) {
+      return ((Number) userTypeObj).intValue();
+    } else {
+      throw new IllegalArgumentException("用户类型格式不正确，期望数字类型");
+    }
+  }
 }

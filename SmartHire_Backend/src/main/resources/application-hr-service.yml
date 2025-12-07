@@ -4,10 +4,22 @@ spring:
 
   # 只覆盖需要不同的配置，其他配置从 application.yml 继承
   # Redis 和 Mail 配置会从 application.yml 继承
+  
+  # 数据库配置
+  datasource:
+    url: jdbc:mysql://111.229.81.45:3306/SmartHire?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
+    username: SmartHireManager
+    password: SmartHire123
 
 # 服务器配置（与 spring 同级）
 server:
   port: 8083
   servlet:
     context-path: /smarthire/api
+
+# JWT 配置
+jwt:
+  secret-key: SmartHire  # JWT 签名密钥
+  refresh-token-valid-time: 604800000  # Refresh Token 有效期：7天（毫秒）
+  access-token-valid-time: 604800000  # Access Token 有效期：7天（毫秒）
 

@@ -54,15 +54,16 @@ public enum ErrorCode {
   
   // HR和岗位相关错误码 (1200-1299)
   HR_NOT_EXIST(1201, "HR信息不存在"),
-  HR_NOT_BELONG_TO_USER(1202, "HR信息不属于当前用户")
+  HR_NOT_BELONG_TO_USER(1202, "HR信息不属于当前用户"),
   USER_NOT_HR(1203, "用户身份不是HR"),
-  COMPANY_NOT_EXIST(1204, "公司信息不存在"),
-  JOB_NOT_EXIST(1205, "岗位不存在"),
-  JOB_NOT_BELONG_TO_HR(1206, "岗位不属于当前HR"),
+  HR_ALREADY_EXIST(1204, "该用户已注册HR信息，请勿重复注册"),
+  COMPANY_NOT_EXIST(1205, "公司信息不存在"),
+  JOB_NOT_EXIST(1206, "岗位不存在"),
+  JOB_NOT_BELONG_TO_HR(1207, "岗位不属于当前HR"),
 
   // 招聘（投递/推荐）相关错误码 (1300-1399)
   APPLICATION_ALREADY_EXISTS(1301, "您已投递过该职位，请勿重复投递"),
-  JOB_NOT_EXIST(1302, "职位不存在"),
+  APPLICATION_JOB_NOT_EXIST(1302, "职位不存在"),
   APPLICATION_NOT_EXIST(1303, "投递记录不存在"),
   APPLICATION_NOT_BELONG_TO_HR(1304, "投递记录不属于当前HR"),
   // 会话/聊天相关错误码 (1400-1499)

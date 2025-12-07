@@ -4,6 +4,7 @@ import com.SmartHire.hrService.dto.JobPositionCreateDTO;
 import com.SmartHire.hrService.dto.JobPositionListDTO;
 import com.SmartHire.hrService.dto.JobPositionUpdateDTO;
 import com.SmartHire.hrService.service.JobPositionService;
+import com.SmartHire.shared.annotation.RequireHr;
 import com.SmartHire.shared.entity.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
@@ -21,6 +22,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/hr/job-position")
 @Validated
+@RequireHr
 public class JobPositionController {
 
     @Autowired
