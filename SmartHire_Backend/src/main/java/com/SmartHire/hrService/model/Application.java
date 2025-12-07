@@ -42,6 +42,11 @@ public class Application implements Serializable {
     private Long resumeId;
 
     /**
+     * 发起方：0-求职者投递 1-HR推荐
+     */
+    private Integer initiator;
+
+    /**
      * 状态：0-已投递 1-已查看 2-待面试 3-已面试 4-已录用 5-已拒绝 6-已撤回
      */
     private Integer status;
@@ -55,16 +60,6 @@ public class Application implements Serializable {
      * 匹配分析（JSON格式）
      */
     private String matchAnalysis;
-
-    /**
-     * HR查看时间
-     */
-    private Date hrViewedAt;
-
-    /**
-     * HR评价
-     */
-    private String hrComment;
 
     /**
      * 投递时间

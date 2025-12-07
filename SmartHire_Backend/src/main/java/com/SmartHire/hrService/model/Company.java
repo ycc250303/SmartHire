@@ -31,29 +31,49 @@ public class Company implements Serializable {
     private String companyName;
 
     /**
+     * 所属行业
+     */
+    private String industry;
+
+    /**
+     * 公司规模（tinyint）
+     */
+    private Integer companyScale;
+
+    /**
+     * 融资阶段（tinyint）
+     */
+    private Integer financingStage;
+
+    /**
+     * 公司网站
+     */
+    private String website;
+
+    /**
+     * 公司Logo
+     */
+    private String logoUrl;
+
+    /**
      * 公司简介
      */
     private String description;
 
     /**
-     * 公司规模
+     * 主要业务
      */
-    private String scale;
+    private String mainBusiness;
 
     /**
-     * 公司行业
+     * 福利待遇
      */
-    private String industry;
+    private String benefits;
 
     /**
-     * 公司地址
+     * 状态：0-未认证 1-已认证
      */
-    private String address;
-
-    /**
-     * 公司城市
-     */
-    private String city;
+    private Integer status;
 
     /**
      * 创建时间
@@ -64,5 +84,15 @@ public class Company implements Serializable {
      * 更新时间
      */
     private Date updatedAt;
+
+    /**
+     * 公司成立时间
+     */
+    private Date companyCreatedAt;
+
+    /**
+     * 注册资本
+     */
+    private String registeredCapital;
 }
 

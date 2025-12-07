@@ -60,14 +60,15 @@ public class ApplicationController {
 
     /**
      * 更新HR备注
+     * 注意：由于数据库表中没有hr_comment字段，此功能暂时禁用
      */
     @PatchMapping("/{applicationId}/comment")
-    @Operation(summary = "简历备注", description = "记录HR备注与查看时间")
+    @Operation(summary = "简历备注", description = "记录HR备注与查看时间（功能暂不可用）")
     public Result<?> updateApplicationComment(
             @PathVariable @Min(value = 1, message = "投递ID非法") Long applicationId,
             @Valid @RequestBody ApplicationCommentUpdateDTO updateDTO) {
-        applicationService.updateApplicationComment(applicationId, updateDTO.getComment());
-        return Result.success("备注更新成功");
+        // 由于数据库表中没有hr_comment字段，此功能暂时返回错误
+        return Result.error("备注功能暂不可用，数据库表中缺少相应字段");
     }
 }
 

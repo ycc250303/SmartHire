@@ -62,16 +62,6 @@ public class ApplicationListDTO implements Serializable {
     private String matchAnalysis;
 
     /**
-     * HR查看时间
-     */
-    private Date hrViewedAt;
-
-    /**
-     * HR评价
-     */
-    private String hrComment;
-
-    /**
      * 投递时间
      */
     private Date createdAt;
@@ -80,6 +70,5 @@ public class ApplicationListDTO implements Serializable {
      * 更新时间
      */
     private Date updatedAt;
-
 }
 

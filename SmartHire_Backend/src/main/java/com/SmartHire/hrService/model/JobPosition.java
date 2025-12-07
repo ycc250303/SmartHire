@@ -15,7 +15,7 @@ import java.util.Date;
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
-@TableName("job_position")
+@TableName("job_info")
 public class JobPosition implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -130,5 +130,20 @@ public class JobPosition implements Serializable {
      * 发布时间
      */
     private Date publishedAt;
+
+    /**
+     * 实习每周天数
+     */
+    private Integer internshipDaysPerWeek;
+
+    /**
+     * 实习持续月数
+     */
+    private Integer internshipDurationMonths;
+
+    /**
+     * 经验要求
+     */
+    private Integer experienceRequired;
 }
 

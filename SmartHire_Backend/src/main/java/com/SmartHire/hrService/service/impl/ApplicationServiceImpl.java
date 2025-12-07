@@ -123,9 +123,6 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
 
         Date now = new Date();
         application.setStatus(status);
-        if (application.getHrViewedAt() == null && status >= 1) {
-            application.setHrViewedAt(now);
-        }
         application.setUpdatedAt(now);
 
         updateById(application);
@@ -134,17 +131,8 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
     @Override
     @Transactional
     public void updateApplicationComment(Long applicationId, String comment) {
-        Long hrId = getCurrentHrId();
-        Application application = validateApplicationOwnership(applicationId, hrId);
-
-        Date now = new Date();
-        application.setHrComment(comment);
-        if (application.getHrViewedAt() == null) {
-            application.setHrViewedAt(now);
-        }
-        application.setUpdatedAt(now);
-
-        updateById(application);
+        // 注意：由于数据库中没有hr_comment字段，此功能暂时不可用
+        // Controller层会直接返回错误，这里不需要做任何操作
     }
 }
 
