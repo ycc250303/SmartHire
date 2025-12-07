@@ -10,4 +10,3 @@ public interface MessageApi {
    */
   void deleteUserMessages(Long userId);
 }
-
