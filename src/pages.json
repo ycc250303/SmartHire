@@ -28,6 +28,15 @@
       }
     },
     {
+      "path": "pages/seeker/chat/conversation",
+      "style": {
+        "navigationBarTitleText": "聊天",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff",
+        "navigationStyle": "custom"
+      }
+    },
+    {
       "path": "pages/seeker/profile/index",
       "style": {
         "navigationBarTitleText": "我的",

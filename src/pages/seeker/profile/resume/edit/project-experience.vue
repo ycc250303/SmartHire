@@ -50,12 +50,12 @@
             class="form-picker"
             mode="date"
             fields="month"
-            :value="formData.endMoneth"
+            :value="formData.endMonth"
             @change="handleEndDateChange"
           >
             <view class="picker-value">
-              <text :class="formData.endMoneth ? 'picker-text' : 'picker-placeholder'">
-                {{ formData.endMoneth || t('pages.resume.edit.project.endMonth') }}
+              <text :class="formData.endMonth ? 'picker-text' : 'picker-placeholder'">
+                {{ formData.endMonth || t('pages.resume.edit.project.endMonth') }}
               </text>
               <text class="picker-arrow">›</text>
             </view>
@@ -132,7 +132,7 @@ const formData = ref<AddProjectExperienceParams>({
   description: '',
   responsibility: '',
   startMonth: '',
-  endMoneth: '',
+  endMonth: '',
 });
 
 onLoad((options: any) => {
@@ -158,7 +158,7 @@ async function loadData() {
         description: item.description,
         responsibility: item.responsibility,
         startMonth: item.startMonth,
-        endMoneth: item.endMoneth,
+        endMonth: item.endMonth,
       };
     }
   } catch (error) {
@@ -179,7 +179,7 @@ function handleStartDateChange(e: any) {
 
 function handleEndDateChange(e: any) {
   const date = e.detail.value;
-  formData.value.endMoneth = date.substring(0, 7);
+  formData.value.endMonth = date.substring(0, 7);
 }
 
 async function handleSave() {
@@ -193,7 +193,7 @@ async function handleSave() {
     return;
   }
 
-  if (formData.value.startMonth && formData.value.endMoneth && formData.value.startMonth > formData.value.endMoneth) {
+  if (formData.value.startMonth && formData.value.endMonth && formData.value.startMonth > formData.value.endMonth) {
     uni.showToast({
       title: t('pages.resume.edit.project.dateInvalid'),
       icon: 'none',

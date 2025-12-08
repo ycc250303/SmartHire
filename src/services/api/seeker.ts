@@ -81,7 +81,7 @@ export interface ProjectExperience {
   description: string;
   responsibility: string;
   startMonth: string;
-  endMoneth: string;
+  endMonth: string;
 }
 
 export interface AddProjectExperienceParams {
@@ -90,7 +90,7 @@ export interface AddProjectExperienceParams {
   description: string;
   responsibility: string;
   startMonth: string;
-  endMoneth: string;
+  endMonth: string;
 }
 
 export interface UpdateProjectExperienceParams {
@@ -99,7 +99,7 @@ export interface UpdateProjectExperienceParams {
   description?: string;
   responsibility?: string;
   startMonth?: string;
-  endMoneth?: string;
+  endMonth?: string;
 }
 
 /**

@@ -15,6 +15,9 @@
 
     <!-- Step 2: Registration Form -->
     <view v-if="step === 2" class="registration-form">
+        <view class="header-section">
+          <text class="main-title">{{ t('auth.register.accountRegister') }}</text>
+        </view>
         <!-- Username and Gender in one row -->
         <view class="form-field form-field-row">
           <view class="field-col field-col-2">
@@ -364,6 +367,7 @@ async function handleRegister() {
   justify-content: center;
   min-height: 100vh;
   padding: vars.$spacing-xl;
+  padding-top: 150rpx;
   background: linear-gradient(to bottom, #e3f2fd 0%, #ffffff 25%);
 }
 
@@ -406,8 +410,21 @@ async function handleRegister() {
 
 .registration-form {
   padding: vars.$spacing-xl vars.$spacing-lg;
+  padding-top: 150rpx;
   min-height: 100vh;
   background-color: #ffffff;
+}
+
+.header-section {
+  margin-bottom: 60rpx;
+  text-align: left;
+}
+
+.main-title {
+  display: block;
+  font-size: 56rpx;
+  font-weight: 700;
+  color: vars.$text-color;
 }
 
 .form-field {

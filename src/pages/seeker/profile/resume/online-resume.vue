@@ -471,7 +471,7 @@ function formatProjectPeriod(project: ProjectExperience): string {
     return t('pages.resume.online.infoFallback');
   }
   
-  const endLabel = project.endMoneth || t('pages.resume.online.presentLabel');
+  const endLabel = project.endMonth || t('pages.resume.online.presentLabel');
   return `${project.startMonth} - ${endLabel}`;
 }
 

@@ -92,7 +92,7 @@ const formData = ref<LoginParams>({
 
 onLoad(() => {
   uni.setNavigationBarTitle({
-    title: t('auth.login.title')
+    title: t('auth.login.title') 
   });
 });
 
@@ -186,12 +186,13 @@ function goToHelp() {
   min-height: 100vh;
   background: linear-gradient(to bottom, #e3f2fd 0%, #ffffff 25%);
   padding: vars.$spacing-xl;
+  padding-top: 180rpx;
 }
 
 .login-container {
   max-width: 650rpx;
   margin: 0 auto;
-  padding-top: 80rpx;
+  padding-top: 0;
 }
 
 .header-section {
