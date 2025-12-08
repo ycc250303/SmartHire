@@ -1,1 +1,1 @@
-# SmartHire+: client-seeker
+# SmartHire+: client
