@@ -1,6 +1,6 @@
 package com.SmartHire.messageService.websocket;
 
-import com.SmartHire.shared.utils.JwtUtil;
+import com.SmartHire.common.utils.JwtUtil;
 import jakarta.websocket.*;
 import jakarta.websocket.server.ServerEndpoint;
 import java.io.IOException;
@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 @Component
 @ServerEndpoint(
     value = "/message",
-    configurator = com.SmartHire.shared.config.WebSocketConfigurator.class)
+    configurator = com.SmartHire.common.config.WebSocketConfigurator.class)
 public class MessageWebSocket {
 
   // 用户会话

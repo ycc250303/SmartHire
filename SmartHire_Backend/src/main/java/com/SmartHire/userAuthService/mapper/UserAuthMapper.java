@@ -17,23 +17,23 @@ public interface UserAuthMapper extends BaseMapper<User> {
 
   // 根据用户名查询用户信息
   @Select("select * from user where username=#{username}")
-  public User findByUserName(String username);
+  User findByUserName(String username);
 
   // 检查用户名是否存在
   @Select("select id from user where username= #{username} limit 1")
-  public Long checkUsernameExist(String username);
+  Long checkUsernameExist(String username);
 
   // 检查邮箱是否存在
   @Select("select id from user where email= #{email} limit 1")
-  public Long checkEmailExist(String email);
+  Long checkEmailExist(String email);
 
   // 检查手机号是否存在
   @Select("select id from user where phone= #{phone} limit 1")
-  public Long checkPhoneExist(String phone);
+  Long checkPhoneExist(String phone);
 
   // 根据ID查询用户信息
   @Select("select * from user where id = #{id}")
-  public User findById(Long id);
+  User findById(Long id);
 
   // 更新用户头像
   @Update("update user set avatar_url = #{avatarUrl},updated_at=now() where id = #{id}")

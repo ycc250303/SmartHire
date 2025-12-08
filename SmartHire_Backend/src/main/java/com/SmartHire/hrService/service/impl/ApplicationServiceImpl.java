@@ -9,11 +9,10 @@ import com.SmartHire.hrService.model.Application;
 import com.SmartHire.hrService.model.HrInfo;
 import com.SmartHire.hrService.model.JobPosition;
 import com.SmartHire.hrService.service.ApplicationService;
-import com.SmartHire.shared.exception.enums.ErrorCode;
-import com.SmartHire.shared.exception.exception.BusinessException;
-import com.SmartHire.shared.utils.JwtUtil;
-import com.SmartHire.shared.utils.SecurityContextUtil;
-import com.SmartHire.userAuthService.mapper.UserAuthMapper;
+import com.SmartHire.common.api.UserAuthApi;
+import com.SmartHire.common.auth.UserContext;
+import com.SmartHire.common.exception.enums.ErrorCode;
+import com.SmartHire.common.exception.exception.BusinessException;
 import com.SmartHire.userAuthService.model.User;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -23,7 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.Date;
-import java.util.Map;
 
 /**
  * 简历服务实现类
@@ -32,7 +30,10 @@ import java.util.Map;
 public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Application> implements ApplicationService {
 
     @Autowired
-    private UserAuthMapper userAuthMapper;
+    private UserAuthApi userAuthApi;
+
+    @Autowired
+    private UserContext userContext;
 
     @Autowired
     private HrInfoMapper hrInfoMapper;
@@ -40,21 +41,12 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
     @Autowired
     private JobPositionMapper jobPositionMapper;
 
-    @Autowired
-    private JwtUtil jwtUtil;
-
     /**
      * 获取当前登录HR的ID（hr_info表的id）
      */
     private Long getCurrentHrId() {
-        Map<String, Object> map = SecurityContextUtil.getCurrentClaims();
-        Long userId = jwtUtil.getUserIdFromToken(map);
-
-        User user = userAuthMapper.selectById(userId);
-        if (user == null) {
-            throw new BusinessException(ErrorCode.USER_ID_NOT_EXIST);
-        }
-
+        Long userId = userContext.getCurrentUserId();
+        User user = userAuthApi.getUserById(userId);
         if (user.getUserType() != 2) {
             throw new BusinessException(ErrorCode.USER_NOT_HR);
         }

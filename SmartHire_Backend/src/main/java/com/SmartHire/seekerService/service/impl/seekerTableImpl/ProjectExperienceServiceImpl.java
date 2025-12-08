@@ -1,11 +1,11 @@
 package com.SmartHire.seekerService.service.impl.seekerTableImpl;
 
+import com.SmartHire.common.exception.enums.ErrorCode;
+import com.SmartHire.common.exception.exception.BusinessException;
 import com.SmartHire.seekerService.dto.seekerTableDto.ProjectExperienceDTO;
 import com.SmartHire.seekerService.mapper.ProjectExperienceMapper;
 import com.SmartHire.seekerService.model.ProjectExperience;
 import com.SmartHire.seekerService.service.seekerTableService.ProjectExperienceService;
-import com.SmartHire.shared.exception.enums.ErrorCode;
-import com.SmartHire.shared.exception.exception.BusinessException;
 import jakarta.validation.Valid;
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -72,8 +72,7 @@ public class ProjectExperienceServiceImpl
    */
   @Override
   public void updateProjectExperience(Long id, ProjectExperienceDTO request) {
-    Long jobSeekerId = currentSeekerId();
-    ProjectExperience existingExperience = getOwnedProjectExperience(id, jobSeekerId);
+    ProjectExperience existingExperience = getOwnedProjectExperience(id);
 
     if (!applyProjectUpdates(existingExperience, request)) {
       throw new BusinessException(ErrorCode.VALIDATION_ERROR);
@@ -109,8 +108,7 @@ public class ProjectExperienceServiceImpl
    */
   @Override
   public void deleteProjectExperience(Long id) {
-    Long jobSeekerId = currentSeekerId();
-    getOwnedProjectExperience(id, jobSeekerId);
+    getOwnedProjectExperience(id);
     projectExperienceMapper.deleteById(id);
   }
 
@@ -235,7 +233,7 @@ public class ProjectExperienceServiceImpl
     return YEAR_MONTH_FORMATTER.format(YearMonth.from(date));
   }
 
-  private ProjectExperience getOwnedProjectExperience(Long id, Long jobSeekerId) {
+  private ProjectExperience getOwnedProjectExperience(Long id) {
     return requireOwnedEntity(
         id,
         projectExperienceMapper::selectById,

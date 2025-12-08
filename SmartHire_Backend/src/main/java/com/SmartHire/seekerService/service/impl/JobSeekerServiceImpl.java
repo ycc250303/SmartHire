@@ -1,5 +1,10 @@
 package com.SmartHire.seekerService.service.impl;
 
+import com.SmartHire.common.api.UserAuthApi;
+import com.SmartHire.common.auth.UserContext;
+import com.SmartHire.common.exception.enums.ErrorCode;
+import com.SmartHire.common.exception.exception.BusinessException;
+import com.SmartHire.common.utils.AliOssUtil;
 import com.SmartHire.seekerService.dto.SeekerDTO;
 import com.SmartHire.seekerService.mapper.EducationExperienceMapper;
 import com.SmartHire.seekerService.mapper.JobSeekerExpectationMapper;
@@ -11,18 +16,11 @@ import com.SmartHire.seekerService.mapper.WorkExperienceMapper;
 import com.SmartHire.seekerService.model.JobSeeker;
 import com.SmartHire.seekerService.model.Resume;
 import com.SmartHire.seekerService.service.JobSeekerService;
-import com.SmartHire.shared.exception.enums.ErrorCode;
-import com.SmartHire.shared.exception.exception.BusinessException;
-import com.SmartHire.shared.utils.AliOssUtil;
-import com.SmartHire.shared.utils.JwtUtil;
-import com.SmartHire.shared.utils.SecurityContextUtil;
-import com.SmartHire.userAuthService.mapper.UserAuthMapper;
 import com.SmartHire.userAuthService.model.User;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -41,9 +39,9 @@ public class JobSeekerServiceImpl extends ServiceImpl<JobSeekerMapper, JobSeeker
     implements JobSeekerService {
   @Autowired private JobSeekerMapper jobSeekerMapper;
 
-  @Autowired private UserAuthMapper userAuthMapper;
+  @Autowired private UserAuthApi userAuthApi;
 
-  @Autowired private JwtUtil jwtUtil;
+  @Autowired private UserContext userContext;
 
   @Autowired private ResumeMapper resumeMapper;
 
@@ -66,14 +64,8 @@ public class JobSeekerServiceImpl extends ServiceImpl<JobSeekerMapper, JobSeeker
    */
   @Override
   public void registerSeeker(SeekerDTO request) {
-    Map<String, Object> map = SecurityContextUtil.getCurrentClaims();
-    Long userId = jwtUtil.getUserIdFromToken(map);
+    Long userId = userContext.getCurrentUserId();
     log.info("用户ID：{}", userId);
-    // 验证用户是否存在
-    User user = userAuthMapper.findById(userId);
-    if (user == null) {
-      throw new BusinessException(ErrorCode.USER_ID_NOT_EXIST);
-    }
 
     // 检查该用户是否已经注册过求职者信息
     JobSeeker existingSeeker = lambdaQuery().eq(JobSeeker::getUserId, userId).one();
@@ -101,16 +93,10 @@ public class JobSeekerServiceImpl extends ServiceImpl<JobSeekerMapper, JobSeeker
    */
   @Override
   public JobSeeker getSeekerInfo() {
-    Map<String, Object> map = SecurityContextUtil.getCurrentClaims();
-    Long userId = jwtUtil.getUserIdFromToken(map);
+    Long userId = userContext.getCurrentUserId();
 
-    // 验证用户是否存在
-    User user = userAuthMapper.selectById(userId);
-    if (user == null) {
-      throw new BusinessException(ErrorCode.USER_ID_NOT_EXIST);
-    }
-
-    // 验证用户身份是否为求职者
+    // 验证用户是否存在和身份
+    User user = userAuthApi.getUserById(userId);
     if (user.getUserType() != 1) {
       throw new BusinessException(ErrorCode.USER_NOT_SEEKER);
     }
@@ -132,11 +118,7 @@ public class JobSeekerServiceImpl extends ServiceImpl<JobSeekerMapper, JobSeeker
    */
   @Override
   public Long getJobSeekerId() {
-    Map<String, Object> map = SecurityContextUtil.getCurrentClaims();
-    Long userId = jwtUtil.getUserIdFromToken(map);
-    if (userId == null) {
-      throw new BusinessException(ErrorCode.USER_ID_NOT_EXIST);
-    }
+    Long userId = userContext.getCurrentUserId();
     JobSeeker jobSeeker = lambdaQuery().eq(JobSeeker::getUserId, userId).one();
 
     if (jobSeeker == null) {

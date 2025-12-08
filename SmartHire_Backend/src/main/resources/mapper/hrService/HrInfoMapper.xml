@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.SmartHire.hrService.mapper.HrInfoMapper">
+
+    <!-- HR信息DTO结果映射 -->
+    <resultMap id="HrInfoDTOResultMap" type="com.SmartHire.hrService.dto.HrInfoDTO">
+        <id column="id" property="id" />
+        <result column="user_id" property="userId" />
+        <result column="company_id" property="companyId" />
+        <result column="company_name" property="companyName" />
+        <result column="real_name" property="realName" />
+        <result column="position" property="position" />
+        <result column="work_phone" property="workPhone" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+    </resultMap>
+
+    <!-- 根据用户ID查询HR信息（包含公司名称） -->
+    <select id="selectHrInfoWithCompanyByUserId" resultMap="HrInfoDTOResultMap">
+        SELECT 
+            h.id,
+            h.user_id,
+            h.company_id,
+            c.company_name,
+            h.real_name,
+            h.position,
+            h.work_phone,
+            h.created_at,
+            h.updated_at
+        FROM hr_info h
+        LEFT JOIN company c ON h.company_id = c.id
+        WHERE h.user_id = #{userId}
+    </select>
+
+</mapper>
+
+

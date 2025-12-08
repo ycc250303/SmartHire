@@ -1,11 +1,11 @@
 package com.SmartHire.seekerService.service.impl;
 
+import com.SmartHire.common.api.UserAuthApi;
+import com.SmartHire.common.exception.enums.ErrorCode;
+import com.SmartHire.common.exception.exception.BusinessException;
 import com.SmartHire.seekerService.mapper.*;
 import com.SmartHire.seekerService.model.*;
 import com.SmartHire.seekerService.service.OnlineResumeService;
-import com.SmartHire.shared.exception.enums.ErrorCode;
-import com.SmartHire.shared.exception.exception.BusinessException;
-import com.SmartHire.userAuthService.mapper.UserAuthMapper;
 import com.SmartHire.userAuthService.model.User;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import java.util.LinkedHashMap;
@@ -21,7 +21,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class OnlineResumeServiceImpl implements OnlineResumeService {
 
-  @Autowired private UserAuthMapper userAuthMapper;
+  @Autowired private UserAuthApi userAuthApi;
 
   @Autowired private JobSeekerMapper jobSeekerMapper;
 
@@ -42,10 +42,7 @@ public class OnlineResumeServiceImpl implements OnlineResumeService {
     }
 
     try {
-      User user = userAuthMapper.selectById(userId);
-      if (user == null) {
-        throw new BusinessException(ErrorCode.USER_ID_NOT_EXIST);
-      }
+      User user = userAuthApi.getUserById(userId);
       if (!Objects.equals(user.getUserType(), 1)) {
         throw new BusinessException(ErrorCode.USER_NOT_SEEKER);
       }

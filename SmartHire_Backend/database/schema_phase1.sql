@@ -67,25 +67,22 @@ CREATE TABLE `job_seeker_expectation` (
 CREATE TABLE `company` (
     `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '公司ID',
     `company_name` VARCHAR(100) NOT NULL COMMENT '公司名称',
-    `company_code` VARCHAR(50) COMMENT '统一社会信用代码',
     `industry` VARCHAR(50) COMMENT '所属行业',
-    `company_scale` VARCHAR(20) COMMENT '公司规模',
-    `financing_stage` VARCHAR(20) COMMENT '融资阶段',
-    `city` VARCHAR(50) COMMENT '所在城市',
-    `address` VARCHAR(255) COMMENT '详细地址',
+    `company_scale` TINYINT COMMENT '公司规模 1:0-20 2：20-99 3:100-499 4:500-999 5:1000-3000 6:3000-10000 7:10000以上',
+    `financing_stage` TINYINT COMMENT '融资阶段 0:无融资 1:天使轮 2:A轮 3:B轮 4:C轮 5:D轮 6:已上市',
     `website` VARCHAR(255) COMMENT '公司网站',
     `logo_url` VARCHAR(255) COMMENT '公司Logo',
     `description` TEXT COMMENT '公司简介',
     `main_business` TEXT COMMENT '主要业务',
     `benefits` TEXT COMMENT '福利待遇',
     `status` TINYINT DEFAULT 1 COMMENT '状态：0-未认证 1-已认证',
+    `company_created_at` DATETIME NOT NULL COMMENT '公司创建时间',
+    `registered_capital` VARCHAR(20) not null COMMENT '注册资本',
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`id`),
-    UNIQUE KEY `uk_company_code` (`company_code`),
     KEY `idx_company_name` (`company_name`),
-    KEY `idx_industry` (`industry`),
-    KEY `idx_city` (`city`)
+    KEY `idx_industry` (`industry`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '公司信息表';
 -- 1.5 HR信息表
 CREATE TABLE `hr_info` (
@@ -191,7 +188,7 @@ CREATE TABLE `certificate` (
 -- 3. 职位模块 (2张表)
 -- =====================================================
 -- 3.1 职位表
-CREATE TABLE `job_position` (
+CREATE TABLE `job_info` (
     `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '职位ID',
     `company_id` BIGINT NOT NULL COMMENT '公司ID',
     `hr_id` BIGINT NOT NULL COMMENT '发布HR的ID',
@@ -204,7 +201,10 @@ CREATE TABLE `job_position` (
     `salary_max` DECIMAL(10, 2) COMMENT '薪资最高',
     `salary_months` INT DEFAULT 12 COMMENT '薪资月数',
     `education_required` TINYINT COMMENT '学历要求 0-不限 1-专科 2-本科 3-硕士 4-博士',
-    `job_type` TINYINT COMMENT '工作类型 0-全职 1-兼职 2-实习',
+    `job_type` TINYINT COMMENT '工作类型 0-全职 1-实习',
+    `experience_required` TINYINT COMMENT '经验要求（仅全职类型需要）0-应届生 1-1年以内 2-1-3年 3-3-5年 4-5-10年 5-10年以上',
+    `internship_days_per_week` INT COMMENT '每周实习天数（仅实习类型需要）',
+    `internship_duration_months` INT COMMENT '实习时长（月为单位，仅实习类型需要）',
     `description` TEXT NOT NULL COMMENT '职位描述',
     `responsibilities` TEXT COMMENT '岗位职责',
     `requirements` TEXT COMMENT '任职要求',

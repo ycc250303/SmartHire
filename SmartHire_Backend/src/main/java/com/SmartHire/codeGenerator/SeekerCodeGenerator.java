@@ -70,6 +70,8 @@ public class SeekerCodeGenerator {
               builder.controllerBuilder().disable();
             })
         .execute();
+
+    generateSeekerController(projectPath);
   }
 
   @SuppressWarnings("unchecked")
@@ -100,15 +102,15 @@ public class SeekerCodeGenerator {
       String password = String.valueOf(datasource.get("password"));
 
       // 验证配置是否有效
-      if (url == null || "null".equals(url) || url.isEmpty()) {
+      if ("null".equals(url) || url.isEmpty()) {
         throw new IllegalStateException(
             "Database URL is missing or invalid in " + configFile.getFileName());
       }
-      if (username == null || "null".equals(username) || username.isEmpty()) {
+      if ("null".equals(username) || username.isEmpty()) {
         throw new IllegalStateException(
             "Database username is missing or invalid in " + configFile.getFileName());
       }
-      if (password == null || "null".equals(password)) {
+      if ("null".equals(password)) {
         throw new IllegalStateException(
             "Database password is missing or invalid in " + configFile.getFileName());
       }
@@ -121,23 +123,24 @@ public class SeekerCodeGenerator {
 
   private static void generateServiceProfile() {
     try {
-      if (Files.notExists(SEEKER_SERVICE_YML)) {
-        Files.createDirectories(SEEKER_SERVICE_YML.getParent());
+      Path parent = SEEKER_SERVICE_YML.getParent();
+      if (parent != null && Files.notExists(parent)) {
+        Files.createDirectories(parent);
       }
       // TODO：需要修改yml文件内容，需要修改port
       String content =
           """
-                    spring:
-                      application:
-                        name: SmartHire_SeekerService
+          spring:
+            application:
+              name: SmartHire_SeekerService
 
-                    server:
-                      port: 8082
-                      servlet:
-                        context-path: /smarthire/api
+          server:
+            port: 8082
+            servlet:
+              context-path: /smarthire/api
 
-                    # inherits datasource/redis/mail from application.yml
-                    """;
+          # inherits datasource/redis/mail from application.yml
+          """;
       Files.writeString(SEEKER_SERVICE_YML, content, StandardCharsets.UTF_8);
     } catch (IOException e) {
       throw new IllegalStateException("Failed to create seeker service profile yml", e);
@@ -159,30 +162,33 @@ public class SeekerCodeGenerator {
             "SeekerController.java");
 
     try {
-      Files.createDirectories(controllerPath.getParent());
+      Path parent = controllerPath.getParent();
+      if (parent != null && Files.notExists(parent)) {
+        Files.createDirectories(parent);
+      }
 
       // TODO：需要修改controller文件内容
       String content =
           """
-                    package com.SmartHire.seekerService.controller;
+          package com.SmartHire.seekerService.controller;
 
-                    import org.springframework.web.bind.annotation.RequestMapping;
-                    import org.springframework.web.bind.annotation.RestController;
+          import org.springframework.web.bind.annotation.RequestMapping;
+          import org.springframework.web.bind.annotation.RestController;
 
-                    /**
-                     * <p>
-                     * 求职者服务统一控制器
-                     * </p>
-                     *
-                     * @author SmartHire Team
-                     * @since 2025-11-19
-                     */
-                    @RestController
-                    @RequestMapping("/seeker")
-                    public class SeekerController {
+          /**
+           * <p>
+           * 求职者服务统一控制器
+           * </p>
+           *
+           * @author SmartHire Team
+           * @since 2025-11-19
+           */
+          @RestController
+          @RequestMapping("/seeker")
+          public class SeekerController {
 
-                    }
-                    """;
+          }
+          """;
 
       Files.writeString(controllerPath, content, StandardCharsets.UTF_8);
       System.out.println("SeekerController generated at: " + controllerPath.toAbsolutePath());

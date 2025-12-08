@@ -8,7 +8,4 @@ import org.apache.ibatis.annotations.Mapper;
  * 公司信息 Mapper 接口
  */
 @Mapper
-public interface CompanyMapper extends BaseMapper<Company> {
-
-}
-
+public interface CompanyMapper extends BaseMapper<Company> {}

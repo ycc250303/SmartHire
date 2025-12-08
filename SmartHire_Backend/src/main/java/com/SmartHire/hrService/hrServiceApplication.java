@@ -9,7 +9,7 @@ import org.springframework.core.env.Environment;
  * HrService 启动类
  * 使用 application-hr-service.yml 配置文件
  */
-@SpringBootApplication(scanBasePackages = {"com.SmartHire.hrService", "com.SmartHire.shared"})
+@SpringBootApplication(scanBasePackages = {"com.SmartHire.hrService", "com.SmartHire.common"})
 @MapperScan({"com.SmartHire.hrService.mapper", "com.SmartHire.userAuthService.mapper"})
 public class hrServiceApplication {
 

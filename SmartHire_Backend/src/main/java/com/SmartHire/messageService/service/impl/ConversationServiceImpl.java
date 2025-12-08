@@ -1,11 +1,11 @@
 package com.SmartHire.messageService.service.impl;
 
+import com.SmartHire.common.exception.enums.ErrorCode;
+import com.SmartHire.common.exception.exception.BusinessException;
 import com.SmartHire.messageService.dto.ConversationDTO;
 import com.SmartHire.messageService.mapper.ConversationMapper;
 import com.SmartHire.messageService.model.Conversation;
 import com.SmartHire.messageService.service.ConversationService;
-import com.SmartHire.shared.exception.enums.ErrorCode;
-import com.SmartHire.shared.exception.exception.BusinessException;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;

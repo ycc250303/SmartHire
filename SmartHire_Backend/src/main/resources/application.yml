@@ -7,27 +7,6 @@ spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
 
-  # MyBatis-Plus 配置
-  mybatis-plus:
-    # Mapper XML 文件位置（支持多个路径）
-    mapper-locations: classpath*:com/SmartHire/userAuthService/mapper/xml/*.xml,classpath*:com/SmartHire/hrService/mapper/xml/*.xml,classpath*:mapper/**/*.xml
-    # 实体类包路径
-    type-aliases-package: com.SmartHire.userAuthService.entity,com.SmartHire.hrService.model
-    # 全局配置
-    global-config:
-      # 数据库配置
-      db-config:
-        # 主键类型
-        id-type: auto
-        # 表名下划线命名
-        table-underline: true
-    # MyBatis 原生配置
-    configuration:
-      # 开启驼峰命名转换
-      map-underscore-to-camel-case: true
-      # SQL 日志输出（开发环境）
-      log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
-
   jpa:
     hibernate:
       ddl-auto: update   # 自动建表（可选值：none, validate, update, create, create-drop）
@@ -35,6 +14,27 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
+
+# MyBatis-Plus 配置（注意：必须在根节点，不能放在 spring: 下面）
+mybatis-plus:
+  # Mapper XML 文件位置（支持多个路径）
+  mapper-locations: classpath*:com/SmartHire/userAuthService/mapper/xml/*.xml,classpath*:com/SmartHire/hrService/mapper/xml/*.xml,classpath*:com/SmartHire/seekerService/mapper/xml/*.xml,classpath*:com/SmartHire/messageService/mapper/xml/*.xml,classpath*:com/SmartHire/recruitmentService/mapper/xml/*.xml,classpath*:mapper/**/*.xml
+  # 实体类包路径
+  type-aliases-package: com.SmartHire.userAuthService.model,com.SmartHire.hrService.model,com.SmartHire.seekerService.model,com.SmartHire.messageService.model,com.SmartHire.recruitmentService.model
+  # 全局配置
+  global-config:
+    # 数据库配置
+    db-config:
+      # 主键类型
+      id-type: auto
+      # 表名下划线命名
+      table-underline: true
+  # MyBatis 原生配置
+  configuration:
+    # 开启驼峰命名转换
+    map-underscore-to-camel-case: true
+    # SQL 日志输出（开发环境）
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
 # 日志配置
 logging:

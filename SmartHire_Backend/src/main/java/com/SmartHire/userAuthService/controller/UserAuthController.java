@@ -1,6 +1,6 @@
 package com.SmartHire.userAuthService.controller;
 
-import com.SmartHire.shared.entity.Result;
+import com.SmartHire.common.entity.Result;
 import com.SmartHire.userAuthService.dto.*;
 import com.SmartHire.userAuthService.service.UserAuthService;
 import com.SmartHire.userAuthService.service.VerificationCodeService;

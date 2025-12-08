@@ -1,11 +1,11 @@
 package com.SmartHire.seekerService.service.impl.seekerTableImpl;
 
+import com.SmartHire.common.exception.enums.ErrorCode;
+import com.SmartHire.common.exception.exception.BusinessException;
 import com.SmartHire.seekerService.dto.seekerTableDto.SkillDTO;
 import com.SmartHire.seekerService.mapper.SkillMapper;
 import com.SmartHire.seekerService.model.Skill;
 import com.SmartHire.seekerService.service.seekerTableService.SkillService;
-import com.SmartHire.shared.exception.enums.ErrorCode;
-import com.SmartHire.shared.exception.exception.BusinessException;
 import jakarta.validation.Valid;
 import java.util.Date;
 import java.util.List;
@@ -48,7 +48,7 @@ public class SkillServiceImpl extends AbstractSeekerOwnedService<SkillMapper, Sk
   @Override
   public void updateSkill(Long id, SkillDTO request) {
     Long jobSeekerId = currentSeekerId();
-    Skill existingSkill = getOwnedSkill(id, jobSeekerId);
+    Skill existingSkill = getOwnedSkill(id);
 
     boolean hasUpdate = false;
     if (StringUtils.hasText(request.getSkillName())) {
@@ -80,12 +80,11 @@ public class SkillServiceImpl extends AbstractSeekerOwnedService<SkillMapper, Sk
 
   @Override
   public void deleteSkill(Long id) {
-    Long jobSeekerId = currentSeekerId();
-    getOwnedSkill(id, jobSeekerId);
+    getOwnedSkill(id);
     skillMapper.deleteById(id);
   }
 
-  private Skill getOwnedSkill(Long id, Long jobSeekerId) {
+  private Skill getOwnedSkill(Long id) {
     return requireOwnedEntity(
         id,
         skillMapper::selectById,
