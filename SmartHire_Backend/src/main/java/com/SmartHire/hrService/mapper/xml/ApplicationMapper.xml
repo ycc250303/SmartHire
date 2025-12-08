@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.SmartHire.hrService.mapper.ApplicationMapper">
+<mapper namespace="com.SmartHire.hrService.mapper.HrApplicationMapper">
 
     <!-- 投递列表查询 -->
-    <select id="selectApplicationList" resultType="com.SmartHire.hrService.dto.ApplicationListDTO">
+    <select id="selectApplicationList" resultType="com.SmartHire.recruitmentService.dto.ApplicationListDTO">
         SELECT
             a.id,
             a.job_id,
@@ -36,7 +36,7 @@
     </select>
 
     <!-- 岗位下所有投递（用于匹配计算） -->
-    <select id="selectApplicationsByJob" resultType="com.SmartHire.hrService.dto.ApplicationListDTO">
+    <select id="selectApplicationsByJob" resultType="com.SmartHire.recruitmentService.dto.ApplicationListDTO">
         SELECT
             a.id,
             a.job_id,
@@ -58,7 +58,7 @@
     </select>
 
     <!-- 投递详情 -->
-    <select id="selectApplicationDetail" resultType="com.SmartHire.hrService.dto.ApplicationListDTO">
+    <select id="selectApplicationDetail" resultType="com.SmartHire.recruitmentService.dto.ApplicationListDTO">
         SELECT
             a.id,
             a.job_id,

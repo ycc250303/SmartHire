@@ -1,7 +1,7 @@
 package com.SmartHire.hrService.mapper;
 
-import com.SmartHire.hrService.dto.ApplicationListDTO;
-import com.SmartHire.hrService.model.Application;
+import com.SmartHire.recruitmentService.dto.ApplicationListDTO;
+import com.SmartHire.recruitmentService.model.Application;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.apache.ibatis.annotations.Mapper;
@@ -13,7 +13,7 @@ import java.util.List;
  * 简历 Mapper 接口
  */
 @Mapper
-public interface ApplicationMapper extends BaseMapper<Application> {
+public interface HrApplicationMapper extends BaseMapper<Application> {
 
     /**
      * 分页查询投递列表

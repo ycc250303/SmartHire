@@ -1,14 +1,15 @@
 package com.SmartHire.hrService.service.impl;
 
-import com.SmartHire.hrService.dto.ApplicationListDTO;
-import com.SmartHire.hrService.dto.ApplicationQueryDTO;
-import com.SmartHire.hrService.mapper.ApplicationMapper;
+import com.SmartHire.recruitmentService.dto.ApplicationListDTO;
+import com.SmartHire.recruitmentService.dto.ApplicationQueryDTO;
+import com.SmartHire.recruitmentService.dto.SubmitResumeDTO;
+import com.SmartHire.recruitmentService.service.ApplicationService;
+import com.SmartHire.hrService.mapper.HrApplicationMapper;
 import com.SmartHire.hrService.mapper.HrInfoMapper;
-import com.SmartHire.hrService.mapper.JobPositionMapper;
-import com.SmartHire.hrService.model.Application;
+import com.SmartHire.hrService.mapper.JobInfoMapper;
+import com.SmartHire.recruitmentService.model.Application;
 import com.SmartHire.hrService.model.HrInfo;
-import com.SmartHire.hrService.model.JobPosition;
-import com.SmartHire.hrService.service.ApplicationService;
+import com.SmartHire.hrService.model.JobInfo;
 import com.SmartHire.common.api.UserAuthApi;
 import com.SmartHire.common.auth.UserContext;
 import com.SmartHire.common.exception.enums.ErrorCode;
@@ -27,7 +28,7 @@ import java.util.Date;
  * 简历服务实现类
  */
 @Service("hrApplicationServiceImpl")
-public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Application> implements ApplicationService {
+public class ApplicationServiceImpl extends ServiceImpl<HrApplicationMapper, Application> implements ApplicationService {
 
     @Autowired
     private UserAuthApi userAuthApi;
@@ -39,7 +40,7 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
     private HrInfoMapper hrInfoMapper;
 
     @Autowired
-    private JobPositionMapper jobPositionMapper;
+    private JobInfoMapper jobInfoMapper;
 
     /**
      * 获取当前登录HR的ID（hr_info表的id）
@@ -72,16 +73,23 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
             throw new BusinessException(ErrorCode.APPLICATION_NOT_EXIST);
         }
 
-        JobPosition jobPosition = jobPositionMapper.selectById(application.getJobId());
-        if (jobPosition == null) {
+        JobInfo jobInfo = jobInfoMapper.selectById(application.getJobId());
+        if (jobInfo == null) {
             throw new BusinessException(ErrorCode.JOB_NOT_EXIST);
         }
 
-        if (!jobPosition.getHrId().equals(hrId)) {
+        if (!jobInfo.getHrId().equals(hrId)) {
             throw new BusinessException(ErrorCode.APPLICATION_NOT_BELONG_TO_HR);
         }
 
         return application;
+    }
+
+    @Override
+    @Transactional
+    public void submitResume(SubmitResumeDTO request) {
+        // HR服务中不支持投递简历功能，此方法应由求职者端调用
+        throw new BusinessException(ErrorCode.SYSTEM_ERROR, "HR服务不支持投递简历功能，请使用求职者端接口");
     }
 
     @Override
@@ -92,8 +100,11 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
 
         Page<ApplicationListDTO> page = new Page<>(pageNum, pageSize);
         String keyword = StringUtils.hasText(queryDTO.getKeyword()) ? queryDTO.getKeyword().trim() : null;
+        
+        // 将 Byte 转换为 Integer（因为 ApplicationMapper.selectApplicationList 方法期望 Integer 类型）
+        Integer status = queryDTO.getStatus() != null ? queryDTO.getStatus().intValue() : null;
 
-        return baseMapper.selectApplicationList(page, hrId, queryDTO.getJobId(), queryDTO.getStatus(), keyword);
+        return baseMapper.selectApplicationList(page, hrId, queryDTO.getJobId(), status, keyword);
     }
 
     @Override
@@ -108,7 +119,7 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
 
     @Override
     @Transactional
-    public void updateApplicationStatus(Long applicationId, Integer status) {
+    public void updateApplicationStatus(Long applicationId, Byte status) {
         if (status == null || status < 0 || status > 6) {
             throw new BusinessException(ErrorCode.VALIDATION_ERROR);
         }
@@ -117,13 +128,13 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
         Application application = validateApplicationOwnership(applicationId, hrId);
 
         Date now = new Date();
+        // Application 模型的 status 是 Byte 类型，直接使用
         application.setStatus(status);
         application.setUpdatedAt(now);
 
         updateById(application);
     }
 
-    @Override
     @Transactional
     public void updateApplicationComment(Long applicationId, String comment) {
         // 注意：由于数据库中没有hr_comment字段，此功能暂时不可用

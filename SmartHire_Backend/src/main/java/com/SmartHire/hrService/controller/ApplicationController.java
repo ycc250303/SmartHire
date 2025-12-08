@@ -1,10 +1,10 @@
 package com.SmartHire.hrService.controller;
 
-import com.SmartHire.hrService.dto.ApplicationCommentUpdateDTO;
-import com.SmartHire.hrService.dto.ApplicationListDTO;
-import com.SmartHire.hrService.dto.ApplicationQueryDTO;
-import com.SmartHire.hrService.dto.ApplicationStatusUpdateDTO;
-import com.SmartHire.hrService.service.ApplicationService;
+import com.SmartHire.recruitmentService.dto.ApplicationCommentUpdateDTO;
+import com.SmartHire.recruitmentService.dto.ApplicationListDTO;
+import com.SmartHire.recruitmentService.dto.ApplicationQueryDTO;
+import com.SmartHire.recruitmentService.dto.ApplicationStatusUpdateDTO;
+import com.SmartHire.recruitmentService.service.ApplicationService;
 import com.SmartHire.common.entity.Result;
 import com.SmartHire.common.exception.enums.ErrorCode;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
