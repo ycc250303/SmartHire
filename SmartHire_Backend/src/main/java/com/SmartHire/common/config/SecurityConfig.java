@@ -1,6 +1,6 @@
 package com.SmartHire.common.config;
 
-import com.SmartHire.common.filters.JwtAuthenticationFilter;
+import com.SmartHire.common.security.JwtAuthenticationFilter;
 import com.SmartHire.common.security.RestAuthenticationEntryPoint;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

@@ -12,6 +12,7 @@ import java.io.InputStream;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -61,12 +62,31 @@ public class ResumeServiceImpl extends AbstractSeekerOwnedService<ResumeMapper, 
   }
 
   @Override
-  public List<Resume> getResumes() {
+  public List<ResumeDTO> getResumes() {
     Long jobSeekerId = currentSeekerId();
     return lambdaQuery()
         .eq(Resume::getJobSeekerId, jobSeekerId)
         .orderByDesc(Resume::getUpdatedAt)
-        .list();
+        .list()
+        .stream()
+        .map(this::toDto)
+        .collect(Collectors.toList());
+  }
+
+  /**
+   * 将Resume转换为ResumeDTO
+   *
+   * @param resume 简历
+   * @return ResumeDTO
+   */
+  private ResumeDTO toDto(Resume resume) {
+    ResumeDTO dto = new ResumeDTO();
+    dto.setId(resume.getId());
+    dto.setResumeName(resume.getResumeName());
+    dto.setPrivacyLevel(resume.getPrivacyLevel());
+    dto.setFileUrl(resume.getFileUrl());
+    dto.setCompleteness(resume.getCompleteness());
+    return dto;
   }
 
   @Override

@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -114,10 +115,10 @@ public class EducationExperienceServiceImpl
   /**
    * 获取教育经历列表
    *
-   * @return List<EducationExperience>
+   * @return List<EducationExperienceDTO>
    */
   @Override
-  public List<EducationExperience> getEducationExperiences() {
+  public List<EducationExperienceDTO> getEducationExperiences() {
     // 获取当前用户的求职者ID
     Long jobSeekerId = currentSeekerId();
 
@@ -125,7 +126,40 @@ public class EducationExperienceServiceImpl
     return lambdaQuery()
         .eq(EducationExperience::getJobSeekerId, jobSeekerId)
         .orderByDesc(EducationExperience::getStartYear)
-        .list();
+        .list()
+        .stream()
+        .map(this::toDto)
+        .collect(Collectors.toList());
+  }
+
+  /**
+   * 将EducationExperience转换为EducationExperienceDTO
+   *
+   * @param experience 教育经历
+   * @return EducationExperienceDTO
+   */
+  private EducationExperienceDTO toDto(EducationExperience experience) {
+    EducationExperienceDTO dto = new EducationExperienceDTO();
+    dto.setId(experience.getId());
+    dto.setSchoolName(experience.getSchoolName());
+    dto.setMajor(experience.getMajor());
+    dto.setEducation(experience.getEducation());
+    dto.setStartYear(formatYear(experience.getStartYear()));
+    dto.setEndYear(formatYear(experience.getEndYear()));
+    return dto;
+  }
+
+  /**
+   * 格式化LocalDate为年份字符串
+   *
+   * @param date LocalDate
+   * @return 年份字符串（yyyy）
+   */
+  private String formatYear(LocalDate date) {
+    if (date == null) {
+      return null;
+    }
+    return String.valueOf(date.getYear());
   }
 
   /**
