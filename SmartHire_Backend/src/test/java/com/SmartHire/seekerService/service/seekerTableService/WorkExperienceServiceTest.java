@@ -175,4 +175,3 @@ class WorkExperienceServiceTest {
     assertNotNull(updated.getUpdatedAt(), "更新时间应该被设置");
   }
 }
-

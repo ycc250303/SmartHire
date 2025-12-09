@@ -72,8 +72,7 @@ class JobSeekerExpectationServiceTest {
 
   private void mockLambdaQueryCount(long count) {
     LambdaQueryChainWrapper<JobSeekerExpectation> queryWrapper =
-        new LambdaQueryChainWrapper<>(
-            jobSeekerExpectationMapper, JobSeekerExpectation.class);
+        new LambdaQueryChainWrapper<>(jobSeekerExpectationMapper, JobSeekerExpectation.class);
     doReturn(queryWrapper).when(jobSeekerExpectationService).lambdaQuery();
     when(jobSeekerExpectationMapper.selectCount(any())).thenReturn(count);
   }
@@ -97,10 +96,7 @@ class JobSeekerExpectationServiceTest {
         ErrorCode.JOB_SEEKER_EXPECTATION_LIMIT_EXCEEDED.getCode(),
         exception.getCode(),
         "异常错误码应该是 JOB_SEEKER_EXPECTATION_LIMIT_EXCEEDED(1119)");
-    assertEquals(
-        "求职期望数量已达上限（最多5个）",
-        exception.getMessage(),
-        "异常消息应该正确");
+    assertEquals("求职期望数量已达上限（最多5个）", exception.getMessage(), "异常消息应该正确");
     verify(jobSeekerExpectationMapper, never()).insert(any(JobSeekerExpectation.class));
   }
 
@@ -128,4 +124,3 @@ class JobSeekerExpectationServiceTest {
     assertNotNull(inserted.getCreatedAt(), "创建时间应该被设置");
   }
 }
-

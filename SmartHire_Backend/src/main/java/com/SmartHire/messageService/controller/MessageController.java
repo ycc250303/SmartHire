@@ -48,7 +48,7 @@ public class MessageController {
   }
 
   /** 获取聊天记录 */
-  @GetMapping("/get-char-history")
+  @GetMapping("/get-chat-history")
   public Result<List<MessageDTO>> getChatHistory(
       @RequestParam Long conversationId,
       @RequestParam(defaultValue = "1") Integer page,
@@ -68,7 +68,7 @@ public class MessageController {
   }
 
   /** 获取未读消息总数 */
-  @GetMapping("/unread-count")
+  @GetMapping("/get-unread-count")
   public Result<Integer> getUnreadCount() {
     Long userId = userContext.getCurrentUserId();
     Integer count = chatMessageService.getUnreadCount(userId);
@@ -76,7 +76,7 @@ public class MessageController {
   }
 
   /** 置顶/取消置顶会话 */
-  @PatchMapping("/conversation/{id}/pin")
+  @PatchMapping("/pin-conversation/{id}")
   public Result<?> pinConversation(@PathVariable Long id, @RequestParam Boolean pinned) {
     Long userId = userContext.getCurrentUserId();
     conversationService.pinConversation(id, userId, pinned);
@@ -84,7 +84,7 @@ public class MessageController {
   }
 
   /** 删除会话 */
-  @DeleteMapping("/conversation/{id}")
+  @DeleteMapping("/delete-conversation/{id}")
   public Result<?> deleteConversation(@PathVariable Long id) {
     Long userId = userContext.getCurrentUserId();
     conversationService.deleteConversation(id, userId);
