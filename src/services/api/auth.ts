@@ -47,52 +47,137 @@ export interface RefreshTokenResponse {
   expiresIn: number;
 }
 
-/**
- * Send verification code to email
- */
+const AUTH_SERVER_BASE_URL = 'http://111.229.81.45/smarthire';
+const DEFAULT_TIMEOUT = 15000;
+const SUCCESS_CODE = 0;
+
+interface ApiResponse<T = unknown> {
+  code: number;
+  data: T;
+  message: string;
+}
+
 export function sendVerificationCode(params: SendVerificationCodeParams): Promise<null> {
   const queryString = `email=${encodeURIComponent(params.email)}`;
-  return http<null>({
-    url: `/api/user-auth/send-verification-code?${queryString}`,
-    method: 'POST',
-    skipAuth: true,
+  const url = `${AUTH_SERVER_BASE_URL}/api/user-auth/send-verification-code?${queryString}`;
+  
+  return new Promise((resolve, reject) => {
+    uni.request({
+      url,
+      method: 'POST',
+      header: {
+        'Content-Type': 'application/json',
+      },
+      timeout: DEFAULT_TIMEOUT,
+      success({ statusCode, data }) {
+        if (statusCode >= 200 && statusCode < 300) {
+          const response = data as ApiResponse<null>;
+          if (response.code === SUCCESS_CODE || statusCode === 200) {
+            resolve(response.data);
+          } else {
+            reject(new Error(response.message || 'Request failed'));
+          }
+        } else {
+          reject(new Error(`Request failed with status ${statusCode}`));
+        }
+      },
+      fail(error) {
+        reject(new Error(error.errMsg || 'Network error'));
+      },
+    });
   });
 }
 
-/**
- * Verify email verification code
- */
 export function verifyCode(params: VerifyCodeParams): Promise<null> {
   const queryString = `email=${encodeURIComponent(params.email)}&code=${encodeURIComponent(params.code)}`;
-  return http<null>({
-    url: `/api/user-auth/verify-code?${queryString}`,
-    method: 'POST',
-    skipAuth: true,
+  const url = `${AUTH_SERVER_BASE_URL}/api/user-auth/verify-code?${queryString}`;
+  
+  return new Promise((resolve, reject) => {
+    uni.request({
+      url,
+      method: 'POST',
+      header: {
+        'Content-Type': 'application/json',
+      },
+      timeout: DEFAULT_TIMEOUT,
+      success({ statusCode, data }) {
+        if (statusCode >= 200 && statusCode < 300) {
+          const response = data as ApiResponse<null>;
+          if (response.code === SUCCESS_CODE || statusCode === 200) {
+            resolve(response.data);
+          } else {
+            reject(new Error(response.message || 'Request failed'));
+          }
+        } else {
+          reject(new Error(`Request failed with status ${statusCode}`));
+        }
+      },
+      fail(error) {
+        reject(new Error(error.errMsg || 'Network error'));
+      },
+    });
   });
 }
 
-/**
- * User registration
- */
 export function register(params: RegisterParams): Promise<null> {
-  return http<null>({
-    url: '/api/user-auth/register',
-    method: 'POST',
-    data: params,
-    skipAuth: true,
+  const url = `${AUTH_SERVER_BASE_URL}/api/user-auth/register`;
+  
+  return new Promise((resolve, reject) => {
+    uni.request({
+      url,
+      method: 'POST',
+      data: params,
+      header: {
+        'Content-Type': 'application/json',
+      },
+      timeout: DEFAULT_TIMEOUT,
+      success({ statusCode, data }) {
+        if (statusCode >= 200 && statusCode < 300) {
+          const response = data as ApiResponse<null>;
+          if (response.code === SUCCESS_CODE || statusCode === 200) {
+            resolve(response.data);
+          } else {
+            reject(new Error(response.message || 'Request failed'));
+          }
+        } else {
+          reject(new Error(`Request failed with status ${statusCode}`));
+        }
+      },
+      fail(error) {
+        reject(new Error(error.errMsg || 'Network error'));
+      },
+    });
   });
 }
 
-/**
- * User login
- * @returns Login response with accessToken, refreshToken and expiresIn
- */
 export function login(params: LoginParams): Promise<LoginResponse> {
-  return http<LoginResponse>({
-    url: '/api/user-auth/login',
-    method: 'POST',
-    data: params,
-    skipAuth: true,
+  const url = `${AUTH_SERVER_BASE_URL}/api/user-auth/login`;
+  
+  return new Promise((resolve, reject) => {
+    uni.request({
+      url,
+      method: 'POST',
+      data: params,
+      header: {
+        'Content-Type': 'application/json',
+      },
+      timeout: DEFAULT_TIMEOUT,
+      success({ statusCode, data }) {
+        if (statusCode >= 200 && statusCode < 300) {
+          const response = data as ApiResponse<LoginResponse>;
+          if (response.code === SUCCESS_CODE || statusCode === 200) {
+            resolve(response.data);
+          } else {
+            reject(new Error(response.message || 'Request failed'));
+          }
+        } else {
+          reject(new Error(`Request failed with status ${statusCode}`));
+        }
+      },
+      fail(error) {
+        reject(new Error(error.errMsg || 'Network error'));
+      },
+    });
   });
 }
 
