@@ -73,4 +73,18 @@ public class AdminServiceException extends BaseException {
     public static AdminServiceException operationFailed(String operation) {
         return new AdminServiceException(com.SmartHire.common.exception.enums.ErrorCode.ADMIN_OPERATION_FAILED, operation + "失败");
     }
+
+    /**
+     * 职位不存在异常
+     */
+    public static AdminServiceException jobNotFound(Long jobId) {
+        return new AdminServiceException(com.SmartHire.common.exception.enums.ErrorCode.JOB_NOT_EXIST, "职位不存在，ID: " + jobId);
+    }
+
+    /**
+     * 职位状态异常
+     */
+    public static AdminServiceException invalidJobStatus(String status) {
+        return new AdminServiceException(com.SmartHire.common.exception.enums.ErrorCode.ADMIN_OPERATION_FAILED, "无效的职位状态: " + status);
+    }
 }

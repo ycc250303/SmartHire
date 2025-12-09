@@ -57,17 +57,7 @@ const routes: RouteRecordRaw[] = [
           requiresAuth: true
         }
       },
-      {
-        path: 'review/:id',
-        name: 'ReviewDetail',
-        component: () => import('@/views/admin/review/Detail.vue'),
-        meta: {
-          title: '审核详情',
-          requiresAuth: true,
-          hideInMenu: true
-        }
-      },
-      {
+        {
         path: 'users',
         name: 'Users',
         component: () => import('@/views/admin/users/Index.vue'),
@@ -75,16 +65,6 @@ const routes: RouteRecordRaw[] = [
           title: '用户管理',
           icon: 'users',
           requiresAuth: true
-        }
-      },
-      {
-        path: 'users/:id',
-        name: 'UserDetail',
-        component: () => import('@/views/admin/users/Detail.vue'),
-        meta: {
-          title: '用户详情',
-          requiresAuth: true,
-          hideInMenu: true
         }
       },
       {

@@ -1,0 +1,37 @@
+package com.SmartHire.adminService.mapper;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.SmartHire.adminService.dto.JobAuditListDTO;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
+/**
+ * 职位审核记录Mapper接口
+ *
+ * @author SmartHire Team
+ * @since 2025-12-09
+ */
+@Mapper
+public interface JobAuditMapper extends BaseMapper<com.SmartHire.adminService.model.JobAuditRecord> {
+
+    /**
+     * 分页查询审核列表（支持前端所有功能）
+     *
+     * @param page 分页对象
+     * @param status 审核状态
+     * @param keyword 搜索关键词
+     * @return 分页结果
+     */
+    Page<JobAuditListDTO> selectAuditList(Page<JobAuditListDTO> page,
+                                        @Param("status") String status,
+                                        @Param("keyword") String keyword);
+
+    /**
+     * 根据状态统计数量
+     *
+     * @param status 审核状态
+     * @return 数量
+     */
+    Integer countByStatus(@Param("status") String status);
+}

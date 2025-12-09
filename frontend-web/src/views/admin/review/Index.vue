@@ -343,7 +343,7 @@
               <NFormItem
                 label="审核意见"
                 :rule="[
-                  { required: true, message: '请输入审核意见', trigger: ['blur', 'input'] }
+                  { required: true, message: '请输入审核意见', trigger: ['blur'] }
                 ]"
               >
                 <NInput
@@ -380,7 +380,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import {
   NCard,
   NTabs,
@@ -396,21 +396,16 @@ import {
   useDialog
 } from 'naive-ui'
 import dayjs from 'dayjs'
-
-interface Job {
-  id: string
-  title: string
-  company: string
-  location: string
-  salary: string
-  experience: string
-  education: string
-  description?: string
-  status: 'pending' | 'approved' | 'rejected' | 'modified'
-  publisher: string
-  createTime: string
-  tags?: string[]
-}
+import {
+  getJobAuditList,
+  approveJob,
+  rejectJob,
+  modifyJob,
+  getJobAuditStats,
+  type Job,
+  type JobAuditQueryParams,
+  type JobAuditParams
+} from '@/api/job'
 
 interface StatusTab {
   value: string
@@ -471,64 +466,17 @@ const statusTabs: StatusTab[] = [
 ]
 
 // 状态数据
-const jobsData = ref<Job[]>([
-  {
-    id: '1',
-    title: '高级前端开发工程师',
-    company: '北京字节跳动科技有限公司',
-    location: '北京市朝阳区',
-    salary: '25k-35k·13薪',
-    experience: '3-5年',
-    education: '本科及以上',
-    description: '负责公司核心产品的前端开发工作，需要熟练掌握Vue.js、React等主流前端框架，有大型项目经验者优先。',
-    status: 'pending',
-    publisher: '张三',
-    createTime: '2024-01-15 10:30:00',
-    tags: ['Vue.js', 'React', 'TypeScript', 'Node.js']
-  },
-  {
-    id: '2',
-    title: 'Java后端开发工程师',
-    company: '阿里巴巴集团控股有限公司',
-    location: '杭州市余杭区',
-    salary: '30k-50k·16薪',
-    experience: '5-8年',
-    education: '本科及以上',
-    description: '参与电商平台的架构设计和开发，熟悉微服务架构，有高并发处理经验。',
-    status: 'pending',
-    publisher: '李四',
-    createTime: '2024-01-15 09:45:00',
-    tags: ['Java', 'Spring Boot', '微服务', 'MySQL']
-  },
-  {
-    id: '3',
-    title: '产品经理',
-    company: '腾讯计算机系统有限公司',
-    location: '深圳市南山区',
-    salary: '25k-40k·15薪',
-    experience: '3-5年',
-    education: '本科及以上',
-    description: '负责互联网产品的规划和设计，有B端或C端产品设计经验，能够独立完成产品方案设计。',
-    status: 'approved',
-    publisher: '王五',
-    createTime: '2024-01-14 16:20:00',
-    tags: ['产品设计', '数据分析', '用户调研']
-  },
-  {
-    id: '4',
-    title: 'UI设计师',
-    company: '网易（杭州）网络有限公司',
-    location: '杭州市滨江区',
-    salary: '15k-25k·14薪',
-    experience: '2-4年',
-    education: '本科及以上',
-    description: '负责移动端和Web端的界面设计，熟悉设计工具，有完整的设计作品集。',
-    status: 'rejected',
-    publisher: '赵六',
-    createTime: '2024-01-13 14:15:00',
-    tags: ['Figma', 'Sketch', 'Adobe XD', 'Photoshop']
-  }
-])
+const jobsData = ref<Job[]>([])
+
+// 分页参数
+const pagination = ref({
+  current: 1,
+  size: 20,
+  total: 0
+})
+
+// 加载状态
+const loading = ref(false)
 
 // 搜索和筛选
 const searchKeyword = ref('')
@@ -606,10 +554,32 @@ const handleSearch = (value: string) => {
   searchKeyword.value = value
 }
 
+// 获取职位审核列表
+const fetchJobs = async () => {
+  loading.value = true
+  try {
+    const params: JobAuditQueryParams = {
+      current: pagination.value.current,
+      size: pagination.value.size,
+      status: activeTab.value,
+      keyword: searchKeyword.value.trim() || undefined
+    }
+
+    const response = await getJobAuditList(params)
+    jobsData.value = response.records
+    pagination.value.total = response.total
+  } catch (error) {
+    message.error('获取职位列表失败')
+    console.error('获取职位列表失败:', error)
+  } finally {
+    loading.value = false
+  }
+}
+
 // 刷新数据
 const handleRefresh = () => {
-  message.success('数据已刷新')
-  // 这里可以调用API刷新数据
+  pagination.value.current = 1
+  fetchJobs()
 }
 
 // 查看职位详情
@@ -648,34 +618,25 @@ const confirmAction = async () => {
   actionLoading.value = true
 
   try {
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 1500))
-
-    const actionTexts = {
-      approve: '通过',
-      reject: '拒绝',
-      modify: '要求修改'
+    const params: JobAuditParams = {
+      reason: actionForm.value.reason
     }
 
-    // 更新职位状态
     if (actionType.value === 'approve') {
-      currentJob.value.status = 'approved'
+      await approveJob(currentJob.value.id)
       message.success('职位审核通过')
     } else if (actionType.value === 'reject') {
-      currentJob.value.status = 'rejected'
+      await rejectJob(currentJob.value.id, params)
       message.warning(`职位已拒绝，原因：${actionForm.value.reason}`)
     } else if (actionType.value === 'modify') {
-      currentJob.value.status = 'modified'
+      await modifyJob(currentJob.value.id, params)
       message.info(`已要求修改职位，建议：${actionForm.value.reason}`)
     }
 
-    // 更新状态统计
-    const tab = statusTabs.find(t => t.value === currentJob.value.status)
-    if (tab) {
-      tab.count = jobsData.value.filter(job => job.status === tab.value).length
-    }
-
     showActionModal.value = false
+    // 重新获取数据以更新列表和统计
+    fetchJobs()
+    updateStatusStats()
   } catch (error) {
     console.error('审核操作失败:', error)
     message.error('操作失败，请重试')
@@ -684,9 +645,35 @@ const confirmAction = async () => {
   }
 }
 
+// 更新状态统计数据
+const updateStatusStats = async () => {
+  try {
+    const stats = await getJobAuditStats()
+
+    statusTabs.forEach(tab => {
+      tab.count = stats[tab.value as keyof typeof stats] || 0
+    })
+  } catch (error) {
+    console.error('获取统计数据失败:', error)
+  }
+}
+
 // 页面初始化
 onMounted(() => {
-  // 这里可以调用API获取真实数据
+  fetchJobs()
+  updateStatusStats()
+})
+
+// 监听标签页切换
+watch(activeTab, () => {
+  pagination.value.current = 1
+  fetchJobs()
+})
+
+// 监听搜索
+watch(searchKeyword, () => {
+  pagination.value.current = 1
+  fetchJobs()
 })
 </script>
 
