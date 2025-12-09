@@ -3,11 +3,11 @@ import { useUserStore } from '@/store/user'
 
 // 用户类型定义
 export interface User {
-  id: number
+  userId: number  // 后端返回的是userId
   username: string
   email?: string
   phone?: string
-  userType: number // 1-求职者 2-HR 3-管理员
+  userType: 'jobseeker' | 'hr' | 'admin' | 'unknown'  // 后端返回的是字符串格式
   status: number // 0-禁用 1-正常
   avatarUrl?: string
   createTime?: string
@@ -16,13 +16,13 @@ export interface User {
 
 // 用户封禁请求参数
 export interface BanUserParams {
-  userId: number
-  banType: string // 'permanent' | 'temporary'
-  banDays?: number
   banReason: string
-  operatorId: number
-  operatorUsername: string
-  sendNotification?: boolean
+  banDurationType: 'permanent' | 'temporary'
+  banDays?: number
+  sendEmailNotification?: boolean
+  sendSystemNotification?: boolean
+  adminId: number
+  adminUsername: string
 }
 
 // 用户状态更新参数
@@ -37,10 +37,10 @@ export interface UpdateUserStatusParams {
 
 // 用户查询参数
 export interface UserQueryParams {
-  page: number
+  current: number  // 后端期望的参数名是current
   size: number
   keyword?: string
-  userType?: number
+  userType?: string
   status?: string // 'active' | 'banned'
   startTime?: string
   endTime?: string
@@ -77,22 +77,25 @@ export const getUserDetail = (userId: number): Promise<User> => {
 }
 
 // 封禁用户
-export const banUser = (userId: number, params: Omit<BanUserParams, 'userId' | 'operatorId' | 'operatorUsername'>): Promise<void> => {
+export const banUser = (userId: number, params: Omit<BanUserParams, 'adminId' | 'adminUsername' | 'userId'>): Promise<void> => {
   const userStore = useUserStore()
   return adminRequest.post(`/admin/users/${userId}/ban`, {
     ...params,
-    operatorId: userStore.auth.user?.id,
-    operatorUsername: userStore.auth.user?.username
+    userId,  // 确保请求体中包含userId字段
+    adminId: userStore.auth.user?.id,
+    adminUsername: userStore.auth.user?.username
   })
 }
 
 // 解封用户
-export const unbanUser = (userId: number, params: { reason: string; sendNotification?: boolean }): Promise<void> => {
+export const unbanUser = (userId: number, params: { liftReason: string; sendNotification?: boolean }): Promise<void> => {
   const userStore = useUserStore()
-  return adminRequest.post(`/admin/users/${userId}/unban`, {
-    ...params,
-    adminId: userStore.auth.user?.id,
-    adminUsername: userStore.auth.user?.username
+  return adminRequest.post(`/admin/users/${userId}/unban`, null, {
+    params: {
+      operatorId: userStore.auth.user?.id,
+      operatorName: userStore.auth.user?.username,
+      liftReason: params.liftReason
+    }
   })
 }
 

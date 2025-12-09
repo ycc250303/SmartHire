@@ -137,6 +137,9 @@ public class AdminController {
             @RequestParam String operatorName,
             @RequestParam String liftReason) {
 
+        log.info("解封请求参数: userId={}, operatorId={}, operatorName={}, liftReason={}",
+                 userId, operatorId, operatorName, liftReason);
+
         boolean result = banRecordService.liftUserBan(userId, operatorId, operatorName, liftReason);
 
         if (result) {

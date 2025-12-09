@@ -90,9 +90,8 @@
       <div class="user-list">
         <div
           v-for="user in paginatedUsers"
-          :key="user.id"
+          :key="user.userId"
           class="user-item"
-          @click="viewUserDetail(user)"
         >
           <div class="user-avatar">
             <div class="avatar-circle" :class="user.userType">
@@ -103,7 +102,7 @@
           <div class="user-info">
             <div class="user-basic">
               <div class="user-name">
-                <h3>{{ user.name }}</h3>
+                <h3>{{ user.username }}</h3>
                 <NTag :type="getStatusType(user.status)" size="small">
                   {{ getStatusText(user.status) }}
                 </NTag>
@@ -112,8 +111,8 @@
                 </NTag>
               </div>
               <div class="user-contact">
-                <span class="contact-item">📱 {{ user.phone }}</span>
-                <span class="contact-item">📧 {{ user.email }}</span>
+                <span class="contact-item">📱 {{ user.phone || '未提供' }}</span>
+                <span class="contact-item">📧 {{ user.email || '未提供' }}</span>
               </div>
             </div>
 
@@ -125,30 +124,15 @@
             <div class="user-stats">
               <div class="stat-item">
                 <span class="stat-label">注册时间</span>
-                <span class="stat-value">{{ formatTime(user.registerTime) }}</span>
+                <span class="stat-value">{{ formatTime(user.createTime) }}</span>
               </div>
               <div class="stat-item">
                 <span class="stat-label">最后登录</span>
                 <span class="stat-value">{{ formatTime(user.lastLoginTime) }}</span>
               </div>
-              <div class="stat-item">
-                <span class="stat-label">登录次数</span>
-                <span class="stat-value">{{ user.loginCount }}次</span>
-              </div>
             </div>
 
-            <div class="user-activity" v-if="user.activityStats">
-              <span class="activity-item">
-                发布职位: {{ user.activityStats.jobsPosted }}
-              </span>
-              <span class="activity-item">
-                投递简历: {{ user.activityStats.applicationsSent }}
-              </span>
-              <span class="activity-item" v-if="user.activityStats.viewsReceived">
-                简历浏览: {{ user.activityStats.viewsReceived }}
-              </span>
             </div>
-          </div>
 
           <div class="user-actions">
             <NButton
@@ -161,10 +145,10 @@
             </NButton>
             <NButton
               size="small"
-              :type="user.status === 'active' ? 'warning' : 'success'"
+              :type="user.status === 1 ? 'warning' : 'success'"
               @click.stop="toggleUserStatus(user)"
             >
-              {{ user.status === 'active' ? '禁用' : '启用' }}
+              {{ user.status === 1 ? '封禁' : '启用' }}
             </NButton>
             <NDropdown
               :options="moreActions"
@@ -222,106 +206,75 @@
         </template>
 
         <div v-if="selectedUser" class="user-detail">
-          <!-- 基本信息 -->
-          <div class="detail-section">
-            <h4 class="section-title">基本信息</h4>
-            <div class="detail-grid">
-              <div class="detail-item">
-                <label>用户姓名</label>
-                <span>{{ selectedUser.name }}</span>
+          <!-- 用户头像和基本信息 -->
+          <div class="detail-header">
+            <div class="detail-avatar">
+              <div class="avatar-circle large" :class="selectedUser.userType">
+                {{ getUserIcon(selectedUser.userType) }}
               </div>
-              <div class="detail-item">
-                <label>用户类型</label>
-                <NTag :type="getUserTypeType(selectedUser.userType)" size="small">
+            </div>
+            <div class="detail-basic-info">
+              <h3 class="detail-username">{{ selectedUser.username }}</h3>
+              <div class="detail-tags">
+                <NTag :type="getUserTypeType(selectedUser.userType)" size="medium">
                   {{ getUserTypeText(selectedUser.userType) }}
                 </NTag>
-              </div>
-              <div class="detail-item">
-                <label>用户状态</label>
-                <NTag :type="getStatusType(selectedUser.status)" size="small">
+                <NTag :type="getStatusType(selectedUser.status)" size="medium">
                   {{ getStatusText(selectedUser.status) }}
                 </NTag>
               </div>
-              <div class="detail-item">
-                <label>手机号码</label>
-                <span>{{ selectedUser.phone }}</span>
-              </div>
-              <div class="detail-item">
-                <label>邮箱地址</label>
-                <span>{{ selectedUser.email }}</span>
-              </div>
-              <div class="detail-item">
-                <label>注册时间</label>
-                <span>{{ formatTime(selectedUser.registerTime) }}</span>
-              </div>
             </div>
           </div>
 
-          <!-- 公司信息 -->
-          <div class="detail-section" v-if="selectedUser.company">
-            <h4 class="section-title">公司信息</h4>
-            <div class="detail-grid">
-              <div class="detail-item">
-                <label>公司名称</label>
-                <span>{{ selectedUser.company }}</span>
+          <!-- 详细信息网格 -->
+          <div class="detail-info-grid">
+            <div class="info-card">
+              <div class="info-card-header">
+                <span class="info-icon"></span>
+                <h4>联系方式</h4>
               </div>
-              <div class="detail-item" v-if="selectedUser.position">
-                <label>职位</label>
-                <span>{{ selectedUser.position }}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- 账户统计 -->
-          <div class="detail-section">
-            <h4 class="section-title">账户统计</h4>
-            <div class="stats-grid">
-              <div class="stat-card">
-                <div class="stat-icon">🔐</div>
-                <div class="stat-content">
-                  <div class="stat-value">{{ selectedUser.loginCount }}</div>
-                  <div class="stat-label">登录次数</div>
+              <div class="info-content">
+                <div class="info-item">
+                  <label>手机号码</label>
+                  <span>{{ selectedUser.phone || '未提供' }}</span>
                 </div>
-              </div>
-              <div class="stat-card">
-                <div class="stat-icon">⏰</div>
-                <div class="stat-content">
-                  <div class="stat-value">{{ formatTime(selectedUser.lastLoginTime) }}</div>
-                  <div class="stat-label">最后登录</div>
-                </div>
-              </div>
-              <div class="stat-card" v-if="selectedUser.activityStats">
-                <div class="stat-icon">💼</div>
-                <div class="stat-content">
-                  <div class="stat-value">{{ selectedUser.activityStats.jobsPosted || 0 }}</div>
-                  <div class="stat-label">发布职位</div>
-                </div>
-              </div>
-              <div class="stat-card" v-if="selectedUser.activityStats">
-                <div class="stat-icon">📄</div>
-                <div class="stat-content">
-                  <div class="stat-value">{{ selectedUser.activityStats.applicationsSent || 0 }}</div>
-                  <div class="stat-label">投递简历</div>
+                <div class="info-item">
+                  <label>邮箱地址</label>
+                  <span>{{ selectedUser.email || '未提供' }}</span>
                 </div>
               </div>
             </div>
-          </div>
 
-          <!-- 操作记录 -->
-          <div class="detail-section">
-            <h4 class="section-title">最近操作</h4>
-            <div class="activity-list">
-              <div
-                v-for="activity in selectedUser.recentActivities"
-                :key="activity.id"
-                class="activity-item"
-              >
-                <div class="activity-type" :class="activity.type">
-                  {{ getActivityIcon(activity.type) }}
+            <div class="info-card">
+              <div class="info-card-header">
+                <span class="info-icon"></span>
+                <h4>时间信息</h4>
+              </div>
+              <div class="info-content">
+                <div class="info-item">
+                  <label>注册时间</label>
+                  <span>{{ formatTime(selectedUser.createTime) }}</span>
                 </div>
-                <div class="activity-content">
-                  <div class="activity-title">{{ activity.title }}</div>
-                  <div class="activity-time">{{ formatTime(activity.time) }}</div>
+                <div class="info-item">
+                  <label>最后登录</label>
+                  <span>{{ formatTime(selectedUser.lastLoginTime) }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="info-card" v-if="selectedUser.company">
+              <div class="info-card-header">
+                <span class="info-icon">🏢</span>
+                <h4>公司信息</h4>
+              </div>
+              <div class="info-content">
+                <div class="info-item">
+                  <label>公司名称</label>
+                  <span>{{ selectedUser.company }}</span>
+                </div>
+                <div class="info-item" v-if="selectedUser.position">
+                  <label>职位</label>
+                  <span>{{ selectedUser.position }}</span>
                 </div>
               </div>
             </div>
@@ -332,10 +285,10 @@
           <div class="modal-actions">
             <NButton @click="showDetailModal = false">关闭</NButton>
             <NButton
-              :type="selectedUser?.status === 'active' ? 'warning' : 'success'"
+              :type="selectedUser?.status === 1 ? 'warning' : 'success'"
               @click="toggleUserStatus(selectedUser!)"
             >
-              {{ selectedUser?.status === 'active' ? '禁用用户' : '启用用户' }}
+              {{ selectedUser?.status === 1 ? '封禁用户' : '启用用户' }}
             </NButton>
             <NButton type="primary" @click="sendNotification(selectedUser!)">
               发送通知
@@ -398,6 +351,9 @@
                 :max="365"
                 style="width: 100%"
                 placeholder="请输入封禁天数"
+                @update:value="(value) => {
+                  console.log('NInputNumber value changed:', value, 'banFormData.banDays:', banFormData.banDays);
+                }"
               />
             </NFormItem>
 
@@ -434,6 +390,75 @@
         </template>
       </NCard>
     </NModal>
+
+    <!-- 解封用户弹窗 -->
+    <NModal v-model:show="showUnbanModal" :mask-closable="false">
+      <NCard
+        style="max-width: 500px"
+        title="解封用户"
+        :bordered="false"
+        size="huge"
+        role="dialog"
+        aria-modal
+      >
+        <template #header-extra>
+          <NButton
+            quaternary
+            circle
+            @click="showUnbanModal = false"
+          >
+            <template #icon>
+              <span class="close-icon">×</span>
+            </template>
+          </NButton>
+        </template>
+
+        <div v-if="currentUserForUnban" class="unban-form">
+          <div class="user-info">
+            <p><strong>用户：</strong>{{ currentUserForUnban.username }}</p>
+            <p><strong>用户类型：</strong>{{ getUserTypeText(currentUserForUnban.userType) }}</p>
+          </div>
+
+          <NForm
+            ref="unbanFormRef"
+            :model="unbanFormData"
+            :rules="unbanRules"
+            label-placement="top"
+            style="margin-top: 20px"
+          >
+            <NFormItem label="解封原因" path="liftReason">
+              <NInput
+                v-model:value="unbanFormData.liftReason"
+                type="textarea"
+                placeholder="请输入解封原因"
+                :rows="4"
+                maxlength="500"
+                show-count
+              />
+            </NFormItem>
+
+            <NFormItem>
+              <NCheckbox v-model:checked="unbanFormData.sendNotification">
+                发送通知给用户
+              </NCheckbox>
+            </NFormItem>
+          </NForm>
+        </div>
+
+        <template #footer>
+          <div class="modal-actions">
+            <NButton @click="showUnbanModal = false">取消</NButton>
+            <NButton
+              type="success"
+              :loading="loading"
+              @click="handleUnbanUser"
+            >
+              确认解封
+            </NButton>
+          </div>
+        </template>
+      </NCard>
+    </NModal>
   </div>
 </template>
 
@@ -464,26 +489,13 @@ import { getUserList, banUser, unbanUser, type User, type UserQueryParams } from
 
 // 扩展User接口以支持前端特有的字段
 interface ExtendedUser extends User {
-  name: string
   company?: string
   position?: string
-  loginCount: number
-  activityStats?: {
-    jobsPosted?: number
-    applicationsSent?: number
-    viewsReceived?: number
-  }
-  recentActivities?: Array<{
-    id: string
-    type: 'login' | 'job_post' | 'application' | 'profile_update'
-    title: string
-    time: string
-  }>
 }
 
 interface Filters {
   userType: string | null
-  status: string | null
+  status: string
   registerTime: [number, number] | null
 }
 
@@ -492,26 +504,20 @@ const dialog = useDialog()
 
 // 表单引用
 const banFormRef = ref<FormInst | null>(null)
+const unbanFormRef = ref<FormInst | null>(null)
 
-// 表单验证规则
-const banRules = {
-  banReason: [
+
+const unbanRules = {
+  liftReason: [
     {
       required: true,
-      message: '请输入封禁原因',
+      message: '请输入解封原因',
       trigger: ['input', 'blur']
     },
     {
       min: 5,
       max: 500,
-      message: '封禁原因长度应在 5-500 个字符之间',
-      trigger: ['input', 'blur']
-    }
-  ],
-  banDays: [
-    {
-      required: true,
-      message: '请输入封禁天数',
+      message: '解封原因长度应在 5-500 个字符之间',
       trigger: ['input', 'blur']
     }
   ]
@@ -525,9 +531,9 @@ const userTypeOptions = [
 ]
 
 const statusOptions = [
-  { label: '全部', value: '' },
-  { label: '正常', value: 'active' },
-  { label: '封禁', value: 'banned' }
+  { label: '全部', value: '', type: 'default' as const },
+  { label: '正常', value: 'active', type: 'success' as const },
+  { label: '封禁', value: 'banned', type: 'error' as const }
 ]
 
 const moreActions = [
@@ -540,7 +546,7 @@ const moreActions = [
 // 状态管理
 const searchKeyword = ref('')
 const filters = ref<Filters>({
-  userType: '',
+  userType: null,
   status: '',
   registerTime: null
 })
@@ -566,15 +572,18 @@ const filteredUsers = computed(() => {
   }
 
   // 状态筛选
-  if (filters.value.status) {
-    filtered = filtered.filter(user => user.status === filters.value.status)
+  if (filters.value.status !== '') {
+    filtered = filtered.filter(user => {
+      const statusValue = filters.value.status === 'active' ? 1 : 0
+      return user.status === statusValue
+    })
   }
 
   // 注册时间筛选
   if (filters.value.registerTime) {
     const [start, end] = filters.value.registerTime
     filtered = filtered.filter(user => {
-      const registerTime = dayjs(user.registerTime).valueOf()
+      const registerTime = dayjs(user.createTime).valueOf()
       return registerTime >= start && registerTime <= end
     })
   }
@@ -583,9 +592,9 @@ const filteredUsers = computed(() => {
   if (searchKeyword.value.trim()) {
     const keyword = searchKeyword.value.toLowerCase()
     filtered = filtered.filter(user =>
-      user.name.toLowerCase().includes(keyword) ||
-      user.phone.includes(keyword) ||
-      user.email.toLowerCase().includes(keyword) ||
+      user.username.toLowerCase().includes(keyword) ||
+      (user.phone && user.phone.includes(keyword)) ||
+      (user.email && user.email.toLowerCase().includes(keyword)) ||
       (user.company && user.company.toLowerCase().includes(keyword))
     )
   }
@@ -600,35 +609,35 @@ const paginatedUsers = computed(() => {
 })
 
 // 辅助方法
-const getUserIcon = (userType: number) => {
-  const iconMap: Record<number, string> = {
-    1: '👤', // 求职者
-    2: '💼', // HR
-    3: '👑'  // 管理员
+const getUserIcon = (userType: string | number) => {
+  const iconMap: Record<string, string> = {
+    '1': '👤', 'jobseeker': '👤', // 求职者
+    '2': '💼', 'hr': '💼',        // HR
+    '3': '👑', 'admin': '👑'      // 管理员
   }
-  return iconMap[userType] || '👤'
+  return iconMap[userType.toString()] || '👤'
 }
 
-const getUserTypeType = (userType: number) => {
-  const typeMap: Record<number, string> = {
-    1: 'info', // 求职者
-    2: 'warning', // HR
-    3: 'error'  // 管理员
+const getUserTypeType = (userType: string | number) => {
+  const typeMap: Record<string, 'info' | 'warning' | 'error' | 'success' | 'primary' | 'default'> = {
+    '1': 'info', 'jobseeker': 'info', // 求职者
+    '2': 'warning', 'hr': 'warning',   // HR
+    '3': 'error', 'admin': 'error'       // 管理员
   }
-  return typeMap[userType] || 'default'
+  return typeMap[userType.toString()] || 'default'
 }
 
-const getUserTypeText = (userType: number) => {
-  const textMap: Record<number, string> = {
-    1: '求职者',
-    2: 'HR',
-    3: '管理员'
+const getUserTypeText = (userType: string | number) => {
+  const textMap: Record<string, string> = {
+    '1': '求职者', 'jobseeker': '求职者',
+    '2': 'HR', 'hr': 'HR',
+    '3': '管理员', 'admin': '管理员'
   }
-  return textMap[userType] || '未知'
+  return textMap[userType.toString()] || '未知'
 }
 
 const getStatusType = (status: number) => {
-  const typeMap: Record<number, string> = {
+  const typeMap: Record<number, 'success' | 'error' | 'warning' | 'info' | 'primary' | 'default'> = {
     1: 'success', // 正常
     0: 'error'    // 禁用/封禁
   }
@@ -643,20 +652,13 @@ const getStatusText = (status: number) => {
   return textMap[status] || '未知'
 }
 
-const getActivityIcon = (type: string) => {
-  const iconMap: Record<string, string> = {
-    login: '🔐',
-    job_post: '💼',
-    application: '📄',
-    profile_update: '✏️'
-  }
-  return iconMap[type] || '📝'
-}
 
 // 格式化时间
-const formatTime = (time: string) => {
+const formatTime = (time: string | undefined) => {
+  if (!time) return '暂无'
   return dayjs(time).format('YYYY-MM-DD HH:mm')
 }
+
 
 // 事件处理
 const handleFilter = () => {
@@ -676,7 +678,7 @@ const handleRefresh = () => {
 
 const resetFilters = () => {
   filters.value = {
-    userType: '',
+    userType: null,
     status: '',
     registerTime: null
   }
@@ -704,22 +706,12 @@ const viewUserDetail = (user: ExtendedUser) => {
 
 // 切换用户状态
 const toggleUserStatus = (user: ExtendedUser) => {
-  const action = user.status === 1 ? '封禁' : '解封'
-
   if (user.status === 1) {
     // 封禁用户 - 显示封禁表单
     showBanUserDialog(user)
   } else {
-    // 解封用户 - 直接确认
-    dialog.warning({
-      title: `确认${action}`,
-      content: `确定要${action}用户"${user.name}"吗？`,
-      positiveText: `确定${action}`,
-      negativeText: '取消',
-      onPositiveClick: () => {
-        handleUnbanUser(user)
-      }
-    })
+    // 解封用户 - 显示解封表单
+    showUnbanUserDialog(user)
   }
 }
 
@@ -751,6 +743,53 @@ const banFormData = ref({
 })
 const currentUserForBan = ref<ExtendedUser | null>(null)
 
+// 解封弹窗相关状态
+const showUnbanModal = ref(false)
+const unbanFormData = ref({
+  liftReason: '',
+  sendNotification: true
+})
+const currentUserForUnban = ref<ExtendedUser | null>(null)
+
+// 表单验证规则 - banRules 必须在 banFormData 定义之后
+const banRules = computed(() => ({
+  banReason: [
+    {
+      required: true,
+      message: '请输入封禁原因',
+      trigger: ['input', 'blur']
+    },
+    {
+      min: 5,
+      max: 500,
+      message: '封禁原因长度应在 5-500 个字符之间',
+      trigger: ['input', 'blur']
+    }
+  ],
+  banDays: banFormData.value.banType === 'temporary' ? [
+    {
+      required: true,
+      validator: (rule: any, value: number) => {
+        console.log('Validator called with value:', value, 'type:', typeof value);
+        console.log('banFormData.value:', banFormData.value);
+        console.log('rule:', rule);
+
+        if (value === null || value === undefined || value < 1) {
+          console.log('Validation failed: value is invalid');
+          return new Error('请输入封禁天数')
+        }
+        if (value > 365) {
+          console.log('Validation failed: value exceeds 365');
+          return new Error('封禁天数不能超过365天')
+        }
+        console.log('Validation passed');
+        return true
+      },
+      trigger: ['input', 'blur', 'change']
+    }
+  ] : []
+}))
+
 // 显示封禁用户弹窗
 const showBanUserDialog = (user: ExtendedUser) => {
   currentUserForBan.value = user
@@ -763,9 +802,21 @@ const showBanUserDialog = (user: ExtendedUser) => {
   showBanModal.value = true
 }
 
+// 显示解封用户弹窗
+const showUnbanUserDialog = (user: ExtendedUser) => {
+  currentUserForUnban.value = user
+  unbanFormData.value = {
+    liftReason: '',
+    sendNotification: true
+  }
+  showUnbanModal.value = true
+}
+
 // 处理封禁用户
 const handleBanUser = async () => {
-  if (!banFormRef.value || !currentUserForBan.value) return
+  if (!banFormRef.value || !currentUserForBan.value) {
+    return
+  }
 
   try {
     await banFormRef.value.validate()
@@ -775,14 +826,15 @@ const handleBanUser = async () => {
 
   try {
     loading.value = true
-    await banUser(currentUserForBan.value.id, {
-      banType: banFormData.value.banType,
+    await banUser(currentUserForBan.value.userId, {
+      banDurationType: banFormData.value.banType,
       banDays: banFormData.value.banType === 'temporary' ? banFormData.value.banDays : undefined,
       banReason: banFormData.value.banReason,
-      sendNotification: banFormData.value.sendNotification
+      sendEmailNotification: false,  // 暂时不发送邮件通知
+      sendSystemNotification: banFormData.value.sendNotification  // 只发送系统通知
     })
 
-    message.success(`用户"${currentUserForBan.value.name}"已封禁`)
+    message.success(`用户"${currentUserForBan.value.username}"已封禁`)
     showBanModal.value = false
     // 刷新用户列表
     await loadUsers()
@@ -794,15 +846,24 @@ const handleBanUser = async () => {
 }
 
 // 处理解封用户
-const handleUnbanUser = async (user: ExtendedUser) => {
+const handleUnbanUser = async () => {
+  if (!unbanFormRef.value || !currentUserForUnban.value) return
+
+  try {
+    await unbanFormRef.value.validate()
+  } catch (error) {
+    return
+  }
+
   try {
     loading.value = true
-    await unbanUser(user.id, {
-      reason: '管理员解封',
-      sendNotification: true
+    await unbanUser(currentUserForUnban.value.userId, {
+      liftReason: unbanFormData.value.liftReason,
+      sendNotification: unbanFormData.value.sendNotification
     })
 
-    message.success(`用户"${user.name}"已解封`)
+    message.success(`用户"${currentUserForUnban.value.username}"已解封`)
+    showUnbanModal.value = false
     // 刷新用户列表
     await loadUsers()
   } catch (error: any) {
@@ -817,22 +878,19 @@ const loadUsers = async () => {
   try {
     loading.value = true
     const params: UserQueryParams = {
-      page: currentPage.value,
+      current: currentPage.value,
       size: pageSize.value,
       keyword: searchKeyword.value || undefined,
-      userType: filters.value.userType ? parseInt(filters.value.userType) : undefined,
-      status: filters.value.status || undefined
+      userType: filters.value.userType || undefined,
+      status: filters.value.status !== '' ? filters.value.status : undefined
     }
 
     const result = await getUserList(params)
-    usersData.value = result.records.map(user => ({
-      ...user,
-      name: user.username, // 使用username作为name
-      loginCount: 0, // 后端暂无此字段，设为默认值
-      activityStats: undefined, // 后端暂无此字段，设为默认值
-      recentActivities: [] // 后端暂无此字段，设为默认值
-    }))
+    console.log('API result:', result);
+    console.log('First user:', result.records[0]);
+    usersData.value = result.records
     total.value = result.total
+    console.log('Mapped usersData:', usersData.value);
   } catch (error: any) {
     message.error(error.message || '加载用户列表失败')
   } finally {
@@ -842,30 +900,30 @@ const loadUsers = async () => {
 
 // 发送通知
 const sendNotification = (user: ExtendedUser) => {
-  message.info(`发送通知功能开发中 - 用户：${user.name}`)
+  message.info(`发送通知功能开发中 - 用户：${user.username}`)
 }
 
 // 重置密码
 const resetPassword = (user: ExtendedUser) => {
   dialog.warning({
     title: '确认重置密码',
-    content: `确定要重置用户"${user.name}"的密码吗？`,
+    content: `确定要重置用户"${user.username}"的密码吗？`,
     positiveText: '确定重置',
     negativeText: '取消',
     onPositiveClick: () => {
-      message.success(`已重置用户"${user.name}"的密码`)
+      message.success(`已重置用户"${user.username}"的密码`)
     }
   })
 }
 
 // 查看操作记录
 const viewUserLogs = (user: ExtendedUser) => {
-  message.info(`查看用户记录功能开发中 - 用户：${user.name}`)
+  message.info(`查看用户记录功能开发中 - 用户：${user.username}`)
 }
 
 // 导出用户数据
 const exportUserData = (user: ExtendedUser) => {
-  message.info(`导出用户数据功能开发中 - 用户：${user.name}`)
+  message.info(`导出用户数据功能开发中 - 用户：${user.username}`)
 }
 
 // 批量导出用户
@@ -1171,108 +1229,117 @@ onMounted(() => {
 
   // 用户详情弹窗
   .user-detail {
-    .detail-section {
-      margin-bottom: 32px;
+    // 头部区域：头像和基本信息
+    .detail-header {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 24px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 12px;
+      margin-bottom: 24px;
+      color: white;
 
-      &:last-child {
-        margin-bottom: 0;
+      .detail-avatar {
+        .avatar-circle.large {
+          width: 64px;
+          height: 64px;
+          font-size: 28px;
+          background: rgba(255, 255, 255, 0.2);
+          backdrop-filter: blur(10px);
+        }
       }
 
-      .section-title {
-        font-size: 16px;
-        font-weight: 600;
-        color: var(--text-primary);
-        margin: 0 0 16px 0;
-        padding-bottom: 8px;
-        border-bottom: 2px solid var(--primary-color);
-      }
+      .detail-basic-info {
+        flex: 1;
 
-      .detail-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 16px;
+        .detail-username {
+          font-size: 24px;
+          font-weight: 600;
+          margin: 0 0 12px 0;
+          color: white;
+        }
 
-        .detail-item {
+        .detail-tags {
           display: flex;
-          flex-direction: column;
           gap: 8px;
+          flex-wrap: wrap;
 
-          label {
-            font-size: 14px;
-            color: var(--text-secondary);
-            font-weight: 500;
-          }
-
-          span {
-            font-size: 14px;
-            color: var(--text-primary);
+          .n-tag {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            backdrop-filter: blur(10px);
           }
         }
       }
+    }
 
-      .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        gap: 16px;
+    // 信息网格
+    .detail-info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
 
-        .stat-card {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          padding: 16px;
-          background: var(--bg-secondary);
-          border-radius: 8px;
+      .info-card {
+        background: #ffffff;
+        border: 1px solid #e8e8e8;
+        border-radius: 12px;
+        padding: 20px;
+        transition: all 0.3s ease;
 
-          .stat-icon {
-            font-size: 24px;
-          }
-
-          .stat-content {
-            .stat-value {
-              font-size: 18px;
-              font-weight: 600;
-              color: var(--text-primary);
-              margin-bottom: 4px;
-            }
-
-            .stat-label {
-              font-size: 12px;
-              color: var(--text-secondary);
-            }
-          }
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
         }
-      }
 
-      .activity-list {
-        .activity-item {
+        .info-card-header {
           display: flex;
           align-items: center;
           gap: 12px;
-          padding: 12px;
-          background: var(--bg-secondary);
-          border-radius: 8px;
-          margin-bottom: 8px;
+          margin-bottom: 16px;
 
-          &:last-child {
-            margin-bottom: 0;
+          .info-icon {
+            font-size: 20px;
           }
 
-          .activity-type {
+          h4 {
             font-size: 16px;
+            font-weight: 600;
+            color: #333333;
+            margin: 0;
           }
+        }
 
-          .activity-content {
-            flex: 1;
+        .info-content {
+          .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
 
-            .activity-title {
-              font-size: 14px;
-              color: var(--text-primary);
-              margin-bottom: 4px;
+            &:last-child {
+              border-bottom: none;
+              padding-bottom: 0;
             }
 
-            .activity-time {
-              font-size: 12px;
-              color: var(--text-disabled);
+            &:first-child {
+              padding-top: 0;
+            }
+
+            label {
+              font-size: 14px;
+              color: #666666;
+              font-weight: 500;
+            }
+
+            span {
+              font-size: 14px;
+              color: #333333;
+              font-weight: 500;
+              text-align: right;
+              word-break: break-all;
             }
           }
         }

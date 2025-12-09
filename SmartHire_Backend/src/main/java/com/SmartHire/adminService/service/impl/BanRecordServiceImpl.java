@@ -95,30 +95,46 @@ public class BanRecordServiceImpl extends ServiceImpl<BanRecordMapper, BanRecord
     public boolean liftUserBan(Long userId, Long operatorId, String operatorName, String liftReason) {
         log.info("开始解除用户封禁，用户ID: {}, 操作管理员: {}", userId, operatorName);
 
-        // 1. 检查用户是否存在
-        User user = userMapper.selectById(userId);
-        if (user == null) {
-            throw AdminServiceException.userNotFound(userId);
+        try {
+            // 1. 检查用户是否存在
+            log.info("步骤1: 检查用户是否存在, userId={}", userId);
+            User user = userMapper.selectById(userId);
+            if (user == null) {
+                log.error("用户不存在: userId={}", userId);
+                throw AdminServiceException.userNotFound(userId);
+            }
+            log.info("用户存在: username={}", user.getUsername());
+
+            // 2. 检查是否有生效的封禁记录
+            log.info("步骤2: 检查是否有生效的封禁记录");
+            BanRecord activeBan = banRecordMapper.findActiveBanByUserId(userId);
+            if (activeBan == null) {
+                log.error("没有找到生效的封禁记录: userId={}", userId);
+                throw AdminServiceException.userNotBanned(userId);
+            }
+            log.info("找到生效封禁记录: banId={}, banStatus={}", activeBan.getId(), activeBan.getBanStatus());
+
+            // 3. 解除封禁
+            log.info("步骤3: 解除封禁");
+            int affectedRows = banRecordMapper.liftUserBans(userId, operatorId, operatorName, liftReason);
+            log.info("解除封禁影响行数: {}", affectedRows);
+            if (affectedRows == 0) {
+                log.error("解除封禁失败，影响行数为0");
+                throw AdminServiceException.operationFailed("解除封禁");
+            }
+
+            // 4. 恢复用户状态
+            log.info("步骤4: 恢复用户状态");
+            user.setStatus(1); // 1-正常
+            userMapper.updateById(user);
+            log.info("用户状态已更新为正常");
+
+            log.info("用户封禁解除成功，用户ID: {}", userId);
+            return true;
+        } catch (Exception e) {
+            log.error("解除用户封禁过程中发生异常: userId={}, error={}", userId, e.getMessage(), e);
+            throw e;
         }
-
-        // 2. 检查是否有生效的封禁记录
-        BanRecord activeBan = banRecordMapper.findActiveBanByUserId(userId);
-        if (activeBan == null) {
-            throw AdminServiceException.userNotBanned(userId);
-        }
-
-        // 3. 解除封禁
-        int affectedRows = banRecordMapper.liftUserBans(userId, operatorId, operatorName, liftReason);
-        if (affectedRows == 0) {
-            throw AdminServiceException.operationFailed("解除封禁");
-        }
-
-        // 4. 恢复用户状态
-        user.setStatus(1); // 1-正常
-        userMapper.updateById(user);
-
-        log.info("用户封禁解除成功，用户ID: {}", userId);
-        return true;
     }
 
     @Override

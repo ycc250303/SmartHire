@@ -43,6 +43,7 @@
             CASE
                 WHEN u.user_type = 1 THEN 'jobseeker'
                 WHEN u.user_type = 2 THEN 'hr'
+                WHEN u.user_type = 3 THEN 'admin'
                 ELSE 'unknown'
             END as user_type,
             u.status,
@@ -82,6 +83,7 @@
             CASE
                 WHEN u.user_type = 1 THEN 'jobseeker'
                 WHEN u.user_type = 2 THEN 'hr'
+                WHEN u.user_type = 3 THEN 'admin'
                 ELSE 'unknown'
             END as user_type,
             u.status,

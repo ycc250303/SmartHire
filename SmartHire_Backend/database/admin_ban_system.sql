@@ -33,7 +33,7 @@ CREATE TABLE `ban_record` (
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`id`),
-    UNIQUE KEY `uk_user_active_ban` (`user_id`, `ban_status`),
+    UNIQUE KEY `uk_user_active_ban` (`user_id`, `ban_status`) COMMENT '只限制active状态，允许lifted状态重复',
     KEY `idx_user_id` (`user_id`),
     KEY `idx_operator_id` (`operator_id`),
     KEY `idx_ban_status` (`ban_status`),

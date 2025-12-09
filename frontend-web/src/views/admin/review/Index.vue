@@ -149,6 +149,162 @@
       </div>
     </NCard>
 
+    <!-- 岗位详情弹窗 -->
+    <NModal v-model:show="showDetailModal" :mask-closable="false">
+      <NCard
+        style="max-width: 900px; max-height: 85vh; overflow-y: auto;"
+        title="岗位详情"
+        :bordered="false"
+        size="huge"
+        role="dialog"
+        aria-modal
+      >
+        <template #header-extra>
+          <NButton
+            quaternary
+            circle
+            @click="showDetailModal = false"
+          >
+            <template #icon>
+              <span class="close-icon">×</span>
+            </template>
+          </NButton>
+        </template>
+
+        <div v-if="selectedJob" class="job-detail">
+          <!-- 岗位基本信息 -->
+          <div class="detail-header">
+            <div class="detail-basic-info">
+              <h3 class="detail-title">{{ selectedJob.title }}</h3>
+              <div class="detail-tags">
+                <NTag :type="getStatusType(selectedJob.status)" size="medium">
+                  {{ getStatusText(selectedJob.status) }}
+                </NTag>
+              </div>
+            </div>
+          </div>
+
+          <!-- 详细信息网格 -->
+          <div class="detail-info-grid">
+            <div class="info-card">
+              <div class="info-card-header">
+                <span class="info-icon">🏢</span>
+                <h4>公司信息</h4>
+              </div>
+              <div class="info-content">
+                <div class="info-item">
+                  <label>公司名称</label>
+                  <span>{{ selectedJob.company }}</span>
+                </div>
+                <div class="info-item">
+                  <label>工作地点</label>
+                  <span>📍 {{ selectedJob.location }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="info-card">
+              <div class="info-card-header">
+                <span class="info-icon">💰</span>
+                <h4>薪资待遇</h4>
+              </div>
+              <div class="info-content">
+                <div class="info-item">
+                  <label>薪资范围</label>
+                  <span>{{ selectedJob.salary }}</span>
+                </div>
+                <div class="info-item">
+                  <label>经验要求</label>
+                  <span>{{ selectedJob.experience }}</span>
+                </div>
+                <div class="info-item">
+                  <label>学历要求</label>
+                  <span>{{ selectedJob.education }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="info-card">
+              <div class="info-card-header">
+                <span class="info-icon">👤</span>
+                <h4>发布信息</h4>
+              </div>
+              <div class="info-content">
+                <div class="info-item">
+                  <label>发布者</label>
+                  <span>{{ selectedJob.publisher }}</span>
+                </div>
+                <div class="info-item">
+                  <label>发布时间</label>
+                  <span>{{ formatTime(selectedJob.createTime) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 岗位描述 -->
+          <div class="info-card full-width">
+            <div class="info-card-header">
+              <span class="info-icon">📝</span>
+              <h4>岗位描述</h4>
+            </div>
+            <div class="info-content">
+              <div class="description-full">
+                {{ selectedJob.description }}
+              </div>
+            </div>
+          </div>
+
+          <!-- 技能标签 -->
+          <div class="info-card full-width" v-if="selectedJob.tags && selectedJob.tags.length > 0">
+            <div class="info-card-header">
+              <span class="info-icon">🏷️</span>
+              <h4>技能标签</h4>
+            </div>
+            <div class="info-content">
+              <div class="tags-full">
+                <NTag
+                  v-for="tag in selectedJob.tags"
+                  :key="tag"
+                  size="medium"
+                  type="info"
+                  class="detail-tag"
+                >
+                  {{ tag }}
+                </NTag>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <template #footer>
+          <div class="modal-actions">
+            <NButton @click="showDetailModal = false">关闭</NButton>
+            <div v-if="selectedJob && selectedJob.status === 'pending'" class="action-buttons">
+              <NButton
+                type="success"
+                @click="handleApprove(selectedJob)"
+              >
+                通过
+              </NButton>
+              <NButton
+                type="warning"
+                @click="handleModify(selectedJob)"
+              >
+                要求修改
+              </NButton>
+              <NButton
+                type="error"
+                @click="handleReject(selectedJob)"
+              >
+                拒绝
+              </NButton>
+            </div>
+          </div>
+        </template>
+      </NCard>
+    </NModal>
+
     <!-- 审核操作弹窗 -->
     <NModal v-model:show="showActionModal" :mask-closable="false">
       <NCard
@@ -225,7 +381,6 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import {
   NCard,
   NTabs,
@@ -267,9 +422,12 @@ interface StatusTab {
   emptyDesc: string
 }
 
-const router = useRouter()
 const message = useMessage()
 const dialog = useDialog()
+
+// 岗位详情弹窗状态
+const showDetailModal = ref(false)
+const selectedJob = ref<Job | null>(null)
 
 // 状态标签页
 const activeTab = ref('pending')
@@ -417,14 +575,14 @@ const getCurrentTabTitle = computed(() => {
 })
 
 // 获取状态类型
-const getStatusType = (status: string) => {
-  const typeMap: Record<string, string> = {
+const getStatusType = (status: string): 'info' | 'success' | 'warning' | 'error' => {
+  const typeMap: Record<string, 'info' | 'success' | 'warning' | 'error'> = {
     pending: 'info',
     approved: 'success',
     rejected: 'error',
     modified: 'warning'
   }
-  return typeMap[status] || 'default'
+  return typeMap[status] || 'info'
 }
 
 // 获取状态文本
@@ -456,7 +614,8 @@ const handleRefresh = () => {
 
 // 查看职位详情
 const viewJobDetail = (job: Job) => {
-  router.push(`/dashboard/review/${job.id}`)
+  selectedJob.value = job
+  showDetailModal.value = true
 }
 
 // 通过审核
@@ -788,6 +947,141 @@ onMounted(() => {
     }
   }
 
+  // 岗位详情弹窗
+  .job-detail {
+    // 头部区域：岗位基本信息
+    .detail-header {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 24px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 12px;
+      margin-bottom: 24px;
+      color: white;
+
+      .detail-basic-info {
+        flex: 1;
+
+        .detail-title {
+          font-size: 24px;
+          font-weight: 600;
+          margin: 0 0 12px 0;
+          color: white;
+        }
+
+        .detail-tags {
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
+
+          .n-tag {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            backdrop-filter: blur(10px);
+          }
+        }
+      }
+    }
+
+    // 信息网格
+    .detail-info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      margin-bottom: 20px;
+
+      .info-card {
+        background: #ffffff;
+        border: 1px solid #e8e8e8;
+        border-radius: 12px;
+        padding: 20px;
+        transition: all 0.3s ease;
+
+        &.full-width {
+          grid-column: 1 / -1;
+        }
+
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .info-card-header {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin-bottom: 16px;
+
+          .info-icon {
+            font-size: 20px;
+          }
+
+          h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333333;
+            margin: 0;
+          }
+        }
+
+        .info-content {
+          .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+
+            &:last-child {
+              border-bottom: none;
+              padding-bottom: 0;
+            }
+
+            &:first-child {
+              padding-top: 0;
+            }
+
+            label {
+              font-size: 14px;
+              color: #666666;
+              font-weight: 500;
+              flex-shrink: 0;
+              margin-right: 16px;
+            }
+
+            span {
+              font-size: 14px;
+              color: #333333;
+              font-weight: 500;
+              text-align: right;
+              word-break: break-all;
+            }
+          }
+
+          .description-full {
+            font-size: 14px;
+            color: #333333;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-break: break-word;
+          }
+
+          .tags-full {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+
+            .detail-tag {
+              font-size: 13px;
+            }
+          }
+        }
+      }
+    }
+  }
+
   // 审核操作弹窗
   .modal-content {
     .job-preview {
@@ -823,8 +1117,14 @@ onMounted(() => {
 
   .modal-actions {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
+    align-items: center;
     gap: 12px;
+
+    .action-buttons {
+      display: flex;
+      gap: 8px;
+    }
   }
 }
 
