@@ -31,10 +31,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
  * <p>测试目标：防止教育经历添加、更新、删除等核心业务逻辑回归
  *
  * <p>测试原则：
+ *
  * <ul>
- *   <li>使用 Mockito mock 外部依赖（JobSeekerService、数据库Mapper）</li>
- *   <li>保留真实业务逻辑测试（数据转换、字段映射、业务规则校验）</li>
- *   <li>使用 Arrange / Act / Assert 三段式结构</li>
+ *   <li>使用 Mockito mock 外部依赖（JobSeekerService、数据库Mapper）
+ *   <li>保留真实业务逻辑测试（数据转换、字段映射、业务规则校验）
+ *   <li>使用 Arrange / Act / Assert 三段式结构
  * </ul>
  *
  * <p>注意：本测试基于 API 文档和测试用例矩阵推导，不依赖具体实现细节
@@ -173,8 +174,7 @@ class EducationExperienceServiceTest {
 
     // Mock 数据库查询: 教育经历存在，但属于其他用户
     EducationExperience otherUserEducation = createOtherUserEducation();
-    when(educationExperienceMapper.selectById(OTHER_EDUCATION_ID))
-        .thenReturn(otherUserEducation);
+    when(educationExperienceMapper.selectById(OTHER_EDUCATION_ID)).thenReturn(otherUserEducation);
 
     // Act & Assert: 执行并验证抛出所有权异常
     BusinessException exception =
@@ -190,10 +190,7 @@ class EducationExperienceServiceTest {
         ErrorCode.EDUCATION_EXPERIENCE_NOT_BELONG_TO_USER.getCode(),
         exception.getCode(),
         "异常错误码应该是 EDUCATION_EXPERIENCE_NOT_BELONG_TO_USER(1105)");
-    assertEquals(
-        "教育经历不属于当前用户",
-        exception.getMessage(),
-        "异常消息应该正确");
+    assertEquals("教育经历不属于当前用户", exception.getMessage(), "异常消息应该正确");
 
     // 验证教育经历未被删除
     verify(educationExperienceMapper, never()).deleteById(any());
@@ -260,8 +257,7 @@ class EducationExperienceServiceTest {
 
     // Mock 数据库查询: 教育经历存在且属于当前用户
     EducationExperience existingEducation = createExistingEducation();
-    when(educationExperienceMapper.selectById(TEST_EDUCATION_ID))
-        .thenReturn(existingEducation);
+    when(educationExperienceMapper.selectById(TEST_EDUCATION_ID)).thenReturn(existingEducation);
 
     // Mock lambdaQuery() 调用：检查重复（返回空列表，表示不重复）
     mockLambdaQueryCount(0);
@@ -298,4 +294,3 @@ class EducationExperienceServiceTest {
     assertNotNull(updatedEducation.getUpdatedAt(), "更新时间应该被设置");
   }
 }
-
