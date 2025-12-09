@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 public class ApplicationController {
 
     @Autowired
+    @Qualifier("hrApplicationServiceImpl")
     private ApplicationService applicationService;
 
     /**

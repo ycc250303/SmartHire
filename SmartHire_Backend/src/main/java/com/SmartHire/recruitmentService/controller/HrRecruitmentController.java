@@ -15,6 +15,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,7 +25,9 @@ import org.springframework.web.bind.annotation.*;
 @Validated
 public class HrRecruitmentController {
 
-  @Autowired private ApplicationService applicationService;
+  @Autowired
+  @Qualifier("applicationServiceImpl")
+  private ApplicationService applicationService;
 
   @Autowired private SeekerApi seekerApi;
 
