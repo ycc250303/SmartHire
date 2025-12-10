@@ -93,14 +93,14 @@ public class AdminCodeGenerator {
             String password = String.valueOf(datasource.get("password"));
 
             // 验证配置是否有效
-            if (url == null || "null".equals(url) || url.isEmpty()) {
+            if ("null".equals(url) || url.isEmpty()) {
                 throw new IllegalStateException("Database URL is missing or invalid in " + configFile.getFileName());
             }
-            if (username == null || "null".equals(username) || username.isEmpty()) {
+            if ("null".equals(username) || username.isEmpty()) {
                 throw new IllegalStateException(
                         "Database username is missing or invalid in " + configFile.getFileName());
             }
-            if (password == null || "null".equals(password)) {
+            if ("null".equals(password)) {
                 throw new IllegalStateException(
                         "Database password is missing or invalid in " + configFile.getFileName());
             }
@@ -113,8 +113,14 @@ public class AdminCodeGenerator {
 
     private static void generateServiceProfile() {
         try {
+            if (ADMIN_SERVICE_YML == null) {
+                throw new IllegalStateException("ADMIN_SERVICE_YML path is null");
+            }
             if (Files.notExists(ADMIN_SERVICE_YML)) {
-                Files.createDirectories(ADMIN_SERVICE_YML.getParent());
+                Path parentDir = ADMIN_SERVICE_YML.getParent();
+                if (parentDir != null) {
+                    Files.createDirectories(parentDir);
+                }
             }
             String content = """
                     spring:
@@ -137,10 +143,19 @@ public class AdminCodeGenerator {
     @SuppressWarnings("unused")
     private static void generateAdminController(String projectPath) {
         // TODO:修改controller文件的路径
+        if (projectPath == null) {
+            throw new IllegalArgumentException("Project path cannot be null");
+        }
         Path controllerPath = Paths.get(projectPath + "\\src\\main\\java\\com\\SmartHire\\adminService\\controller", "AdminController.java");
 
         try {
-            Files.createDirectories(controllerPath.getParent());
+            if (controllerPath == null) {
+                throw new IllegalStateException("Failed to create controller path");
+            }
+            Path parentDir = controllerPath.getParent();
+            if (parentDir != null) {
+                Files.createDirectories(parentDir);
+            }
 
             // TODO：需要修改controller文件内容
             String content = """
@@ -165,7 +180,10 @@ public class AdminCodeGenerator {
                     """;
 
             Files.writeString(controllerPath, content, StandardCharsets.UTF_8);
-            System.out.println("SeekerController generated at: " + controllerPath.toAbsolutePath());
+            Path absolutePath = controllerPath.toAbsolutePath();
+            if (absolutePath != null) {
+                System.out.println("SeekerController generated at: " + absolutePath);
+            }
         } catch (IOException e) {
             throw new IllegalStateException("Failed to create SeekerController", e);
         }

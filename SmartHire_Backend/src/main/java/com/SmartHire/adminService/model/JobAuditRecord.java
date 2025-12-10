@@ -136,4 +136,29 @@ public class JobAuditRecord implements Serializable {
     public String getStatusDescription() {
         return AuditStatus.fromCode(this.status).getDescription();
     }
+
+    // 防御性复制方法
+    public Date getAuditedAt() {
+        return auditedAt == null ? null : new Date(auditedAt.getTime());
+    }
+
+    public void setAuditedAt(Date auditedAt) {
+        this.auditedAt = auditedAt == null ? null : new Date(auditedAt.getTime());
+    }
+
+    public Date getCreatedAt() {
+        return createdAt == null ? null : new Date(createdAt.getTime());
+    }
+
+    public void setCreatedAt(Date createdAt) {
+        this.createdAt = createdAt == null ? null : new Date(createdAt.getTime());
+    }
+
+    public Date getUpdatedAt() {
+        return updatedAt == null ? null : new Date(updatedAt.getTime());
+    }
+
+    public void setUpdatedAt(Date updatedAt) {
+        this.updatedAt = updatedAt == null ? null : new Date(updatedAt.getTime());
+    }
 }

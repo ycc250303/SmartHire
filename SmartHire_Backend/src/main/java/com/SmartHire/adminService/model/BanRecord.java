@@ -118,4 +118,45 @@ public class BanRecord implements Serializable {
      * 更新时间
      */
     private Date updatedAt;
+
+    // 防御性复制方法
+    public Date getBanStartTime() {
+        return banStartTime == null ? null : new Date(banStartTime.getTime());
+    }
+
+    public void setBanStartTime(Date banStartTime) {
+        this.banStartTime = banStartTime == null ? null : new Date(banStartTime.getTime());
+    }
+
+    public Date getBanEndTime() {
+        return banEndTime == null ? null : new Date(banEndTime.getTime());
+    }
+
+    public void setBanEndTime(Date banEndTime) {
+        this.banEndTime = banEndTime == null ? null : new Date(banEndTime.getTime());
+    }
+
+    public Date getCreatedAt() {
+        return createdAt == null ? null : new Date(createdAt.getTime());
+    }
+
+    public void setCreatedAt(Date createdAt) {
+        this.createdAt = createdAt == null ? null : new Date(createdAt.getTime());
+    }
+
+    public Date getUpdatedAt() {
+        return updatedAt == null ? null : new Date(updatedAt.getTime());
+    }
+
+    public void setUpdatedAt(Date updatedAt) {
+        this.updatedAt = updatedAt == null ? null : new Date(updatedAt.getTime());
+    }
+
+    public Date getLiftedAt() {
+        return liftedAt == null ? null : new Date(liftedAt.getTime());
+    }
+
+    public void setLiftedAt(Date liftedAt) {
+        this.liftedAt = liftedAt == null ? null : new Date(liftedAt.getTime());
+    }
 }

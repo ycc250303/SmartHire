@@ -71,7 +71,7 @@ public class BanRecordServiceImpl extends ServiceImpl<BanRecordMapper, BanRecord
 
         // 计算封禁结束时间
         if ("temporary".equals(userBanDTO.getBanDurationType()) && userBanDTO.getBanDays() != null) {
-            Date endTime = new Date(System.currentTimeMillis() + userBanDTO.getBanDays() * 24 * 60 * 60 * 1000L);
+            Date endTime = new Date(System.currentTimeMillis() + (long) userBanDTO.getBanDays() * 24L * 60L * 60L * 1000L);
             banRecord.setBanEndTime(endTime);
             banRecord.setBanDays(userBanDTO.getBanDays());
         } else if ("permanent".equals(userBanDTO.getBanDurationType())) {
