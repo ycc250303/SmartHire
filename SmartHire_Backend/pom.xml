@@ -254,6 +254,8 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
+                    <!-- 指定 HR 后端入口，避免多 main class 触发 CI 打包失败 -->
+                    <mainClass>com.SmartHire.hrService.hrServiceApplication</mainClass>
                     <!-- 排除 Lombok 依赖，避免打包到最终 JAR 中 -->
                     <excludes>
                         <exclude>
