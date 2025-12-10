@@ -65,6 +65,7 @@ public class JwtUtil {
       DecodedJWT decoded = JWT.require(algorithm).build().verify(token);
       log.info("✅ Token验证成功");
       log.info("- Token类型: {}", decoded.getClaim("type").asString());
+      log.info(" - 用户ID: {}", decoded.getClaim("claims").asMap().get("id"));
       log.info("- 过期时间: {}", decoded.getExpiresAt());
       return decoded;
     } catch (JWTVerificationException e) {

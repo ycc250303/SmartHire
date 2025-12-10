@@ -36,13 +36,13 @@ public class BanRecordServiceImpl extends ServiceImpl<BanRecordMapper, BanRecord
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public BanRecord banUser(UserBanDTO userBanDTO) {
-        log.info("开始封禁用户，用户ID: {}, 操作管理员: {}", userBanDTO.getUserId(), userBanDTO.getAdminUsername());
+    public BanRecord banUser(Long userId, UserBanDTO userBanDTO) {
+        log.info("开始封禁用户，用户ID: {}, 操作管理员: {}", userId, userBanDTO.getAdminUsername());
 
         // 1. 验证用户是否存在
-        User user = userMapper.selectById(userBanDTO.getUserId());
+        User user = userMapper.selectById(userId);
         if (user == null) {
-            throw AdminServiceException.userNotFound(userBanDTO.getUserId());
+            throw AdminServiceException.userNotFound(userId);
         }
 
         // 2. 验证用户类型（不能封禁管理员）
@@ -51,14 +51,14 @@ public class BanRecordServiceImpl extends ServiceImpl<BanRecordMapper, BanRecord
         }
 
         // 3. 检查用户是否已经被封禁
-        BanRecord existingBan = banRecordMapper.findActiveBanByUserId(userBanDTO.getUserId());
+        BanRecord existingBan = banRecordMapper.findActiveBanByUserId(userId);
         if (existingBan != null) {
-            throw AdminServiceException.userAlreadyBanned(userBanDTO.getUserId());
+            throw AdminServiceException.userAlreadyBanned(userId);
         }
 
         // 4. 创建封禁记录
         BanRecord banRecord = new BanRecord();
-        banRecord.setUserId(userBanDTO.getUserId());
+        banRecord.setUserId(userId);
         banRecord.setUsername(user.getUsername());
         banRecord.setEmail(user.getEmail());
         banRecord.setUserType(user.getUserType().byteValue());
@@ -86,7 +86,7 @@ public class BanRecordServiceImpl extends ServiceImpl<BanRecordMapper, BanRecord
         user.setStatus(0); // 0-禁用
         userMapper.updateById(user);
 
-        log.info("用户封禁成功，用户ID: {}, 封禁类型: {}", userBanDTO.getUserId(), userBanDTO.getBanDurationType());
+        log.info("用户封禁成功，用户ID: {}, 封禁类型: {}", userId, userBanDTO.getBanDurationType());
         return banRecord;
     }
 

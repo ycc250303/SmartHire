@@ -123,9 +123,7 @@ public class AdminController {
             @PathVariable @NotNull Long userId,
             @Valid @RequestBody UserBanDTO userBanDTO) {
 
-        // 确保用户ID匹配
-        userBanDTO.setUserId(userId);
-        BanRecord banRecord = banRecordService.banUser(userBanDTO);
+        BanRecord banRecord = banRecordService.banUser(userId, userBanDTO);
 
         return Result.success("用户封禁成功", banRecord);
     }

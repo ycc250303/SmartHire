@@ -15,12 +15,6 @@ import jakarta.validation.constraints.Size;
 public class UserBanDTO {
 
     /**
-     * 用户ID
-     */
-    @NotNull(message = "用户ID不能为空")
-    private Long userId;
-
-    /**
      * 封禁原因
      */
     @NotBlank(message = "封禁原因不能为空")
