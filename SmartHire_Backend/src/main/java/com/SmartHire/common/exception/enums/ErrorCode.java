@@ -71,6 +71,7 @@ public enum ErrorCode {
   APPLICATION_NOT_BELONG_TO_HR(1304, "投递记录不属于当前HR"),
   // 会话/聊天相关错误码 (1400-1499)
   CONVERSATION_NOT_EXIST(1401, "沟通记录不存在"),
+  MESSAGE_USER_TYPE_MISMATCH(1402, "求职者只能和HR发消息，HR只能和求职者发消息"),
   SYSTEM_ERROR(9999, "系统内部错误,请检查业务处理逻辑,以及是否存在未处理的异常情况");
 
   private final Integer code;

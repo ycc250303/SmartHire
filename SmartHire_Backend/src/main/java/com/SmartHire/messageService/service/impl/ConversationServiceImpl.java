@@ -60,6 +60,58 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationMapper, Con
       conversation.setDeletedByUser2((byte) 0);
       this.save(conversation);
       log.info("创建会话成功：{}, user1Id={}, user2Id={}", conversation, minId, maxId);
+    } else {
+      // 软删除场景：若双方都已删除，则“复活”会话并重置计数/置顶/通知
+      if (conversation.getDeletedByUser1() == 1 && conversation.getDeletedByUser2() == 1) {
+        LambdaUpdateWrapper<Conversation> revive = new LambdaUpdateWrapper<>();
+        revive
+            .eq(Conversation::getId, conversation.getId())
+            .set(Conversation::getDeletedByUser1, 0)
+            .set(Conversation::getDeletedByUser2, 0)
+            .set(Conversation::getUnreadCountUser1, 0)
+            .set(Conversation::getUnreadCountUser2, 0)
+            .set(Conversation::getPinnedByUser1, 0)
+            .set(Conversation::getPinnedByUser2, 0)
+            .set(Conversation::getHasNotificationUser1, 0)
+            .set(Conversation::getHasNotificationUser2, 0)
+            .set(Conversation::getLastMessage, null)
+            .set(Conversation::getLastMessageTime, null);
+        this.update(revive);
+        // 同步内存对象，避免后续使用旧值
+        conversation.setDeletedByUser1((byte) 0);
+        conversation.setDeletedByUser2((byte) 0);
+        conversation.setUnreadCountUser1(0);
+        conversation.setUnreadCountUser2(0);
+        conversation.setPinnedByUser1((byte) 0);
+        conversation.setPinnedByUser2((byte) 0);
+        conversation.setHasNotificationUser1((byte) 0);
+        conversation.setHasNotificationUser2((byte) 0);
+        conversation.setLastMessage(null);
+        conversation.setLastMessageTime(null);
+        log.info("复活已双方删除的会话：id={}, user1Id={}, user2Id={}", conversation.getId(), minId, maxId);
+      } else {
+        // 若仅当前请求方曾删除，则取消其删除标记
+        boolean isCallerUser1 = conversation.getUser1Id().equals(user1Id);
+        boolean isCallerUser2 = conversation.getUser2Id().equals(user1Id);
+
+        if (isCallerUser1 && conversation.getDeletedByUser1() == 1) {
+          this.update(
+              new LambdaUpdateWrapper<Conversation>()
+                  .eq(Conversation::getId, conversation.getId())
+                  .set(Conversation::getDeletedByUser1, 0));
+          conversation.setDeletedByUser1((byte) 0);
+          log.info("用户 {} 重新打开会话，清除 deleted_by_user1 标记，会话ID={}", user1Id, conversation.getId());
+        }
+
+        if (isCallerUser2 && conversation.getDeletedByUser2() == 1) {
+          this.update(
+              new LambdaUpdateWrapper<Conversation>()
+                  .eq(Conversation::getId, conversation.getId())
+                  .set(Conversation::getDeletedByUser2, 0));
+          conversation.setDeletedByUser2((byte) 0);
+          log.info("用户 {} 重新打开会话，清除 deleted_by_user2 标记，会话ID={}", user1Id, conversation.getId());
+        }
+      }
     }
     return conversation;
   }
@@ -132,6 +184,7 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationMapper, Con
     this.update(updateWrapper);
   }
 
+  // 删除会话
   @Override
   @Transactional(rollbackFor = Exception.class)
   public void deleteConversation(Long conversationId, Long userId) {
