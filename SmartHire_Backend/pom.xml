@@ -51,6 +51,12 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
+        <!-- Spring Boot AOP 支持，提供面向切面编程功能 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
+        </dependency>
+
         <!-- Spring Boot 开发工具，支持热部署和自动重启 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -247,6 +253,8 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
+                    <!-- 指定主类 -->
+                    <mainClass>com.SmartHire.SmartHireBackendApplication</mainClass>
                     <!-- 排除 Lombok 依赖，避免打包到最终 JAR 中 -->
                     <excludes>
                         <exclude>
