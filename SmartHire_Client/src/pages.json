@@ -1,0 +1,341 @@
+{
+  "pages": [
+    {
+      "path": "pages/seeker/index/index",
+      "style": {
+        "navigationBarTitleText": "岗位",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/seeker/index/search/index",
+      "style": {
+        "navigationBarTitleText": "搜索",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/seeker/chat/index",
+      "style": {
+        "navigationBarTitleText": "消息",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/seeker/chat/conversation",
+      "style": {
+        "navigationBarTitleText": "聊天",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/seeker/profile/index",
+      "style": {
+        "navigationBarTitleText": "我的",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/seeker/profile/settings",
+      "style": {
+        "navigationBarTitleText": "设置",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/seeker/profile/self",
+      "style": {
+        "navigationBarTitleText": "个人资料",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/seeker/profile/resume/online-resume",
+      "style": {
+        "navigationBarTitleText": "在线简历",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff",
+        "navigationStyle": "default"
+      }
+    },
+    {
+      "path": "pages/seeker/profile/resume/attachment-resume",
+      "style": {
+        "navigationBarTitleText": "附件简历",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/seeker/profile/resume/edit/basic-info",
+      "style": {
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/seeker/profile/resume/edit/expectation",
+      "style": {
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/seeker/profile/resume/edit/work-experience",
+      "style": {
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/seeker/profile/resume/edit/project-experience",
+      "style": {
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/seeker/profile/resume/edit/education-experience",
+      "style": {
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/seeker/profile/resume/edit/skill",
+      "style": {
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/seeker/profile/resume/edit/upload-resume",
+      "style": {
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/seeker/profile/resume/edit/edit-resume",
+      "style": {
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/seeker/profile/resume/edit/university-selector",
+      "style": {
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/seeker/profile/resume/edit/major-selector",
+      "style": {
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/auth/login",
+      "style": {
+        "navigationBarTitleText": "登录",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/auth/register",
+      "style": {
+        "navigationBarTitleText": "注册",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/auth/help",
+      "style": {
+        "navigationBarTitleText": "帮助",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/hr/hr/home/index",
+      "style": {
+        "navigationBarTitleText": "工作台",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/hr/hr/jobs/index",
+      "style": {
+        "navigationBarTitleText": "岗位管理",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/hr/hr/jobs/detail",
+      "style": {
+        "navigationBarTitleText": "岗位详情",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/hr/hr/jobs/edit",
+      "style": {
+        "navigationBarTitleText": "编辑岗位",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/hr/hr/messages/index",
+      "style": {
+        "navigationBarTitleText": "消息中心",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/hr/hr/messages/chat",
+      "style": {
+        "navigationBarTitleText": "与候选人对话",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/hr/hr/profile/index",
+      "style": {
+        "navigationBarTitleText": "我的",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/hr/hr/analytics/index",
+      "style": {
+        "navigationBarTitleText": "数据分析",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/hr/hr/candidate/detail",
+      "style": {
+        "navigationBarTitleText": "候选人详情",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/hr/dashboard/index",
+      "style": {
+        "navigationBarTitleText": "优先处理",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/hr/candidates/detail",
+      "style": {
+        "navigationBarTitleText": "候选人详情",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/hr/jobs/list",
+      "style": {
+        "navigationBarTitleText": "职位列表",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/hr/jobs/create",
+      "style": {
+        "navigationBarTitleText": "创建/编辑职位",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/hr/profile/index",
+      "style": {
+        "navigationBarTitleText": "个人中心",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "SmartHire+",
+    "navigationBarBackgroundColor": "#ffffff",
+    "backgroundColor": "#f6f9ff"
+  },
+  "tabBar": {
+    "custom": true,
+    "color": "#6b778c",
+    "selectedColor": "#4ba3ff",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/seeker/index/index",
+        "text": "岗位",
+        "iconPath": "static/tab-jobs.png",
+        "selectedIconPath": "static/tab-jobs-active.png"
+      },
+      {
+        "pagePath": "pages/seeker/chat/index",
+        "text": "消息",
+        "iconPath": "static/tab-chat.png",
+        "selectedIconPath": "static/tab-chat-active.png"
+      },
+      {
+        "pagePath": "pages/seeker/profile/index",
+        "text": "我的",
+        "iconPath": "static/tab-profile.png",
+        "selectedIconPath": "static/tab-profile-active.png"
+      },
+      {
+        "pagePath": "pages/hr/hr/home/index",
+        "text": "工作台",
+        "iconPath": "static/tab-home.png",
+        "selectedIconPath": "static/tab-home-active.png"
+      },
+      {
+        "pagePath": "pages/hr/hr/jobs/index",
+        "text": "岗位",
+        "iconPath": "static/tab-jobs.png",
+        "selectedIconPath": "static/tab-jobs-active.png"
+      },
+      {
+        "pagePath": "pages/hr/hr/messages/index",
+        "text": "消息",
+        "iconPath": "static/tab-chat.png",
+        "selectedIconPath": "static/tab-chat-active.png"
+      }
+    ]
+  }
+}

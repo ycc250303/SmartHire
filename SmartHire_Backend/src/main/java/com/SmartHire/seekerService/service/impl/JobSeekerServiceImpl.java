@@ -1,11 +1,11 @@
 package com.SmartHire.seekerService.service.impl;
 
-import com.SmartHire.common.api.UserAuthApi;
 import com.SmartHire.common.auth.UserContext;
 import com.SmartHire.common.exception.enums.ErrorCode;
 import com.SmartHire.common.exception.exception.BusinessException;
 import com.SmartHire.common.utils.AliOssUtil;
 import com.SmartHire.seekerService.dto.SeekerDTO;
+import com.SmartHire.seekerService.dto.SeekerInfoDTO;
 import com.SmartHire.seekerService.mapper.EducationExperienceMapper;
 import com.SmartHire.seekerService.mapper.JobSeekerExpectationMapper;
 import com.SmartHire.seekerService.mapper.JobSeekerMapper;
@@ -16,7 +16,6 @@ import com.SmartHire.seekerService.mapper.WorkExperienceMapper;
 import com.SmartHire.seekerService.model.JobSeeker;
 import com.SmartHire.seekerService.model.Resume;
 import com.SmartHire.seekerService.service.JobSeekerService;
-import com.SmartHire.userAuthService.model.User;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import java.util.Date;
@@ -38,8 +37,6 @@ import org.springframework.util.StringUtils;
 public class JobSeekerServiceImpl extends ServiceImpl<JobSeekerMapper, JobSeeker>
     implements JobSeekerService {
   @Autowired private JobSeekerMapper jobSeekerMapper;
-
-  @Autowired private UserAuthApi userAuthApi;
 
   @Autowired private UserContext userContext;
 
@@ -92,14 +89,18 @@ public class JobSeekerServiceImpl extends ServiceImpl<JobSeekerMapper, JobSeeker
    * @return 求职者信息
    */
   @Override
-  public JobSeeker getSeekerInfo() {
-    Long userId = userContext.getCurrentUserId();
+  public SeekerInfoDTO getSeekerInfo() {
+    JobSeeker jobSeeker = getJobSeekerEntity();
+    return toSeekerInfoDTO(jobSeeker);
+  }
 
-    // 验证用户是否存在和身份
-    User user = userAuthApi.getUserById(userId);
-    if (user.getUserType() != 1) {
-      throw new BusinessException(ErrorCode.USER_NOT_SEEKER);
-    }
+  /**
+   * 获取JobSeeker实体（内部方法，用于需要操作数据库的场景）
+   *
+   * @return JobSeeker实体
+   */
+  private JobSeeker getJobSeekerEntity() {
+    Long userId = userContext.getCurrentUserId();
 
     // 通过用户ID获取（job_seeker表有user_id字段，且是唯一索引）
     JobSeeker jobSeeker = lambdaQuery().eq(JobSeeker::getUserId, userId).one();
@@ -109,6 +110,23 @@ public class JobSeekerServiceImpl extends ServiceImpl<JobSeekerMapper, JobSeeker
     }
 
     return jobSeeker;
+  }
+
+  /**
+   * 将JobSeeker转换为SeekerInfoDTO
+   *
+   * @param jobSeeker 求职者信息
+   * @return SeekerInfoDTO
+   */
+  private SeekerInfoDTO toSeekerInfoDTO(JobSeeker jobSeeker) {
+    SeekerInfoDTO dto = new SeekerInfoDTO();
+    dto.setRealName(jobSeeker.getRealName());
+    dto.setBirthDate(jobSeeker.getBirthDate());
+    dto.setCurrentCity(jobSeeker.getCurrentCity());
+    dto.setEducation(jobSeeker.getEducation());
+    dto.setJobStatus(jobSeeker.getJobStatus());
+    dto.setGraduationYear(jobSeeker.getGraduationYear());
+    return dto;
   }
 
   /**
@@ -137,7 +155,7 @@ public class JobSeekerServiceImpl extends ServiceImpl<JobSeekerMapper, JobSeeker
   @Transactional(rollbackFor = Exception.class)
   public void updateSeekerInfo(SeekerDTO request) {
     // 获取当前求职者信息
-    JobSeeker jobSeeker = getSeekerInfo();
+    JobSeeker jobSeeker = getJobSeekerEntity();
     if (jobSeeker == null) {
       throw new BusinessException(ErrorCode.SEEKER_NOT_EXIST);
     }
@@ -182,7 +200,7 @@ public class JobSeekerServiceImpl extends ServiceImpl<JobSeekerMapper, JobSeeker
   @Transactional(rollbackFor = Exception.class)
   public void deleteJobSeeker() {
     // 获取当前求职者信息
-    JobSeeker jobSeeker = getSeekerInfo();
+    JobSeeker jobSeeker = getJobSeekerEntity();
     if (jobSeeker == null) {
       throw new BusinessException(ErrorCode.SEEKER_NOT_EXIST);
     }

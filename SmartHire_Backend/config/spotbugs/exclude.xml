@@ -18,14 +18,14 @@
         </Or>
     </Match>
     <Match>
-        <Class name="com.SmartHire.hrService.dto.JobPositionCreateDTO"/>
+        <Class name="com.SmartHire.hrService.dto.JobInfoCreateDTO"/>
         <Or>
             <Bug code="EI"/>
             <Bug code="EI2"/>
         </Or>
     </Match>
     <Match>
-        <Class name="com.SmartHire.hrService.dto.JobPositionListDTO"/>
+        <Class name="com.SmartHire.hrService.dto.JobInfoListDTO"/>
         <Or>
             <Bug code="EI"/>
             <Bug code="EI2"/>
@@ -66,7 +66,7 @@
             <Class name="com.SmartHire.hrService.model.Company"/>
             <Class name="com.SmartHire.hrService.model.Complaint"/>
             <Class name="com.SmartHire.hrService.model.HrInfo"/>
-            <Class name="com.SmartHire.hrService.model.JobPosition"/>
+            <Class name="com.SmartHire.hrService.model.JobInfo"/>
             <Class name="com.SmartHire.hrService.model.JobSkillRequirement"/>
             <Class name="com.SmartHire.messageService.model.ChatMessage"/>
             <Class name="com.SmartHire.messageService.model.Conversation"/>

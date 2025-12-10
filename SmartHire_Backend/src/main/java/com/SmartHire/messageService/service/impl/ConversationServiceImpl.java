@@ -76,12 +76,36 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationMapper, Con
                 .eq(Conversation::getUser2Id, userId)
                 .eq(Conversation::getDeletedByUser2, (byte) 0));
 
+    // 先按最后消息时间降序查询
     wrapper.orderByDesc(Conversation::getLastMessageTime);
 
     List<Conversation> conversations = this.list(wrapper);
 
+    // 转换为 DTO 并排序：置顶优先，然后按最后消息时间降序
     return conversations.stream()
         .map(conv -> convertToConversationDTO(conv, userId))
+        .sorted(
+            (dto1, dto2) -> {
+              // 先按置顶状态排序（置顶的在前，1 > 0）
+              int pinnedCompare =
+                  Byte.compare(
+                      dto2.getPinned() != null ? dto2.getPinned() : 0,
+                      dto1.getPinned() != null ? dto1.getPinned() : 0);
+              if (pinnedCompare != 0) {
+                return pinnedCompare;
+              }
+              // 置顶状态相同时，按最后消息时间降序
+              if (dto1.getLastMessageTime() == null && dto2.getLastMessageTime() == null) {
+                return 0;
+              }
+              if (dto1.getLastMessageTime() == null) {
+                return 1;
+              }
+              if (dto2.getLastMessageTime() == null) {
+                return -1;
+              }
+              return dto2.getLastMessageTime().compareTo(dto1.getLastMessageTime());
+            })
         .collect(Collectors.toList());
   }
 

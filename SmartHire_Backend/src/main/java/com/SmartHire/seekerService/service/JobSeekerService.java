@@ -1,6 +1,7 @@
 package com.SmartHire.seekerService.service;
 
 import com.SmartHire.seekerService.dto.SeekerDTO;
+import com.SmartHire.seekerService.dto.SeekerInfoDTO;
 import com.SmartHire.seekerService.model.JobSeeker;
 import com.baomidou.mybatisplus.extension.service.IService;
 
@@ -23,7 +24,7 @@ public interface JobSeekerService extends IService<JobSeeker> {
    *
    * @return 求职者信息
    */
-  JobSeeker getSeekerInfo();
+  SeekerInfoDTO getSeekerInfo();
 
   /**
    * 获取求职者ID

@@ -50,6 +50,8 @@ public enum ErrorCode {
   RESUME_LIMIT_EXCEEDED(1123, "附件简历数量已达上限（最多5个）"),
   RESUME_FILE_EMPTY(1124, "上传的简历文件不能为空"),
   RESUME_UPLOAD_FAILED(1125, "简历上传失败"),
+  JOB_FAVORITE_ALREADY_EXISTS(1126, "该岗位已收藏，请勿重复收藏"),
+  JOB_FAVORITE_NOT_EXIST(1127, "收藏记录不存在"),
 
   // HR和岗位相关错误码 (1200-1299)
   HR_NOT_EXIST(1201, "HR信息不存在"),
@@ -58,6 +60,9 @@ public enum ErrorCode {
   COMPANY_NOT_EXIST(1204, "公司信息不存在"),
   JOB_NOT_EXIST(1205, "岗位不存在"),
   JOB_NOT_BELONG_TO_HR(1206, "岗位不属于当前HR"),
+  INTERNSHIP_DAYS_PER_WEEK_REQUIRED(1207, "实习类型职位必须填写每周实习天数"),
+  INTERNSHIP_DURATION_MONTHS_REQUIRED(1208, "实习类型职位必须填写实习时长"),
+  EXPERIENCE_REQUIRED_FOR_FULL_TIME(1209, "全职类型职位必须填写经验要求"),
 
   // 招聘（投递/推荐）相关错误码 (1300-1399)
   APPLICATION_ALREADY_EXISTS(1301, "您已投递过该职位，请勿重复投递"),

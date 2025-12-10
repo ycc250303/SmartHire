@@ -1,5 +1,7 @@
 package com.SmartHire.common.api;
 
+import com.SmartHire.hrService.dto.JobCardDTO;
+
 /** HR服务API接口 用于模块间通信，避免直接访问数据库 */
 public interface HrApi {
 
@@ -27,4 +29,12 @@ public interface HrApi {
    * @return HR ID，如果岗位不存在返回null
    */
   Long getHrIdByJobId(Long jobId);
+
+  /**
+   * 根据岗位ID获取岗位卡片信息
+   *
+   * @param jobId 岗位ID
+   * @return 岗位卡片信息，如果岗位不存在返回null
+   */
+  JobCardDTO getJobCardByJobId(Long jobId);
 }

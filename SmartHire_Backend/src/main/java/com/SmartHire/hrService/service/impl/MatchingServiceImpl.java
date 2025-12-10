@@ -5,11 +5,11 @@ import com.SmartHire.common.auth.UserContext;
 import com.SmartHire.common.exception.enums.ErrorCode;
 import com.SmartHire.common.exception.exception.BusinessException;
 import com.SmartHire.hrService.mapper.HrInfoMapper;
-import com.SmartHire.hrService.mapper.JobPositionMapper;
+import com.SmartHire.hrService.mapper.JobInfoMapper;
 import com.SmartHire.hrService.mapper.JobSeekerSkillMapper;
 import com.SmartHire.hrService.mapper.JobSkillRequirementMapper;
 import com.SmartHire.hrService.model.HrInfo;
-import com.SmartHire.hrService.model.JobPosition;
+import com.SmartHire.hrService.model.JobInfo;
 import com.SmartHire.hrService.service.MatchingService;
 import com.SmartHire.recruitmentService.dto.ApplicationListDTO;
 import com.SmartHire.recruitmentService.mapper.ApplicationMapper;
@@ -38,7 +38,7 @@ public class MatchingServiceImpl implements MatchingService {
 
   @Autowired private HrInfoMapper hrInfoMapper;
 
-  @Autowired private JobPositionMapper jobPositionMapper;
+  @Autowired private JobInfoMapper jobInfoMapper;
 
   @Autowired private JobSkillRequirementMapper jobSkillRequirementMapper;
 
@@ -69,15 +69,15 @@ public class MatchingServiceImpl implements MatchingService {
   }
 
   /** 校验岗位归属 */
-  private JobPosition validateJobOwnership(Long jobId, Long hrId) {
-    JobPosition jobPosition = jobPositionMapper.selectById(jobId);
-    if (jobPosition == null) {
+  private JobInfo validateJobOwnership(Long jobId, Long hrId) {
+    JobInfo jobInfo = jobInfoMapper.selectById(jobId);
+    if (jobInfo == null) {
       throw new BusinessException(ErrorCode.JOB_NOT_EXIST);
     }
-    if (!jobPosition.getHrId().equals(hrId)) {
+    if (!jobInfo.getHrId().equals(hrId)) {
       throw new BusinessException(ErrorCode.JOB_NOT_BELONG_TO_HR);
     }
-    return jobPosition;
+    return jobInfo;
   }
 
   @Override

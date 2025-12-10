@@ -3,10 +3,12 @@ package com.SmartHire.seekerService.service.impl;
 import com.SmartHire.common.api.SeekerApi;
 import com.SmartHire.common.exception.enums.ErrorCode;
 import com.SmartHire.common.exception.exception.BusinessException;
+import com.SmartHire.seekerService.dto.SeekerCardDTO;
 import com.SmartHire.seekerService.mapper.JobSeekerMapper;
 import com.SmartHire.seekerService.mapper.ResumeMapper;
 import com.SmartHire.seekerService.model.JobSeeker;
 import com.SmartHire.seekerService.model.Resume;
+import com.SmartHire.seekerService.service.SeekerCardService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,6 +20,8 @@ public class SeekerApiImpl implements SeekerApi {
   @Autowired private JobSeekerMapper jobSeekerMapper;
 
   @Autowired private ResumeMapper resumeMapper;
+
+  @Autowired private SeekerCardService seekerCardService;
 
   @Override
   public Long getJobSeekerIdByUserId(Long userId) {
@@ -74,5 +78,18 @@ public class SeekerApiImpl implements SeekerApi {
       return;
     }
     jobSeekerService.deleteJobSeekerByUserId(userId);
+  }
+
+  @Override
+  public SeekerCardDTO getSeekerCard(Long userId) {
+    if (userId == null) {
+      return null;
+    }
+    try {
+      return seekerCardService.getJobCard(userId);
+    } catch (BusinessException e) {
+      // 其他业务异常（如 SEEKER_NOT_EXIST）返回null，让调用方处理
+      return null;
+    }
   }
 }

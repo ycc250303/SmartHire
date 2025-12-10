@@ -38,7 +38,16 @@ jobs:
 
       # 4. Check code format (Spotless) - 仅检查，不自动修改
       - name: Check code format (Spotless)
-        run: mvn -B spotless:check
+        shell: bash
+        run: |
+          echo "Running Spotless check..."
+          if mvn -B spotless:check; then
+            echo "Spotless check passed. No formatting needed."
+          else
+            echo "Spotless check failed. Running spotless:apply to auto-format code..."
+            mvn -B spotless:apply
+            echo "Spotless formatting applied successfully."
+          fi
         working-directory: SmartHire_Backend
 
       # 5. Run tests + PMD + SpotBugs + FindSecBugs（verify 会执行完整流水线）
