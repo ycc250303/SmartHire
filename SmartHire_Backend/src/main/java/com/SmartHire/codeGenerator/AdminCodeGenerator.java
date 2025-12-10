@@ -134,6 +134,7 @@ public class AdminCodeGenerator {
         }
     }
 
+    @SuppressWarnings("unused")
     private static void generateAdminController(String projectPath) {
         // TODO:修改controller文件的路径
         Path controllerPath = Paths.get(projectPath + "\\src\\main\\java\\com\\SmartHire\\adminService\\controller", "AdminController.java");

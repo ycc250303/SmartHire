@@ -63,10 +63,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         Integer targetStatus = userStatusUpdateDTO.getTargetStatus();
 
         // 如果是从正常状态改为禁用状态，需要检查是否已有封禁记录
-        if (currentStatus == 1 && userStatusUpdateDTO.getTargetStatus() == 0) {
-            if (!banRecordService.isUserBanned(userStatusUpdateDTO.getUserId())) {
-                throw AdminServiceException.operationFailed("封禁用户请使用专门的封禁接口");
-            }
+        if (currentStatus == 1 && userStatusUpdateDTO.getTargetStatus() == 0 && !banRecordService.isUserBanned(userStatusUpdateDTO.getUserId())) {
+            throw AdminServiceException.operationFailed("封禁用户请使用专门的封禁接口");
         }
 
         // 4. 更新用户状态
