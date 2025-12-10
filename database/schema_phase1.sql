@@ -18,7 +18,7 @@ CREATE TABLE `user` (
     `password` VARCHAR(255) NOT NULL COMMENT '加密密码',
     `email` VARCHAR(100) NOT NULL COMMENT '邮箱',
     `phone` VARCHAR(20) COMMENT '手机号',
-    `gender` TINYINT NOT NULL DEFAULT 2 COMMENT '性别：0-女 1-男 2-不愿透露',
+    `gender` TINYINT NOT NULL DEFAULT 2 COMMENT '性别：0-男 1-女 2-不愿透露',
     `user_type` TINYINT NOT NULL COMMENT '用户类型：1-求职者 2-HR',
     `status` TINYINT DEFAULT 1 COMMENT '账户状态：0-禁用 1-正常',
     `avatar_url` VARCHAR(255) COMMENT '头像URL',
