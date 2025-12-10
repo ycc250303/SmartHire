@@ -1,5 +1,6 @@
 package com.SmartHire.common.exception.handler;
 
+import com.SmartHire.adminService.exception.AdminServiceException;
 import com.SmartHire.common.entity.Result;
 import com.SmartHire.common.exception.enums.ErrorCode;
 import com.SmartHire.common.exception.exception.AuthenticationException;
@@ -34,6 +35,13 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(AuthenticationException.class)
   public Result<?> handleAuthenticationException(AuthenticationException e) {
     log.warn("认证异常: code={}, message={}", e.getCode(), e.getMessage());
+    return Result.error(e.getCode(), e.getMessage());
+  }
+
+  /** 处理管理员服务异常 */
+  @ExceptionHandler(AdminServiceException.class)
+  public Result<?> handleAdminServiceException(AdminServiceException e) {
+    log.warn("管理员服务异常: code={}, message={}", e.getCode(), e.getMessage());
     return Result.error(e.getCode(), e.getMessage());
   }
 
