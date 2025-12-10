@@ -3,6 +3,8 @@ package com.SmartHire.hrService.service;
 import com.SmartHire.hrService.dto.JobInfoCreateDTO;
 import com.SmartHire.hrService.dto.JobInfoListDTO;
 import com.SmartHire.hrService.dto.JobInfoUpdateDTO;
+import com.SmartHire.hrService.dto.JobSearchDTO;
+import com.SmartHire.hrService.dto.JobCardDTO;
 import com.SmartHire.hrService.model.JobInfo;
 import com.baomidou.mybatisplus.extension.service.IService;
 import java.util.List;
@@ -56,4 +58,12 @@ public interface JobInfoService extends IService<JobInfo> {
    * @return 岗位详情
    */
   JobInfoListDTO getJobInfoById(Long jobId);
+
+  /**
+   * 求职者端岗位筛选
+   *
+   * @param searchDTO 筛选条件
+   * @return 岗位卡片列表
+   */
+  List<JobCardDTO> searchPublicJobs(JobSearchDTO searchDTO);
 }

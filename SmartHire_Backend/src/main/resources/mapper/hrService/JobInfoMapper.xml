@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.SmartHire.hrService.mapper.JobInfoMapper">
+
+    <resultMap id="JobCardResultMap" type="com.SmartHire.hrService.dto.JobCardDTO">
+        <result column="job_id" property="jobId"/>
+        <result column="job_title" property="jobTitle"/>
+        <result column="salary_min" property="salaryMin"/>
+        <result column="salary_max" property="salaryMax"/>
+        <result column="city" property="city"/>
+        <result column="address" property="address"/>
+        <result column="company_name" property="companyName"/>
+        <result column="company_scale" property="companyScale"/>
+        <result column="financing_stage" property="financingStage"/>
+        <result column="hr_name" property="hrName"/>
+        <result column="hr_avatar_url" property="hrAvatarUrl"/>
+        <result column="job_type" property="jobType"/>
+        <result column="education_required" property="educationRequired"/>
+    </resultMap>
+
+    <select id="searchPublicJobCards" resultMap="JobCardResultMap">
+        SELECT
+            j.id AS job_id,
+            j.job_title,
+            j.salary_min,
+            j.salary_max,
+            j.city,
+            j.address,
+            j.job_type,
+            j.education_required,
+            c.company_name,
+            c.company_scale,
+            c.financing_stage,
+            h.real_name AS hr_name,
+            u.avatar_url AS hr_avatar_url
+        FROM job_info j
+        JOIN company c ON j.company_id = c.id
+        JOIN hr_info h ON j.hr_id = h.id
+        JOIN user u ON h.user_id = u.id
+        <if test="skills != null and skills.size > 0">
+            JOIN job_skill_requirement jsr ON jsr.job_id = j.id
+        </if>
+        WHERE j.status = 1
+        <if test="city != null and city != ''">
+            AND j.city = #{city}
+        </if>
+        <if test="jobType != null">
+            AND j.job_type = #{jobType}
+        </if>
+        <if test="educationRequired != null">
+            AND (j.education_required IS NULL OR j.education_required = #{educationRequired})
+        </if>
+        <if test="minSalary != null">
+            AND (j.salary_max IS NULL OR j.salary_max &gt;= #{minSalary})
+        </if>
+        <if test="maxSalary != null">
+            AND (j.salary_min IS NULL OR j.salary_min &lt;= #{maxSalary})
+        </if>
+        <if test="companyId != null">
+            AND j.company_id = #{companyId}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND (
+                j.job_title LIKE CONCAT('%', #{keyword}, '%')
+                OR j.description LIKE CONCAT('%', #{keyword}, '%')
+                OR j.requirements LIKE CONCAT('%', #{keyword}, '%')
+            )
+        </if>
+        <if test="skills != null and skills.size > 0">
+            AND jsr.skill_name IN
+            <foreach collection="skills" item="skill" open="(" close=")" separator=",">
+                #{skill}
+            </foreach>
+        </if>
+        GROUP BY j.id
+        ORDER BY (j.published_at IS NULL), j.published_at DESC, j.created_at DESC
+        <if test="offset != null and limit != null">
+            LIMIT #{limit} OFFSET #{offset}
+        </if>
+    </select>
+
+</mapper>
+

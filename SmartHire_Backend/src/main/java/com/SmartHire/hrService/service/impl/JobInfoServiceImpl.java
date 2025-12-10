@@ -7,6 +7,8 @@ import com.SmartHire.common.exception.exception.BusinessException;
 import com.SmartHire.hrService.dto.JobInfoCreateDTO;
 import com.SmartHire.hrService.dto.JobInfoListDTO;
 import com.SmartHire.hrService.dto.JobInfoUpdateDTO;
+import com.SmartHire.hrService.dto.JobCardDTO;
+import com.SmartHire.hrService.dto.JobSearchDTO;
 import com.SmartHire.hrService.mapper.CompanyMapper;
 import com.SmartHire.hrService.mapper.HrInfoMapper;
 import com.SmartHire.hrService.mapper.JobInfoMapper;
@@ -337,5 +339,24 @@ public class JobInfoServiceImpl extends ServiceImpl<JobInfoMapper, JobInfo>
     dto.setSkills(skills);
 
     return dto;
+  }
+
+  @Override
+  public List<JobCardDTO> searchPublicJobs(JobSearchDTO searchDTO) {
+    int page = searchDTO.getPage() == null ? 1 : searchDTO.getPage();
+    int size = searchDTO.getSize() == null ? 20 : searchDTO.getSize();
+    int offset = (page - 1) * size;
+
+    return baseMapper.searchPublicJobCards(
+        searchDTO.getCity(),
+        searchDTO.getJobType(),
+        searchDTO.getEducationRequired(),
+        searchDTO.getMinSalary(),
+        searchDTO.getMaxSalary(),
+        searchDTO.getKeyword(),
+        searchDTO.getSkills(),
+        searchDTO.getCompanyId(),
+        offset,
+        size);
   }
 }

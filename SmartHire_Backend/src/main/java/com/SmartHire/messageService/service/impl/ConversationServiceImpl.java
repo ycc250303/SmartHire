@@ -188,6 +188,17 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationMapper, Con
     dto.setOtherUserName(otherUserName);
     dto.setOtherUserAvatar(otherUserAvatar);
 
+    // 对方公司信息（若对方为HR，否则可能为null）
+    Long otherCompanyId =
+        this.getBaseMapper().getOtherCompanyId(conversation.getId(), currentUserId);
+    dto.setOtherCompanyId(otherCompanyId);
+    if (otherCompanyId != null) {
+      dto.setOtherCompanyName(
+          this.getBaseMapper().getOtherCompanyName(conversation.getId(), currentUserId));
+      dto.setOtherCompanyLogo(
+          this.getBaseMapper().getOtherCompanyLogo(conversation.getId(), currentUserId));
+    }
+
     return dto;
   }
 }
