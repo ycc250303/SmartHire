@@ -11,7 +11,7 @@ public interface SkillService extends IService<Skill> {
 
   void updateSkill(Long id, SkillDTO request);
 
-  List<Skill> getSkills();
+  List<SkillDTO> getSkills();
 
   void deleteSkill(Long id);
 }

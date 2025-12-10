@@ -1,9 +1,11 @@
 package com.SmartHire.common.config;
 
-import com.SmartHire.common.filters.JwtAuthenticationFilter;
+import com.SmartHire.common.security.JwtAuthenticationFilter;
 import com.SmartHire.common.security.RestAuthenticationEntryPoint;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -26,11 +28,14 @@ public class SecurityConfig {
       RestAuthenticationEntryPoint authenticationEntryPoint)
       throws Exception {
     http.csrf(csrf -> csrf.disable())
+        .cors(Customizer.withDefaults())
         .sessionManagement(
             session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(
             auth ->
-                auth.requestMatchers(
+                auth.requestMatchers(HttpMethod.OPTIONS, "/**")
+                    .permitAll()
+                    .requestMatchers(
                         "/health",
                         "/user-auth/login",
                         "/user-auth/register",

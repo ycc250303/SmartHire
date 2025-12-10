@@ -1,5 +1,6 @@
 package com.SmartHire.userAuthService.service.impl;
 
+import com.SmartHire.common.api.MessageApi;
 import com.SmartHire.common.api.SeekerApi;
 import com.SmartHire.common.auth.JwtTokenExtractor;
 import com.SmartHire.common.auth.UserContext;
@@ -66,6 +67,9 @@ public class UserAuthServiceImpl extends ServiceImpl<UserAuthMapper, User>
 
   @Autowired(required = false)
   private SeekerApi seekerApi;
+
+  @Autowired(required = false)
+  private MessageApi messageApi;
 
   @Value("${jwt.access-token-valid-time}")
   private long accessTokenValidTime;
@@ -468,7 +472,14 @@ public class UserAuthServiceImpl extends ServiceImpl<UserAuthMapper, User>
       }
     }
 
-    // 5. 删除用户记录
+    // 5. 删除用户相关的消息和会话（共同部分，HR和求职者都需要删除）
+    if (messageApi != null) {
+      messageApi.deleteUserMessages(userId);
+    } else {
+      log.warn("MessageApi 未注入，跳过删除消息数据");
+    }
+
+    // 6. 删除用户记录
     userMapper.deleteById(userId);
     log.info("删除用户成功，用户ID：{}", userId);
   }

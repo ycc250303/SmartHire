@@ -22,7 +22,7 @@ public interface ResumeService extends IService<Resume> {
   void uploadResume(MultipartFile resumeFile);
 
   /** 查询当前求职者的所有附件简历 */
-  List<Resume> getResumes();
+  List<ResumeDTO> getResumes();
 
   /**
    * 更新附件简历元数据（只能修改名称和隐私级别）

@@ -33,7 +33,7 @@ public interface EducationExperienceService extends IService<EducationExperience
    *
    * @return 教育经历列表
    */
-  java.util.List<EducationExperience> getEducationExperiences();
+  java.util.List<EducationExperienceDTO> getEducationExperiences();
 
   /**
    * 删除教育经历

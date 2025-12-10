@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -96,10 +97,10 @@ public class JobSeekerExpectationServiceImpl
   /**
    * 获取求职期望列表
    *
-   * @return List<JobSeekerExpectation>
+   * @return List<JobSeekerExpectationDTO>
    */
   @Override
-  public List<JobSeekerExpectation> getJobSeekerExpectations() {
+  public List<JobSeekerExpectationDTO> getJobSeekerExpectations() {
     // 获取当前用户的求职者ID
     Long jobSeekerId = currentSeekerId();
 
@@ -107,7 +108,27 @@ public class JobSeekerExpectationServiceImpl
     return lambdaQuery()
         .eq(JobSeekerExpectation::getJobSeekerId, jobSeekerId)
         .orderByDesc(JobSeekerExpectation::getCreatedAt)
-        .list();
+        .list()
+        .stream()
+        .map(this::toDto)
+        .collect(Collectors.toList());
+  }
+
+  /**
+   * 将JobSeekerExpectation转换为JobSeekerExpectationDTO
+   *
+   * @param expectation 求职期望
+   * @return JobSeekerExpectationDTO
+   */
+  private JobSeekerExpectationDTO toDto(JobSeekerExpectation expectation) {
+    JobSeekerExpectationDTO dto = new JobSeekerExpectationDTO();
+    dto.setId(expectation.getId());
+    dto.setExpectedPosition(expectation.getExpectedPosition());
+    dto.setExpectedIndustry(expectation.getExpectedIndustry());
+    dto.setWorkCity(expectation.getWorkCity());
+    dto.setSalaryMin(expectation.getSalaryMin());
+    dto.setSalaryMax(expectation.getSalaryMax());
+    return dto;
   }
 
   /**

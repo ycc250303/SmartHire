@@ -17,6 +17,9 @@ public class EducationExperienceDTO {
     public static final int CURRENT_YEAR = Year.now().getValue();
   }
 
+  /** 记录ID（用于响应） */
+  private Long id;
+
   @NotBlank(message = "学校名称不能为空", groups = Create.class)
   private String schoolName;
 

@@ -50,6 +50,8 @@ public enum ErrorCode {
   RESUME_LIMIT_EXCEEDED(1123, "附件简历数量已达上限（最多5个）"),
   RESUME_FILE_EMPTY(1124, "上传的简历文件不能为空"),
   RESUME_UPLOAD_FAILED(1125, "简历上传失败"),
+  JOB_FAVORITE_ALREADY_EXISTS(1126, "该岗位已收藏，请勿重复收藏"),
+  JOB_FAVORITE_NOT_EXIST(1127, "收藏记录不存在"),
 
   // HR和岗位相关错误码 (1200-1299)
   HR_NOT_EXIST(1201, "HR信息不存在"),

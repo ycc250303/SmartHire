@@ -11,7 +11,6 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -43,9 +42,6 @@ public class OnlineResumeServiceImpl implements OnlineResumeService {
 
     try {
       User user = userAuthApi.getUserById(userId);
-      if (!Objects.equals(user.getUserType(), 1)) {
-        throw new BusinessException(ErrorCode.USER_NOT_SEEKER);
-      }
 
       JobSeeker jobSeeker =
           jobSeekerMapper.selectOne(

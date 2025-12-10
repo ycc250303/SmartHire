@@ -88,10 +88,6 @@ public class SeekerApiImpl implements SeekerApi {
     try {
       return seekerCardService.getJobCard(userId);
     } catch (BusinessException e) {
-      // 如果用户不是求职者，重新抛出异常，让调用方知道具体原因
-      if (e.getCode().equals(ErrorCode.USER_NOT_SEEKER.getCode())) {
-        throw e;
-      }
       // 其他业务异常（如 SEEKER_NOT_EXIST）返回null，让调用方处理
       return null;
     }

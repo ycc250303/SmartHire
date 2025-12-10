@@ -1,4 +1,4 @@
-package com.SmartHire.common.filters;
+package com.SmartHire.common.security;
 
 import com.SmartHire.common.auth.JwtTokenExtractor;
 import com.SmartHire.common.exception.enums.ErrorCode;

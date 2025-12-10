@@ -34,7 +34,7 @@ public interface JobSeekerExpectationService extends IService<JobSeekerExpectati
    *
    * @return 求职期望列表
    */
-  List<JobSeekerExpectation> getJobSeekerExpectations();
+  List<JobSeekerExpectationDTO> getJobSeekerExpectations();
 
   /**
    * 删除求职期望

@@ -14,6 +14,9 @@ public class ResumeDTO {
 
   public interface Update extends Default {}
 
+  /** 简历ID（用于响应） */
+  private Long id;
+
   @NotBlank(message = "简历名称不能为空", groups = Create.class)
   @Size(
       max = 100,
@@ -30,4 +33,10 @@ public class ResumeDTO {
       message = "隐私级别仅支持1或2",
       groups = {Create.class, Update.class})
   private Byte privacyLevel;
+
+  /** 简历文件URL（用于响应） */
+  private String fileUrl;
+
+  /** 完整度（0-100）（用于响应） */
+  private Integer completeness;
 }
