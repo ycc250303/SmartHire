@@ -26,7 +26,6 @@ export default {
     editResume: '编辑简历',
     selectUniversity: '选择大学',
     selectMajor: '选择专业',
-    selectUniversity: '选择大学',
   },
   pages: {
     jobs: {
@@ -46,7 +45,6 @@ export default {
     chat: {
       title: '消息',
       messages: '消息',
-      notifications: '通知',
       list: {
         empty: '暂无消息',
         loading: '加载中...',
@@ -80,8 +78,13 @@ export default {
         yesterday: '昨天',
         timeFormat: 'HH:mm',
         dateFormat: 'MM月DD日',
+        reply: '回复',
+        replying: '正在回复',
+        you: '你',
+        file: '文件',
       },
       notifications: {
+        title: '通知',
         empty: '暂无通知',
       },
     },

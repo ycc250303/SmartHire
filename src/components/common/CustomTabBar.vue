@@ -130,11 +130,11 @@ function updateSelectedIndex() {
   const route = currentPage.route;
   
   // Determine role based on user's actual role (userType)
-  // UserType: Seeker = 0, HR = 1
+  // UserType: Seeker = 1, HR = 2
   // userType is number, UserType is enum
   const userRole = userStore.userInfo?.userType;
   
-  if (userRole === UserType.HR || userRole === 1) {
+  if (userRole === UserType.HR || userRole === 2) {
     currentRole.value = 'hr';
     // Prevent HR from accessing seeker pages
     if (route.startsWith('pages/seeker/')) {
@@ -143,7 +143,7 @@ function updateSelectedIndex() {
       });
       return;
     }
-  } else if (userRole === UserType.Seeker || userRole === 0) {
+  } else if (userRole === UserType.Seeker || userRole === 1) {
     currentRole.value = 'seeker';
     // Prevent Seeker from accessing HR pages
     if (route.startsWith('pages/hr/hr/') || route.startsWith('pages/hr/')) {

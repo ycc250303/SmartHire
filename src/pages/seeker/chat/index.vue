@@ -39,7 +39,7 @@ const currentCategory = ref<CategoryType>('messages');
 
 const categories = computed(() => [
   { value: 'messages' as CategoryType, label: t('pages.chat.messages') },
-  { value: 'notifications' as CategoryType, label: t('pages.chat.notifications') },
+  { value: 'notifications' as CategoryType, label: t('pages.chat.notifications.title') },
 ]);
 
 const currentComponent = computed(() => {

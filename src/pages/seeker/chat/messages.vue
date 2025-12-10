@@ -27,18 +27,18 @@
         v-for="conversation in sortedConversations"
         :key="conversation.id"
         class="conversation-item"
-        :class="{ pinned: conversation.isPinned === 1 }"
+        :class="{ pinned: conversation.pinned === 1 }"
         @click="openConversation(conversation)"
         @longpress="showActionMenu(conversation)"
       >
         <image
           class="avatar"
-          :src="conversation.avatarUrl || '/static/user-avatar.png'"
+          :src="conversation.otherUserAvatar || '/static/user-avatar.png'"
           mode="aspectFill"
         />
         <view class="conversation-info">
           <view class="conversation-header">
-            <text class="username">{{ conversation.username }}</text>
+            <text class="username">{{ conversation.otherUserName }}</text>
             <text class="time">{{ formatTime(conversation.lastMessageTime) }}</text>
           </view>
           <view class="conversation-footer">
@@ -66,8 +66,8 @@ const error = ref<string | null>(null);
 const refreshing = ref(false);
 
 const sortedConversations = computed(() => {
-  const pinned = conversations.value.filter(c => c.isPinned === 1);
-  const unpinned = conversations.value.filter(c => c.isPinned !== 1);
+  const pinned = conversations.value.filter(c => c.pinned === 1);
+  const unpinned = conversations.value.filter(c => c.pinned !== 1);
   
   const sortByTime = (a: Conversation, b: Conversation) => {
     const timeA = a.lastMessageTime ? new Date(a.lastMessageTime).getTime() : 0;
@@ -135,12 +135,12 @@ function formatTime(time?: string): string {
 
 function openConversation(conversation: Conversation) {
   uni.navigateTo({
-    url: `/pages/seeker/chat/conversation?id=${conversation.id}&userId=${conversation.userId}&username=${encodeURIComponent(conversation.username)}`
+    url: `/pages/seeker/chat/conversation?id=${conversation.id}&userId=${conversation.otherUserId}&username=${encodeURIComponent(conversation.otherUserName)}`
   });
 }
 
 function showActionMenu(conversation: Conversation) {
-  const isPinned = conversation.isPinned === 1;
+  const isPinned = conversation.pinned === 1;
   uni.showActionSheet({
     itemList: [
       isPinned ? t('pages.chat.list.unpin') : t('pages.chat.list.pin'),
@@ -148,7 +148,7 @@ function showActionMenu(conversation: Conversation) {
     ],
     success: (res) => {
       if (res.tapIndex === 0) {
-        handlePinConversation(conversation, isPinned ? 0 : 1);
+        handlePinConversation(conversation, !isPinned);
       } else if (res.tapIndex === 1) {
         handleDeleteConversation(conversation);
       }
@@ -156,12 +156,12 @@ function showActionMenu(conversation: Conversation) {
   });
 }
 
-async function handlePinConversation(conversation: Conversation, isPinned: number) {
+async function handlePinConversation(conversation: Conversation, pinned: boolean) {
   try {
-    await pinConversation(conversation.id, isPinned);
-    conversation.isPinned = isPinned;
+    await pinConversation(conversation.id, pinned);
+    conversation.pinned = pinned ? 1 : 0;
     uni.showToast({
-      title: isPinned === 1 ? t('pages.chat.list.pinSuccess') : t('pages.chat.list.unpinSuccess'),
+      title: pinned ? t('pages.chat.list.pinSuccess') : t('pages.chat.list.unpinSuccess'),
       icon: 'success',
       duration: 1500
     });

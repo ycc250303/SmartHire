@@ -45,7 +45,6 @@ export default {
     chat: {
       title: 'Messages',
       messages: 'Messages',
-      notifications: 'Notifications',
       list: {
         empty: 'No messages',
         loading: 'Loading...',
@@ -79,8 +78,13 @@ export default {
         yesterday: 'Yesterday',
         timeFormat: 'HH:mm',
         dateFormat: 'MMM DD',
+        reply: 'Reply',
+        replying: 'Replying',
+        you: 'You',
+        file: 'File',
       },
-      notifications: {
+      notifications: {  
+        title: 'Notifications',
         empty: 'No notifications',
       },
     },

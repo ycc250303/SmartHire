@@ -1,48 +1,48 @@
 import { http } from '../http';
 
 export interface Conversation {
-  id: string;
-  userId: number;
-  username: string;
-  avatarUrl?: string;
-  lastMessage?: string;
-  lastMessageTime?: string;
+  id: number;
+  otherUserId: number;
+  otherUserName: string;
+  otherUserAvatar: string;
+  lastMessage: string;
+  lastMessageTime: string;
   unreadCount: number;
-  isPinned: number;
-  createdAt?: string;
-  updatedAt?: string;
+  pinned: number;
+  hasNotification: number;
 }
 
 export interface Message {
-  id: string;
-  conversationId: string;
+  id: number;
+  conversationId: number;
   senderId: number;
   receiverId: number;
-  content: string;
   messageType: number;
-  createdAt: string;
+  content: string;
+  fileUrl: string | null;
+  replyTo: number | null;
   isRead: number;
+  createdAt: string;
+  replyContent: string | null;
+  replyMessageType: number | null;
 }
 
 export interface GetChatHistoryParams {
-  conversationId: string;
+  conversationId: number;
   page?: number;
-  pageSize?: number;
+  size?: number;
 }
 
 export interface SendMessageParams {
   receiverId: number;
+  applicationId: number;
+  messageType: number;
   content: string;
-  messageType?: number;
+  fileUrl: null;
+  replyTo: number | null;
 }
 
-export interface PinConversationParams {
-  isPinned: number;
-}
-
-/**
- * Get conversations list
- */
+// Get conversations list
 export function getConversations(): Promise<Conversation[]> {
   return http<Conversation[]>({
     url: '/api/message/get-conversations',
@@ -50,9 +50,7 @@ export function getConversations(): Promise<Conversation[]> {
   });
 }
 
-/**
- * Get chat history
- */
+// Get chat history
 export function getChatHistory(params: GetChatHistoryParams): Promise<Message[]> {
   const queryParams: Record<string, any> = {
     conversationId: params.conversationId,
@@ -62,8 +60,8 @@ export function getChatHistory(params: GetChatHistoryParams): Promise<Message[]>
     queryParams.page = params.page;
   }
   
-  if (params.pageSize !== undefined) {
-    queryParams.pageSize = params.pageSize;
+  if (params.size !== undefined) {
+    queryParams.size = params.size;
   }
   
   const queryString = Object.keys(queryParams)
@@ -76,59 +74,51 @@ export function getChatHistory(params: GetChatHistoryParams): Promise<Message[]>
   });
 }
 
-/**
- * Send message
- */
+// Send message
 export function sendMessage(params: SendMessageParams): Promise<Message> {
   return http<Message>({
-    url: '/api/message/send-message',
+    url: '/api/message/send-text',
     method: 'POST',
     data: {
       receiverId: params.receiverId,
+      applicationId: params.applicationId,
+      messageType: params.messageType,
       content: params.content,
-      messageType: params.messageType || 0,
+      fileUrl: params.fileUrl,
+      replyTo: params.replyTo,
     },
   });
 }
 
-/**
- * Mark messages as read
- */
-export function markAsRead(conversationId: string): Promise<null> {
+// Mark messages as read
+export function markAsRead(conversationId: number): Promise<null> {
   const queryString = `conversationId=${encodeURIComponent(conversationId)}`;
   return http<null>({
     url: `/api/message/read?${queryString}`,
+    method: 'PATCH',
+  });
+}
+
+// Pin or unpin conversation
+export function pinConversation(id: number, pinned: boolean): Promise<null> {
+  return http<null>({
+    url: `/api/message/pin-conversation/${id}?pinned=${pinned}`,
+    method: 'PATCH',
+  });
+}
+
+// Delete conversation
+export function deleteConversation(id: number): Promise<null> {
+  return http<null>({
+    url: `/api/message/delete-conversation/${id}`,
     method: 'DELETE',
   });
 }
 
-/**
- * Pin or unpin conversation
- */
-export function pinConversation(id: string, isPinned: number): Promise<null> {
-  return http<null>({
-    url: `/api/message/conversation/${id}/pin`,
-    method: 'PATCH',
-    data: { isPinned },
-  });
-}
-
-/**
- * Delete conversation
- */
-export function deleteConversation(id: string): Promise<null> {
-  return http<null>({
-    url: `/api/message/conversation/${id}`,
-    method: 'PATCH',
-  });
-}
-
-/**
- * Get unread message count
- */
+// Get unread message count
 export function getUnreadCount(): Promise<number> {
   return http<number>({
-    url: '/api/message/unread-count',
+    url: '/api/message/get-unread-count',
     method: 'GET',
   });
 }
