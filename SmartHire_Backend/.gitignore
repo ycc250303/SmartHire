@@ -35,5 +35,13 @@ build/
 # Local configuration overrides
 src/main/resources/application-local.yml
 
+# docker 
 smarthire_deploy
 smarthire_deploy.pub
+
+# nginx
+nginx-smarthire.conf
+nginx安装步骤.md
+
+# 测试
+/API文档与测试/

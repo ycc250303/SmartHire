@@ -10,7 +10,7 @@ public class MessageDTO {
   private Long conversationId;
   private Long senderId;
   private Long receiverId;
-  private Byte messageType;
+  private Integer messageType;
   private String content;
   private String fileUrl;
   private Long replyTo;
@@ -19,5 +19,5 @@ public class MessageDTO {
 
   // 可选：被引用消息的预览（如果 replyTo 不为空）
   private String replyContent;
-  private Byte replyMessageType;
+  private Integer replyMessageType;
 }

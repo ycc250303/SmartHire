@@ -67,11 +67,17 @@ public enum ErrorCode {
     // 招聘（投递/推荐）相关错误码 (1300-1399)
     APPLICATION_ALREADY_EXISTS(1301, "您已投递过该职位，请勿重复投递"),
 
-    APPLICATION_NOT_EXIST(1303, "投递记录不存在"),
-    APPLICATION_NOT_BELONG_TO_HR(1304, "投递记录不属于当前HR"),
-    // 会话/聊天相关错误码 (1400-1499)
-    CONVERSATION_NOT_EXIST(1401, "沟通记录不存在"),
-    MESSAGE_USER_TYPE_MISMATCH(1402, "求职者只能和HR发消息，HR只能和求职者发消息"),
+  APPLICATION_NOT_EXIST(1303, "投递记录不存在"),
+  APPLICATION_NOT_BELONG_TO_HR(1304, "投递记录不属于当前HR"),
+  // 会话/聊天相关错误码 (1400-1499)
+  CONVERSATION_NOT_EXIST(1401, "沟通记录不存在"),
+  MESSAGE_USER_TYPE_MISMATCH(1402, "求职者只能和HR发消息，HR只能和求职者发消息"),
+  MESSAGE_TYPE_IS_EMPTY(1403, "消息类型不能为空"),
+  MESSAGE_TYPE_INVALID(1404, "消息类型无效"),
+  CONTENT_IS_EMPTY(1405, "文本消息内容不能为空"),
+  MEDIA_URL_IS_EMPTY(1406, "媒体消息URL不能为空"),
+  MEDIA_UPLOAD_FAILED(1407, "媒体消息附件上传失败"),
+  SYSTEM_ERROR(9999, "系统内部错误,请检查业务处理逻辑,以及是否存在未处理的异常情况");
 
     // 管理员相关错误码 (1500-1599)
     ADMIN_USER_NOT_FOUND(1501, "用户不存在"),
