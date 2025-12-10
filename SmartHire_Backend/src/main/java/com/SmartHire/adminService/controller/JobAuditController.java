@@ -5,7 +5,10 @@ import com.SmartHire.adminService.dto.JobAuditListDTO;
 import com.SmartHire.adminService.dto.JobAuditQueryDTO;
 import com.SmartHire.adminService.model.JobAuditRecord;
 import com.SmartHire.adminService.service.JobAuditService;
+import com.SmartHire.common.auth.RequireUserType;
+import com.SmartHire.common.auth.UserContext;
 import com.SmartHire.common.entity.Result;
+import com.SmartHire.common.enums.UserType;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,11 +27,15 @@ import jakarta.validation.Valid;
 @Slf4j
 @RestController
 @RequestMapping("/admin/review")
+@RequireUserType(UserType.ADMIN)  // 只有管理员可以访问职位审核功能
 @Validated
 public class JobAuditController {
 
     @Autowired
     private JobAuditService jobAuditService;
+
+    @Autowired
+    private UserContext userContext;
 
     /**
      * 获取审核列表（完全支持前端功能）
@@ -52,9 +59,8 @@ public class JobAuditController {
     @PostMapping("/jobs/{jobId}/approve")
     public Result<?> approveJob(@PathVariable Long jobId) {
         // 从SecurityContext获取当前管理员信息
-        // 这里暂时使用模拟的管理员信息，实际应该从Spring Security上下文获取
-        Long auditorId = 1L; // 模拟管理员ID
-        String auditorName = "系统管理员"; // 模拟管理员姓名
+        Long auditorId = userContext.getCurrentUserId();
+        String auditorName = userContext.getCurrentUsername();
 
         jobAuditService.approveJob(jobId, auditorId, auditorName);
         return Result.success("审核通过");
@@ -71,8 +77,8 @@ public class JobAuditController {
     public Result<?> rejectJob(@PathVariable Long jobId,
                              @Valid @RequestBody JobAuditDTO auditDTO) {
         // 从SecurityContext获取当前管理员信息
-        Long auditorId = 1L; // 模拟管理员ID
-        String auditorName = "系统管理员"; // 模拟管理员姓名
+        Long auditorId = userContext.getCurrentUserId();
+        String auditorName = userContext.getCurrentUsername();
 
         jobAuditService.rejectJob(jobId, auditDTO.getReason(), auditorId, auditorName);
         return Result.success("已拒绝该职位");
@@ -89,8 +95,8 @@ public class JobAuditController {
     public Result<?> modifyJob(@PathVariable Long jobId,
                              @Valid @RequestBody JobAuditDTO auditDTO) {
         // 从SecurityContext获取当前管理员信息
-        Long auditorId = 1L; // 模拟管理员ID
-        String auditorName = "系统管理员"; // 模拟管理员姓名
+        Long auditorId = userContext.getCurrentUserId();
+        String auditorName = userContext.getCurrentUsername();
 
         jobAuditService.modifyJob(jobId, auditDTO.getReason(), auditorId, auditorName);
         return Result.success("已要求修改该职位");

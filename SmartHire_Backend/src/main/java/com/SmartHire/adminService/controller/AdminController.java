@@ -6,7 +6,9 @@ import com.SmartHire.adminService.dto.UserManagementDTO;
 import com.SmartHire.adminService.model.BanRecord;
 import com.SmartHire.adminService.service.BanRecordService;
 import com.SmartHire.adminService.service.UserService;
+import com.SmartHire.common.auth.RequireUserType;
 import com.SmartHire.common.entity.Result;
+import com.SmartHire.common.enums.UserType;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +32,7 @@ import java.util.Map;
 @Slf4j
 @RestController
 @RequestMapping("/admin")
+@RequireUserType(UserType.ADMIN)  // 只有管理员可以访问所有admin接口
 @Validated
 public class AdminController {
 
