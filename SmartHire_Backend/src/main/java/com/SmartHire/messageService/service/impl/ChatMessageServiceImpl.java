@@ -1,9 +1,11 @@
 package com.SmartHire.messageService.service.impl;
 
+import com.SmartHire.common.api.ApplicationApi;
 import com.SmartHire.common.api.UserAuthApi;
 import com.SmartHire.common.enums.UserType;
 import com.SmartHire.common.exception.enums.ErrorCode;
 import com.SmartHire.common.exception.exception.BusinessException;
+import com.SmartHire.common.utils.AliOssUtil;
 import com.SmartHire.messageService.dto.MessageDTO;
 import com.SmartHire.messageService.dto.SendMessageDTO;
 import com.SmartHire.messageService.mapper.ChatMessageMapper;
@@ -41,11 +43,63 @@ public class ChatMessageServiceImpl extends ServiceImpl<ChatMessageMapper, ChatM
 
   @Autowired private UserAuthApi userAuthApi;
 
+  @Autowired private AliOssUtil aliOssUtil;
+
+  @Autowired private ApplicationApi applicationApi;
+
   @Override
   @Transactional(rollbackFor = Exception.class)
   public MessageDTO sendMessage(Long senderId, SendMessageDTO dto) {
-    // 0. 验证用户类型：求职者只能和HR发消息，HR只能和求职者发消息
+
+    // 检查receiverId对应的用户是否存在
+    if (!userAuthApi.existsUser(dto.getReceiverId())) {
+      throw new BusinessException(ErrorCode.USER_ID_NOT_EXIST);
+    }
+
+    // 检查applicationId对应的投递记录是否存在
+    if (!applicationApi.existsApplication(dto.getApplicationId())) {
+      throw new BusinessException(ErrorCode.APPLICATION_NOT_EXIST);
+    }
+
+    // 验证用户类型：求职者只能和HR发消息，HR只能和求职者发消息
     validateUserTypeForMessage(senderId, dto.getReceiverId());
+
+    // 验证消息类型
+    Integer messageType = dto.getMessageType();
+    if (messageType == null) {
+      throw new BusinessException(ErrorCode.MESSAGE_TYPE_IS_EMPTY);
+    }
+
+    boolean isText = messageType == 1;
+    boolean isMedia = 2 <= messageType && messageType <= 5;
+
+    if (isMedia) {
+      // 如果没有提供fileUrl，则需要上传文件
+      if (dto.getFileUrl() == null || dto.getFileUrl().isBlank()) {
+        if (dto.getFile() == null || dto.getFile().isEmpty()) {
+          throw new BusinessException(ErrorCode.MEDIA_URL_IS_EMPTY);
+        }
+        try {
+          String objectName = aliOssUtil.generateFileUrl(dto.getFile().getOriginalFilename());
+          String url = aliOssUtil.uploadFile("chat", objectName, dto.getFile().getInputStream());
+          dto.setFileUrl(url);
+        } catch (Exception e) {
+          log.error("上传消息附件失败", e);
+          throw new BusinessException(ErrorCode.MEDIA_UPLOAD_FAILED);
+        }
+      }
+      // 如果媒体消息的content为空，则自动生成
+      if (dto.getContent() == null || dto.getContent().isBlank()) {
+        dto.setContent(generateMessagePreview(dto.getMessageType(), null));
+      }
+      // 如果已经提供了fileUrl，则直接使用，不需要上传文件
+    } else if (isText) {
+      if (dto.getContent() == null || dto.getContent().isBlank()) {
+        throw new BusinessException(ErrorCode.CONTENT_IS_EMPTY);
+      }
+    } else {
+      throw new BusinessException(ErrorCode.MESSAGE_TYPE_INVALID);
+    }
 
     // 1. 获取或创建会话
     Conversation conversation =
@@ -87,7 +141,8 @@ public class ChatMessageServiceImpl extends ServiceImpl<ChatMessageMapper, ChatM
 
     // 7. 通过消息队列异步推送消息
     mqProducerService.sendChatMessage(dto.getReceiverId(), messageDTO);
-
+    log.info("dto.messageType: {}", dto.getMessageType());
+    log.info("message.messageType: {}", message.getMessageType());
     return messageDTO;
   }
 
@@ -183,18 +238,15 @@ public class ChatMessageServiceImpl extends ServiceImpl<ChatMessageMapper, ChatM
   }
 
   /** 生成消息预览 */
-  private String generateMessagePreview(Byte messageType, String content) {
-    if (content == null) {
-      return "";
-    }
+  private String generateMessagePreview(Integer messageType, String content) {
     return switch (messageType) {
       case 1 -> // 文本
-      content.length() > 50 ? content.substring(0, 50) + "..." : content;
+      content == null ? "" : content.length() > 50 ? content.substring(0, 50) + "..." : content;
       case 2 -> "[图片]";
       case 3 -> "[文件]";
       case 4 -> "[语音]";
       case 5 -> "[视频]";
-      default -> content;
+      default -> content == null ? "" : content;
     };
   }
 

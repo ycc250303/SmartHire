@@ -72,6 +72,11 @@ public enum ErrorCode {
   // 会话/聊天相关错误码 (1400-1499)
   CONVERSATION_NOT_EXIST(1401, "沟通记录不存在"),
   MESSAGE_USER_TYPE_MISMATCH(1402, "求职者只能和HR发消息，HR只能和求职者发消息"),
+  MESSAGE_TYPE_IS_EMPTY(1403, "消息类型不能为空"),
+  MESSAGE_TYPE_INVALID(1404, "消息类型无效"),
+  CONTENT_IS_EMPTY(1405, "文本消息内容不能为空"),
+  MEDIA_URL_IS_EMPTY(1406, "媒体消息URL不能为空"),
+  MEDIA_UPLOAD_FAILED(1407, "媒体消息附件上传失败"),
   SYSTEM_ERROR(9999, "系统内部错误,请检查业务处理逻辑,以及是否存在未处理的异常情况");
 
   private final Integer code;

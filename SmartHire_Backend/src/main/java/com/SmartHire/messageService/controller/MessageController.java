@@ -7,12 +7,14 @@ import com.SmartHire.messageService.dto.MessageDTO;
 import com.SmartHire.messageService.dto.SendMessageDTO;
 import com.SmartHire.messageService.service.ChatMessageService;
 import com.SmartHire.messageService.service.ConversationService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.MessageSource;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 沟通消息服务统一控制器
@@ -29,7 +31,6 @@ public class MessageController {
   @Autowired private ConversationService conversationService;
 
   @Autowired private UserContext userContext;
-  @Autowired private MessageSource messageSource;
 
   /** 获取会话列表 */
   @GetMapping("/get-conversations")
@@ -39,9 +40,36 @@ public class MessageController {
     return Result.success("获取会话列表成功", conversations);
   }
 
-  /** 发送消息 */
-  @PostMapping("/send-message")
-  public Result<MessageDTO> sendMessage(@Valid @RequestBody SendMessageDTO dto) {
+  /** 发送文本消息 */
+  @PostMapping(value = "/send-text", consumes = "application/json")
+  public Result<MessageDTO> sendMessageText(@Valid @RequestBody SendMessageDTO dto) {
+    Long userId = userContext.getCurrentUserId();
+    MessageDTO messageDTO = chatMessageService.sendMessage(userId, dto);
+    return Result.success("消息发送成功", messageDTO);
+  }
+
+  /** 发送媒体消息（图片、文件、语音、视频） */
+  @PostMapping(value = "/send-media", consumes = "multipart/form-data")
+  public Result<MessageDTO> sendMessageMedia(
+      @RequestParam("payload") String payloadJson,
+      @RequestPart(value = "file", required = false) MultipartFile file) {
+
+    // 手动解析JSON
+    SendMessageDTO dto;
+    try {
+      ObjectMapper objectMapper = new ObjectMapper();
+      dto = objectMapper.readValue(payloadJson, SendMessageDTO.class);
+    } catch (JsonProcessingException e) {
+      log.error("JSON解析失败: {}", e.getMessage());
+      return Result.error(1, "参数格式错误");
+    } catch (Exception e) {
+      log.error("解析消息参数失败: {}", e.getMessage());
+      return Result.error(1, "参数格式错误");
+    }
+
+    // 设置文件
+    dto.setFile(file);
+
     Long userId = userContext.getCurrentUserId();
     MessageDTO messageDTO = chatMessageService.sendMessage(userId, dto);
     return Result.success("消息发送成功", messageDTO);

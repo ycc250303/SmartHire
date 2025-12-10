@@ -35,7 +35,7 @@ public class ChatMessage implements Serializable {
   private Long receiverId;
 
   /** 消息类型：1-文本 2-图片 3-文件 4-语音 5-视频 6-系统通知 7-卡片消息 */
-  private Byte messageType;
+  private Integer messageType;
 
   /** 消息内容 */
   private String content;
