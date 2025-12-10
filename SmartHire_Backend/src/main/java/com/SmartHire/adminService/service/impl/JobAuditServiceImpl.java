@@ -10,8 +10,8 @@ import com.SmartHire.adminService.exception.AdminServiceException;
 import com.SmartHire.adminService.mapper.JobAuditMapper;
 import com.SmartHire.adminService.model.JobAuditRecord;
 import com.SmartHire.adminService.service.JobAuditService;
-import com.SmartHire.hrService.model.JobPosition;
-import com.SmartHire.hrService.mapper.JobPositionMapper;
+import com.SmartHire.hrService.model.JobInfo;
+import com.SmartHire.hrService.mapper.JobInfoMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -32,7 +32,7 @@ public class JobAuditServiceImpl extends ServiceImpl<JobAuditMapper, JobAuditRec
         implements JobAuditService {
 
     private final JobAuditMapper jobAuditMapper;
-    private final JobPositionMapper jobPositionMapper;
+    private final JobInfoMapper jobInfoMapper;
 
     @Override
     public Page<JobAuditListDTO> getAuditList(Page<JobAuditListDTO> page,
@@ -56,7 +56,7 @@ public class JobAuditServiceImpl extends ServiceImpl<JobAuditMapper, JobAuditRec
         updateById(auditRecord);
 
         // 更新职位状态
-        updateJobPositionAuditStatus(jobId, AuditStatus.APPROVED);
+        updateJobInfoAuditStatus(jobId, AuditStatus.APPROVED);
 
         log.info("职位审核通过完成，职位ID: {}", jobId);
     }
@@ -78,7 +78,7 @@ public class JobAuditServiceImpl extends ServiceImpl<JobAuditMapper, JobAuditRec
         updateById(auditRecord);
 
         // 更新职位状态
-        updateJobPositionAuditStatus(jobId, AuditStatus.REJECTED);
+        updateJobInfoAuditStatus(jobId, AuditStatus.REJECTED);
 
         log.info("职位拒绝审核完成，职位ID: {}", jobId);
     }
@@ -100,7 +100,7 @@ public class JobAuditServiceImpl extends ServiceImpl<JobAuditMapper, JobAuditRec
         updateById(auditRecord);
 
         // 更新职位状态
-        updateJobPositionAuditStatus(jobId, AuditStatus.MODIFIED);
+        updateJobInfoAuditStatus(jobId, AuditStatus.MODIFIED);
 
         log.info("职位要求修改完成，职位ID: {}", jobId);
     }
@@ -143,11 +143,11 @@ public class JobAuditServiceImpl extends ServiceImpl<JobAuditMapper, JobAuditRec
      * @param jobId 职位ID
      * @param auditStatus 审核状态
      */
-    private void updateJobPositionAuditStatus(Long jobId, AuditStatus auditStatus) {
-        JobPosition jobPosition = new JobPosition();
-        jobPosition.setId(jobId);
-        jobPosition.setAuditStatus(auditStatus.getCode());
-        jobPosition.setAuditedAt(new Date());
-        jobPositionMapper.updateById(jobPosition);
+    private void updateJobInfoAuditStatus(Long jobId, AuditStatus auditStatus) {
+        JobInfo jobInfo = new JobInfo();
+        jobInfo.setId(jobId);
+        jobInfo.setAuditStatus(auditStatus.getCode());
+        jobInfo.setAuditedAt(new Date());
+        jobInfoMapper.updateById(jobInfo);
     }
 }
