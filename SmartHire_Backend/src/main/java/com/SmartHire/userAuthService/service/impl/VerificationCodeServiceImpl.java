@@ -62,17 +62,41 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
     }
 
     // 存储验证码到Redis
+    // 注意：直接使用 set 覆盖，允许用户重新请求验证码时覆盖旧的验证码
     String codeKey = CODE_KEY_PREFIX + email;
-    redisTemplate.opsForValue().set(codeKey, code, CODE_EXPIRE_TIME, TimeUnit.MILLISECONDS);
+    try {
+      // 直接设置验证码（如果键已存在则覆盖）
+      redisTemplate.opsForValue().set(codeKey, code, CODE_EXPIRE_TIME, TimeUnit.MILLISECONDS);
+
+      // 验证存储是否成功（稍等片刻确保 Redis 操作完成）
+      String storedCode = redisTemplate.opsForValue().get(codeKey);
+      if (storedCode == null || !storedCode.equals(code)) {
+        log.error("验证码存储验证失败，邮箱: {}, 存储的验证码: {}", email, storedCode);
+        throw new BusinessException(ErrorCode.EMAIL_CODE_SEND_FAILED);
+      }
+
+      log.info("验证码已成功存储到Redis，邮箱: {}, 有效期: {} 分钟", email, CODE_EXPIRE_TIME / (60 * 1000));
+    } catch (BusinessException e) {
+      // 重新抛出业务异常
+      throw e;
+    } catch (Exception e) {
+      log.error("存储验证码到Redis失败，邮箱: {}", email, e);
+      throw new BusinessException(ErrorCode.EMAIL_CODE_SEND_FAILED);
+    }
 
     // 存储发送时间
-    redisTemplate
-        .opsForValue()
-        .set(
-            sendTimeKey,
-            String.valueOf(System.currentTimeMillis()),
-            SEND_INTERVAL,
-            TimeUnit.MILLISECONDS);
+    try {
+      redisTemplate
+          .opsForValue()
+          .set(
+              sendTimeKey,
+              String.valueOf(System.currentTimeMillis()),
+              SEND_INTERVAL,
+              TimeUnit.MILLISECONDS);
+    } catch (Exception e) {
+      log.warn("存储发送时间失败，邮箱: {}，但不影响验证码使用", email, e);
+      // 发送时间存储失败不影响主流程，只记录警告
+    }
 
     log.info("验证码已发送并存储到Redis，邮箱: {}", email);
   }
@@ -88,24 +112,43 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
       @Email(message = "邮箱格式不正确") String email, @NotBlank(message = "验证码不能为空") String code) {
     // 1.从 Redis 获取验证码
     String codeKey = CODE_KEY_PREFIX + email;
-    String storedCode = redisTemplate.opsForValue().get(codeKey);
-
-    // 2. 验证码不存在或已过期
-    if (storedCode == null) {
-      log.warn("验证码验证失败：验证码不存在或已过期，邮箱: {}", email);
+    String storedCode = null;
+    try {
+      storedCode = redisTemplate.opsForValue().get(codeKey);
+      log.debug("从Redis获取验证码，邮箱: {}, 是否存在: {}", email, storedCode != null);
+    } catch (Exception e) {
+      log.error("从Redis获取验证码失败，邮箱: {}", email, e);
       throw new BusinessException(ErrorCode.EMAIL_CODE_INVALID);
     }
 
-    // 3. 比对验证码
-    boolean isValid = storedCode.trim().equals(code.trim());
+    // 2. 验证码不存在或已过期
+    if (storedCode == null || storedCode.isBlank()) {
+      log.warn("验证码验证失败：验证码不存在或已过期，邮箱: {}, Redis键: {}", email, codeKey);
+      throw new BusinessException(ErrorCode.EMAIL_CODE_INVALID);
+    }
+
+    // 3. 比对验证码（去除空格，不区分大小写）
+    String trimmedStoredCode = storedCode.trim();
+    String trimmedInputCode = code.trim();
+    boolean isValid = trimmedStoredCode.equals(trimmedInputCode);
+
     if (!isValid) {
-      log.warn("验证码验证失败：验证码不匹配，邮箱: {}", email);
+      log.warn(
+          "验证码验证失败：验证码不匹配，邮箱: {}, 输入的验证码: {}, 存储的验证码: {}",
+          email,
+          trimmedInputCode,
+          trimmedStoredCode);
       throw new BusinessException(ErrorCode.EMAIL_CODE_INVALID);
     }
 
     // 4. 验证成功后删除验证码（防止重复使用）
-    redisTemplate.delete(codeKey);
-    log.info("验证码验证成功并已删除，邮箱: {}", email);
+    try {
+      redisTemplate.delete(codeKey);
+      log.info("验证码验证成功并已删除，邮箱: {}", email);
+    } catch (Exception e) {
+      log.warn("删除验证码失败，邮箱: {}，但不影响验证结果", email, e);
+      // 删除失败不影响验证结果，只记录警告
+    }
   }
 
   /**

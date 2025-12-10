@@ -5,6 +5,9 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import com.SmartHire.userAuthService.service.impl.VerificationCodeServiceImpl;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -53,21 +56,47 @@ class VerificationCodeServiceTest {
 
   private static final String VALID_EMAIL = "test@example.com";
 
+  // 用于模拟 Redis 存储的 Map
+  private final Map<String, String> mockRedisStore = new HashMap<>();
+
   @BeforeEach
   void setUp() {
     // Arrange: 设置 RedisTemplate mock 行为
     // 当调用 redisTemplate.opsForValue() 时返回 valueOperations mock
     // 使用 lenient 避免不必要的 stubbing 警告
     lenient().when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+    // 清空模拟的 Redis 存储
+    mockRedisStore.clear();
   }
 
   @Test
   @DisplayName("TC-VERIFY-001: 成功发送验证码")
   void testSendVerificationCode_Success() {
     // Arrange: 准备测试数据
-    // 1. Mock Redis 返回 null（表示该邮箱未在限制期内发送过验证码）
-    when(valueOperations.get(anyString())).thenReturn(null);
-    // 2. Mock 邮件服务成功发送（不抛出异常）
+    // 1. Mock Redis get 方法：使用 Map 模拟 Redis 存储
+    // 第一次调用：检查发送频率限制（返回 null 表示未在限制期内）
+    // 后续调用：从模拟存储中返回值
+    when(valueOperations.get(anyString()))
+        .thenAnswer(
+            invocation -> {
+              String key = invocation.getArgument(0);
+              // 第一次调用是检查发送频率，返回 null
+              // 后续调用从模拟存储中获取值
+              return mockRedisStore.get(key);
+            });
+
+    // 2. Mock set 方法：将值存储到模拟的 Map 中
+    doAnswer(
+            invocation -> {
+              String key = invocation.getArgument(0);
+              String value = invocation.getArgument(1);
+              mockRedisStore.put(key, value);
+              return null;
+            })
+        .when(valueOperations)
+        .set(anyString(), anyString(), anyLong(), any(TimeUnit.class));
+
+    // 3. Mock 邮件服务成功发送（不抛出异常）
     try {
       doNothing().when(emailService).sendVerificationCode(anyString(), anyString());
     } catch (Exception e) {
@@ -89,7 +118,11 @@ class VerificationCodeServiceTest {
       fail("验证邮件服务调用不应该抛出异常: " + e.getMessage());
     }
     // 2. 验证验证码已保存到 Redis（用于后续验证）
-    // 注意：实际验证需要检查 Redis set 操作，这里简化验证
-    verify(valueOperations, atLeastOnce()).set(anyString(), anyString(), anyLong(), any());
+    verify(valueOperations, atLeastOnce())
+        .set(anyString(), anyString(), anyLong(), any(TimeUnit.class));
+    // 3. 验证存储的验证码不为空（从模拟存储中检查）
+    String codeKey = "email:code:" + VALID_EMAIL;
+    assertTrue(mockRedisStore.containsKey(codeKey), "验证码应该已存储到 Redis");
+    assertNotNull(mockRedisStore.get(codeKey), "存储的验证码不应该为空");
   }
 }
