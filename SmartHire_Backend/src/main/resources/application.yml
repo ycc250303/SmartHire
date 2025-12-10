@@ -6,9 +6,9 @@ spring:
 
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: ...
-    username: ...
-    password: ...
+    url: jdbc:mysql://111.229.81.45:3306/SmartHire?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
+    username: SmartHireManager
+    password: SmartHire123
 
   jpa:
     hibernate:

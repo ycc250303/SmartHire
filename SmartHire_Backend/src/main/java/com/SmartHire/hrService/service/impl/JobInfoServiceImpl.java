@@ -7,9 +7,11 @@ import com.SmartHire.common.exception.exception.BusinessException;
 import com.SmartHire.hrService.dto.JobInfoCreateDTO;
 import com.SmartHire.hrService.dto.JobInfoListDTO;
 import com.SmartHire.hrService.dto.JobInfoUpdateDTO;
+import com.SmartHire.hrService.mapper.CompanyMapper;
 import com.SmartHire.hrService.mapper.HrInfoMapper;
 import com.SmartHire.hrService.mapper.JobInfoMapper;
 import com.SmartHire.hrService.mapper.JobSkillRequirementMapper;
+import com.SmartHire.hrService.model.Company;
 import com.SmartHire.hrService.model.HrInfo;
 import com.SmartHire.hrService.model.JobInfo;
 import com.SmartHire.hrService.model.JobSkillRequirement;
@@ -33,6 +35,8 @@ public class JobInfoServiceImpl extends ServiceImpl<JobInfoMapper, JobInfo>
   @Autowired private UserAuthApi userAuthApi;
 
   @Autowired private HrInfoMapper hrInfoMapper;
+
+  @Autowired private CompanyMapper companyMapper;
 
   @Autowired private JobSkillRequirementMapper jobSkillRequirementMapper;
 
@@ -92,6 +96,12 @@ public class JobInfoServiceImpl extends ServiceImpl<JobInfoMapper, JobInfo>
       if (createDTO.getInternshipDurationMonths() == null) {
         throw new BusinessException(ErrorCode.INTERNSHIP_DURATION_MONTHS_REQUIRED);
       }
+    }
+
+    // 验证公司是否存在（外键验证）
+    Company company = companyMapper.selectById(createDTO.getCompanyId());
+    if (company == null) {
+      throw new BusinessException(ErrorCode.COMPANY_NOT_EXIST);
     }
 
     // 创建岗位实体

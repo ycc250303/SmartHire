@@ -4,6 +4,7 @@ import com.SmartHire.common.api.UserAuthApi;
 import com.SmartHire.common.auth.UserContext;
 import com.SmartHire.common.exception.enums.ErrorCode;
 import com.SmartHire.common.exception.exception.BusinessException;
+import com.SmartHire.hrService.mapper.HrApplicationMapper;
 import com.SmartHire.hrService.mapper.HrInfoMapper;
 import com.SmartHire.hrService.mapper.JobInfoMapper;
 import com.SmartHire.hrService.mapper.JobSeekerSkillMapper;
@@ -12,7 +13,6 @@ import com.SmartHire.hrService.model.HrInfo;
 import com.SmartHire.hrService.model.JobInfo;
 import com.SmartHire.hrService.service.MatchingService;
 import com.SmartHire.recruitmentService.dto.ApplicationListDTO;
-import com.SmartHire.recruitmentService.mapper.ApplicationMapper;
 import com.SmartHire.userAuthService.model.User;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -46,7 +46,7 @@ public class MatchingServiceImpl implements MatchingService {
 
   @Autowired private JobSeekerSkillMapper jobSeekerSkillMapper;
 
-  @Autowired private ApplicationMapper applicationMapper;
+  @Autowired private HrApplicationMapper hrApplicationMapper;
 
   /** 获取当前登录HR的ID（hr_info表ID） */
   private Long getCurrentHrId() {
@@ -95,7 +95,7 @@ public class MatchingServiceImpl implements MatchingService {
                 .map(this::normalizeSkill)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
 
-    List<ApplicationListDTO> applications = applicationMapper.selectApplicationsByJob(hrId, jobId);
+    List<ApplicationListDTO> applications = hrApplicationMapper.selectApplicationsByJob(hrId, jobId);
     if (CollectionUtils.isEmpty(applications)) {
       return new ArrayList<>();
     }
@@ -123,7 +123,7 @@ public class MatchingServiceImpl implements MatchingService {
           calculateScore(requiredSkillSet.size(), matchedSkills.size(), seekerSkillSet.size());
       String analysis = buildMatchAnalysis(requiredSkills, seekerSkills, matchedSkills);
 
-      applicationMapper.updateMatchResult(application.getId(), score, analysis, now);
+      hrApplicationMapper.updateMatchResult(application.getId(), score, analysis, now);
       application.setMatchScore(score);
       application.setMatchAnalysis(analysis);
     }
