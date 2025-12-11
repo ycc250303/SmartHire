@@ -1,6 +1,5 @@
 package com.SmartHire.hrService.service.impl;
 
-import com.SmartHire.common.api.UserAuthApi;
 import com.SmartHire.common.auth.UserContext;
 import com.SmartHire.common.exception.enums.ErrorCode;
 import com.SmartHire.common.exception.exception.BusinessException;
@@ -18,7 +17,6 @@ import com.SmartHire.hrService.model.HrInfo;
 import com.SmartHire.hrService.model.JobInfo;
 import com.SmartHire.hrService.model.JobSkillRequirement;
 import com.SmartHire.hrService.service.JobInfoService;
-import com.SmartHire.userAuthService.model.User;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import java.util.Date;
 import java.util.List;
@@ -34,8 +32,6 @@ import org.springframework.util.StringUtils;
 public class JobInfoServiceImpl extends ServiceImpl<JobInfoMapper, JobInfo>
     implements JobInfoService {
 
-  @Autowired private UserAuthApi userAuthApi;
-
   @Autowired private HrInfoMapper hrInfoMapper;
 
   @Autowired private CompanyMapper companyMapper;
@@ -44,13 +40,11 @@ public class JobInfoServiceImpl extends ServiceImpl<JobInfoMapper, JobInfo>
 
   @Autowired private UserContext userContext;
 
-  /** 获取当前登录HR的ID（hr_info表的id） */
+  /** 获取当前登录HR的ID（hr_info表的id）
+   * 注意：用户身份验证已由AOP在Controller层统一处理，此处无需再次验证
+   */
   private Long getCurrentHrId() {
     Long userId = userContext.getCurrentUserId();
-    User user = userAuthApi.getUserById(userId);
-    if (user.getUserType() != 2) {
-      throw new BusinessException(ErrorCode.USER_NOT_HR);
-    }
 
     // 通过user_id查询hr_info表获取hr_id（hr_info.id）
     HrInfo hrInfo =

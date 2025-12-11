@@ -33,6 +33,11 @@ public class JwtTokenExtractor {
       throw new BusinessException(ErrorCode.TOKEN_IS_NULL);
     }
 
+    // 处理 "Bearer " 前缀
+    if (token.startsWith("Bearer ")) {
+      token = token.substring(7);
+    }
+
     return token;
   }
 
@@ -55,6 +60,11 @@ public class JwtTokenExtractor {
       return null;
     }
 
+    // 处理 "Bearer " 前缀
+    if (token.startsWith("Bearer ")) {
+      token = token.substring(7);
+    }
+
     return token;
   }
 
@@ -70,6 +80,10 @@ public class JwtTokenExtractor {
     if (token == null || token.isBlank()) {
       throw new BusinessException(ErrorCode.TOKEN_IS_NULL);
     }
+    // 处理 "Bearer " 前缀
+    if (token.startsWith("Bearer ")) {
+      token = token.substring(7);
+    }
     return token;
   }
 
@@ -83,6 +97,10 @@ public class JwtTokenExtractor {
     String token = request.getHeader(AUTHORIZATION_HEADER);
     if (token == null || token.isBlank()) {
       return null;
+    }
+    // 处理 "Bearer " 前缀
+    if (token.startsWith("Bearer ")) {
+      token = token.substring(7);
     }
     return token;
   }

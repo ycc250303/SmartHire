@@ -5,7 +5,9 @@ import com.SmartHire.recruitmentService.dto.ApplicationListDTO;
 import com.SmartHire.recruitmentService.dto.ApplicationQueryDTO;
 import com.SmartHire.recruitmentService.dto.ApplicationStatusUpdateDTO;
 import com.SmartHire.recruitmentService.service.ApplicationService;
+import com.SmartHire.common.auth.RequireUserType;
 import com.SmartHire.common.entity.Result;
+import com.SmartHire.common.enums.UserType;
 import com.SmartHire.common.exception.enums.ErrorCode;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.Operation;
@@ -22,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/hr/application")
 @Validated
+@RequireUserType(UserType.HR) // 整个Controller要求HR身份
 public class ApplicationController {
 
     @Autowired

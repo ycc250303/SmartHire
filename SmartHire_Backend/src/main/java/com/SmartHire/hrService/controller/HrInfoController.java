@@ -1,6 +1,8 @@
 package com.SmartHire.hrService.controller;
 
+import com.SmartHire.common.auth.RequireUserType;
 import com.SmartHire.common.entity.Result;
+import com.SmartHire.common.enums.UserType;
 import com.SmartHire.hrService.dto.HrInfoCreateDTO;
 import com.SmartHire.hrService.dto.HrInfoDTO;
 import com.SmartHire.hrService.dto.HrInfoUpdateDTO;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/hr/info")
 @Validated
+@RequireUserType(UserType.HR) // 整个Controller要求HR身份
 public class HrInfoController {
 
   @Autowired private HrInfoService hrInfoService;

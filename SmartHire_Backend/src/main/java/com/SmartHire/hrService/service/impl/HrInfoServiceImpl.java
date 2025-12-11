@@ -1,6 +1,5 @@
 package com.SmartHire.hrService.service.impl;
 
-import com.SmartHire.common.api.UserAuthApi;
 import com.SmartHire.common.auth.UserContext;
 import com.SmartHire.common.exception.enums.ErrorCode;
 import com.SmartHire.common.exception.exception.BusinessException;
@@ -12,7 +11,6 @@ import com.SmartHire.hrService.mapper.HrInfoMapper;
 import com.SmartHire.hrService.model.Company;
 import com.SmartHire.hrService.model.HrInfo;
 import com.SmartHire.hrService.service.HrInfoService;
-import com.SmartHire.userAuthService.model.User;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import java.util.Date;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,27 +22,21 @@ import org.springframework.util.StringUtils;
 @Service
 public class HrInfoServiceImpl extends ServiceImpl<HrInfoMapper, HrInfo> implements HrInfoService {
 
-  @Autowired private UserAuthApi userAuthApi;
-
   @Autowired private UserContext userContext;
 
   @Autowired private CompanyMapper companyMapper;
 
-  /** 获取当前登录用户ID并校验HR身份 */
-  private Long validateAndGetCurrentHrUserId() {
-    Long userId = userContext.getCurrentUserId();
-    // 验证用户是否存在和身份
-    User user = userAuthApi.getUserById(userId);
-    if (user.getUserType() != 2) {
-      throw new BusinessException(ErrorCode.USER_NOT_HR);
-    }
-    return userId;
+  /** 获取当前登录用户ID
+   * 注意：用户身份验证已由AOP在Controller层统一处理，此处无需再次验证
+   */
+  private Long getCurrentUserId() {
+    return userContext.getCurrentUserId();
   }
 
   /** 获取当前登录HR的信息 */
   @Override
   public HrInfoDTO getHrInfo() {
-    Long userId = validateAndGetCurrentHrUserId();
+    Long userId = getCurrentUserId();
 
     // 查询HR信息（包含公司名称）
     HrInfoDTO hrInfoDTO = baseMapper.selectHrInfoWithCompanyByUserId(userId);
@@ -59,7 +51,7 @@ public class HrInfoServiceImpl extends ServiceImpl<HrInfoMapper, HrInfo> impleme
   @Override
   @Transactional
   public Long createHrInfo(HrInfoCreateDTO createDTO) {
-    Long userId = validateAndGetCurrentHrUserId();
+    Long userId = getCurrentUserId();
 
     // 检查是否已经注册过HR信息
     HrInfo existingHrInfo = lambdaQuery().eq(HrInfo::getUserId, userId).one();
@@ -92,7 +84,7 @@ public class HrInfoServiceImpl extends ServiceImpl<HrInfoMapper, HrInfo> impleme
   /** 新增当前登录HR的信息（若已存在则进行更新）（原 main 功能） */
   @Override
   public void createHrInfo(HrInfoUpdateDTO updateDTO) {
-    Long userId = validateAndGetCurrentHrUserId();
+    Long userId = getCurrentUserId();
 
     HrInfo hrInfo = lambdaQuery().eq(HrInfo::getUserId, userId).one();
 
@@ -124,7 +116,7 @@ public class HrInfoServiceImpl extends ServiceImpl<HrInfoMapper, HrInfo> impleme
   /** 更新当前登录HR的信息 */
   @Override
   public void updateHrInfo(HrInfoUpdateDTO updateDTO) {
-    Long userId = validateAndGetCurrentHrUserId();
+    Long userId = getCurrentUserId();
 
     // 查询HR信息
     HrInfo hrInfo = lambdaQuery().eq(HrInfo::getUserId, userId).one();

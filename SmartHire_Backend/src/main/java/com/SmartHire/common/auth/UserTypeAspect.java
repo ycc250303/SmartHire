@@ -1,6 +1,5 @@
 package com.SmartHire.common.auth;
 
-import com.SmartHire.common.api.UserAuthApi;
 import com.SmartHire.common.enums.UserType;
 import com.SmartHire.common.exception.enums.ErrorCode;
 import com.SmartHire.common.exception.exception.BusinessException;
@@ -23,8 +22,6 @@ import org.springframework.stereotype.Component;
 @Order(1)
 public class UserTypeAspect {
   @Autowired private UserContext userContext;
-
-  @Autowired private UserAuthApi userAuthApi;
 
   /** 拦截所有Controller方法，检查是否需要角色验证 */
   @Before("execution(* com.SmartHire..controller..*(..))")

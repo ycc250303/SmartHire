@@ -10,11 +10,9 @@ import com.SmartHire.hrService.mapper.JobInfoMapper;
 import com.SmartHire.recruitmentService.model.Application;
 import com.SmartHire.hrService.model.HrInfo;
 import com.SmartHire.hrService.model.JobInfo;
-import com.SmartHire.common.api.UserAuthApi;
 import com.SmartHire.common.auth.UserContext;
 import com.SmartHire.common.exception.enums.ErrorCode;
 import com.SmartHire.common.exception.exception.BusinessException;
-import com.SmartHire.userAuthService.model.User;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,9 +29,6 @@ import java.util.Date;
 public class ApplicationServiceImpl extends ServiceImpl<HrApplicationMapper, Application> implements ApplicationService {
 
     @Autowired
-    private UserAuthApi userAuthApi;
-
-    @Autowired
     private UserContext userContext;
 
     @Autowired
@@ -44,13 +39,10 @@ public class ApplicationServiceImpl extends ServiceImpl<HrApplicationMapper, App
 
     /**
      * 获取当前登录HR的ID（hr_info表的id）
+     * 注意：用户身份验证已由AOP在Controller层统一处理，此处无需再次验证
      */
     private Long getCurrentHrId() {
         Long userId = userContext.getCurrentUserId();
-        User user = userAuthApi.getUserById(userId);
-        if (user.getUserType() != 2) {
-            throw new BusinessException(ErrorCode.USER_NOT_HR);
-        }
 
         HrInfo hrInfo = hrInfoMapper.selectOne(
                 new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<HrInfo>()

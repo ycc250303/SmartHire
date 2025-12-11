@@ -39,7 +39,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
           "/swagger-ui.html",
           "/v3/api-docs",
           "/v3/api-docs/**",
-          "/doc.html");
+          "/doc.html",
+          "/public/**");
 
   @Autowired private JwtUtil jwtUtil;
 
@@ -54,8 +55,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       throws ServletException, IOException {
     String path = request.getServletPath();
 
-    // 公开路径直接放行
-    if (PUBLIC_PATHS.contains(path)) {
+    // 公开路径直接放行（支持通配符匹配）
+    if (isPublicPath(path)) {
       filterChain.doFilter(request, response);
       return;
     }
@@ -63,9 +64,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     try {
       // 从HTTP请求中提取Token
       String token = tokenExtractor.extractToken(request);
+      log.debug("提取到的Token: {}", token != null && token.length() > 20 ? token.substring(0, 20) + "..." : token);
 
-      // 检查黑名单
-      ensureNotBlacklisted(token);
+      // 检查黑名单（如果Redis不可用，跳过黑名单检查）
+      try {
+        ensureNotBlacklisted(token);
+      } catch (Exception e) {
+        log.warn("Redis黑名单检查失败，跳过检查: {}", e.getMessage());
+        // Redis不可用时，不阻止请求，继续验证Token
+      }
 
       // 验证Token
       DecodedJWT decoded = jwtUtil.verifyToken(token);
@@ -92,6 +99,26 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       // 其他异常也转换为AuthenticationException
       throw new GeneralAuthenticationException("认证失败: " + ex.getMessage());
     }
+  }
+
+  /** 判断是否为公开路径（支持通配符） */
+  private boolean isPublicPath(String path) {
+    // 精确匹配
+    if (PUBLIC_PATHS.contains(path)) {
+      return true;
+    }
+    // 通配符匹配：检查路径是否以公开路径开头
+    for (String publicPath : PUBLIC_PATHS) {
+      if (publicPath.endsWith("/**")) {
+        String prefix = publicPath.substring(0, publicPath.length() - 3);
+        if (path.startsWith(prefix)) {
+          return true;
+        }
+      } else if (path.startsWith(publicPath + "/")) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /** 确保Token不在黑名单中 */

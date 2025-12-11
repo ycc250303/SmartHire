@@ -56,7 +56,8 @@ public class JwtUtil {
     try {
       return JWT.require(algorithm).build().verify(token);
     } catch (JWTVerificationException e) {
-      throw new BusinessException(ErrorCode.TOKEN_IS_INVALID);
+      // 记录详细错误信息以便调试
+      throw new BusinessException(ErrorCode.TOKEN_IS_INVALID, "Token验证失败: " + e.getMessage());
     }
   }
 
