@@ -2,65 +2,170 @@
   <view class="chat-page">
     <view class="chat-header">
       <view class="title">{{ chatTitle }}</view>
-      <button class="outline" @click="showSummary">AI 对话总结（预览）</button>
     </view>
 
-    <scroll-view scroll-y class="chat-body" :scroll-into-view="lastMessageId">
-      <view v-for="message in messages" :key="message.id" :id="message.id" class="bubble" :class="message.from">
+    <scroll-view
+      scroll-y
+      class="chat-body"
+      :scroll-into-view="scrollIntoView"
+      :scroll-with-animation="true"
+    >
+      <view
+        v-for="message in sortedMessages"
+        :key="message.id"
+        :id="`msg-${message.id}`"
+        class="bubble"
+        :class="message.senderId === otherUserId ? 'candidate' : 'hr'"
+      >
         <text class="content">{{ message.content }}</text>
-        <text class="time">{{ message.time }}</text>
+        <text class="time">{{ formatTime(message.createdAt) }}</text>
       </view>
     </scroll-view>
 
     <view class="chat-input">
-      <input v-model="draft" placeholder="输入消息..." @confirm="sendMessage" />
-      <button class="send" @click="sendMessage">发送</button>
+      <input
+        v-model="draft"
+        placeholder="输入消息..."
+        :disabled="sending || loading"
+        :adjust-position="false"
+        :cursor-spacing="16"
+        confirm-type="send"
+        @confirm="doSendMessage"
+      />
+      <button class="send" :disabled="sending || loading" @click="doSendMessage">发送</button>
     </view>
   </view>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import { onLoad } from '@dcloudio/uni-app';
-import { fetchChatHistory, mockConversations, type MessageBubble } from '@/mock/hr';
+import { ref, computed, onMounted, nextTick } from 'vue';
+import { onLoad, onShow } from '@dcloudio/uni-app';
+import dayjs from 'dayjs';
+import { getChatHistory, sendMessage, markAsRead, type Message } from '@/services/api/message';
+import { t } from '@/locales';
 
-const messages = ref<MessageBubble[]>([]);
+const messages = ref<Message[]>([]);
 const draft = ref('');
-const chatTitle = ref('候选人对话');
-const lastMessageId = ref('');
+const chatTitle = ref(t('pages.chat.conversation.title'));
+const scrollIntoView = ref('');
+const conversationId = ref<number>(0);
+const otherUserId = ref<number>(0);
+const applicationId = ref<number>(0);
+const loading = ref(false);
+const sending = ref(false);
+
+const sortedMessages = computed(() => messages.value);
 
 const loadChat = async () => {
-  // TODO: GET /api/hr/messages/:chatId
-  messages.value = await fetchChatHistory();
-  setTimeout(() => {
-    lastMessageId.value = messages.value[messages.value.length - 1]?.id || '';
-  }, 0);
+  if (!conversationId.value) return;
+  loading.value = true;
+  try {
+    const data = await getChatHistory({
+      conversationId: conversationId.value,
+      page: 1,
+      size: 20,
+    });
+    messages.value = data;
+    if (!otherUserId.value && messages.value.length > 0) {
+      const last = messages.value[messages.value.length - 1];
+      const candidateId = last.senderId !== 0 ? last.senderId : last.receiverId;
+      if (candidateId) {
+        otherUserId.value = candidateId;
+      }
+    }
+    nextTick(() => {
+      const lastId = messages.value[messages.value.length - 1]?.id;
+      scrollIntoView.value = lastId ? `msg-${lastId}` : '';
+    });
+    if (conversationId.value) {
+      await markAsRead(conversationId.value);
+    }
+  } catch (err) {
+    console.error('Failed to load chat history:', err);
+    uni.showToast({ title: t('pages.chat.conversation.loadError'), icon: 'none' });
+  } finally {
+    loading.value = false;
+  }
 };
 
-const sendMessage = () => {
-  if (!draft.value.trim()) return;
-  const newMessage: MessageBubble = {
-    id: `msg-${Date.now()}`,
-    from: 'hr',
-    content: draft.value,
-    time: new Date().toLocaleTimeString(),
+const doSendMessage = async () => {
+  if (!draft.value.trim() || !conversationId.value) return;
+  if (!otherUserId.value) {
+    uni.showToast({ title: '缺少收件人', icon: 'none' });
+    return;
+  }
+  const content = draft.value.trim();
+  sending.value = true;
+  const tempId = Date.now();
+  const tempMessage: Message = {
+    id: tempId,
+    conversationId: conversationId.value,
+    senderId: 0,
+    receiverId: otherUserId.value,
+    messageType: 1,
+    content,
+    fileUrl: null,
+    replyTo: null,
+    createdAt: new Date().toISOString(),
+    isRead: 0,
+    replyContent: null,
+    replyMessageType: null,
   };
-  messages.value = [...messages.value, newMessage];
+  messages.value = [...messages.value, tempMessage];
   draft.value = '';
-  lastMessageId.value = newMessage.id;
-  // TODO: POST /api/hr/messages/send
+  nextTick(() => {
+    scrollIntoView.value = `msg-${tempId}`;
+  });
+
+  try {
+    const sent = await sendMessage({
+      receiverId: otherUserId.value,
+      applicationId: applicationId.value || 0,
+      messageType: 1,
+      content,
+      fileUrl: null,
+      replyTo: null,
+    });
+    messages.value = messages.value.map((m) => (m.id === tempMessage.id ? sent : m));
+    nextTick(() => {
+      scrollIntoView.value = `msg-${sent.id}`;
+    });
+  } catch (err) {
+    console.error('Failed to send message:', err);
+    messages.value = messages.value.filter((m) => m.id !== tempMessage.id);
+    uni.showToast({ title: t('pages.chat.conversation.sendError'), icon: 'none' });
+  } finally {
+    sending.value = false;
+  }
 };
 
-const showSummary = () => {
-  uni.showToast({ title: 'LLM 总结功能待接入', icon: 'none' });
-};
+const formatTime = (time: string) => dayjs(time).format('MM/DD HH:mm');
 
 onLoad((options) => {
-  const chatId = options?.id as string;
-  const meta = mockConversations.find((item) => item.id === chatId);
-  if (meta) {
-    chatTitle.value = `${meta.candidate} · ${meta.jobTitle}`;
+  if (options?.id) {
+    conversationId.value = parseInt(options.id as string, 10);
   }
+  if (options?.userId) {
+    otherUserId.value = parseInt(options.userId as string, 10);
+  }
+  if (options?.applicationId) {
+    applicationId.value = parseInt(options.applicationId as string, 10);
+  }
+  if (options?.username) {
+    try {
+      chatTitle.value = decodeURIComponent(options.username as string);
+    } catch {
+      chatTitle.value = options.username as string;
+    }
+  }
+  loadChat();
+});
+
+onShow(() => {
+  loadChat();
+});
+
+onMounted(() => {
   loadChat();
 });
 </script>
@@ -70,25 +175,23 @@ onLoad((options) => {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  padding-top: calc(var(--status-bar-height) + 32rpx);
+  box-sizing: border-box;
 }
 
 .chat-header {
   padding: 20rpx 24rpx;
   background: #fff;
   box-shadow: 0 8rpx 16rpx rgba(0, 0, 0, 0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .title {
   font-size: 30rpx;
   font-weight: 600;
-  margin-bottom: 12rpx;
-}
-
-button.outline {
-  border: 2rpx solid #2f7cff;
-  color: #2f7cff;
-  border-radius: 16rpx;
-  padding: 10rpx 20rpx;
+  margin-bottom: 0;
 }
 
 .chat-body {
@@ -128,14 +231,20 @@ button.outline {
   padding: 16rpx 24rpx;
   background: #fff;
   gap: 12rpx;
+  align-items: center;
+  border-top: 1rpx solid #f0f0f0;
+  padding-bottom: calc(16rpx + env(safe-area-inset-bottom));
 }
 
 .chat-input input {
   flex: 1;
-  padding: 20rpx;
+  height: 72rpx;
+  padding: 0 20rpx;
   border-radius: 16rpx;
   background: #f6f7fb;
   border: none;
+  font-size: 28rpx;
+  line-height: 72rpx;
 }
 
 button.send {

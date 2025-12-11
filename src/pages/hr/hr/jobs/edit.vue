@@ -94,20 +94,30 @@ const ensureCompanyId = async () => {
     form.companyId = hrStore.companyId;
     return;
   }
-  const info = await getHrInfo();
-  form.companyId = info.companyId;
-  hrStore.setCompanyId(info.companyId);
-  hrStore.setCompanyName(info.companyName);
+  try {
+    const info = await getHrInfo();
+    if (info?.companyId) {
+      form.companyId = info.companyId;
+      hrStore.setCompanyId(info.companyId);
+      hrStore.setCompanyName(info.companyName);
+    }
+  } catch (error) {
+    console.error('Failed to load HR info:', error);
+    uni.showToast({ title: '无法获取企业信息', icon: 'none' });
+  }
 };
 
-const populateForm = (data: JobPosition) => {
-  form.companyId = data.companyId;
-  form.jobTitle = data.jobTitle;
-  form.city = data.city;
+const populateForm = (data?: JobPosition) => {
+  if (!data) {
+    return;
+  }
+  form.companyId = data.companyId ?? form.companyId;
+  form.jobTitle = data.jobTitle || '';
+  form.city = data.city || '';
   form.salaryMin = data.salaryMin;
   form.salaryMax = data.salaryMax;
   form.salaryMonths = data.salaryMonths;
-  form.jobType = data.jobType;
+  form.jobType = data.jobType ?? 0;
   form.description = data.description || '';
   form.responsibilities = data.responsibilities || '';
   form.requirements = data.requirements || '';
@@ -118,10 +128,16 @@ const loadJob = async (id: number) => {
   loading.value = true;
   try {
     const data = await getJobPositionById(id);
+    if (!data) {
+      uni.showToast({ title: '岗位不存在，已切换为新建', icon: 'none' });
+      jobId.value = null;
+      return;
+    }
     populateForm(data);
   } catch (error) {
     console.error('Failed to load job:', error);
     uni.showToast({ title: '加载失败', icon: 'none' });
+    jobId.value = null;
   } finally {
     loading.value = false;
   }
@@ -172,7 +188,7 @@ onLoad(async (options) => {
 .job-edit {
   background: #f6f7fb;
   min-height: 100vh;
-  padding: 24rpx;
+  padding: calc(var(--status-bar-height) + 48rpx) 24rpx 24rpx;
   box-sizing: border-box;
 }
 

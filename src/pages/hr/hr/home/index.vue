@@ -1,12 +1,13 @@
 ﻿<template>
   <view class="home-page">
-    <view class="top-bar">
-      <view class="welcome-block">
-        <text class="welcome-title">SmartHire+</text>
+    <view class="hero">
+      <view class="hero-top">
+        <view class="welcome-title">SmartHire+</view>
+        <view class="avatar" @click="goProfile">
+          <image :src="avatarImg" mode="aspectFill" />
+        </view>
       </view>
-      <view class="avatar" @click="goProfile">
-        <image :src="avatarImg" mode="aspectFill" />
-      </view>
+      <view class="hero-sub">欢迎回来，查看今天的待办</view>
     </view>
 
     <view class="card todo-card">
@@ -55,14 +56,6 @@
       </view>
     </view>
 
-    <view class="card quick-card">
-      <view class="section-title">快捷操作</view>
-      <view class="quick-actions">
-        <button class="primary" @click="goCreateJob">发布新岗位</button>
-        <button class="secondary" @click="goAnalytics">查看数据分析</button>
-      </view>
-    </view>
-    
     <CustomTabBar />
   </view>
 </template>
@@ -88,14 +81,6 @@ const loadDashboard = async () => {
 
 const goProfile = () => {
   uni.navigateTo({ url: '/pages/hr/hr/profile/index' });
-};
-
-const goCreateJob = () => {
-  uni.navigateTo({ url: '/pages/hr/hr/jobs/edit?mode=create' });
-};
-
-const goAnalytics = () => {
-  uni.navigateTo({ url: '/pages/hr/hr/analytics/index' });
 };
 
 const parseQuery = (queryString?: string) => {
@@ -150,21 +135,29 @@ onShow(() => {
 <style scoped lang="scss">
 .home-page {
   min-height: 100vh;
-  padding: 32rpx;
-  background: #f6f7fb;
+  padding: 0 32rpx 32rpx;
+  background: linear-gradient(180deg, #e5f0ff 0%, #f6f7fb 40%, #f6f7fb 100%);
   box-sizing: border-box;
 }
 
-.top-bar {
+.hero {
+  padding-top: calc(var(--status-bar-height) + 64rpx);
+  padding-bottom: 32rpx;
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.hero-top {
+  display: flex;
   align-items: center;
-  margin-bottom: 32rpx;
+  justify-content: space-between;
 }
 
 .welcome-title {
-  font-size: 34rpx;
-  font-weight: 600;
+  font-size: 38rpx;
+  font-weight: 700;
+  color: #0b1c33;
 }
 
 .avatar {
@@ -181,6 +174,11 @@ onShow(() => {
 .avatar image {
   width: 100%;
   height: 100%;
+}
+
+.hero-sub {
+  font-size: 26rpx;
+  color: #2f4b76;
 }
 
 .card {
@@ -289,26 +287,4 @@ onShow(() => {
   font-size: 24rpx;
 }
 
-.quick-actions {
-  display: flex;
-  gap: 20rpx;
-}
-
-button.primary {
-  flex: 1;
-  background: #2f7cff;
-  color: #fff;
-  border: none;
-  border-radius: 20rpx;
-  height: 88rpx;
-}
-
-button.secondary {
-  flex: 1;
-  background: #e5edff;
-  color: #2f7cff;
-  border: none;
-  border-radius: 20rpx;
-  height: 88rpx;
-}
 </style>

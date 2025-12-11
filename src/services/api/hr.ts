@@ -218,6 +218,46 @@ export function getCandidateDetail(candidateId: number): Promise<CandidateDetail
   });
 }
 
+// ============ 投递相关 ============ 
+export interface ApplicationItem {
+  id: number;
+  applicantName: string;
+  jobTitle: string;
+  status: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ApplicationDetail extends ApplicationItem {
+  resumeUrl?: string;
+  contactPhone?: string;
+  contactEmail?: string;
+  remarks?: string;
+}
+
+export function getApplications(params?: { status?: number }): Promise<ApplicationItem[]> {
+  return http<ApplicationItem[]>({
+    url: "/api/hr/application",
+    method: "GET",
+    data: params,
+  });
+}
+
+export function getApplicationDetail(applicationId: number): Promise<ApplicationDetail> {
+  return http<ApplicationDetail>({
+    url: `/api/hr/application/${applicationId}`,
+    method: "GET",
+  });
+}
+
+export function updateApplicationStatus(applicationId: number, status: number): Promise<null> {
+  return http<null>({
+    url: `/api/hr/application/${applicationId}/status`,
+    method: "PATCH",
+    data: { status },
+  });
+}
+
 // ============ 旧命名兼容（新接口别名） ============
 export type JobPosting = JobPosition;
 

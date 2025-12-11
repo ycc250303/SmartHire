@@ -10,6 +10,7 @@ export interface Conversation {
   unreadCount: number;
   pinned: number;
   hasNotification: number;
+  applicationId?: number;
 }
 
 export interface Message {
@@ -122,4 +123,3 @@ export function getUnreadCount(): Promise<number> {
     method: 'GET',
   });
 }
-
