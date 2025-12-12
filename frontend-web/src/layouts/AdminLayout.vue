@@ -82,7 +82,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, h } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { NLayout, NLayoutSider, NLayoutHeader, NLayoutContent, NMenu, NBreadcrumb, NBreadcrumbItem, NSwitch, NDropdown, NAvatar, useMessage } from 'naive-ui'
 import { useThemeStore } from '@/store/theme'
@@ -131,45 +131,45 @@ const breadcrumbs = computed(() => {
 // 菜单配置
 const menuOptions = computed(() => [
   {
-    label: '管理台首页',
+    label: () => '管理台首页',
     key: 'DashboardHome',
-    icon: () => '🏠',
+    icon: () => h('span', '🏠'),
     onClick: () => router.push('/dashboard')
   },
   {
-    label: '数据统计',
+    label: () => '数据统计',
     key: 'Statistics',
-    icon: () => '📊',
+    icon: () => h('span', '📊'),
     onClick: () => router.push('/dashboard/statistics')
   },
   {
-    label: '招聘审核',
+    label: () => '招聘审核',
     key: 'Review',
-    icon: () => '✅',
+    icon: () => h('span', '✅'),
     onClick: () => router.push('/dashboard/review')
   },
   {
-    label: '用户管理',
+    label: () => '用户管理',
     key: 'Users',
-    icon: () => '👥',
+    icon: () => h('span', '👥'),
     onClick: () => router.push('/dashboard/users')
   },
   {
-    label: '公告管理',
+    label: () => '公告管理',
     key: 'Announcement',
-    icon: () => '📢',
+    icon: () => h('span', '📢'),
     onClick: () => router.push('/dashboard/announcement')
   },
   {
-    label: '举报处理',
+    label: () => '举报处理',
     key: 'Reports',
-    icon: () => '⚠️',
+    icon: () => h('span', '⚠️'),
     onClick: () => router.push('/dashboard/reports')
   },
   {
-    label: '系统管理',
+    label: () => '系统管理',
     key: 'System',
-    icon: () => '⚙️',
+    icon: () => h('span', '⚙️'),
     onClick: () => router.push('/dashboard/system')
   }
 ])

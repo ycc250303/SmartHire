@@ -68,4 +68,14 @@ public interface JobAuditService extends IService<JobAuditRecord> {
      * @return 审核记录
      */
     JobAuditRecord getAuditDetail(Long jobId);
+
+    /**
+     * 强制下线职位
+     *
+     * @param jobId 职位ID
+     * @param offlineReason 下线原因
+     * @param auditorId 审核员ID
+     * @param auditorName 审核员姓名
+     */
+    void forceOfflineJob(Long jobId, String offlineReason, Long auditorId, String auditorName);
 }

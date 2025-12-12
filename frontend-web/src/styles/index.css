@@ -63,15 +63,14 @@
 
     &:hover {
       background: var(--primary-color-hover);
-      color: white;
     }
 
     &.n-menu-item-content--selected {
       background: var(--primary-color);
-      color: white;
 
-      &::before {
-        background: var(--primary-color);
+      /* 强制所有子元素文字为白色 */
+      * {
+        color: white !important;
       }
     }
   }

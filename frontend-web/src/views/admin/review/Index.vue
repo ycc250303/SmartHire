@@ -101,6 +101,14 @@
               >
                 拒绝
               </NButton>
+              <NButton
+                v-if="job.status === 'approved'"
+                size="small"
+                type="error"
+                @click.stop="handleForceOffline(job)"
+              >
+                强制下线
+              </NButton>
             </div>
           </div>
 
@@ -280,24 +288,33 @@
         <template #footer>
           <div class="modal-actions">
             <NButton @click="showDetailModal = false">关闭</NButton>
-            <div v-if="selectedJob && selectedJob.status === 'pending'" class="action-buttons">
+            <div v-if="selectedJob" class="action-buttons">
+              <template v-if="selectedJob.status === 'pending'">
+                <NButton
+                  type="success"
+                  @click="handleApprove(selectedJob)"
+                >
+                  通过
+                </NButton>
+                <NButton
+                  type="warning"
+                  @click="handleModify(selectedJob)"
+                >
+                  要求修改
+                </NButton>
+                <NButton
+                  type="error"
+                  @click="handleReject(selectedJob)"
+                >
+                  拒绝
+                </NButton>
+              </template>
               <NButton
-                type="success"
-                @click="handleApprove(selectedJob)"
-              >
-                通过
-              </NButton>
-              <NButton
-                type="warning"
-                @click="handleModify(selectedJob)"
-              >
-                要求修改
-              </NButton>
-              <NButton
+                v-if="selectedJob.status === 'approved'"
                 type="error"
-                @click="handleReject(selectedJob)"
+                @click="handleForceOffline(selectedJob)"
               >
-                拒绝
+                强制下线
               </NButton>
             </div>
           </div>
@@ -333,7 +350,7 @@
             <p class="preview-company">{{ currentJob?.company }}</p>
           </div>
 
-          <div class="action-form" v-if="actionType === 'reject' || actionType === 'modify'">
+          <div class="action-form" v-if="actionType === 'reject' || actionType === 'modify' || actionType === 'offline'">
             <NForm
               ref="actionFormRef"
               :model="actionForm"
@@ -341,15 +358,15 @@
               label-width="auto"
             >
               <NFormItem
-                label="审核意见"
+                :label="actionType === 'offline' ? '下线原因' : '审核意见'"
                 :rule="[
-                  { required: true, message: '请输入审核意见', trigger: ['blur'] }
+                  { required: true, message: actionType === 'offline' ? '请输入下线原因' : '请输入审核意见', trigger: ['blur'] }
                 ]"
               >
                 <NInput
                   v-model:value="actionForm.reason"
                   type="textarea"
-                  placeholder="请输入审核意见"
+                  :placeholder="actionType === 'offline' ? '请输入强制下线的原因' : '请输入审核意见'"
                   :rows="4"
                 />
               </NFormItem>
@@ -368,7 +385,7 @@
               type="primary"
               :loading="actionLoading"
               @click="confirmAction"
-              :disabled="actionType === 'reject' && !actionForm.reason.trim()"
+              :disabled="(actionType === 'reject' || actionType === 'modify' || actionType === 'offline') && !actionForm.reason.trim()"
             >
               {{ actionText }}
             </NButton>
@@ -392,8 +409,7 @@ import {
   NForm,
   NFormItem,
   FormInst,
-  useMessage,
-  useDialog
+  useMessage
 } from 'naive-ui'
 import dayjs from 'dayjs'
 import {
@@ -401,6 +417,7 @@ import {
   approveJob,
   rejectJob,
   modifyJob,
+  forceOfflineJob,
   getJobAuditStats,
   type Job,
   type JobAuditQueryParams,
@@ -418,7 +435,6 @@ interface StatusTab {
 }
 
 const message = useMessage()
-const dialog = useDialog()
 
 // 岗位详情弹窗状态
 const showDetailModal = ref(false)
@@ -480,12 +496,13 @@ const loading = ref(false)
 
 // 搜索和筛选
 const searchKeyword = ref('')
-const actionType = ref<'approve' | 'reject' | 'modify'>('approve')
+const actionType = ref<'approve' | 'reject' | 'modify' | 'offline'>('approve')
 const actionText = computed(() => {
   const textMap = {
     approve: '通过',
     reject: '拒绝',
-    modify: '要求修改'
+    modify: '要求修改',
+    offline: '强制下线'
   }
   return textMap[actionType.value] || '操作'
 })
@@ -611,6 +628,14 @@ const handleModify = (job: Job) => {
   showActionModal.value = true
 }
 
+// 强制下线
+const handleForceOffline = (job: Job) => {
+  currentJob.value = job
+  actionType.value = 'offline'
+  actionForm.value.reason = ''
+  showActionModal.value = true
+}
+
 // 确认审核操作
 const confirmAction = async () => {
   if (!currentJob.value) return
@@ -631,6 +656,9 @@ const confirmAction = async () => {
     } else if (actionType.value === 'modify') {
       await modifyJob(currentJob.value.id, params)
       message.info(`已要求修改职位，建议：${actionForm.value.reason}`)
+    } else if (actionType.value === 'offline') {
+      await forceOfflineJob(currentJob.value.id, params)
+      message.warning(`职位已强制下线，原因：${actionForm.value.reason}`)
     }
 
     showActionModal.value = false

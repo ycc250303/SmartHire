@@ -117,6 +117,54 @@ public class JobAuditServiceImpl extends ServiceImpl<JobAuditMapper, JobAuditRec
         return getOne(wrapper);
     }
 
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void forceOfflineJob(Long jobId, String offlineReason, Long auditorId, String auditorName) {
+        log.info("开始强制下线职位，职位ID: {}, 审核员: {}, 下线原因: {}", jobId, auditorName, offlineReason);
+
+        // 验证职位存在且为已通过状态
+        JobAuditRecord auditRecord = validateJobForOffline(jobId);
+
+        // 更新审核记录：记录强制下线操作
+        auditRecord.setStatus(AuditStatus.REJECTED.getCode()); // 使用rejected状态表示被拒绝/下线
+        auditRecord.setRejectReason(offlineReason); // 使用reject_reason字段记录下线原因
+        auditRecord.setAuditorId(auditorId);
+        auditRecord.setAuditorName(auditorName);
+        auditRecord.setAuditedAt(new Date());
+        updateById(auditRecord);
+
+        // 更新JobInfo表：只更新status为已下线，audit_status保持为rejected
+        JobInfo jobInfo = new JobInfo();
+        jobInfo.setId(jobId);
+        jobInfo.setStatus(0); // 0-已下线
+        jobInfo.setAuditStatus(AuditStatus.REJECTED.getCode()); // 与审核记录保持一致
+        jobInfo.setAuditedAt(new Date());
+        jobInfo.setUpdatedAt(new Date());
+        jobInfoMapper.updateById(jobInfo);
+
+        log.info("职位强制下线完成，职位ID: {}", jobId);
+    }
+
+    /**
+     * 验证职位是否可以强制下线
+     *
+     * @param jobId 职位ID
+     * @return 审核记录
+     */
+    private JobAuditRecord validateJobForOffline(Long jobId) {
+        JobAuditRecord auditRecord = getAuditDetail(jobId);
+        if (auditRecord == null) {
+            throw AdminServiceException.jobNotFound(jobId);
+        }
+
+        // 只有已通过的职位才能强制下线
+        if (!AuditStatus.APPROVED.getCode().equals(auditRecord.getStatus())) {
+            throw AdminServiceException.operationFailed("只有已通过审核的职位才能强制下线");
+        }
+
+        return auditRecord;
+    }
+
     /**
      * 验证职位状态
      *

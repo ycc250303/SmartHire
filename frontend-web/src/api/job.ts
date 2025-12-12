@@ -93,6 +93,11 @@ export const modifyJob = (jobId: number, params: JobAuditParams): Promise<void> 
   return adminRequest.post(`/admin/review/jobs/${jobId}/modify`, params)
 }
 
+// 强制下线
+export const forceOfflineJob = (jobId: number, params: JobAuditParams): Promise<void> => {
+  return adminRequest.post(`/admin/review/jobs/${jobId}/offline`, params)
+}
+
 // 按状态统计职位数量
 export const countJobsByStatus = (status: string): Promise<number> => {
   return adminRequest.get(`/admin/review/count/${status}`)

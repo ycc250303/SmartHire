@@ -531,7 +531,6 @@ const userTypeOptions = [
 ]
 
 const statusOptions = [
-  { label: '全部', value: '', type: 'default' as const },
   { label: '正常', value: 'active', type: 'success' as const },
   { label: '封禁', value: 'banned', type: 'error' as const }
 ]
@@ -572,7 +571,7 @@ const filteredUsers = computed(() => {
   }
 
   // 状态筛选
-  if (filters.value.status !== '') {
+  if (filters.value.status && filters.value.status !== '') {
     filtered = filtered.filter(user => {
       const statusValue = filters.value.status === 'active' ? 1 : 0
       return user.status === statusValue

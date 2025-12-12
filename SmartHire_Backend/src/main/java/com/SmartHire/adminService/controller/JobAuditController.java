@@ -115,6 +115,24 @@ public class JobAuditController {
     }
 
     /**
+     * 强制下线职位
+     *
+     * @param jobId 职位ID
+     * @param auditDTO 审核DTO（包含下线原因）
+     * @return 操作结果
+     */
+    @PostMapping("/jobs/{jobId}/offline")
+    public Result<?> forceOfflineJob(@PathVariable Long jobId,
+                                   @Valid @RequestBody JobAuditDTO auditDTO) {
+        // 从SecurityContext获取当前管理员信息
+        Long auditorId = userContext.getCurrentUserId();
+        String auditorName = userContext.getCurrentUsername();
+
+        jobAuditService.forceOfflineJob(jobId, auditDTO.getReason(), auditorId, auditorName);
+        return Result.success("职位已强制下线");
+    }
+
+    /**
      * 按状态统计数量
      *
      * @param status 审核状态

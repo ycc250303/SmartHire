@@ -18,7 +18,7 @@
     <!-- 数据概览卡片 -->
     <div class="overview-section">
       <NGrid :x-gap="24" :y-gap="24" responsive="screen">
-        <NGi v-for="stat in overviewStats" :key="stat.key" span="24 s:12 m:12 l:6">
+        <NGi v-for="stat in overviewStats" :key="stat.key" span="12">
           <div class="overview-card" :class="stat.type">
             <div class="card-header">
               <div class="card-icon">{{ stat.icon }}</div>
@@ -127,7 +127,7 @@ const retentionChartRef = ref<HTMLElement>()
 const overviewStats = ref([
   {
     key: 'total-users',
-    label: '总用户数',
+    label: '用户总数',
     value: 1024,
     icon: '👥',
     type: 'primary',
@@ -135,31 +135,31 @@ const overviewStats = ref([
     changeText: '较昨日 +12.5%'
   },
   {
-    key: 'active-users',
-    label: '活跃用户',
-    value: 428,
-    icon: '🔥',
+    key: 'jobseekers',
+    label: '求职者人数',
+    value: 685,
+    icon: '🎯',
     type: 'success',
     trend: 'up',
-    changeText: '较昨日 +8.9%'
+    changeText: '较昨日 +15.2%'
   },
   {
-    key: 'total-jobs',
-    label: '活跃职位',
-    value: 568,
+    key: 'hr-users',
+    label: 'HR人数',
+    value: 339,
     icon: '💼',
     type: 'warning',
     trend: 'up',
-    changeText: '较昨日 +5.2%'
+    changeText: '较昨日 +6.8%'
   },
   {
-    key: 'total-applications',
-    label: '申请总数',
-    value: 3420,
-    icon: '📝',
+    key: 'total-jobs',
+    label: '岗位总数',
+    value: 856,
+    icon: '📋',
     type: 'info',
-    trend: 'down',
-    changeText: '较昨日 -2.1%'
+    trend: 'up',
+    changeText: '较昨日 +8.3%'
   }
 ])
 
