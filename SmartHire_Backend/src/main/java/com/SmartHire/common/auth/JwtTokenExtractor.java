@@ -3,11 +3,13 @@ package com.SmartHire.common.auth;
 import com.SmartHire.common.exception.enums.ErrorCode;
 import com.SmartHire.common.exception.exception.BusinessException;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 /** JWT Token提取工具类 统一从HTTP请求中提取JWT Token */
+@Slf4j
 @Component
 public class JwtTokenExtractor {
 
@@ -66,10 +68,24 @@ public class JwtTokenExtractor {
    * @throws BusinessException 如果Token为空
    */
   public String extractToken(HttpServletRequest request) {
-    String token = request.getHeader(AUTHORIZATION_HEADER);
-    if (token == null || token.isBlank()) {
+    String authHeader = request.getHeader(AUTHORIZATION_HEADER);
+    log.info("📥 提取Token - Authorization header: {}", 
+        authHeader != null ? authHeader.substring(0, Math.min(50, authHeader.length())) + "..." : "null");
+    
+    if (authHeader == null || authHeader.isBlank()) {
+      log.warn("❌ Authorization header为空");
       throw new BusinessException(ErrorCode.TOKEN_IS_NULL);
     }
+    
+    // 处理 "Bearer " 前缀
+    String token = authHeader;
+    if (authHeader.startsWith("Bearer ")) {
+      token = authHeader.substring(7);
+      log.info("✅ 已移除Bearer前缀，token长度: {}", token.length());
+    } else {
+      log.warn("⚠️ Authorization header不包含Bearer前缀");
+    }
+    
     return token;
   }
 

@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: SmartHire_AdminService
+
+server:
+  port: 8085
+  servlet:
+    context-path: /smarthire/api/admin
+
+# inherits datasource/redis/mail from application.yml
+
+# 日志配置
+logging:
+  level:
+    com.SmartHire.adminService: DEBUG
+    com.SmartHire.adminService.mapper: DEBUG
+
+# 管理员服务配置
+admin:
+  # 封禁相关配置
+  ban:
+    # 默认封禁类型
+    default-ban-type: temporary
+    # 默认封禁天数
+    default-ban-days: 7
+    # 是否自动处理过期封禁
+    auto-process-expired: true
+    # 自动处理间隔（小时）
+    auto-process-interval: 24
