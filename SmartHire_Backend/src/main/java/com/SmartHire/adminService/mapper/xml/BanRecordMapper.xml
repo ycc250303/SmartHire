@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.SmartHire.adminService.mapper.BanRecordMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.SmartHire.adminService.model.BanRecord">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="username" property="username"/>
+        <result column="email" property="email"/>
+        <result column="user_type" property="userType"/>
+        <result column="ban_reason" property="banReason"/>
+        <result column="ban_type" property="banType"/>
+        <result column="ban_days" property="banDays"/>
+        <result column="ban_start_time" property="banStartTime"/>
+        <result column="ban_end_time" property="banEndTime"/>
+        <result column="ban_status" property="banStatus"/>
+        <result column="operator_id" property="operatorId"/>
+        <result column="operator_name" property="operatorName"/>
+        <result column="lifted_by_operator_id" property="liftedByOperatorId"/>
+        <result column="lifted_by_operator_name" property="liftedByOperatorName"/>
+        <result column="lift_reason" property="liftReason"/>
+        <result column="lifted_at" property="liftedAt"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, user_id, username, email, user_type, ban_reason, ban_type, ban_days,
+        ban_start_time, ban_end_time, ban_status, operator_id, operator_name,
+        lifted_by_operator_id, lifted_by_operator_name, lift_reason, lifted_at,
+        created_at, updated_at
+    </sql>
+
+    <!-- 根据用户ID查询当前生效的封禁记录 -->
+    <select id="findActiveBanByUserId" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM ban_record
+        WHERE user_id = #{userId}
+        AND ban_status = 'active'
+        AND (ban_end_time IS NULL OR ban_end_time > NOW())
+        ORDER BY created_at DESC
+        LIMIT 1
+    </select>
+
+    <!-- 根据用户ID查询所有封禁记录 -->
+    <select id="findAllBansByUserId" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM ban_record
+        WHERE user_id = #{userId}
+        ORDER BY created_at DESC
+    </select>
+
+    <!-- 查询已过期需要自动解除的封禁记录 -->
+    <select id="findExpiredBans" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM ban_record
+        WHERE ban_status = 'active'
+        AND ban_end_time IS NOT NULL
+        AND ban_end_time &lt;= NOW()
+    </select>
+
+    <!-- 解除用户的所有生效封禁 -->
+    <update id="liftUserBans">
+        UPDATE ban_record
+        SET ban_status = 'lifted',
+            lifted_by_operator_id = #{operatorId},
+            lifted_by_operator_name = #{operatorName},
+            lift_reason = #{liftReason},
+            lifted_at = NOW(),
+            updated_at = NOW()
+        WHERE user_id = #{userId}
+        AND ban_status = 'active'
+    </update>
+
+    <!-- 根据管理员ID查询封禁记录 -->
+    <select id="findBansByOperatorId" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM ban_record
+        WHERE operator_id = #{operatorId}
+        ORDER BY created_at DESC
+    </select>
+
+    <!-- 统计指定时间范围内的封禁数量 -->
+    <select id="countBansByTimeRange" resultType="int">
+        SELECT COUNT(*)
+        FROM ban_record
+        WHERE created_at &gt;= #{startTime}
+        AND created_at &lt;= #{endTime}
+    </select>
+
+</mapper>

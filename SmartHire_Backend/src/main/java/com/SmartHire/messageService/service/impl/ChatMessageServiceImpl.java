@@ -1,5 +1,11 @@
 package com.SmartHire.messageService.service.impl;
 
+import com.SmartHire.common.api.ApplicationApi;
+import com.SmartHire.common.api.UserAuthApi;
+import com.SmartHire.common.enums.UserType;
+import com.SmartHire.common.exception.enums.ErrorCode;
+import com.SmartHire.common.exception.exception.BusinessException;
+import com.SmartHire.common.utils.AliOssUtil;
 import com.SmartHire.messageService.dto.MessageDTO;
 import com.SmartHire.messageService.dto.SendMessageDTO;
 import com.SmartHire.messageService.mapper.ChatMessageMapper;
@@ -7,12 +13,11 @@ import com.SmartHire.messageService.model.ChatMessage;
 import com.SmartHire.messageService.model.Conversation;
 import com.SmartHire.messageService.service.ChatMessageService;
 import com.SmartHire.messageService.service.ConversationService;
-import com.SmartHire.messageService.websocket.MessageWebSocket;
+import com.SmartHire.messageService.service.MQProducerService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -34,17 +39,73 @@ public class ChatMessageServiceImpl extends ServiceImpl<ChatMessageMapper, ChatM
     implements ChatMessageService {
   @Autowired private ConversationService conversationService;
 
-  @Autowired private ObjectMapper objectMapper; // JSON 序列化工具
+  @Autowired private MQProducerService mqProducerService;
+
+  @Autowired private UserAuthApi userAuthApi;
+
+  @Autowired private AliOssUtil aliOssUtil;
+
+  @Autowired private ApplicationApi applicationApi;
 
   @Override
   @Transactional(rollbackFor = Exception.class)
   public MessageDTO sendMessage(Long senderId, SendMessageDTO dto) {
+
+    // 检查receiverId对应的用户是否存在
+    if (!userAuthApi.existsUser(dto.getReceiverId())) {
+      throw new BusinessException(ErrorCode.USER_ID_NOT_EXIST);
+    }
+
+    // 检查applicationId对应的投递记录是否存在
+    if (!applicationApi.existsApplication(dto.getApplicationId())) {
+      throw new BusinessException(ErrorCode.APPLICATION_NOT_EXIST);
+    }
+
+    // 验证用户类型：求职者只能和HR发消息，HR只能和求职者发消息
+    validateUserTypeForMessage(senderId, dto.getReceiverId());
+
+    // 验证消息类型
+    Integer messageType = dto.getMessageType();
+    if (messageType == null) {
+      throw new BusinessException(ErrorCode.MESSAGE_TYPE_IS_EMPTY);
+    }
+
+    boolean isText = messageType == 1;
+    boolean isMedia = 2 <= messageType && messageType <= 5;
+
+    if (isMedia) {
+      // 如果没有提供fileUrl，则需要上传文件
+      if (dto.getFileUrl() == null || dto.getFileUrl().isBlank()) {
+        if (dto.getFile() == null || dto.getFile().isEmpty()) {
+          throw new BusinessException(ErrorCode.MEDIA_URL_IS_EMPTY);
+        }
+        try {
+          String objectName = aliOssUtil.generateFileUrl(dto.getFile().getOriginalFilename());
+          String url = aliOssUtil.uploadFile("chat", objectName, dto.getFile().getInputStream());
+          dto.setFileUrl(url);
+        } catch (Exception e) {
+          log.error("上传消息附件失败", e);
+          throw new BusinessException(ErrorCode.MEDIA_UPLOAD_FAILED);
+        }
+      }
+      // 如果媒体消息的content为空，则自动生成
+      if (dto.getContent() == null || dto.getContent().isBlank()) {
+        dto.setContent(generateMessagePreview(dto.getMessageType(), null));
+      }
+      // 如果已经提供了fileUrl，则直接使用，不需要上传文件
+    } else if (isText) {
+      if (dto.getContent() == null || dto.getContent().isBlank()) {
+        throw new BusinessException(ErrorCode.CONTENT_IS_EMPTY);
+      }
+    } else {
+      throw new BusinessException(ErrorCode.MESSAGE_TYPE_INVALID);
+    }
+
     // 1. 获取或创建会话
     Conversation conversation =
         conversationService.getOrCreateConversation(senderId, dto.getReceiverId());
 
     // 2. 创建消息对象
-
     ChatMessage message = getChatMessage(senderId, dto, conversation);
 
     // 3. 保存消息到数据库
@@ -78,18 +139,10 @@ public class ChatMessageServiceImpl extends ServiceImpl<ChatMessageMapper, ChatM
     // 6. 返回消息数据
     MessageDTO messageDTO = convertToMessageDTO(message);
 
-    // 7. 通过 WebSocket 推送给接收者
-    try {
-      String jsonMessage = objectMapper.writeValueAsString(messageDTO);
-      boolean pushed = MessageWebSocket.sendMessage(dto.getReceiverId(), jsonMessage);
-      if (pushed) {
-        log.info("消息已实时推送给用户: receiverId={}, messageId={}", dto.getReceiverId(), message.getId());
-      }
-    } catch (Exception e) {
-      log.error("推送消息失败，但消息已保存到数据库", e);
-      // 不抛异常，保证业务逻辑不受影响
-    }
-
+    // 7. 通过消息队列异步推送消息
+    mqProducerService.sendChatMessage(dto.getReceiverId(), messageDTO);
+    log.info("dto.messageType: {}", dto.getMessageType());
+    log.info("message.messageType: {}", message.getMessageType());
     return messageDTO;
   }
 
@@ -185,18 +238,15 @@ public class ChatMessageServiceImpl extends ServiceImpl<ChatMessageMapper, ChatM
   }
 
   /** 生成消息预览 */
-  private String generateMessagePreview(Byte messageType, String content) {
-    if (content == null) {
-      return "";
-    }
+  private String generateMessagePreview(Integer messageType, String content) {
     return switch (messageType) {
       case 1 -> // 文本
-      content.length() > 50 ? content.substring(0, 50) + "..." : content;
+      content == null ? "" : content.length() > 50 ? content.substring(0, 50) + "..." : content;
       case 2 -> "[图片]";
       case 3 -> "[文件]";
       case 4 -> "[语音]";
       case 5 -> "[视频]";
-      default -> content;
+      default -> content == null ? "" : content;
     };
   }
 
@@ -205,5 +255,49 @@ public class ChatMessageServiceImpl extends ServiceImpl<ChatMessageMapper, ChatM
     MessageDTO vo = new MessageDTO();
     BeanUtils.copyProperties(message, vo);
     return vo;
+  }
+
+  /**
+   * 验证用户类型：求职者只能和HR发消息，HR只能和求职者发消息
+   *
+   * @param senderId 发送者ID
+   * @param receiverId 接收者ID
+   * @throws BusinessException 如果用户类型不匹配
+   */
+  private void validateUserTypeForMessage(Long senderId, Long receiverId) {
+    // 获取发送者和接收者的用户信息
+    var sender = userAuthApi.getUserById(senderId);
+    var receiver = userAuthApi.getUserById(receiverId);
+
+    Integer senderType = sender.getUserType();
+    Integer receiverType = receiver.getUserType();
+
+    // 验证：求职者(1)只能和HR(2)发消息，HR(2)只能和求职者(1)发消息
+    if (senderType == null || receiverType == null) {
+      log.warn("用户类型为空，发送者ID: {}, 接收者ID: {}", senderId, receiverId);
+      throw new BusinessException(ErrorCode.MESSAGE_USER_TYPE_MISMATCH);
+    }
+
+    // 如果发送者是求职者(1)，接收者必须是HR(2)
+    if (UserType.SEEKER.getCode().equals(senderType)) {
+      if (!UserType.HR.getCode().equals(receiverType)) {
+        log.warn(
+            "求职者尝试与非HR用户发消息，发送者ID: {}, 接收者ID: {}, 接收者类型: {}", senderId, receiverId, receiverType);
+        throw new BusinessException(ErrorCode.MESSAGE_USER_TYPE_MISMATCH);
+      }
+    }
+    // 如果发送者是HR(2)，接收者必须是求职者(1)
+    else if (UserType.HR.getCode().equals(senderType)) {
+      if (!UserType.SEEKER.getCode().equals(receiverType)) {
+        log.warn(
+            "HR尝试与非求职者用户发消息，发送者ID: {}, 接收者ID: {}, 接收者类型: {}", senderId, receiverId, receiverType);
+        throw new BusinessException(ErrorCode.MESSAGE_USER_TYPE_MISMATCH);
+      }
+    }
+    // 其他类型（如管理员）不允许发送消息
+    else {
+      log.warn("不支持的用户类型尝试发送消息，发送者ID: {}, 发送者类型: {}", senderId, senderType);
+      throw new BusinessException(ErrorCode.MESSAGE_USER_TYPE_MISMATCH);
+    }
   }
 }

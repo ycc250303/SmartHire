@@ -29,9 +29,9 @@ spring:
 # MyBatis-Plus 配置（注意：必须在根节点，不能放在 spring: 下面）
 mybatis-plus:
   # Mapper XML 文件位置（支持多个路径）
-  mapper-locations: classpath*:com/SmartHire/userAuthService/mapper/xml/*.xml,classpath*:com/SmartHire/hrService/mapper/xml/*.xml,classpath*:com/SmartHire/seekerService/mapper/xml/*.xml,classpath*:com/SmartHire/messageService/mapper/xml/*.xml,classpath*:com/SmartHire/recruitmentService/mapper/xml/*.xml,classpath*:mapper/**/*.xml
+  mapper-locations: classpath*:com/SmartHire/userAuthService/mapper/xml/*.xml,classpath*:com/SmartHire/hrService/mapper/xml/*.xml,classpath*:com/SmartHire/seekerService/mapper/xml/*.xml,classpath*:com/SmartHire/messageService/mapper/xml/*.xml,classpath*:com/SmartHire/recruitmentService/mapper/xml/*.xml,classpath*:com/SmartHire/adminService/mapper/xml/*.xml,classpath*:mapper/**/*.xml
   # 实体类包路径
-  type-aliases-package: com.SmartHire.userAuthService.model,com.SmartHire.hrService.model,com.SmartHire.seekerService.model,com.SmartHire.messageService.model,com.SmartHire.recruitmentService.model
+  type-aliases-package: com.SmartHire.userAuthService.model,com.SmartHire.hrService.model,com.SmartHire.seekerService.model,com.SmartHire.messageService.model,com.SmartHire.recruitmentService.model,com.SmartHire.adminService.model
   # 全局配置
   global-config:
     # 数据库配置

@@ -11,7 +11,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
   "com.SmartHire.hrService.mapper",
   "com.SmartHire.seekerService.mapper",
   "com.SmartHire.messageService.mapper",
-  "com.SmartHire.recruitmentService.mapper"
+  "com.SmartHire.recruitmentService.mapper",
+  "com.SmartHire.adminService.mapper"
 })
 public class SmartHireBackendApplication {
 

@@ -18,7 +18,6 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import java.io.IOException;
 import java.util.Date;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -195,17 +194,7 @@ public class UserAuthServiceImpl extends ServiceImpl<UserAuthMapper, User>
     }
     String oldAvatarUrl = user.getAvatarUrl();
 
-    // 生成文件名
-    String originalFileName = avatarFile.getOriginalFilename();
-    log.info("originalFileName:" + originalFileName);
-    String fileExtension = "";
-
-    // 安全地获取文件扩展名
-    if (originalFileName != null && originalFileName.contains(".")) {
-      fileExtension = originalFileName.substring(originalFileName.lastIndexOf("."));
-    }
-
-    String fileName = UUID.randomUUID().toString() + fileExtension;
+    String fileName = aliOssUtil.generateFileUrl(avatarFile.getOriginalFilename());
     try {
       String avatarUrl =
           aliOssUtil.uploadFile(AVATAR_DIRECTORY_KEY, fileName, avatarFile.getInputStream());

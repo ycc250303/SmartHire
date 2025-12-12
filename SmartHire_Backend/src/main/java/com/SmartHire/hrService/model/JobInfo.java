@@ -92,4 +92,13 @@ public class JobInfo implements Serializable {
 
   /** 发布时间 */
   private Date publishedAt;
+
+  /** 审核状态: draft-草稿 pending-待审核 approved-已通过 rejected-已拒绝 modified-需修改 */
+  private String auditStatus;
+
+  /** 提交审核时间 */
+  private Date submittedAt;
+
+  /** 审核完成时间 */
+  private Date auditedAt;
 }
