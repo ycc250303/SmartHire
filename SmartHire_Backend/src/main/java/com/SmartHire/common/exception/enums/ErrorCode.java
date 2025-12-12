@@ -83,6 +83,12 @@ public enum ErrorCode {
     ADMIN_BAN_DAYS_MUST_BE_POSITIVE(1507, "封禁天数必须大于0"),
     ADMIN_OPERATION_FAILED(1508, "管理员操作失败"),
 
+    // 举报管理相关错误码 (1590-1599)
+    REPORT_NOT_FOUND(1590, "举报记录不存在"),
+    REPORT_ALREADY_HANDLED(1591, "该举报已处理"),
+    REPORT_HANDLE_FAILED(1592, "举报处理失败"),
+    REPORT_EVIDENCE_NOT_FOUND(1593, "该举报没有证据图片"),
+
     SYSTEM_ERROR(9999, "系统内部错误,请检查业务处理逻辑,以及是否存在未处理的异常情况");
 
     private final Integer code;

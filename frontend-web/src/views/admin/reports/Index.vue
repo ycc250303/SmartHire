@@ -25,9 +25,20 @@
           <div class="filter-item">
             <label>举报类型</label>
             <NSelect
-              v-model:value="filters.type"
-              :options="typeOptions"
+              v-model:value="filters.reportType"
+              :options="reportTypeOptions"
               placeholder="全部类型"
+              clearable
+              style="width: 150px"
+              @update:value="handleFilter"
+            />
+          </div>
+          <div class="filter-item">
+            <label>对象类型</label>
+            <NSelect
+              v-model:value="filters.targetType"
+              :options="targetTypeOptions"
+              placeholder="全部对象"
               clearable
               style="width: 150px"
               @update:value="handleFilter"
@@ -44,18 +55,7 @@
               @update:value="handleFilter"
             />
           </div>
-          <div class="filter-item">
-            <label>优先级</label>
-            <NSelect
-              v-model:value="filters.priority"
-              :options="priorityOptions"
-              placeholder="全部优先级"
-              clearable
-              style="width: 150px"
-              @update:value="handleFilter"
-            />
           </div>
-        </div>
         <div class="search-row">
           <div class="search-input">
             <NInput
@@ -87,20 +87,16 @@
     <NCard :bordered="false" class="list-card">
       <div class="list-header">
         <span class="list-title">举报列表</span>
-        <div class="list-actions">
-          <span class="total-count">共 {{ filteredReports.length }} 条举报</span>
-        </div>
       </div>
 
       <div class="report-list">
         <div
-          v-for="report in paginatedReports"
+          v-for="report in reportsData"
           :key="report.id"
           class="report-item"
           :class="{
-            'high-priority': report.priority === 'high',
-            'pending': report.status === 'pending',
-            'processing': report.status === 'processing'
+            'processing': report.status === 0,
+            'resolved': report.status === 1
           }"
           @click="viewReportDetail(report)"
         >
@@ -111,36 +107,15 @@
                 <span class="id-value">#{{ report.id }}</span>
               </div>
               <div class="report-badges">
-                <NTag :type="getTypeType(report.type)" size="small">
-                  {{ getTypeText(report.type) }}
+                <NTag :type="getTypeType(report.reportType)" size="small">
+                  {{ getTypeText(report.reportType) }}
                 </NTag>
                 <NTag :type="getStatusType(report.status)" size="small">
                   {{ getStatusText(report.status) }}
                 </NTag>
-                <NTag :type="getPriorityType(report.priority)" size="small">
-                  {{ getPriorityText(report.priority) }}
-                </NTag>
-              </div>
+                </div>
             </div>
-            <div class="report-actions">
-              <NButton
-                v-if="report.status === 'pending'"
-                size="small"
-                type="success"
-                @click.stop="handleReport(report)"
-              >
-                处理
-              </NButton>
-              <NButton
-                size="small"
-                type="primary"
-                ghost
-                @click.stop="viewReportDetail(report)"
-              >
-                查看详情
-              </NButton>
             </div>
-          </div>
 
           <div class="report-content">
             <h4>举报内容</h4>
@@ -150,51 +125,34 @@
           <div class="report-details">
             <div class="detail-item">
               <span class="detail-label">举报对象</span>
-              <span class="detail-value">{{ report.targetType }} - {{ report.targetInfo }}</span>
+              <span class="detail-value">
+                {{ getTargetTypeText(report.targetType) }} - {{ report.targetTitle }}
+              </span>
             </div>
             <div class="detail-item">
               <span class="detail-label">举报人</span>
-              <span class="detail-value">{{ report.reporter }}</span>
+              <span class="detail-value">{{ report.reporterName }}</span>
             </div>
             <div class="detail-item">
               <span class="detail-label">举报时间</span>
-              <span class="detail-value">{{ formatTime(report.createTime) }}</span>
+              <span class="detail-value">{{ formatTime(report.createdAt) }}</span>
             </div>
-          </div>
-
-          <div class="report-evidence" v-if="report.evidence && report.evidence.length > 0">
-            <span class="evidence-label">举报证据：</span>
-            <div class="evidence-list">
-              <span
-                v-for="(evidence, index) in report.evidence"
-                :key="index"
-                class="evidence-item"
-              >
-                {{ evidence.type }}: {{ evidence.name }}
-              </span>
-            </div>
-          </div>
-
-          <div class="report-status" v-if="report.status !== 'pending'">
-            <span class="status-label">处理结果：</span>
-            <span class="status-result">{{ report.result || '处理中' }}</span>
           </div>
         </div>
       </div>
 
       <!-- 空状态 -->
-      <div v-if="filteredReports.length === 0" class="empty-state">
+      <div v-if="reportsData.length === 0 && !loading" class="empty-state">
         <div class="empty-icon">⚠️</div>
         <h3 class="empty-title">暂无举报</h3>
         <p class="empty-description">当前没有需要处理的举报</p>
       </div>
 
       <!-- 分页 -->
-      <div v-if="filteredReports.length > 0" class="pagination-wrapper">
+      <div v-if="reportsData.length > 0" class="pagination-wrapper">
         <NPagination
           v-model:page="currentPage"
           :page-size="pageSize"
-          :item-count="filteredReports.length"
           show-size-picker
           :page-sizes="[10, 20, 50, 100]"
           @update:page="handlePageChange"
@@ -202,113 +160,11 @@
         />
       </div>
     </NCard>
-
-    <!-- 处理弹窗 -->
-    <NModal v-model:show="showHandleModal" :mask-closable="false">
-      <NCard
-        style="max-width: 600px"
-        title="处理举报"
-        :bordered="false"
-        size="huge"
-        role="dialog"
-        aria-modal
-      >
-        <template #header-extra>
-          <NButton
-            quaternary
-            circle
-            @click="showHandleModal = false"
-          >
-            <template #icon>
-              <span class="close-icon">×</span>
-            </template>
-          </NButton>
-        </template>
-
-        <div v-if="selectedReport" class="handle-form">
-          <div class="report-summary">
-            <h4>举报概要</h4>
-            <p><strong>举报类型：</strong>{{ getTypeText(selectedReport.type) }}</p>
-            <p><strong>举报对象：</strong>{{ selectedReport.targetType }} - {{ selectedReport.targetInfo }}</p>
-            <p><strong>举报内容：</strong>{{ selectedReport.reason }}</p>
-          </div>
-
-          <NForm
-            ref="handleFormRef"
-            :model="handleForm"
-            label-placement="left"
-            label-width="auto"
-          >
-            <NFormItem
-              label="处理结果"
-              :rule="[
-                { required: true, message: '请选择处理结果', trigger: 'change' }
-              ]"
-            >
-              <NRadioGroup v-model:value="handleForm.result">
-                <NRadio value="valid">举报成立</NRadio>
-                <NRadio value="invalid">举报不成立</NRadio>
-                <NRadio value="partial">部分成立</NRadio>
-              </NRadioGroup>
-            </NFormItem>
-
-            <NFormItem
-              label="处理方式"
-              :rule="[
-                { required: true, message: '请选择处理方式', trigger: 'change' }
-              ]"
-            >
-              <NSelect
-                v-model:value="handleForm.action"
-                :options="actionOptions"
-                placeholder="请选择处理方式"
-              />
-            </NFormItem>
-
-            <NFormItem
-              label="处理说明"
-              :rule="[
-                { required: true, message: '请输入处理说明', trigger: ['blur', 'input'] }
-              ]"
-            >
-              <NInput
-                v-model:value="handleForm.description"
-                type="textarea"
-                placeholder="请输入处理说明和处理依据"
-                :rows="4"
-              />
-            </NFormItem>
-
-            <NFormItem label="后续处理">
-              <NCheckboxGroup v-model:value="handleForm.followUp">
-                <NCheckbox value="warn">警告用户</NCheckbox>
-                <NCheckbox value="delete_content">删除内容</NCheckbox>
-                <NCheckbox value="block_user">封禁用户</NCheckbox>
-                <NCheckbox value="monitor">重点监控</NCheckbox>
-              </NCheckboxGroup>
-            </NFormItem>
-          </NForm>
-        </div>
-
-        <template #footer>
-          <div class="modal-actions">
-            <NButton @click="showHandleModal = false">取消</NButton>
-            <NButton
-              type="primary"
-              :loading="handleLoading"
-              @click="confirmHandle"
-            >
-              确认处理
-            </NButton>
-          </div>
-        </template>
-      </NCard>
-    </NModal>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   NCard,
@@ -317,340 +173,226 @@ import {
   NButton,
   NTag,
   NPagination,
-  NModal,
-  NForm,
-  NFormItem,
-  NRadioGroup,
-  NRadio,
-  NCheckboxGroup,
-  NCheckbox,
-  FormInst,
-  useMessage,
-  useDialog
+  useMessage
 } from 'naive-ui'
 import dayjs from 'dayjs'
-
-interface Report {
-  id: string
-  type: 'spam' | 'inappropriate' | 'fake_job' | 'fraud' | 'harassment' | 'other'
-  status: 'pending' | 'processing' | 'resolved' | 'rejected'
-  priority: 'low' | 'medium' | 'high' | 'urgent'
-  reason: string
-  targetType: 'job' | 'user' | 'company' | 'comment'
-  targetInfo: string
-  targetId: string
-  reporter: string
-  reporterId: string
-  createTime: string
-  evidence?: Array<{
-    type: string
-    name: string
-    url?: string
-  }>
-  result?: string
-  action?: string
-  description?: string
-}
+import { reportsApi, type Report, type ReportQuery, REPORT_TYPE_LABEL_MAP, STATUS_LABEL_MAP, TARGET_TYPE_LABEL_MAP } from '@/api/reports'
 
 interface Filters {
-  type: string | null
+  reportType: number | null
+  targetType: number | null
   status: string | null
-  priority: string | null
-}
-
-interface HandleForm {
-  result: string
-  action: string
-  description: string
-  followUp: string[]
 }
 
 const router = useRouter()
 const message = useMessage()
-const dialog = useDialog()
 
-// 筛选选项
-const typeOptions = [
-  { label: '垃圾信息', value: 'spam' },
-  { label: '不当内容', value: 'inappropriate' },
-  { label: '虚假职位', value: 'fake_job' },
-  { label: '欺诈行为', value: 'fraud' },
-  { label: '骚扰行为', value: 'harassment' },
-  { label: '其他', value: 'other' }
+// 筛选选项 - 举报类型（对应后端数字类型）
+const reportTypeOptions = [
+  { label: '垃圾信息', value: 1 },
+  { label: '不当内容', value: 2 },
+  { label: '虚假职位', value: 3 },
+  { label: '欺诈行为', value: 4 },
+  { label: '骚扰行为', value: 5 },
+  { label: '其他', value: 6 }
+]
+
+// 筛选选项 - 对象类型
+const targetTypeOptions = [
+  { label: '用户', value: 1 },
+  { label: '职位', value: 2 }
 ]
 
 const statusOptions = [
-  { label: '待处理', value: 'pending' },
   { label: '处理中', value: 'processing' },
-  { label: '已解决', value: 'resolved' },
-  { label: '已驳回', value: 'rejected' }
-]
-
-const priorityOptions = [
-  { label: '低', value: 'low' },
-  { label: '中', value: 'medium' },
-  { label: '高', value: 'high' },
-  { label: '紧急', value: 'urgent' }
-]
-
-const actionOptions = [
-  { label: '警告用户', value: 'warn' },
-  { label: '删除内容', value: 'delete_content' },
-  { label: '封禁账户', value: 'block_user' },
-  { label: '内容下架', value: 'remove_content' },
-  { label: '无需处理', value: 'no_action' }
+  { label: '已处理', value: 'resolved' }
 ]
 
 // 状态管理
 const searchKeyword = ref('')
 const filters = ref<Filters>({
-  type: null,
-  status: null,
-  priority: null
+  reportType: null,
+  targetType: null,
+  status: null
 })
 const currentPage = ref(1)
 const pageSize = ref(20)
+const loading = ref(false)
 
 // 统计数据
 const reportStats = ref({
-  pending: 12,
-  processing: 3,
-  total: 156
+  pending: 0,
+  total: 0
 })
 
-// 弹窗状态
-const showHandleModal = ref(false)
-const selectedReport = ref<Report | null>(null)
-const handleLoading = ref(false)
-const handleFormRef = ref<FormInst | null>(null)
-const handleForm = ref<HandleForm>({
-  result: '',
-  action: '',
-  description: '',
-  followUp: []
-})
+// 举报数据
+const reportsData = ref<Report[]>([])
 
-// 模拟举报数据
-const reportsData = ref<Report[]>([
-  {
-    id: '1',
-    type: 'fake_job',
-    status: 'pending',
-    priority: 'high',
-    reason: '该职位信息涉嫌虚假，公司信息与实际不符，要求高薪但实际工作内容不符',
-    targetType: 'job',
-    targetInfo: '高级产品经理 - 某科技公司',
-    targetId: 'job_123456',
-    reporter: '张三',
-    reporterId: 'user_789012',
-    createTime: '2024-01-15 14:30:00',
-    evidence: [
-      { type: '截图', name: '职位详情页.png' },
-      { type: '聊天记录', name: 'HR聊天记录.docx' }
-    ]
-  },
-  {
-    id: '2',
-    type: 'spam',
-    status: 'processing',
-    priority: 'medium',
-    reason: '用户发布大量重复的评论内容，涉嫌垃圾信息',
-    targetType: 'user',
-    targetInfo: '用户ID: user_456789',
-    targetId: 'user_456789',
-    reporter: '李四',
-    reporterId: 'user_123456',
-    createTime: '2024-01-15 10:15:00',
-    evidence: [
-      { type: '截图', name: '评论列表.png' }
-    ]
-  },
-  {
-    id: '3',
-    type: 'harassment',
-    status: 'pending',
-    priority: 'urgent',
-    reason: '用户通过私信发送骚扰信息，言语不当，要求用户转账',
-    targetType: 'user',
-    targetInfo: '用户ID: user_234567',
-    targetId: 'user_234567',
-    reporter: '王五',
-    reporterId: 'user_345678',
-    createTime: '2024-01-15 09:45:00',
-    evidence: [
-      { type: '聊天记录', name: '私信截图1.jpg' },
-      { type: '聊天记录', name: '私信截图2.jpg' }
-    ]
-  },
-  {
-    id: '4',
-    type: 'fraud',
-    status: 'resolved',
-    priority: 'high',
-    reason: '冒充知名企业进行招聘，收取费用后失联',
-    targetType: 'company',
-    targetInfo: '某知名互联网科技有限公司',
-    targetId: 'company_123456',
-    reporter: '赵六',
-    reporterId: 'user_567890',
-    createTime: '2024-01-14 16:20:00',
-    result: '举报成立',
-    action: '封禁账户',
-    description: '经核实，该企业确实存在欺诈行为，已封禁相关账户并删除所有职位信息'
-  }
-])
 
-// 计算属性
-const filteredReports = computed(() => {
-  let filtered = reportsData.value
-
-  // 类型筛选
-  if (filters.value.type) {
-    filtered = filtered.filter(report => report.type === filters.value.type)
-  }
-
-  // 状态筛选
-  if (filters.value.status) {
-    filtered = filtered.filter(report => report.status === filters.value.status)
-  }
-
-  // 优先级筛选
-  if (filters.value.priority) {
-    filtered = filtered.filter(report => report.priority === filters.value.priority)
-  }
-
-  // 关键词搜索
-  if (searchKeyword.value.trim()) {
-    const keyword = searchKeyword.value.toLowerCase()
-    filtered = filtered.filter(report =>
-      report.reason.toLowerCase().includes(keyword) ||
-      report.targetInfo.toLowerCase().includes(keyword) ||
-      report.reporter.toLowerCase().includes(keyword)
-    )
-  }
-
-  // 按优先级和时间排序
-  return filtered.sort((a, b) => {
-    const priorityOrder = { urgent: 4, high: 3, medium: 2, low: 1 }
-    const aPriority = priorityOrder[a.priority] || 0
-    const bPriority = priorityOrder[b.priority] || 0
-
-    if (aPriority !== bPriority) {
-      return bPriority - aPriority
-    }
-
-    return dayjs(b.createTime).valueOf() - dayjs(a.createTime).valueOf()
-  })
-})
-
-const paginatedReports = computed(() => {
-  const start = (currentPage.value - 1) * pageSize.value
-  const end = start + pageSize.value
-  return filteredReports.value.slice(start, end)
-})
 
 // 辅助方法
 const formatTime = (time: string) => {
   return dayjs(time).format('YYYY-MM-DD HH:mm')
 }
 
-const getTypeType = (type: string) => {
-  const typeMap: Record<string, string> = {
-    spam: 'warning',
-    inappropriate: 'error',
-    fake_job: 'error',
-    fraud: 'error',
-    harassment: 'error',
-    other: 'default'
+const getTypeType = (type: string | number): 'default' | 'warning' | 'error' | 'info' | 'success' | 'primary' => {
+  // 处理数字类型的举报类型
+  const typeNum = typeof type === 'number' ? type : parseInt(type)
+  const typeMap: Record<number, 'default' | 'warning' | 'error' | 'info' | 'success' | 'primary'> = {
+    1: 'warning',     // 垃圾信息
+    2: 'warning',     // 不当内容
+    3: 'error',       // 虚假职位
+    4: 'error',       // 欺诈行为
+    5: 'error',       // 骚扰行为
+    6: 'default'      // 其他
   }
-  return typeMap[type] || 'default'
+
+  // 处理字符串类型的举报类型（兼容性）
+  if (typeof type === 'string') {
+    const stringMap: Record<string, 'default' | 'warning' | 'error' | 'info' | 'success' | 'primary'> = {
+      spam: 'warning',
+      inappropriate: 'warning',
+      fake_job: 'error',
+      fraud: 'error',
+      harassment: 'error',
+      other: 'default'
+    }
+    return stringMap[type] || 'default'
+  }
+
+  return typeMap[typeNum] || 'default'
 }
 
-const getTypeText = (type: string) => {
-  const textMap: Record<string, string> = {
-    spam: '垃圾信息',
-    inappropriate: '不当内容',
-    fake_job: '虚假职位',
-    fraud: '欺诈行为',
-    harassment: '骚扰行为',
-    other: '其他'
+const getTypeText = (type: string | number) => {
+  // 处理数字类型的举报类型
+  const typeNum = typeof type === 'number' ? type : parseInt(type)
+  const textMap: Record<number, string> = {
+    1: '垃圾信息',
+    2: '不当内容',
+    3: '虚假职位',
+    4: '欺诈行为',
+    5: '骚扰行为',
+    6: '其他'
   }
-  return textMap[type] || type
+
+  // 处理字符串类型的举报类型（兼容性）
+  if (typeof type === 'string') {
+    const stringMap: Record<string, string> = {
+      spam: '垃圾信息',
+      inappropriate: '不当内容',
+      fake_job: '虚假职位',
+      fraud: '欺诈行为',
+      harassment: '骚扰行为',
+      other: '其他'
+    }
+    return stringMap[type] || type
+  }
+
+  return textMap[typeNum] || '其他'
 }
 
-const getStatusType = (status: string) => {
-  const typeMap: Record<string, string> = {
-    pending: 'warning',
-    processing: 'info',
-    resolved: 'success',
-    rejected: 'error'
+const getStatusType = (status: string | number): 'default' | 'warning' | 'error' | 'info' | 'success' | 'primary' => {
+  // 处理数字类型的状态
+  const statusNum = typeof status === 'number' ? status : parseInt(status)
+  const typeMap: Record<number, 'default' | 'warning' | 'error' | 'info' | 'success' | 'primary'> = {
+    0: 'info',        // 处理中
+    1: 'success'      // 已处理
   }
-  return typeMap[status] || 'default'
+
+  // 处理字符串类型的状态（兼容性）
+  if (typeof status === 'string') {
+    const stringMap: Record<string, 'default' | 'warning' | 'error' | 'info' | 'success' | 'primary'> = {
+      pending: 'warning',
+      processing: 'info',
+      resolved: 'success',
+      rejected: 'error'
+    }
+    return stringMap[status] || 'default'
+  }
+
+  return typeMap[statusNum] || 'default'
 }
 
-const getStatusText = (status: string) => {
-  const textMap: Record<string, string> = {
-    pending: '待处理',
-    processing: '处理中',
-    resolved: '已解决',
-    rejected: '已驳回'
+const getStatusText = (status: string | number) => {
+  // 处理数字类型的状态
+  const statusNum = typeof status === 'number' ? status : parseInt(status)
+  const textMap: Record<number, string> = {
+    0: '处理中',
+    1: '已处理'
   }
-  return textMap[status] || status
+
+  // 处理字符串类型的状态（兼容性）
+  if (typeof status === 'string') {
+    const stringMap: Record<string, string> = {
+      pending: '待处理',
+      processing: '处理中',
+      resolved: '已处理',
+      rejected: '已驳回'
+    }
+    return stringMap[status] || status
+  }
+
+  return textMap[statusNum] || '未知状态'
 }
 
-const getPriorityType = (priority: string) => {
-  const typeMap: Record<string, string> = {
-    low: 'success',
-    medium: 'warning',
-    high: 'error',
-    urgent: 'error'
+const getTargetTypeText = (targetType: string | number) => {
+  // 处理数字类型的对象类型
+  const targetTypeNum = typeof targetType === 'number' ? targetType : parseInt(targetType)
+  const textMap: Record<number, string> = {
+    1: '用户',
+    2: '职位'
   }
-  return typeMap[priority] || 'default'
+
+  // 处理字符串类型的对象类型（兼容性）
+  if (typeof targetType === 'string') {
+    const stringMap: Record<string, string> = {
+      user: '用户',
+      job: '职位'
+    }
+    return stringMap[targetType] || targetType
+  }
+
+  return textMap[targetTypeNum] || '未知对象'
 }
 
-const getPriorityText = (priority: string) => {
-  const textMap: Record<string, string> = {
-    low: '低',
-    medium: '中',
-    high: '高',
-    urgent: '紧急'
-  }
-  return textMap[priority] || priority
-}
 
 // 事件处理
 const handleFilter = () => {
   currentPage.value = 1
+  loadReports()
 }
 
 const handleSearch = (value: string) => {
   searchKeyword.value = value
   currentPage.value = 1
+  loadReports()
 }
 
 const handleRefresh = () => {
   message.success('数据已刷新')
-  // 更新统计数据
-  updateStats()
+  loadReports()
 }
 
 const resetFilters = () => {
   filters.value = {
-    type: null,
-    status: null,
-    priority: null
+    reportType: null,
+    targetType: null,
+    status: null
   }
   searchKeyword.value = ''
   currentPage.value = 1
+  loadReports()
 }
 
 const handlePageChange = (page: number) => {
   currentPage.value = page
+  loadReports()
 }
 
 const handlePageSizeChange = (size: number) => {
   pageSize.value = size
   currentPage.value = 1
+  loadReports()
 }
 
 // 查看详情
@@ -658,74 +400,57 @@ const viewReportDetail = (report: Report) => {
   router.push(`/dashboard/reports/${report.id}`)
 }
 
-// 处理举报
-const handleReport = (report: Report) => {
-  selectedReport.value = report
-  handleForm.value = {
-    result: '',
-    action: '',
-    description: '',
-    followUp: []
-  }
-  showHandleModal.value = true
-}
 
-// 确认处理
-const confirmHandle = async () => {
-  if (!selectedReport.value || !handleFormRef.value) return
 
+// 加载举报列表
+const loadReports = async () => {
   try {
-    await handleFormRef.value.validate()
-  } catch {
-    return
-  }
-
-  handleLoading.value = true
-
-  try {
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 2000))
-
-    // 更新举报状态
-    const reportIndex = reportsData.value.findIndex(r => r.id === selectedReport.value!.id)
-    if (reportIndex !== -1) {
-      reportsData.value[reportIndex] = {
-        ...reportsData.value[reportIndex],
-        status: 'resolved',
-        result: handleForm.value.result === 'valid' ? '举报成立' :
-               handleForm.value.result === 'invalid' ? '举报不成立' : '部分成立',
-        action: handleForm.value.action,
-        description: handleForm.value.description
-      }
+    loading.value = true
+    const params: ReportQuery = {
+      current: currentPage.value,
+      size: pageSize.value,
+      targetType: filters.value.targetType || undefined,
+      reportType: filters.value.reportType || undefined,
+      status: filters.value.status === 'processing' ? 0 : filters.value.status === 'resolved' ? 1 : undefined,
+      keyword: searchKeyword.value || undefined
     }
 
-    message.success('举报处理完成')
-    showHandleModal.value = false
-    updateStats()
+    const result = await reportsApi.getReports(params)
+    console.log('举报列表API响应:', result)
 
-  } catch (error) {
-    message.error('处理失败，请重试')
+    // MyBatis-Plus分页格式：records数组
+    reportsData.value = result.records
+  } catch (error: any) {
+    console.error('加载举报列表失败:', error)
+    message.error(error.message || '加载举报列表失败')
   } finally {
-    handleLoading.value = false
+    loading.value = false
   }
 }
 
-// 更新统计数据
-const updateStats = () => {
-  const pending = reportsData.value.filter(r => r.status === 'pending').length
-  const processing = reportsData.value.filter(r => r.status === 'processing').length
-  const total = reportsData.value.length
+// 加载统计信息
+const loadStats = async () => {
+  try {
+    const stats = await reportsApi.getReportStats() as any
+    const total = stats?.total || 0
+    const pending = stats?.pendingCount || 0
+    const resolved = stats?.resolvedCount || 0
 
-  reportStats.value = {
-    pending,
-    processing,
-    total
+    reportStats.value = {
+      total: total,
+      pending: pending
+    }
+  } catch (error) {
+    console.error('加载统计信息失败:', error)
   }
 }
+
+
 
 // 页面初始化
 onMounted(() => {
-  updateStats()
+  loadReports()
+  loadStats()
 })
 </script>
 
@@ -866,15 +591,7 @@ onMounted(() => {
           border-color: var(--primary-color);
         }
 
-        &.high-priority {
-          border-left: 4px solid var(--error-color);
-        }
-
-        &.urgent {
-          border-left: 4px solid var(--error-color);
-          background: rgba(245, 34, 45, 0.05);
-        }
-
+  
         &.pending {
           background: rgba(250, 173, 20, 0.05);
         }
@@ -1053,40 +770,8 @@ onMounted(() => {
       padding: 20px;
     }
   }
-
-  // 处理弹窗
-  .handle-form {
-    .report-summary {
-      margin-bottom: 24px;
-      padding: 16px;
-      background: var(--bg-secondary);
-      border-radius: 8px;
-
-      h4 {
-        margin: 0 0 12px 0;
-        font-size: 16px;
-        font-weight: 600;
-        color: var(--text-primary);
-      }
-
-      p {
-        margin: 0 0 4px 0;
-        font-size: 14px;
-        color: var(--text-secondary);
-
-        strong {
-          color: var(--text-primary);
-        }
-      }
-    }
-  }
-
-  .modal-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-  }
 }
+
 
 // 响应式设计
 @media (max-width: 768px) {

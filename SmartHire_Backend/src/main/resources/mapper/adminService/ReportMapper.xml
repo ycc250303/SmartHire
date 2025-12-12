@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.SmartHire.adminService.mapper.ReportMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="ReportDetailMap" type="com.SmartHire.adminService.dto.ReportDetailDTO">
+        <id column="id" property="id"/>
+        <result column="reporter_id" property="reporterId"/>
+        <result column="reporter_name" property="reporterName"/>
+        <result column="reporter_type" property="reporterType"/>
+        <result column="target_type" property="targetType"/>
+        <result column="target_id" property="targetId"/>
+        <result column="target_title" property="targetTitle"/>
+        <result column="report_type" property="reportType"/>
+        <result column="reason" property="reason"/>
+        <result column="status" property="status"/>
+        <result column="handler_id" property="handlerId"/>
+        <result column="handle_result" property="handleResult"/>
+        <result column="handle_reason" property="handleReason"/>
+        <result column="handle_time" property="handleTime"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+
+    <!-- 分页查询举报列表 -->
+    <select id="selectReportListWithDetails" resultMap="ReportDetailMap">
+        SELECT
+            r.id,
+            r.reporter_id,
+            u.username as reporter_name,
+            u.user_type as reporter_type,
+            r.target_type,
+            r.target_id,
+            CASE r.target_type
+                WHEN 1 THEN (
+                    SELECT username FROM user WHERE id = r.target_id
+                )
+                WHEN 2 THEN (
+                    SELECT job_title FROM job_info WHERE id = r.target_id
+                )
+                ELSE '未知'
+            END as target_title,
+            r.report_type,
+            r.reason,
+            r.status,
+            r.handler_id,
+            r.handle_result,
+            r.handle_reason,
+            r.handle_time,
+            r.created_at,
+            r.updated_at
+        FROM reports r
+        LEFT JOIN user u ON r.reporter_id = u.id
+        <where>
+            <if test="targetType != null">
+                AND r.target_type = #{targetType}
+            </if>
+            <if test="reportType != null">
+                AND r.report_type = #{reportType}
+            </if>
+            <if test="status != null">
+                AND r.status = #{status}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    r.reason LIKE CONCAT('%', #{keyword}, '%')
+                    OR u.username LIKE CONCAT('%', #{keyword}, '%')
+                    OR (r.target_type = 1 AND (SELECT username FROM user WHERE id = r.target_id) LIKE CONCAT('%', #{keyword}, '%'))
+                    OR (r.target_type = 2 AND (SELECT job_title FROM job_info WHERE id = r.target_id) LIKE CONCAT('%', #{keyword}, '%'))
+                )
+            </if>
+        </where>
+        ORDER BY r.created_at DESC
+    </select>
+
+    <!-- 查询举报详情 -->
+    <select id="selectReportDetailById" resultType="com.SmartHire.adminService.dto.ReportDetailDTO">
+        SELECT
+            r.id,
+            r.reporter_id,
+            u.username as reporter_name,
+            u.user_type as reporter_type,
+            r.target_type,
+            r.target_id,
+            CASE r.target_type
+                WHEN 1 THEN (
+                    SELECT username FROM user WHERE id = r.target_id
+                )
+                WHEN 2 THEN (
+                    SELECT job_title FROM job_info WHERE id = r.target_id
+                )
+                ELSE '未知'
+            END as target_title,
+            r.report_type,
+            r.reason,
+            r.status,
+            r.handler_id,
+            r.handle_result,
+            r.handle_reason,
+            r.handle_time,
+            r.evidence_image,
+            r.created_at,
+            r.updated_at
+        FROM reports r
+        LEFT JOIN user u ON r.reporter_id = u.id
+        WHERE r.id = #{id}
+    </select>
+
+    <!-- 批量查询举报详情 -->
+    <select id="selectReportDetailsByIds" resultType="com.SmartHire.adminService.dto.ReportDetailDTO">
+        SELECT
+            r.id,
+            r.reporter_id,
+            u.username as reporter_name,
+            u.user_type as reporter_type,
+            r.target_type,
+            r.target_id,
+            CASE r.target_type
+                WHEN 1 THEN (
+                    SELECT username FROM user WHERE id = r.target_id
+                )
+                WHEN 2 THEN (
+                    SELECT job_title FROM job_info WHERE id = r.target_id
+                )
+                ELSE '未知'
+            END as target_title,
+            r.report_type,
+            r.reason,
+            r.status,
+            r.handle_result,
+            r.created_at
+        FROM reports r
+        LEFT JOIN user u ON r.reporter_id = u.id
+        WHERE r.id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        ORDER BY r.created_at DESC
+    </select>
+
+    <!-- 查询被举报用户详情 -->
+    <select id="selectTargetUserById" resultType="com.SmartHire.adminService.dto.ReportDetailDTO$UserInfoDTO">
+        SELECT
+            id,
+            username,
+            email,
+            phone,
+            user_type,
+            status,
+            avatar_url,
+            created_at
+        FROM user
+        WHERE id = #{userId}
+    </select>
+
+    <!-- 查询被举报职位详情 -->
+    <select id="selectTargetJobById" resultType="com.SmartHire.adminService.dto.ReportDetailDTO$JobInfoDTO">
+        SELECT
+            j.id,
+            j.hr_id,
+            j.job_title,
+            j.job_category,
+            j.city,
+            j.salary_min,
+            j.salary_max,
+            j.status,
+            j.created_at,
+            j.company_id,
+            c.company_name
+        FROM job_info j
+        LEFT JOIN company c ON j.company_id = c.id
+        WHERE j.id = #{jobId}
+    </select>
+
+</mapper>
