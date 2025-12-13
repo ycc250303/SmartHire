@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/SmartHire.iml" filepath="$PROJECT_DIR$/.idea/SmartHire.iml" />
+      <module fileurl="file://$PROJECT_DIR$/SmartHire_Backend/SmartHire_Backend.iml" filepath="$PROJECT_DIR$/SmartHire_Backend/SmartHire_Backend.iml" />
     </modules>
   </component>
 </project>

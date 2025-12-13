@@ -35,9 +35,20 @@ public class HrInfo implements Serializable {
   /** 工作电话 */
   private String workPhone;
 
+  /** 是否为公司管理员：0-否 1-是 */
+  private Integer isCompanyAdmin;
+
   /** 创建时间 */
   private Date createdAt;
 
   /** 更新时间 */
   private Date updatedAt;
+
+  /**
+   * 判断是否为公司管理员
+   * @return true如果是公司管理员
+   */
+  public boolean isCompanyAdmin() {
+    return isCompanyAdmin != null && isCompanyAdmin == 1;
+  }
 }

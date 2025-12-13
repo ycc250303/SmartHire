@@ -34,4 +34,24 @@ public interface JobAuditMapper extends BaseMapper<com.SmartHire.adminService.mo
      * @return 数量
      */
     Integer countByStatus(@Param("status") String status);
+
+    /**
+     * 分页查询系统审核列表（只查询已通过公司审核的岗位）
+     *
+     * @param page 分页对象
+     * @param status 系统审核状态
+     * @param keyword 搜索关键词
+     * @return 分页结果
+     */
+    Page<JobAuditListDTO> selectSystemAuditList(Page<JobAuditListDTO> page,
+                                                @Param("status") String status,
+                                                @Param("keyword") String keyword);
+
+    /**
+     * 根据系统审核状态统计数量（只统计已通过公司审核的）
+     *
+     * @param status 系统审核状态
+     * @return 数量
+     */
+    Integer countBySystemStatus(@Param("status") String status);
 }

@@ -17,7 +17,11 @@ import com.SmartHire.hrService.model.HrInfo;
 import com.SmartHire.hrService.model.JobInfo;
 import com.SmartHire.hrService.model.JobSkillRequirement;
 import com.SmartHire.hrService.service.JobInfoService;
+import com.SmartHire.adminService.mapper.JobAuditMapper;
+import com.SmartHire.adminService.model.JobAuditRecord;
+import com.SmartHire.adminService.enums.AuditStatus;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -39,6 +43,8 @@ public class JobInfoServiceImpl extends ServiceImpl<JobInfoMapper, JobInfo>
   @Autowired private JobSkillRequirementMapper jobSkillRequirementMapper;
 
   @Autowired private UserContext userContext;
+
+  @Autowired private JobAuditMapper jobAuditMapper;
 
   /** 获取当前登录HR的ID（hr_info表的id）
    * 注意：用户身份验证已由AOP在Controller层统一处理，此处无需再次验证
@@ -352,5 +358,75 @@ public class JobInfoServiceImpl extends ServiceImpl<JobInfoMapper, JobInfo>
         searchDTO.getCompanyId(),
         offset,
         size);
+  }
+
+  @Override
+  @Transactional
+  public void submitJobForAudit(Long jobId) {
+    // 验证岗位归属
+    validateJobOwnership(jobId);
+
+    JobInfo jobInfo = getById(jobId);
+    if (jobInfo == null) {
+      throw new BusinessException(ErrorCode.JOB_NOT_EXIST);
+    }
+
+    // 检查岗位状态，只有草稿或需修改状态才能提交审核
+    String currentStatus = jobInfo.getAuditStatus();
+    if (currentStatus != null 
+        && !currentStatus.equals(AuditStatus.DRAFT.getCode())
+        && !currentStatus.equals(AuditStatus.MODIFIED.getCode())) {
+      throw new BusinessException(ErrorCode.ADMIN_OPERATION_FAILED, "只有草稿或需修改状态的岗位才能提交审核");
+    }
+
+    // 获取HR信息
+    Long currentHrId = getCurrentHrId();
+    HrInfo hrInfo = hrInfoMapper.selectById(currentHrId);
+    if (hrInfo == null) {
+      throw new BusinessException(ErrorCode.HR_NOT_EXIST);
+    }
+
+    // 获取公司信息
+    Company company = companyMapper.selectById(jobInfo.getCompanyId());
+    if (company == null) {
+      throw new BusinessException(ErrorCode.COMPANY_NOT_EXIST);
+    }
+
+    Date now = new Date();
+
+    // 更新岗位状态为待公司审核
+    jobInfo.setAuditStatus("company_pending");
+    jobInfo.setCompanyAuditStatus(AuditStatus.PENDING.getCode());
+    jobInfo.setSubmittedAt(now);
+    updateById(jobInfo);
+
+    // 创建或更新审核记录
+    LambdaQueryWrapper<JobAuditRecord> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(JobAuditRecord::getJobId, jobId);
+    
+    JobAuditRecord auditRecord = jobAuditMapper.selectOne(wrapper);
+    
+    if (auditRecord == null) {
+      // 创建新的审核记录
+      auditRecord = new JobAuditRecord();
+      auditRecord.setJobId(jobId);
+      auditRecord.setJobTitle(jobInfo.getJobTitle());
+      auditRecord.setCompanyId(jobInfo.getCompanyId());
+      auditRecord.setHrId(currentHrId);
+      auditRecord.setCompanyName(company.getCompanyName());
+      auditRecord.setHrName(hrInfo.getRealName());
+      auditRecord.setCompanyAuditStatus(AuditStatus.PENDING.getCode());
+      auditRecord.setStatus("company_pending"); // 兼容字段
+      jobAuditMapper.insert(auditRecord);
+    } else {
+      // 更新现有审核记录
+      auditRecord.setCompanyAuditStatus(AuditStatus.PENDING.getCode());
+      auditRecord.setStatus("company_pending"); // 兼容字段
+      // 清空之前的审核信息
+      auditRecord.setCompanyAuditorId(null);
+      auditRecord.setCompanyAuditorName(null);
+      auditRecord.setCompanyAuditedAt(null);
+      jobAuditMapper.updateById(auditRecord);
+    }
   }
 }

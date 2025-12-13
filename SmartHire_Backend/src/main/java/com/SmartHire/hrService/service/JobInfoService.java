@@ -66,4 +66,11 @@ public interface JobInfoService extends IService<JobInfo> {
    * @return 岗位卡片列表
    */
   List<JobCardDTO> searchPublicJobs(JobSearchDTO searchDTO);
+
+  /**
+   * 提交岗位审核
+   *
+   * @param jobId 岗位ID
+   */
+  void submitJobForAudit(Long jobId);
 }
