@@ -54,4 +54,18 @@ public interface JobAuditMapper
    * @return 数量
    */
   Integer countBySystemStatus(@Param("status") String status);
+
+  /**
+   * 分页查询公司审核列表（查询指定公司的岗位审核记录）
+   *
+   * @param page 分页对象
+   * @param companyId 公司ID
+   * @param status 公司审核状态
+   * @param keyword 搜索关键词
+   * @return 分页结果
+   */
+  Page<JobAuditListDTO> selectCompanyAuditList(Page<JobAuditListDTO> page,
+                                               @Param("companyId") Long companyId,
+                                               @Param("status") String status,
+                                               @Param("keyword") String keyword);
 }

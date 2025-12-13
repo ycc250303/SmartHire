@@ -7,10 +7,13 @@ import com.SmartHire.hrService.dto.HrInfoCreateDTO;
 import com.SmartHire.hrService.dto.HrInfoDTO;
 import com.SmartHire.hrService.dto.HrInfoUpdateDTO;
 import com.SmartHire.hrService.mapper.CompanyMapper;
+import com.SmartHire.hrService.mapper.HrAuditMapper;
 import com.SmartHire.hrService.mapper.HrInfoMapper;
 import com.SmartHire.hrService.model.Company;
+import com.SmartHire.hrService.model.HrAuditRecord;
 import com.SmartHire.hrService.model.HrInfo;
 import com.SmartHire.hrService.service.HrInfoService;
+import com.SmartHire.adminService.enums.AuditStatus;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import java.util.Date;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +28,8 @@ public class HrInfoServiceImpl extends ServiceImpl<HrInfoMapper, HrInfo> impleme
   @Autowired private UserContext userContext;
 
   @Autowired private CompanyMapper companyMapper;
+
+  @Autowired private HrAuditMapper hrAuditMapper;
 
   /** 获取当前登录用户ID
    * 注意：用户身份验证已由AOP在Controller层统一处理，此处无需再次验证
@@ -78,6 +83,16 @@ public class HrInfoServiceImpl extends ServiceImpl<HrInfoMapper, HrInfo> impleme
     hrInfo.setUpdatedAt(now);
 
     save(hrInfo);
+
+    // 创建HR审核记录（状态为待审核）
+    HrAuditRecord auditRecord = new HrAuditRecord();
+    auditRecord.setHrId(hrInfo.getId());
+    auditRecord.setUserId(userId);
+    auditRecord.setCompanyId(createDTO.getCompanyId());
+    auditRecord.setHrName(hrInfo.getRealName());
+    auditRecord.setAuditStatus(AuditStatus.PENDING.getCode());
+    hrAuditMapper.insert(auditRecord);
+
     return hrInfo.getId();
   }
 

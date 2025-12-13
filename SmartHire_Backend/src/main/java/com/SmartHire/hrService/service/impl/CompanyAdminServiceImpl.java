@@ -206,33 +206,13 @@ public class CompanyAdminServiceImpl implements CompanyAdminService {
     HrInfo currentHr = getCurrentHrInfoAndValidateAdmin();
     Long companyId = currentHr.getCompanyId();
 
-    // 查询本公司待审核的岗位
-    LambdaQueryWrapper<JobAuditRecord> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(JobAuditRecord::getCompanyId, companyId);
-
-    if (status != null && !status.trim().isEmpty()) {
-      wrapper.eq(JobAuditRecord::getCompanyAuditStatus, status);
-    } else {
-      // 默认查询待审核的
-      wrapper.eq(JobAuditRecord::getCompanyAuditStatus, AuditStatus.PENDING.getCode());
+    // 如果没有指定状态，默认查询待审核的
+    if (status == null || status.trim().isEmpty()) {
+      status = AuditStatus.PENDING.getCode();
     }
 
-    if (keyword != null && !keyword.trim().isEmpty()) {
-      wrapper.and(
-          w ->
-              w.like(JobAuditRecord::getJobTitle, keyword)
-                  .or()
-                  .like(JobAuditRecord::getHrName, keyword));
-    }
-
-    Page<JobAuditRecord> auditPage = new Page<>(page.getCurrent(), page.getSize());
-    Page<JobAuditRecord> result = jobAuditMapper.selectPage(auditPage, wrapper);
-
-    // 转换为DTO（简化处理，实际应该使用Mapper查询）
-    Page<com.SmartHire.adminService.dto.JobAuditListDTO> dtoPage =
-        new Page<>(result.getCurrent(), result.getSize(), result.getTotal());
-    // TODO: 这里应该使用Mapper查询完整的DTO，暂时简化
-    return dtoPage;
+    // 使用 Mapper 查询完整的 DTO 列表
+    return jobAuditMapper.selectCompanyAuditList(page, companyId, status, keyword);
   }
 
   @Override

@@ -371,12 +371,13 @@ public class JobInfoServiceImpl extends ServiceImpl<JobInfoMapper, JobInfo>
       throw new BusinessException(ErrorCode.JOB_NOT_EXIST);
     }
 
-    // 检查岗位状态，只有草稿或需修改状态才能提交审核
+    // 检查岗位状态，允许草稿、需修改、已拒绝状态重新提交审核
     String currentStatus = jobInfo.getAuditStatus();
     if (currentStatus != null 
         && !currentStatus.equals(AuditStatus.DRAFT.getCode())
-        && !currentStatus.equals(AuditStatus.MODIFIED.getCode())) {
-      throw new BusinessException(ErrorCode.ADMIN_OPERATION_FAILED, "只有草稿或需修改状态的岗位才能提交审核");
+        && !currentStatus.equals(AuditStatus.MODIFIED.getCode())
+        && !currentStatus.equals(AuditStatus.REJECTED.getCode())) {
+      throw new BusinessException(ErrorCode.ADMIN_OPERATION_FAILED, "只有草稿、需修改或已拒绝状态的岗位才能提交审核");
     }
 
     // 获取HR信息
@@ -419,13 +420,19 @@ public class JobInfoServiceImpl extends ServiceImpl<JobInfoMapper, JobInfo>
       auditRecord.setStatus("company_pending"); // 兼容字段
       jobAuditMapper.insert(auditRecord);
     } else {
-      // 更新现有审核记录
+      // 更新现有审核记录（重新提交审核）
       auditRecord.setCompanyAuditStatus(AuditStatus.PENDING.getCode());
       auditRecord.setStatus("company_pending"); // 兼容字段
-      // 清空之前的审核信息
+      // 清空之前的审核信息（包括公司审核和系统审核字段）
       auditRecord.setCompanyAuditorId(null);
       auditRecord.setCompanyAuditorName(null);
       auditRecord.setCompanyAuditedAt(null);
+      auditRecord.setSystemAuditStatus(null);
+      auditRecord.setSystemAuditorId(null);
+      auditRecord.setSystemAuditorName(null);
+      auditRecord.setSystemAuditedAt(null);
+      auditRecord.setRejectReason(null);
+      auditRecord.setAuditReason(null);
       jobAuditMapper.updateById(auditRecord);
     }
   }
