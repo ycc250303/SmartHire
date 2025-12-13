@@ -69,14 +69,17 @@ public class JwtTokenExtractor {
    */
   public String extractToken(HttpServletRequest request) {
     String authHeader = request.getHeader(AUTHORIZATION_HEADER);
-    log.info("📥 提取Token - Authorization header: {}", 
-        authHeader != null ? authHeader.substring(0, Math.min(50, authHeader.length())) + "..." : "null");
-    
+    log.info(
+        "📥 提取Token - Authorization header: {}",
+        authHeader != null
+            ? authHeader.substring(0, Math.min(50, authHeader.length())) + "..."
+            : "null");
+
     if (authHeader == null || authHeader.isBlank()) {
       log.warn("❌ Authorization header为空");
       throw new BusinessException(ErrorCode.TOKEN_IS_NULL);
     }
-    
+
     // 处理 "Bearer " 前缀
     String token = authHeader;
     if (authHeader.startsWith("Bearer ")) {
@@ -85,7 +88,7 @@ public class JwtTokenExtractor {
     } else {
       log.warn("⚠️ Authorization header不包含Bearer前缀");
     }
-    
+
     return token;
   }
 

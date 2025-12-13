@@ -1,8 +1,7 @@
 package com.SmartHire.adminService.dto;
 
-import lombok.Data;
-
 import jakarta.validation.constraints.NotBlank;
+import lombok.Data;
 
 /**
  * 职位审核操作DTO
@@ -13,9 +12,7 @@ import jakarta.validation.constraints.NotBlank;
 @Data
 public class JobAuditDTO {
 
-    /**
-     * 审核原因（拒绝原因或修改意见）
-     */
-    @NotBlank(message = "审核原因不能为空")
-    private String reason;
+  /** 审核原因（拒绝原因或修改意见） */
+  @NotBlank(message = "审核原因不能为空")
+  private String reason;
 }
