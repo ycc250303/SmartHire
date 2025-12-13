@@ -20,7 +20,7 @@ public class CorsConfig {
             "http://localhost:5173", // Vue开发环境
             "http://127.0.0.1:5173", // 本地IP访问
             "http://localhost:3000", // React开发环境
-            "http://127.0.0.1:3000"  // 本地IP访问
+            "http://127.0.0.1:3000" // 本地IP访问
             ));
 
     config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
