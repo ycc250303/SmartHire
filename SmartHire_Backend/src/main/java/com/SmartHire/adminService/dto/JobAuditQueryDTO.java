@@ -11,23 +11,15 @@ import lombok.Data;
 @Data
 public class JobAuditQueryDTO {
 
-    /**
-     * 审核状态: pending, approved, rejected, modified
-     */
-    private String status;
+  /** 审核状态: pending, approved, rejected, modified */
+  private String status;
 
-    /**
-     * 搜索关键词（职位名称、公司名称、发布者）
-     */
-    private String keyword;
+  /** 搜索关键词（职位名称、公司名称、发布者） */
+  private String keyword;
 
-    /**
-     * 当前页码
-     */
-    private Integer current = 1;
+  /** 当前页码 */
+  private Integer current = 1;
 
-    /**
-     * 每页数量
-     */
-    private Integer size = 20;
+  /** 每页数量 */
+  private Integer size = 20;
 }

@@ -50,7 +50,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     String contextPath = request.getContextPath();
     String fullPath = contextPath + path;
 
-    log.debug("🔍 路径检查 - ContextPath: {}, ServletPath: {}, FullPath: {}", contextPath, path, fullPath);
+    log.debug(
+        "🔍 路径检查 - ContextPath: {}, ServletPath: {}, FullPath: {}", contextPath, path, fullPath);
 
     // 公开路径直接放行（检查完整路径和相对路径）
     if (PUBLIC_PATHS.contains(path) || PUBLIC_PATHS.stream().anyMatch(p -> fullPath.endsWith(p))) {
