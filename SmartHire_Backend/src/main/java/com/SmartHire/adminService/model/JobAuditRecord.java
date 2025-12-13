@@ -200,32 +200,25 @@ public class JobAuditRecord implements Serializable {
     return updatedAt == null ? null : new Date(updatedAt.getTime());
   }
 
-<<<<<<< HEAD
-    public void setUpdatedAt(Date updatedAt) {
-        this.updatedAt = updatedAt == null ? null : new Date(updatedAt.getTime());
-    }
-
-    // 防御性复制方法 - 公司审核时间
-    public Date getCompanyAuditedAt() {
-        return companyAuditedAt == null ? null : new Date(companyAuditedAt.getTime());
-    }
-
-    public void setCompanyAuditedAt(Date companyAuditedAt) {
-        this.companyAuditedAt = companyAuditedAt == null ? null : new Date(companyAuditedAt.getTime());
-    }
-
-    // 防御性复制方法 - 系统审核时间
-    public Date getSystemAuditedAt() {
-        return systemAuditedAt == null ? null : new Date(systemAuditedAt.getTime());
-    }
-
-    public void setSystemAuditedAt(Date systemAuditedAt) {
-        this.systemAuditedAt = systemAuditedAt == null ? null : new Date(systemAuditedAt.getTime());
-    }
-}
-=======
   public void setUpdatedAt(Date updatedAt) {
     this.updatedAt = updatedAt == null ? null : new Date(updatedAt.getTime());
   }
+
+  // 防御性复制方法 - 公司审核时间
+  public Date getCompanyAuditedAt() {
+    return companyAuditedAt == null ? null : new Date(companyAuditedAt.getTime());
+  }
+
+  public void setCompanyAuditedAt(Date companyAuditedAt) {
+    this.companyAuditedAt = companyAuditedAt == null ? null : new Date(companyAuditedAt.getTime());
+  }
+
+  // 防御性复制方法 - 系统审核时间
+  public Date getSystemAuditedAt() {
+    return systemAuditedAt == null ? null : new Date(systemAuditedAt.getTime());
+  }
+
+  public void setSystemAuditedAt(Date systemAuditedAt) {
+    this.systemAuditedAt = systemAuditedAt == null ? null : new Date(systemAuditedAt.getTime());
+  }
 }
->>>>>>> 0d520125f172b90bc084722067d2549866293c38
