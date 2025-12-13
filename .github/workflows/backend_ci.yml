@@ -36,19 +36,32 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-m2-
 
-      # 4. Check code format (Spotless) - 仅检查，不自动修改
+      # 4. Check code format (Spotless) - 自动修改并提交
       - name: Check code format (Spotless)
+        id: spotless
         shell: bash
         run: |
           echo "Running Spotless check..."
           if mvn -B spotless:check; then
             echo "Spotless check passed. No formatting needed."
+            echo "changed=false" >> $GITHUB_OUTPUT
           else
             echo "Spotless check failed. Running spotless:apply to auto-format code..."
             mvn -B spotless:apply
             echo "Spotless formatting applied successfully."
+            echo "changed=true" >> $GITHUB_OUTPUT
           fi
         working-directory: SmartHire_Backend
+
+      # 4.1. Commit formatting changes if needed
+      - name: Commit formatting changes
+        if: steps.spotless.outputs.changed == 'true'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add -A
+          git commit -m "Auto-format code with Spotless [skip ci]" || exit 0
+          git push
 
       # 5. Run tests + PMD + SpotBugs + FindSecBugs（verify 会执行完整流水线）
       - name: Run tests & static analysis (verify)

@@ -31,6 +31,7 @@ CREATE TABLE `user` (
     UNIQUE KEY `uk_phone` (`phone`),
     KEY `idx_user_type` (`user_type`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '用户基础表';
+-- 1.2 求职者信息表
 CREATE TABLE `job_seeker` (
     `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '求职者ID',
     `user_id` BIGINT NOT NULL COMMENT '用户ID',
@@ -185,7 +186,7 @@ CREATE TABLE `certificate` (
     KEY `idx_job_seeker_id` (`job_seeker_id`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '证书表（在线简历信息）';
 -- =====================================================
--- 3. 职位模块 (2张表)
+-- 3. 职位模块 (3张表)
 -- =====================================================
 -- 3.1 职位表
 CREATE TABLE `job_info` (
@@ -231,6 +232,22 @@ CREATE TABLE `job_skill_requirement` (
     KEY `idx_job_id` (`job_id`),
     KEY `idx_skill_name` (`skill_name`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '职位技能要求表';
+-- 3.3 职位筛选表
+CREATE TABLE ``(
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '记录ID',
+    `job_seeker_id`  BIGINT NOT NULL COMMENT '求职者ID',
+    `education_required` TINYINT COMMENT '学历要求 0-不限 1-专科 2-本科 3-硕士 4-博士',
+    `internship_days_per_week` TINYINT COMMENT '每周实习天数 1:1天 2:2天 以此类推（仅实习类型需要）',
+    `internship_duration_months` TINYINT COMMENT '实习时长 1:1个月 2:1-3个月 3:3-6个月 4:6个月以上（月为单位，仅实习类型需要）',
+    `internship_salary` TINYINT COMMENT `实习日薪 1:100以下 2:100-200 3:200-300 4:300-400 5:400-500 6:500以上（仅实习类型需要）`,
+    `salary_per_month` TINYINT COMMENT `月薪 1:3k以下 2:3-5k 3:5-10k 4:10-20k 5:20-30k 6:30-50k 7:50k以上（仅全职类型需要）`,
+    `experience_required` TINYINT COMMENT `经验要求 1:应届生 2:1年以下 2:1-3年 3:3-5年 4:5-10年 5:10年以上（仅全职类型需要）`,
+    `company_scale` TINYINT COMMENT '公司规模 1:0-20 2：20-99 3:100-499 4:500-999 5:1000-3000 6:3000-10000 7:10000以上',
+    `financing_stage` TINYINT COMMENT '融资阶段 0:无融资 1:天使轮 2:A轮 3:B轮 4:C轮 5:D轮 6:已上市',
+    PRIMARY KEY (`id`),
+    UNIQUE  KEY `idx_job_seeker_id` (`job_seeker_id`)
+)
+ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '职位筛选表';
 -- =====================================================
 -- 4. 投递与匹配模块 (2张表)
 -- =====================================================
