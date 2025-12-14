@@ -61,7 +61,14 @@ jobs:
           git config --local user.name "GitHub Action"
           git add -A
           git commit -m "Auto-format code with Spotless [skip ci]" || exit 0
-          git push
+          # 获取当前分支名并推送到对应分支
+          CURRENT_BRANCH=${GITHUB_REF#refs/heads/}
+          if [ "$CURRENT_BRANCH" = "" ]; then
+            # 如果是detached HEAD状态，跳过推送
+            echo "Detached HEAD state, skipping push"
+          else
+            git push origin $CURRENT_BRANCH
+          fi
 
       # 5. Run tests + PMD + SpotBugs + FindSecBugs（verify 会执行完整流水线）
       - name: Run tests & static analysis (verify)
