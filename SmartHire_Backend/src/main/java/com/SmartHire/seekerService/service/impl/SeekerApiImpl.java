@@ -10,6 +10,8 @@ import com.SmartHire.seekerService.model.JobSeeker;
 import com.SmartHire.seekerService.model.Resume;
 import com.SmartHire.seekerService.service.SeekerCardService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import java.util.ArrayList;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,20 +19,22 @@ import org.springframework.stereotype.Service;
 @Service
 public class SeekerApiImpl implements SeekerApi {
 
-  @Autowired private JobSeekerMapper jobSeekerMapper;
+  @Autowired
+  private JobSeekerMapper jobSeekerMapper;
 
-  @Autowired private ResumeMapper resumeMapper;
+  @Autowired
+  private ResumeMapper resumeMapper;
 
-  @Autowired private SeekerCardService seekerCardService;
+  @Autowired
+  private SeekerCardService seekerCardService;
 
   @Override
   public Long getJobSeekerIdByUserId(Long userId) {
     if (userId == null) {
       throw new BusinessException(ErrorCode.VALIDATION_ERROR);
     }
-    JobSeeker jobSeeker =
-        jobSeekerMapper.selectOne(
-            new LambdaQueryWrapper<JobSeeker>().eq(JobSeeker::getUserId, userId));
+    JobSeeker jobSeeker = jobSeekerMapper.selectOne(
+        new LambdaQueryWrapper<JobSeeker>().eq(JobSeeker::getUserId, userId));
     if (jobSeeker == null) {
       throw new BusinessException(ErrorCode.SEEKER_NOT_EXIST);
     }
@@ -70,7 +74,8 @@ public class SeekerApiImpl implements SeekerApi {
     return resume != null && jobSeekerId.equals(resume.getJobSeekerId());
   }
 
-  @Autowired private com.SmartHire.seekerService.service.JobSeekerService jobSeekerService;
+  @Autowired
+  private com.SmartHire.seekerService.service.JobSeekerService jobSeekerService;
 
   @Override
   public void deleteJobSeekerByUserId(Long userId) {
@@ -91,5 +96,55 @@ public class SeekerApiImpl implements SeekerApi {
       // 其他业务异常（如 SEEKER_NOT_EXIST）返回null，让调用方处理
       return null;
     }
+  }
+
+  @Override
+  public List<SeekerCardDTO> getSeekersByCity(String city) {
+    if (city == null || city.trim().isEmpty()) {
+      return new ArrayList<>();
+    }
+
+    // 使用自定义SQL查询，一次性获取所有需要的数据
+    return jobSeekerMapper.getSeekerCardsByCity(city);
+  }
+
+  @Override
+  public List<SeekerCardDTO> getSeekersByEducation(Integer education) {
+    if (education == null) {
+      return new ArrayList<>();
+    }
+
+    // 使用自定义SQL查询，一次性获取所有需要的数据
+    return jobSeekerMapper.getSeekerCardsByEducation(education);
+  }
+
+  @Override
+  public List<SeekerCardDTO> getSeekersBySalaryRange(Double salaryMin, Double salaryMax, Integer isInternship) {
+    if (salaryMin == null || salaryMax == null || isInternship == null) {
+      return new ArrayList<>();
+    }
+
+    // 使用自定义SQL查询，一次性获取所有需要的数据
+    return jobSeekerMapper.getSeekerCardsBySalaryRange(salaryMin, salaryMax, isInternship);
+  }
+
+  @Override
+  public List<SeekerCardDTO> getSeekersByJobStatus(Integer jobStatus) {
+    if (jobStatus == null) {
+      return new ArrayList<>();
+    }
+
+    // 使用自定义SQL查询，一次性获取所有需要的数据
+    return jobSeekerMapper.getSeekerCardsByJobStatus(jobStatus);
+  }
+
+  @Override
+  public List<SeekerCardDTO> getSeekersByInternshipExperience(Integer hasInternship) {
+    if (hasInternship == null) {
+      return new ArrayList<>();
+    }
+
+    // 使用自定义SQL查询，一次性获取所有需要的数据
+    return jobSeekerMapper.getSeekerCardsByInternshipExperience(hasInternship);
   }
 }

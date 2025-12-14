@@ -15,10 +15,112 @@
         <result column="created_at" property="createdAt" />
         <result column="updated_at" property="updatedAt" />
     </resultMap>
+    
+    <!-- 求职者卡片信息映射结果 -->
+    <resultMap id="SeekerCardResultMap" type="com.SmartHire.seekerService.dto.SeekerCardDTO">
+        <result column="username" property="username" />
+        <result column="age" property="age" />
+        <result column="highest_education" property="highestEducation" />
+        <result column="major" property="major" />
+        <result column="graduation_year" property="graduationYear" />
+        <result column="job_status" property="jobStatus" />
+    </resultMap>
 
     <!-- 通用查询结果列 -->
     <sql id="Base_Column_List">
         id, user_id, real_name, birth_date, current_city, education, graduation_year, job_status, created_at, updated_at
     </sql>
+    
+    <!-- 求职者卡片查询基础SQL -->
+    <sql id="SeekerCard_Base_SQL">
+        SELECT 
+            u.username,
+            TIMESTAMPDIFF(YEAR, js.birth_date, CURDATE()) AS age,
+            CASE 
+                WHEN ee.education IS NOT NULL THEN 
+                    CASE ee.education
+                        WHEN 0 THEN '高中'
+                        WHEN 1 THEN '大专'
+                        WHEN 2 THEN '本科'
+                        WHEN 3 THEN '硕士'
+                        WHEN 4 THEN '博士'
+                        ELSE '未知'
+                    END
+                ELSE 
+                    CASE js.education
+                        WHEN 0 THEN '高中'
+                        WHEN 1 THEN '大专'
+                        WHEN 2 THEN '本科'
+                        WHEN 3 THEN '硕士'
+                        WHEN 4 THEN '博士'
+                        ELSE '未知'
+                    END
+            END AS highest_education,
+            COALESCE(ee.major, '') AS major,
+            CASE 
+                WHEN ee.end_year IS NOT NULL THEN CONCAT(YEAR(ee.end_year), '年应届生')
+                ELSE js.graduation_year
+            END AS graduation_year,
+            js.job_status
+        FROM job_seeker js
+        INNER JOIN user u ON js.user_id = u.id
+        LEFT JOIN (
+            SELECT 
+                job_seeker_id,
+                education,
+                major,
+                end_year,
+                ROW_NUMBER() OVER (PARTITION BY job_seeker_id ORDER BY education DESC, end_year DESC) AS rn
+            FROM education_experience
+        ) ee ON js.id = ee.job_seeker_id AND ee.rn = 1
+    </sql>
+    
+    <!-- 根据城市查询求职者卡片信息 -->
+    <select id="getSeekerCardsByCity" resultMap="SeekerCardResultMap">
+        <include refid="SeekerCard_Base_SQL" />
+        WHERE js.current_city = #{city}
+    </select>
+    
+    <!-- 根据学历查询求职者卡片信息 -->
+    <select id="getSeekerCardsByEducation" resultMap="SeekerCardResultMap">
+        <include refid="SeekerCard_Base_SQL" />
+        WHERE COALESCE(ee.education, js.education) >= #{education}
+    </select>
+    
+    <!-- 根据期望薪资范围查询求职者卡片信息 -->
+    <select id="getSeekerCardsBySalaryRange" resultMap="SeekerCardResultMap">
+        <include refid="SeekerCard_Base_SQL" />
+        INNER JOIN job_seeker_expectation jse ON js.id = jse.job_seeker_id
+        WHERE jse.salary_min <= #{salaryMax} AND jse.salary_max >= #{salaryMin}
+        <if test="isInternship == 1">
+            AND EXISTS (
+                SELECT 1 FROM work_experience we 
+                WHERE we.job_seeker_id = js.id AND we.is_internship = 1
+            )
+        </if>
+    </select>
+    
+    <!-- 根据求职状态查询求职者卡片信息 -->
+    <select id="getSeekerCardsByJobStatus" resultMap="SeekerCardResultMap">
+        <include refid="SeekerCard_Base_SQL" />
+        WHERE js.job_status = #{jobStatus}
+    </select>
+    
+    <!-- 根据是否有实习经历查询求职者卡片信息 -->
+    <select id="getSeekerCardsByInternshipExperience" resultMap="SeekerCardResultMap">
+        <include refid="SeekerCard_Base_SQL" />
+        <if test="hasInternship == 1">
+            WHERE EXISTS (
+                SELECT 1 FROM work_experience we 
+                WHERE we.job_seeker_id = js.id AND we.is_internship = 1
+            )
+        </if>
+        <if test="hasInternship == 0">
+            WHERE NOT EXISTS (
+                SELECT 1 FROM work_experience we 
+                WHERE we.job_seeker_id = js.id AND we.is_internship = 1
+            )
+        </if>
+    </select>
 
 </mapper>
