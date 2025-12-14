@@ -57,7 +57,7 @@ jobs:
       - name: Commit formatting changes
         if: steps.spotless.outputs.changed == 'true'
         run: |
-          git config --local user.email "action@github.com"
+          git config --local user.email "2351279@tongji.edu.cn"
           git config --local user.name "GitHub Action"
           git add -A
           git commit -m "Auto-format code with Spotless [skip ci]" || exit 0
