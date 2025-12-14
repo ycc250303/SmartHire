@@ -35,7 +35,7 @@ public interface SeekerApi {
   /**
    * 验证简历是否属于指定求职者
    *
-   * @param resumeId    简历ID
+   * @param resumeId 简历ID
    * @param jobSeekerId 求职者ID
    * @return 是否属于
    */
@@ -80,12 +80,13 @@ public interface SeekerApi {
   /**
    * 根据期望薪资筛选求职者（需要区分实习和全职）
    *
-   * @param salaryMin    最低期望薪资
-   * @param salaryMax    最高期望薪资
+   * @param salaryMin 最低期望薪资
+   * @param salaryMax 最高期望薪资
    * @param isInternship 是否实习（0-全职，1-实习）
    * @return 求职者卡片信息列表
    */
-  List<SeekerCardDTO> getSeekersBySalaryRange(Double salaryMin, Double salaryMax, Integer isInternship);
+  List<SeekerCardDTO> getSeekersBySalaryRange(
+      Double salaryMin, Double salaryMax, Integer isInternship);
 
   /**
    * 根据求职者求职状态筛选求职者（寻找机会/暂不考虑）

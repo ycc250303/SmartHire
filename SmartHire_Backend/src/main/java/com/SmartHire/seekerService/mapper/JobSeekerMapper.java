@@ -13,7 +13,7 @@ import org.apache.ibatis.annotations.Param;
  * @since 2025-11-19
  */
 public interface JobSeekerMapper extends BaseMapper<JobSeeker> {
-  
+
   /**
    * 根据城市查询求职者卡片信息
    *
@@ -21,7 +21,7 @@ public interface JobSeekerMapper extends BaseMapper<JobSeeker> {
    * @return 求职者卡片信息列表
    */
   List<SeekerCardDTO> getSeekerCardsByCity(@Param("city") String city);
-  
+
   /**
    * 根据学历查询求职者卡片信息
    *
@@ -29,7 +29,7 @@ public interface JobSeekerMapper extends BaseMapper<JobSeeker> {
    * @return 求职者卡片信息列表
    */
   List<SeekerCardDTO> getSeekerCardsByEducation(@Param("education") Integer education);
-  
+
   /**
    * 根据期望薪资范围查询求职者卡片信息
    *
@@ -39,10 +39,10 @@ public interface JobSeekerMapper extends BaseMapper<JobSeeker> {
    * @return 求职者卡片信息列表
    */
   List<SeekerCardDTO> getSeekerCardsBySalaryRange(
-      @Param("salaryMin") Double salaryMin, 
-      @Param("salaryMax") Double salaryMax, 
+      @Param("salaryMin") Double salaryMin,
+      @Param("salaryMax") Double salaryMax,
       @Param("isInternship") Integer isInternship);
-  
+
   /**
    * 根据求职状态查询求职者卡片信息
    *
@@ -50,12 +50,13 @@ public interface JobSeekerMapper extends BaseMapper<JobSeeker> {
    * @return 求职者卡片信息列表
    */
   List<SeekerCardDTO> getSeekerCardsByJobStatus(@Param("jobStatus") Integer jobStatus);
-  
+
   /**
    * 根据是否有实习经历查询求职者卡片信息
    *
    * @param hasInternship 是否有实习经历
    * @return 求职者卡片信息列表
    */
-  List<SeekerCardDTO> getSeekerCardsByInternshipExperience(@Param("hasInternship") Integer hasInternship);
+  List<SeekerCardDTO> getSeekerCardsByInternshipExperience(
+      @Param("hasInternship") Integer hasInternship);
 }
