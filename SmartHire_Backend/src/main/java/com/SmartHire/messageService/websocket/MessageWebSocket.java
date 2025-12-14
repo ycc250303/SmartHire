@@ -1,6 +1,7 @@
 package com.SmartHire.messageService.websocket;
 
 import com.SmartHire.common.utils.JwtUtil;
+import com.SmartHire.messageService.service.OfflineMessageService;
 import jakarta.websocket.*;
 import jakarta.websocket.server.ServerEndpoint;
 import java.io.IOException;
@@ -32,6 +33,13 @@ public class MessageWebSocket {
   @Autowired
   public void setJwtUtil(JwtUtil jwtUtil) {
     MessageWebSocket.jwtUtil = jwtUtil;
+  }
+
+  private static OfflineMessageService offlineMessageService;
+
+  @Autowired
+  public void setOfflineMessageService(OfflineMessageService service) {
+    offlineMessageService = service;
   }
 
   /**
@@ -66,6 +74,9 @@ public class MessageWebSocket {
       userSessions.computeIfAbsent(userId, k -> ConcurrentHashMap.newKeySet()).add(session);
 
       sessionToUserId.put(session, userId);
+
+      // 用户上线后推送未读消息
+      offlineMessageService.pushUnreadMessages(userId, session);
 
       log.info(
           "WebSocket 连接建立: userId={}, sessionId={}, 当前在线用户数={}",

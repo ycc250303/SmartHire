@@ -1,21 +1,27 @@
 package com.SmartHire.hrService.service.impl;
 
-import com.SmartHire.common.api.UserAuthApi;
 import com.SmartHire.common.auth.UserContext;
 import com.SmartHire.common.exception.enums.ErrorCode;
 import com.SmartHire.common.exception.exception.BusinessException;
 import com.SmartHire.hrService.dto.JobInfoCreateDTO;
 import com.SmartHire.hrService.dto.JobInfoListDTO;
 import com.SmartHire.hrService.dto.JobInfoUpdateDTO;
+import com.SmartHire.hrService.dto.JobCardDTO;
+import com.SmartHire.hrService.dto.JobSearchDTO;
+import com.SmartHire.hrService.mapper.CompanyMapper;
 import com.SmartHire.hrService.mapper.HrInfoMapper;
 import com.SmartHire.hrService.mapper.JobInfoMapper;
 import com.SmartHire.hrService.mapper.JobSkillRequirementMapper;
+import com.SmartHire.hrService.model.Company;
 import com.SmartHire.hrService.model.HrInfo;
 import com.SmartHire.hrService.model.JobInfo;
 import com.SmartHire.hrService.model.JobSkillRequirement;
 import com.SmartHire.hrService.service.JobInfoService;
-import com.SmartHire.userAuthService.model.User;
+import com.SmartHire.adminService.mapper.JobAuditMapper;
+import com.SmartHire.adminService.model.JobAuditRecord;
+import com.SmartHire.adminService.enums.AuditStatus;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -30,21 +36,21 @@ import org.springframework.util.StringUtils;
 public class JobInfoServiceImpl extends ServiceImpl<JobInfoMapper, JobInfo>
     implements JobInfoService {
 
-  @Autowired private UserAuthApi userAuthApi;
-
   @Autowired private HrInfoMapper hrInfoMapper;
+
+  @Autowired private CompanyMapper companyMapper;
 
   @Autowired private JobSkillRequirementMapper jobSkillRequirementMapper;
 
   @Autowired private UserContext userContext;
 
-  /** 获取当前登录HR的ID（hr_info表的id） */
+  @Autowired private JobAuditMapper jobAuditMapper;
+
+  /** 获取当前登录HR的ID（hr_info表的id）
+   * 注意：用户身份验证已由AOP在Controller层统一处理，此处无需再次验证
+   */
   private Long getCurrentHrId() {
     Long userId = userContext.getCurrentUserId();
-    User user = userAuthApi.getUserById(userId);
-    if (user.getUserType() != 2) {
-      throw new BusinessException(ErrorCode.USER_NOT_HR);
-    }
 
     // 通过user_id查询hr_info表获取hr_id（hr_info.id）
     HrInfo hrInfo =
@@ -92,6 +98,12 @@ public class JobInfoServiceImpl extends ServiceImpl<JobInfoMapper, JobInfo>
       if (createDTO.getInternshipDurationMonths() == null) {
         throw new BusinessException(ErrorCode.INTERNSHIP_DURATION_MONTHS_REQUIRED);
       }
+    }
+
+    // 验证公司是否存在（外键验证）
+    Company company = companyMapper.selectById(createDTO.getCompanyId());
+    if (company == null) {
+      throw new BusinessException(ErrorCode.COMPANY_NOT_EXIST);
     }
 
     // 创建岗位实体
@@ -327,5 +339,101 @@ public class JobInfoServiceImpl extends ServiceImpl<JobInfoMapper, JobInfo>
     dto.setSkills(skills);
 
     return dto;
+  }
+
+  @Override
+  public List<JobCardDTO> searchPublicJobs(JobSearchDTO searchDTO) {
+    int page = searchDTO.getPage() == null ? 1 : searchDTO.getPage();
+    int size = searchDTO.getSize() == null ? 20 : searchDTO.getSize();
+    int offset = (page - 1) * size;
+
+    return baseMapper.searchPublicJobCards(
+        searchDTO.getCity(),
+        searchDTO.getJobType(),
+        searchDTO.getEducationRequired(),
+        searchDTO.getMinSalary(),
+        searchDTO.getMaxSalary(),
+        searchDTO.getKeyword(),
+        searchDTO.getSkills(),
+        searchDTO.getCompanyId(),
+        offset,
+        size);
+  }
+
+  @Override
+  @Transactional
+  public void submitJobForAudit(Long jobId) {
+    // 验证岗位归属
+    validateJobOwnership(jobId);
+
+    JobInfo jobInfo = getById(jobId);
+    if (jobInfo == null) {
+      throw new BusinessException(ErrorCode.JOB_NOT_EXIST);
+    }
+
+    // 检查岗位状态，允许草稿、需修改、已拒绝状态重新提交审核
+    String currentStatus = jobInfo.getAuditStatus();
+    if (currentStatus != null 
+        && !currentStatus.equals(AuditStatus.DRAFT.getCode())
+        && !currentStatus.equals(AuditStatus.MODIFIED.getCode())
+        && !currentStatus.equals(AuditStatus.REJECTED.getCode())) {
+      throw new BusinessException(ErrorCode.ADMIN_OPERATION_FAILED, "只有草稿、需修改或已拒绝状态的岗位才能提交审核");
+    }
+
+    // 获取HR信息
+    Long currentHrId = getCurrentHrId();
+    HrInfo hrInfo = hrInfoMapper.selectById(currentHrId);
+    if (hrInfo == null) {
+      throw new BusinessException(ErrorCode.HR_NOT_EXIST);
+    }
+
+    // 获取公司信息
+    Company company = companyMapper.selectById(jobInfo.getCompanyId());
+    if (company == null) {
+      throw new BusinessException(ErrorCode.COMPANY_NOT_EXIST);
+    }
+
+    Date now = new Date();
+
+    // 更新岗位状态为待公司审核
+    jobInfo.setAuditStatus("company_pending");
+    jobInfo.setCompanyAuditStatus(AuditStatus.PENDING.getCode());
+    jobInfo.setSubmittedAt(now);
+    updateById(jobInfo);
+
+    // 创建或更新审核记录
+    LambdaQueryWrapper<JobAuditRecord> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(JobAuditRecord::getJobId, jobId);
+    
+    JobAuditRecord auditRecord = jobAuditMapper.selectOne(wrapper);
+    
+    if (auditRecord == null) {
+      // 创建新的审核记录
+      auditRecord = new JobAuditRecord();
+      auditRecord.setJobId(jobId);
+      auditRecord.setJobTitle(jobInfo.getJobTitle());
+      auditRecord.setCompanyId(jobInfo.getCompanyId());
+      auditRecord.setHrId(currentHrId);
+      auditRecord.setCompanyName(company.getCompanyName());
+      auditRecord.setHrName(hrInfo.getRealName());
+      auditRecord.setCompanyAuditStatus(AuditStatus.PENDING.getCode());
+      auditRecord.setStatus("company_pending"); // 兼容字段
+      jobAuditMapper.insert(auditRecord);
+    } else {
+      // 更新现有审核记录（重新提交审核）
+      auditRecord.setCompanyAuditStatus(AuditStatus.PENDING.getCode());
+      auditRecord.setStatus("company_pending"); // 兼容字段
+      // 清空之前的审核信息（包括公司审核和系统审核字段）
+      auditRecord.setCompanyAuditorId(null);
+      auditRecord.setCompanyAuditorName(null);
+      auditRecord.setCompanyAuditedAt(null);
+      auditRecord.setSystemAuditStatus(null);
+      auditRecord.setSystemAuditorId(null);
+      auditRecord.setSystemAuditorName(null);
+      auditRecord.setSystemAuditedAt(null);
+      auditRecord.setRejectReason(null);
+      auditRecord.setAuditReason(null);
+      jobAuditMapper.updateById(auditRecord);
+    }
   }
 }

@@ -12,6 +12,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,7 +31,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/recruitment/seeker")
 @Validated
 public class SeekerRecruitmentController {
-  @Autowired private ApplicationService applicationService;
+  @Autowired
+  @Qualifier("applicationServiceImpl")
+  private ApplicationService applicationService;
 
   @Autowired private HrApi hrApi;
 

@@ -54,4 +54,9 @@ public interface SeekerApi {
    * @return 求职者卡片信息，如果用户不是求职者或求职者不存在返回null
    */
   SeekerCardDTO getSeekerCard(Long userId);
+
+  /**
+   * @return 所有求职者卡片信息
+   */
+  // List<SeekerCardDTO> getSeekerCards();
 }

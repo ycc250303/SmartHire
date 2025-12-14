@@ -22,6 +22,9 @@ public class JobCardDTO implements Serializable {
   /** 岗位薪资最高 */
   private BigDecimal salaryMax;
 
+  /** 工作城市 */
+  private String city;
+
   /** 岗位地址 */
   private String address;
 
@@ -39,6 +42,9 @@ public class JobCardDTO implements Serializable {
 
   /** HR头像URL */
   private String hrAvatarUrl;
+
+  /** 工作类型：0-全职 1-实习 */
+  private Integer jobType;
 
   /** 学历要求：0-不限 1-专科 2-本科 3-硕士 4-博士 */
   private Integer educationRequired;

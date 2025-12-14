@@ -42,6 +42,10 @@ public class RestAuthenticationEntryPoint implements AuthenticationEntryPoint {
   private Result<?> determineErrorResult(HttpServletRequest request) {
     String token = request.getHeader("Authorization");
     if (token != null && !token.isBlank()) {
+      // 处理 "Bearer " 前缀
+      if (token.startsWith("Bearer ")) {
+        token = token.substring(7);
+      }
       try {
         DecodedJWT decodedJWT = jwtUtil.verifyToken(token);
         if (jwtUtil.isRefreshToken(decodedJWT)) {

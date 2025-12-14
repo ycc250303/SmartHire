@@ -56,11 +56,12 @@ public class JwtUtil {
       log.error("❌ Token验证失败: token为空");
       throw new BusinessException(ErrorCode.TOKEN_IS_NULL);
     }
-    
-    log.info("🔐 开始验证token，长度: {}, 前缀: {}", 
-        token.length(), 
+
+    log.info(
+        "🔐 开始验证token，长度: {}, 前缀: {}",
+        token.length(),
         token.substring(0, Math.min(20, token.length())) + "...");
-    
+
     try {
       DecodedJWT decoded = JWT.require(algorithm).build().verify(token);
       log.info("✅ Token验证成功");

@@ -7,11 +7,13 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
+import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @Getter
@@ -79,6 +81,20 @@ public class AliOssUtil {
   }
 
   /**
+   * 直接上传 multipart 文件并自动生成文件名
+   *
+   * @param directoryKey 目录键
+   * @param file multipart 文件
+   */
+  public String uploadFile(String directoryKey, MultipartFile file) throws IOException {
+    if (file == null || file.isEmpty()) {
+      throw new IllegalArgumentException("上传文件不能为空");
+    }
+    String objectName = buildObjectName(directoryKey, generateFileUrl(file.getOriginalFilename()));
+    return uploadFile(objectName, file.getInputStream());
+  }
+
+  /**
    * 查询文件
    *
    * @param objectName 文件名
@@ -141,6 +157,22 @@ public class AliOssUtil {
       }
     }
     return deleted;
+  }
+
+  /**
+   * @param objectName
+   * @return
+   */
+  public String generateFileUrl(String objectName) {
+    // 生成文件名
+    String fileExtension = "";
+
+    // 安全地获取文件扩展名
+    if (objectName != null && objectName.contains(".")) {
+      fileExtension = objectName.substring(objectName.lastIndexOf("."));
+    }
+
+    return UUID.randomUUID().toString() + fileExtension;
   }
 
   /**

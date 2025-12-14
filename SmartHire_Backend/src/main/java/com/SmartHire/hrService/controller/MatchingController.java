@@ -1,6 +1,8 @@
 package com.SmartHire.hrService.controller;
 
+import com.SmartHire.common.auth.RequireUserType;
 import com.SmartHire.common.entity.Result;
+import com.SmartHire.common.enums.UserType;
 import com.SmartHire.hrService.service.MatchingService;
 import com.SmartHire.recruitmentService.dto.ApplicationListDTO;
 import io.swagger.v3.oas.annotations.Operation;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/hr/matching")
 @Validated
+@RequireUserType(UserType.HR) // 整个Controller要求HR身份
 public class MatchingController {
 
   @Autowired private MatchingService matchingService;
