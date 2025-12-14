@@ -134,6 +134,8 @@ public class JobAuditServiceImpl extends ServiceImpl<JobAuditMapper, JobAuditRec
     public JobAuditRecord getAuditDetail(Long jobId) {
         LambdaQueryWrapper<JobAuditRecord> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(JobAuditRecord::getJobId, jobId);
+        wrapper.orderByDesc(JobAuditRecord::getId); // 按ID降序，获取最新记录
+        wrapper.last("LIMIT 1"); // 限制只返回一条记录
         return getOne(wrapper);
     }
 
@@ -142,24 +144,31 @@ public class JobAuditServiceImpl extends ServiceImpl<JobAuditMapper, JobAuditRec
     public void forceOfflineJob(Long jobId, String offlineReason, Long auditorId, String auditorName) {
         log.info("开始强制下线职位，职位ID: {}, 审核员: {}, 下线原因: {}", jobId, auditorName, offlineReason);
 
-        // 验证职位存在且为已通过状态
+        // 验证职位存在且为已通过系统审核状态
         JobAuditRecord auditRecord = validateJobForOffline(jobId);
 
-        // 更新审核记录：记录强制下线操作
-        auditRecord.setStatus(AuditStatus.REJECTED.getCode()); // 使用rejected状态表示被拒绝/下线
-        auditRecord.setRejectReason(offlineReason); // 使用reject_reason字段记录下线原因
+        Date now = new Date();
+
+        // 更新审核记录：设置状态为rejected，使用reject_reason记录下线原因
+        auditRecord.setSystemAuditStatus("rejected"); // 设置为rejected状态
+        auditRecord.setSystemAuditorId(auditorId);
+        auditRecord.setSystemAuditorName(auditorName);
+        auditRecord.setSystemAuditedAt(now);
+        // 更新兼容字段
+        auditRecord.setStatus("rejected"); // 兼容字段
+        auditRecord.setRejectReason("强制下线：" + offlineReason); // 记录下线原因
         auditRecord.setAuditorId(auditorId);
         auditRecord.setAuditorName(auditorName);
-        auditRecord.setAuditedAt(new Date());
+        auditRecord.setAuditedAt(now);
         updateById(auditRecord);
 
-        // 更新JobInfo表：只更新status为已下线，audit_status保持为rejected
+        // 更新JobInfo表：设置职位为下线状态，审核状态为rejected
         JobInfo jobInfo = new JobInfo();
         jobInfo.setId(jobId);
         jobInfo.setStatus(0); // 0-已下线
-        jobInfo.setAuditStatus(AuditStatus.REJECTED.getCode()); // 与审核记录保持一致
-        jobInfo.setAuditedAt(new Date());
-        jobInfo.setUpdatedAt(new Date());
+        jobInfo.setAuditStatus("rejected"); // 设置审核状态为rejected
+        jobInfo.setAuditedAt(now);
+        jobInfo.setUpdatedAt(now);
         jobInfoMapper.updateById(jobInfo);
 
         log.info("职位强制下线完成，职位ID: {}", jobId);
@@ -167,6 +176,7 @@ public class JobAuditServiceImpl extends ServiceImpl<JobAuditMapper, JobAuditRec
 
     /**
      * 验证职位是否可以强制下线
+     * 系统管理员只能下线同时通过公司审核和系统审核的职位
      *
      * @param jobId 职位ID
      * @return 审核记录
@@ -177,9 +187,15 @@ public class JobAuditServiceImpl extends ServiceImpl<JobAuditMapper, JobAuditRec
             throw AdminServiceException.jobNotFound(jobId);
         }
 
-        // 只有已通过的职位才能强制下线
-        if (!AuditStatus.APPROVED.getCode().equals(auditRecord.getStatus())) {
-            throw AdminServiceException.operationFailed("只有已通过审核的职位才能强制下线");
+        // 验证必须已通过公司审核
+        if (!AuditStatus.APPROVED.getCode().equals(auditRecord.getCompanyAuditStatus())) {
+            throw AdminServiceException.operationFailed("该岗位尚未通过公司审核，无法进行下线操作");
+        }
+
+        // 验证必须已通过系统管理员审核且未被强制下线
+        String systemAuditStatus = auditRecord.getSystemAuditStatus();
+        if (systemAuditStatus == null || !AuditStatus.APPROVED.getCode().equals(systemAuditStatus)) {
+            throw AdminServiceException.operationFailed("只有已通过系统管理员审核的职位才能强制下线");
         }
 
         return auditRecord;

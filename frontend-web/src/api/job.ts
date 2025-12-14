@@ -1,5 +1,4 @@
 import { adminRequest } from '@/utils/request'
-import { useUserStore } from '@/store/user'
 
 // 职位审核信息接口定义（严格匹配后端JobAuditListDTO）
 export interface Job {

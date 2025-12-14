@@ -408,9 +408,9 @@ import {
   NModal,
   NForm,
   NFormItem,
-  FormInst,
   useMessage
 } from 'naive-ui'
+import type { FormInst } from 'naive-ui'
 import dayjs from 'dayjs'
 import {
   getJobAuditList,
@@ -432,6 +432,7 @@ interface StatusTab {
   type: 'info' | 'success' | 'warning' | 'error'
   emptyText: string
   emptyDesc: string
+  title?: string  // 可选的title属性
 }
 
 const message = useMessage()
