@@ -76,7 +76,7 @@ jobs:
 
       # 5. Run tests + PMD + SpotBugs + FindSecBugs（verify 会执行完整流水线）
       - name: Run tests & static analysis (verify)
-        run: mvn -B clean verify
+        run: mvn -B clean verify -Dpmd.failurePriority=5
         working-directory: SmartHire_Backend
 
       # 6. Build JAR（在 verify 通过后再次打包，跳过测试以加快速度）
