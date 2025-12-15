@@ -57,15 +57,26 @@ jobs:
       - name: Commit formatting changes
         if: steps.spotless.outputs.changed == 'true'
         run: |
-          git config --local user.email "action@github.com"
+          git config --local user.email "2351279@tongji.edu.cn"
           git config --local user.name "GitHub Action"
           git add -A
           git commit -m "Auto-format code with Spotless [skip ci]" || exit 0
-          git push
+          # 获取当前分支名并推送到对应分支
+          # 检查是否是PR引用
+          if [[ "$GITHUB_REF" == refs/pull/* ]]; then
+            echo "PR context detected, skipping push to avoid conflicts"
+          elif [[ "$GITHUB_REF" == refs/heads/* ]]; then
+            # 正常分支推送
+            CURRENT_BRANCH=${GITHUB_REF#refs/heads/}
+            git push origin $CURRENT_BRANCH
+          else
+            # 其他情况（如detached HEAD）
+            echo "Not on a branch or in PR context, skipping push"
+          fi
 
       # 5. Run tests + PMD + SpotBugs + FindSecBugs（verify 会执行完整流水线）
       - name: Run tests & static analysis (verify)
-        run: mvn -B clean verify
+        run: mvn -B clean verify -Dpmd.failurePriority=5
         working-directory: SmartHire_Backend
 
       # 6. Build JAR（在 verify 通过后再次打包，跳过测试以加快速度）
