@@ -112,26 +112,26 @@ public class Report implements Serializable {
 
     // 防御性拷贝Date字段
     public Date getHandleTime() {
-        return handleTime != null ? (Date) handleTime.clone() : null;
+        return handleTime != null ? new Date(handleTime.getTime()) : null;
     }
 
     public void setHandleTime(Date handleTime) {
-        this.handleTime = handleTime != null ? (Date) handleTime.clone() : null;
+        this.handleTime = handleTime != null ? new Date(handleTime.getTime()) : null;
     }
 
     public Date getCreatedAt() {
-        return createdAt != null ? (Date) createdAt.clone() : null;
+        return createdAt != null ? new Date(createdAt.getTime()) : null;
     }
 
     public void setCreatedAt(Date createdAt) {
-        this.createdAt = createdAt != null ? (Date) createdAt.clone() : null;
+        this.createdAt = createdAt != null ? new Date(createdAt.getTime()) : null;
     }
 
     public Date getUpdatedAt() {
-        return updatedAt != null ? (Date) updatedAt.clone() : null;
+        return updatedAt != null ? new Date(updatedAt.getTime()) : null;
     }
 
     public void setUpdatedAt(Date updatedAt) {
-        this.updatedAt = updatedAt != null ? (Date) updatedAt.clone() : null;
+        this.updatedAt = updatedAt != null ? new Date(updatedAt.getTime()) : null;
     }
 }
