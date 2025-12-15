@@ -60,5 +60,26 @@ public class ReportHandleDTO {
         @Min(value = 1, message = "封禁天数最少1天")
         @Max(value = 365, message = "封禁天数最多365天")
         private Integer banDays;
+
+        }
+
+    // 防御性拷贝BanInfoDTO字段
+    public BanInfoDTO getBanInfo() {
+        if (banInfo == null) return null;
+        BanInfoDTO copy = new BanInfoDTO();
+        copy.setBanType(banInfo.getBanType());
+        copy.setBanDays(banInfo.getBanDays());
+        return copy;
+    }
+
+    public void setBanInfo(BanInfoDTO banInfo) {
+        if (banInfo == null) {
+            this.banInfo = null;
+            return;
+        }
+        BanInfoDTO copy = new BanInfoDTO();
+        copy.setBanType(banInfo.getBanType());
+        copy.setBanDays(banInfo.getBanDays());
+        this.banInfo = copy;
     }
 }
