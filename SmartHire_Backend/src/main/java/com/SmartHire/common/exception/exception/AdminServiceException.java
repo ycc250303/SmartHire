@@ -1,7 +1,5 @@
 package com.SmartHire.common.exception.exception;
 
-import com.SmartHire.common.exception.exception.BaseException;
-
 /**
  * 管理员服务异常
  *

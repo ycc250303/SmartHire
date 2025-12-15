@@ -2,7 +2,6 @@ package com.SmartHire.adminService.dto;
 
 import lombok.Data;
 import java.util.Date;
-import java.util.List;
 
 /**
  * 举报详情DTO

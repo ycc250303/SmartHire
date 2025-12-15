@@ -208,6 +208,7 @@ public class JobAuditServiceImpl extends ServiceImpl<JobAuditMapper, JobAuditRec
    * @param expectedStatus 期望状态
    * @return 审核记录
    */
+  @SuppressWarnings("unused")
   private JobAuditRecord validateJobStatus(Long jobId, AuditStatus expectedStatus) {
     JobAuditRecord auditRecord = getAuditDetail(jobId);
     if (auditRecord == null) {

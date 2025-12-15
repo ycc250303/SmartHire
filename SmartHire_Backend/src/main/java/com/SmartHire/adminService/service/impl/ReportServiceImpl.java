@@ -19,7 +19,6 @@ import com.SmartHire.common.auth.UserContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.beans.BeanUtils;
 
 import java.util.Map;
 
@@ -189,18 +188,16 @@ public class ReportServiceImpl extends ServiceImpl<ReportMapper, Report> impleme
                         targetType,
                         handleDTO.getHandleReason()
                     );
-                } else if (report.getTargetType().equals(Report.TargetType.JOB)) {
+                } else if (report.getTargetType().equals(Report.TargetType.JOB) && detail.getTargetJob() != null) {
                     // 警告HR（针对职位）
-                    if (detail.getTargetJob() != null) {
-                        // 需要获取HR的user_id，而不是hr_info_id
-                        Long hrUserId = getHrUserIdByJobId(detail.getTargetJob().getHrId());
-                        if (hrUserId != null) {
-                            notificationService.sendUserWarningNotification(
-                                hrUserId,
-                                "职位内容",
-                                handleDTO.getHandleReason()
-                            );
-                        }
+                    // 需要获取HR的user_id，而不是hr_info_id
+                    Long hrUserId = getHrUserIdByJobId(detail.getTargetJob().getHrId());
+                    if (hrUserId != null) {
+                        notificationService.sendUserWarningNotification(
+                            hrUserId,
+                            "职位内容",
+                            handleDTO.getHandleReason()
+                        );
                     }
                 }
                 break;
