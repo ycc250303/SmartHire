@@ -158,7 +158,7 @@ public class AdminCodeGenerator {
     }
   }
 
-  @SuppressWarnings("unused")
+  // @SuppressWarnings("unused")
   //    private static void generateAdminController(String projectPath) {
   //        // TODO:修改controller文件的路径
   //        if (projectPath == null) {
