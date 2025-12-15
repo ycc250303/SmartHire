@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.SmartHire.adminService.mapper.NotificationMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="BaseResultMap" type="com.SmartHire.adminService.model.Notification">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="user_id" property="userId" jdbcType="BIGINT"/>
+        <result column="type" property="type" jdbcType="TINYINT"/>
+        <result column="title" property="title" jdbcType="VARCHAR"/>
+        <result column="content" property="content" jdbcType="LONGVARCHAR"/>
+        <result column="related_id" property="relatedId" jdbcType="BIGINT"/>
+        <result column="related_type" property="relatedType" jdbcType="VARCHAR"/>
+        <result column="is_read" property="isRead" jdbcType="TINYINT"/>
+        <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
+        <result column="read_at" property="readAt" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <!-- 基础列 -->
+    <sql id="Base_Column_List">
+        id, user_id, type, title, content, related_id, related_type,
+        is_read, created_at, read_at
+    </sql>
+
+    <!-- 插入通知 -->
+    <insert id="insert" parameterType="com.SmartHire.adminService.model.Notification" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO notifications (
+            user_id, type, title, content, related_id, related_type,
+            is_read, created_at
+        ) VALUES (
+            #{userId,jdbcType=BIGINT},
+            #{type,jdbcType=TINYINT},
+            #{title,jdbcType=VARCHAR},
+            #{content,jdbcType=LONGVARCHAR},
+            #{relatedId,jdbcType=BIGINT},
+            #{relatedType,jdbcType=VARCHAR},
+            #{isRead,jdbcType=TINYINT},
+            NOW()
+        )
+    </insert>
+
+    <!-- 批量插入通知 -->
+    <insert id="insertBatch" parameterType="java.util.List">
+        INSERT INTO notifications (
+            user_id, type, title, content, related_id, related_type,
+            is_read, created_at
+        ) VALUES
+        <foreach collection="notifications" item="notification" separator=",">
+            (
+                #{notification.userId,jdbcType=BIGINT},
+                #{notification.type,jdbcType=TINYINT},
+                #{notification.title,jdbcType=VARCHAR},
+                #{notification.content,jdbcType=LONGVARCHAR},
+                #{notification.relatedId,jdbcType=BIGINT},
+                #{notification.relatedType,jdbcType=VARCHAR},
+                #{notification.isRead,jdbcType=TINYINT},
+                NOW()
+            )
+        </foreach>
+    </insert>
+
+</mapper>

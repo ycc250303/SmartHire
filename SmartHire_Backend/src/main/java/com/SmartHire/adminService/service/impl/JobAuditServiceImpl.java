@@ -3,7 +3,7 @@ package com.SmartHire.adminService.service.impl;
 import com.SmartHire.adminService.dto.JobAuditListDTO;
 import com.SmartHire.adminService.dto.JobAuditQueryDTO;
 import com.SmartHire.adminService.enums.AuditStatus;
-import com.SmartHire.adminService.exception.AdminServiceException;
+import com.SmartHire.common.exception.exception.AdminServiceException;
 import com.SmartHire.adminService.mapper.JobAuditMapper;
 import com.SmartHire.adminService.model.JobAuditRecord;
 import com.SmartHire.adminService.service.JobAuditService;

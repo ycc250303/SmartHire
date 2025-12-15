@@ -2,7 +2,7 @@ package com.SmartHire.adminService.service.impl;
 
 import com.SmartHire.adminService.dto.UserManagementDTO;
 import com.SmartHire.adminService.dto.UserStatusUpdateDTO;
-import com.SmartHire.adminService.exception.AdminServiceException;
+import com.SmartHire.common.exception.exception.AdminServiceException;
 import com.SmartHire.adminService.mapper.UserMapper;
 import com.SmartHire.adminService.service.BanRecordService;
 import com.SmartHire.adminService.service.UserService;

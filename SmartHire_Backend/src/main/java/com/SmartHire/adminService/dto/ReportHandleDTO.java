@@ -21,18 +21,44 @@ public class ReportHandleDTO {
     private Integer handleResult;
 
     /**
-     * 处理原因
+     * 处理原因（内部记录）
      */
     @NotBlank(message = "处理原因不能为空")
     private String handleReason;
 
     /**
-     * 是否通知被举报方
+     * 封禁信息DTO（当处理结果为封禁时必填）
      */
-    private Boolean notifyTarget = false;
+    private BanInfoDTO banInfo;
 
     /**
-     * 通知内容
+     * 举报方通知内容（必填）
      */
-    private String notificationContent;
+    @NotBlank(message = "举报方通知内容不能为空")
+    private String reporterNotificationContent;
+
+    /**
+     * 被举报方通知内容（必填）
+     */
+    @NotBlank(message = "被举报方通知内容不能为空")
+    private String targetNotificationContent;
+
+    /**
+     * 封禁信息内部类
+     */
+    @Data
+    public static class BanInfoDTO {
+        /**
+         * 封禁类型：permanent-永久封禁, temporary-临时封禁
+         */
+        @NotBlank(message = "封禁类型不能为空")
+        private String banType;
+
+        /**
+         * 封禁天数（临时封禁时必填，1-365天）
+         */
+        @Min(value = 1, message = "封禁天数最少1天")
+        @Max(value = 365, message = "封禁天数最多365天")
+        private Integer banDays;
+    }
 }

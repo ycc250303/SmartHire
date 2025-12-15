@@ -56,7 +56,7 @@ public class Report implements Serializable {
     /** 处理时间 */
     private Date handleTime;
 
-    /** 证据图片（Base64编码） */
+    /** 证据图片URL */
     private String evidenceImage;
 
     /** 创建时间 */

@@ -74,7 +74,7 @@
             </NDescriptionsItem>
             <NDescriptionsItem label="涉及内容">
               <NButton text type="primary" @click="viewTargetContent">
-                查看{{ reportData.targetType === 2 ? '职位' : '用户' }}详情
+                查看被举报{{ reportData.targetType === 1 ? '用户' : '职位' }}详情
               </NButton>
             </NDescriptionsItem>
           </NDescriptions>
@@ -87,17 +87,24 @@
           </div>
 
           <!-- 举报证据 -->
-          <div v-if="reportData.evidenceImage" class="evidence-section">
+          <div v-if="evidenceImages.length > 0" class="evidence-section">
             <h4>相关证据</h4>
             <NSpace>
-              <div class="evidence-item">
+              <div
+                v-for="(image, index) in evidenceImages"
+                :key="index"
+                class="evidence-item"
+              >
                 <NImage
-                  :src="`data:image/jpeg;base64,${reportData.evidenceImage}`"
+                  :src="image"
                   width="100"
                   height="100"
                   object-fit="cover"
                   preview
                 />
+                <div class="image-caption">
+                  <span>证据图片 {{ index + 1 }}</span>
+                </div>
               </div>
             </NSpace>
           </div>
@@ -117,7 +124,7 @@
       <NForm
         ref="handleFormRef"
         :model="handleForm"
-        :rules="handleRules"
+        :rules="dynamicRules"
         label-placement="left"
         label-width="100px"
       >
@@ -141,6 +148,38 @@
           </NRadioGroup>
         </NFormItem>
 
+        <!-- 封禁天数选择（当选择封禁用户时显示） -->
+        <NFormItem
+          v-if="reportData.targetType === 1 && handleForm.result === 2"
+          label="封禁设置"
+          path="banInfo.banType"
+        >
+          <NSpace vertical>
+            <NRadioGroup v-model:value="handleForm.banInfo.banType">
+              <NSpace>
+                <NRadio value="permanent">永久封禁</NRadio>
+                <NRadio value="temporary">临时封禁</NRadio>
+              </NSpace>
+            </NRadioGroup>
+          </NSpace>
+        </NFormItem>
+
+        <NFormItem
+          v-if="reportData.targetType === 1 && handleForm.result === 2 && handleForm.banInfo.banType === 'temporary'"
+          label="封禁天数"
+          path="banInfo.banDays"
+        >
+          <NInputNumber
+            v-model:value="handleForm.banInfo.banDays"
+            :min="1"
+            :max="365"
+            placeholder="封禁天数"
+            style="width: 200px"
+          >
+            <template #suffix>天</template>
+          </NInputNumber>
+        </NFormItem>
+
         <NFormItem label="处理原因" path="handleReason">
           <NInput
             v-model:value="handleForm.handleReason"
@@ -150,20 +189,18 @@
           />
         </NFormItem>
 
-        <NFormItem label="通知被举报方" path="notifyTarget">
-          <NSwitch v-model:value="handleForm.notifyTarget">
-            <template #checked>发送通知</template>
-            <template #unchecked>不通知</template>
-          </NSwitch>
+        <NFormItem label="举报方通知内容" path="reporterNotificationContent">
+          <NInput
+            v-model:value="handleForm.reporterNotificationContent"
+            type="textarea"
+            :rows="3"
+            placeholder="发送给举报方的通知内容"
+          />
         </NFormItem>
 
-        <NFormItem
-          v-if="handleForm.notifyTarget"
-          label="通知内容"
-          path="notificationContent"
-        >
+        <NFormItem label="被举报方通知内容" path="targetNotificationContent">
           <NInput
-            v-model:value="handleForm.notificationContent"
+            v-model:value="handleForm.targetNotificationContent"
             type="textarea"
             :rows="3"
             placeholder="发送给被举报方的通知内容"
@@ -270,12 +307,12 @@ import { useRouter, useRoute } from 'vue-router'
 import {
   NCard, NSpace, NButton, NDescriptions, NDescriptionsItem, NTag,
   NAvatar, NText, NSpin, NImage, NModal,
-  NForm, NFormItem, NRadioGroup, NRadio, NInput, NSwitch,
+  NForm, NFormItem, NRadioGroup, NRadio, NInput, NInputNumber,
   NDivider, useMessage
 } from 'naive-ui'
 import type { FormRules } from 'naive-ui'
 import dayjs from 'dayjs'
-import { reportsApi, type ReportDetail, type ReportHandle, HANDLE_RESULT_LABEL_MAP, HANDLE_RESULT_MAP } from '@/api/reports'
+import { reportsApi, type ReportDetail, type ReportHandle } from '@/api/reports'
 import { useUserStore } from '@/store/user'
 
 const router = useRouter()
@@ -285,6 +322,16 @@ const userStore = useUserStore()
 
 // 获取举报ID
 const reportId = computed(() => route.params.id as string)
+
+// 计算属性 - 解析证据图片
+const evidenceImages = computed(() => {
+  if (!reportData.value.evidenceImage) {
+    return []
+  }
+
+  // 直接返回URL数组，支持单个或多个URL
+  return [reportData.value.evidenceImage]
+})
 
 // 状态
 const loading = ref(true)
@@ -303,19 +350,79 @@ const reportData = ref<ReportDetail>({} as ReportDetail)
 const handleForm = reactive({
   result: 0,
   handleReason: '',
-  notifyTarget: false,
-  notificationContent: ''
+  banInfo: {
+    banType: 'temporary',
+    banDays: 7
+  },
+  reporterNotificationContent: '',
+  targetNotificationContent: ''
 })
 
-// 表单验证规则
-const handleRules: FormRules = {
-  result: [
-    { required: true, message: '请选择处理结果', trigger: 'change' }
-  ],
-  handleReason: [
-    { required: true, message: '请输入处理原因', trigger: 'blur' }
-  ]
-}
+
+// 计算属性：动态验证规则
+const dynamicRules = computed(() => {
+  // 直接定义所有基础验证规则
+  const rules: FormRules = {
+    result: [
+      {
+        validator: (rule: any, value: any) => {
+          if (value === null || value === undefined || value === '') {
+            return new Error('请选择处理结果')
+          }
+          // 允许的值：0-无需处理, 1-警告, 2-封禁, 3-下线
+          if (![0, 1, 2, 3].includes(Number(value))) {
+            return new Error('请选择有效的处理结果')
+          }
+          return true
+        },
+        trigger: 'change'
+      }
+    ],
+    handleReason: [
+      { required: true, message: '请输入处理原因', trigger: 'blur' }
+    ],
+    reporterNotificationContent: [
+      { required: true, message: '请输入举报方通知内容', trigger: 'blur' }
+    ],
+    targetNotificationContent: [
+      { required: true, message: '请输入被举报方通知内容', trigger: 'blur' }
+    ]
+  }
+
+  // 如果选择封禁，添加封禁信息验证
+  if (handleForm.result === 2) {
+    rules['banInfo.banType'] = [
+      {
+        validator: (rule: any, value: any) => {
+          if (!value || (value !== 'permanent' && value !== 'temporary')) {
+            return new Error('请选择封禁类型')
+          }
+          return true
+        },
+        trigger: 'change'
+      }
+    ]
+    rules['banInfo.banDays'] = [
+      {
+        validator: (rule: any, value: any) => {
+          // 只有临时封禁才需要验证天数
+          if (handleForm.banInfo.banType === 'temporary') {
+            if (value === null || value === undefined || value === '') {
+              return new Error('请设置封禁天数')
+            }
+            if (Number(value) < 1 || Number(value) > 365) {
+              return new Error('封禁天数必须在1-365天之间')
+            }
+          }
+          return true
+        },
+        trigger: 'blur'
+      }
+    ]
+  }
+
+  return rules
+})
 
 
 // 工具方法
@@ -396,27 +503,53 @@ const openHandleModal = () => {
   // 重置表单
   handleForm.result = 0
   handleForm.handleReason = ''
-  handleForm.notifyTarget = false
-  handleForm.notificationContent = ''
+  handleForm.banInfo.banType = 'temporary'
+  handleForm.banInfo.banDays = 7
+  handleForm.reporterNotificationContent = ''
+  handleForm.targetNotificationContent = ''
 
   handleModalVisible.value = true
 }
 
 const handleSubmit = async () => {
+  let handleData: ReportHandle
+
   try {
+    // 先检查表单验证
+    console.log('开始表单验证...')
+    console.log('表单数据:', handleForm)
     await handleFormRef.value?.validate()
+    console.log('表单验证通过')
 
     handling.value = true
 
     // 准备处理数据
-    const handleData: ReportHandle = {
+    handleData = {
       handleResult: handleForm.result,
       handleReason: handleForm.handleReason,
-      notifyTarget: handleForm.notifyTarget,
-      notificationContent: handleForm.notificationContent
+      reporterNotificationContent: handleForm.reporterNotificationContent,
+      targetNotificationContent: handleForm.targetNotificationContent
+    }
+
+    // 如果选择封禁，添加封禁信息
+    if (handleForm.result === 2) {
+      // 验证封禁信息
+      if (!handleForm.banInfo.banType) {
+        throw new Error('请选择封禁类型')
+      }
+
+      if (handleForm.banInfo.banType === 'temporary' && (!handleForm.banInfo.banDays || handleForm.banInfo.banDays < 1)) {
+        throw new Error('临时封禁必须设置封禁天数')
+      }
+
+      handleData.banInfo = {
+        banType: handleForm.banInfo.banType,
+        banDays: handleForm.banInfo.banType === 'permanent' ? undefined : handleForm.banInfo.banDays
+      }
     }
 
     // 调用后端API处理举报
+    console.log('发送到后端的数据:', handleData)
     await reportsApi.handleReport(
       reportId.value,
       handleData,
@@ -430,7 +563,82 @@ const handleSubmit = async () => {
     handleModalVisible.value = false
   } catch (error: any) {
     console.error('处理举报失败:', error)
-    message.error(error.message || '处理举报失败')
+    console.error('错误类型:', typeof error)
+    console.error('错误构造函数:', error?.constructor?.name)
+    console.error('错误响应:', error.response)
+    console.error('错误状态:', error.response?.status)
+    console.error('错误数据:', error.response?.data)
+
+    // 处理Naive UI表单验证错误 - 最常见的情况
+    if (Array.isArray(error)) {
+      console.log('检测到数组类型的错误，详细内容:', error)
+
+      // 处理可能的嵌套数组结构
+      let flatErrors: any[] = []
+      error.forEach((item: any) => {
+        if (Array.isArray(item)) {
+          // 如果是嵌套数组，展开它
+          flatErrors.push(...item)
+        } else {
+          flatErrors.push(item)
+        }
+      })
+
+      console.log('展开后的错误数组:', flatErrors)
+
+      const errorMessages = flatErrors.map((err: any, index: number) => {
+        console.log(`错误 ${index}:`, err)
+        console.log(`  - 类型:`, typeof err)
+        console.log(`  - 构造函数:`, err?.constructor?.name)
+        console.log(`  - 内容:`, JSON.stringify(err, null, 2))
+
+        if (err && typeof err === 'object') {
+          if (err.field && err.message) {
+            return `${err.field}: ${err.message}`
+          }
+          if (err.message) {
+            return err.message
+          }
+          return `字段: ${err.field || '未知'}, 值: ${err.fieldValue}, 消息: ${JSON.stringify(err)}`
+        }
+        return String(err)
+      }).join('; ')
+      message.error(`表单验证失败: ${errorMessages}`)
+    }
+    // 处理前端验证错误
+    else if (error.errors && Array.isArray(error.errors)) {
+      const errorMessages = error.errors.map((err: any) => {
+        if (err.field) {
+          return `${err.field}: ${err.message}`
+        }
+        return err.message
+      }).join('; ')
+      message.error(`表单验证失败: ${errorMessages}`)
+    }
+    // 处理后端错误
+    else if (error.response?.data) {
+      const responseData = error.response.data
+
+      // 如果有具体的验证错误
+      if (responseData.data && Array.isArray(responseData.data)) {
+        const errors = responseData.data
+        const errorMessages = errors.map((err: any) => {
+          if (err.field) {
+            return `${err.field}: ${err.message || err.defaultMessage}`
+          }
+          return err.message || err.defaultMessage || JSON.stringify(err)
+        }).join('; ')
+        message.error(`处理失败: ${errorMessages}`)
+      } else if (responseData.message) {
+        message.error(`处理失败: ${responseData.message}`)
+      } else {
+        message.error(`处理失败: ${JSON.stringify(responseData)}`)
+      }
+    } else if (error.message) {
+      message.error(`处理失败: ${error.message}`)
+    } else {
+      message.error('处理举报失败，请查看控制台了解详情')
+    }
   } finally {
     handling.value = false
   }

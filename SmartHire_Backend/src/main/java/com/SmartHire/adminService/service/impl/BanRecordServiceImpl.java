@@ -1,7 +1,7 @@
 package com.SmartHire.adminService.service.impl;
 
 import com.SmartHire.adminService.dto.UserBanDTO;
-import com.SmartHire.adminService.exception.AdminServiceException;
+import com.SmartHire.common.exception.exception.AdminServiceException;
 import com.SmartHire.adminService.mapper.BanRecordMapper;
 import com.SmartHire.adminService.mapper.UserMapper;
 import com.SmartHire.adminService.model.BanRecord;

@@ -19,7 +19,7 @@ CREATE TABLE `reports` (
   `handle_result` TINYINT NULL COMMENT '处理结果：0-无需处理, 1-警告, 2-封禁/下线',
   `handle_reason` TEXT NULL COMMENT '处理原因',
   `handle_time` DATETIME NULL COMMENT '处理时间',
-  `evidence_image` LONGTEXT NULL COMMENT '举报证据图片（base64编码，支持jpg/pdf）',
+  `evidence_image` VARCHAR(255) NULL COMMENT '举报证据图片URL',
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`),

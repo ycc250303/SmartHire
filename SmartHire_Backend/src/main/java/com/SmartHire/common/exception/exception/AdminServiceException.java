@@ -1,4 +1,4 @@
-package com.SmartHire.adminService.exception;
+package com.SmartHire.common.exception.exception;
 
 import com.SmartHire.common.exception.exception.BaseException;
 

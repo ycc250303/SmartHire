@@ -70,8 +70,12 @@ export interface ReportQuery {
 export interface ReportHandle {
   handleResult: number
   handleReason: string
-  notifyTarget?: boolean
-  notificationContent?: string
+  banInfo?: {
+    banType: string  // 'permanent' | 'temporary'
+    banDays?: number // 临时封禁天数
+  }
+  reporterNotificationContent: string
+  targetNotificationContent: string
 }
 
 // 分页响应接口
