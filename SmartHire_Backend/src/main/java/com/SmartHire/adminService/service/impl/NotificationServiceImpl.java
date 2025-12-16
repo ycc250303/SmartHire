@@ -1,8 +1,10 @@
 package com.SmartHire.adminService.service.impl;
 
 import com.SmartHire.adminService.mapper.NotificationMapper;
+import com.SmartHire.adminService.mapper.UserMapper;
 import com.SmartHire.adminService.model.Notification;
 import com.SmartHire.adminService.service.NotificationService;
+import com.SmartHire.common.exception.exception.AdminServiceException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,10 +25,14 @@ import java.util.List;
 public class NotificationServiceImpl implements NotificationService {
 
     private final NotificationMapper notificationMapper;
+    private final UserMapper userMapper;
 
     @Override
     public void sendNotification(Long userId, Integer type, String title, String content) {
         log.info("管理员发送通知给用户{}, 类型: {}, 标题: {}", userId, type, title);
+
+        // 验证用户是否存在
+        validateUserExistence(userId);
 
         Notification notification = new Notification();
         notification.setUserId(userId);
@@ -44,6 +50,9 @@ public class NotificationServiceImpl implements NotificationService {
         log.info("管理员发送关联通知给用户{}, 类型: {}, 关联: {}-{}",
                 userId, type, relatedType, relatedId);
 
+        // 验证用户是否存在
+        validateUserExistence(userId);
+
         Notification notification = new Notification();
         notification.setUserId(userId);
         notification.setType(type);
@@ -59,6 +68,9 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public void sendBatchNotification(List<Long> userIds, Integer type, String title, String content) {
         log.info("管理员批量发送通知给{}个用户, 类型: {}", userIds.size(), type);
+
+        // 验证所有用户是否存在
+        validateUsersExistence(userIds);
 
         List<Notification> notifications = new ArrayList<>();
         for (Long userId : userIds) {
@@ -149,5 +161,40 @@ public class NotificationServiceImpl implements NotificationService {
 
         sendNotification(hrId, Notification.Type.JOB_OFFLINE, title, content,
                         null, Notification.RelatedType.JOB);
+    }
+
+    /**
+     * 验证单个用户是否存在
+     *
+     * @param userId 用户ID
+     */
+    private void validateUserExistence(Long userId) {
+        if (userMapper.selectById(userId) == null) {
+            throw AdminServiceException.userNotFound(userId);
+        }
+    }
+
+    /**
+     * 验证多个用户是否都存在
+     *
+     * @param userIds 用户ID列表
+     */
+    private void validateUsersExistence(List<Long> userIds) {
+        if (userIds == null || userIds.isEmpty()) {
+            throw AdminServiceException.operationFailed("用户ID列表不能为空");
+        }
+
+        // 检查是否有重复的用户ID
+        long uniqueCount = userIds.stream().distinct().count();
+        if (uniqueCount != userIds.size()) {
+            throw AdminServiceException.operationFailed("用户ID列表包含重复项");
+        }
+
+        // 验证每个用户是否存在
+        for (Long userId : userIds) {
+            if (userMapper.selectById(userId) == null) {
+                throw AdminServiceException.userNotFound(userId);
+            }
+        }
     }
 }

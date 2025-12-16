@@ -5,9 +5,14 @@ import com.SmartHire.adminService.dto.JobAuditQueryDTO;
 import com.SmartHire.adminService.enums.AuditStatus;
 import com.SmartHire.common.exception.exception.AdminServiceException;
 import com.SmartHire.adminService.mapper.JobAuditMapper;
+import com.SmartHire.adminService.mapper.UserMapper;
 import com.SmartHire.adminService.model.JobAuditRecord;
 import com.SmartHire.adminService.service.JobAuditService;
+import com.SmartHire.hrService.mapper.CompanyMapper;
+import com.SmartHire.hrService.mapper.HrInfoMapper;
 import com.SmartHire.hrService.mapper.JobInfoMapper;
+import com.SmartHire.hrService.model.Company;
+import com.SmartHire.hrService.model.HrInfo;
 import com.SmartHire.hrService.model.JobInfo;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -32,6 +37,9 @@ public class JobAuditServiceImpl extends ServiceImpl<JobAuditMapper, JobAuditRec
 
   private final JobAuditMapper jobAuditMapper;
   private final JobInfoMapper jobInfoMapper;
+  private final UserMapper userMapper;
+  private final HrInfoMapper hrInfoMapper;
+  private final CompanyMapper companyMapper;
 
   @Override
   public Page<JobAuditListDTO> getAuditList(Page<JobAuditListDTO> page,
@@ -182,6 +190,9 @@ public class JobAuditServiceImpl extends ServiceImpl<JobAuditMapper, JobAuditRec
      * @return 审核记录
      */
     private JobAuditRecord validateJobForOffline(Long jobId) {
+        // 1. 验证职位及其关联数据的存在性
+        validateJobExistence(jobId);
+
         JobAuditRecord auditRecord = getAuditDetail(jobId);
         if (auditRecord == null) {
             throw AdminServiceException.jobNotFound(jobId);
@@ -230,6 +241,9 @@ public class JobAuditServiceImpl extends ServiceImpl<JobAuditMapper, JobAuditRec
    * @return 审核记录
    */
   private JobAuditRecord validateSystemJobStatus(Long jobId, AuditStatus expectedSystemStatus) {
+    // 1. 验证职位是否存在以及关联的HR和公司是否存在
+    validateJobExistence(jobId);
+
     JobAuditRecord auditRecord = getAuditDetail(jobId);
     if (auditRecord == null) {
       throw AdminServiceException.jobNotFound(jobId);
@@ -246,6 +260,47 @@ public class JobAuditServiceImpl extends ServiceImpl<JobAuditMapper, JobAuditRec
     }
 
     return auditRecord;
+  }
+
+  /**
+   * 验证职位及其关联的HR和公司的存在性
+   *
+   * @param jobId 职位ID
+   */
+  private void validateJobExistence(Long jobId) {
+    // 验证职位是否存在
+    JobInfo jobInfo = jobInfoMapper.selectById(jobId);
+    if (jobInfo == null) {
+      throw AdminServiceException.jobNotFound(jobId);
+    }
+
+    // 验证HR是否存在
+    if (jobInfo.getHrId() != null) {
+      HrInfo hrInfo = hrInfoMapper.selectById(jobInfo.getHrId());
+      if (hrInfo == null) {
+        throw AdminServiceException.operationFailed("职位关联的HR不存在，HR ID: " + jobInfo.getHrId());
+      }
+
+      // 验证HR关联的用户是否存在
+      if (hrInfo.getUserId() != null) {
+        var user = userMapper.selectById(hrInfo.getUserId());
+        if (user == null) {
+          throw AdminServiceException.operationFailed("HR关联的用户不存在，用户 ID: " + hrInfo.getUserId());
+        }
+        // 验证用户类型是否为HR
+        if (user.getUserType() != 2) {
+          throw AdminServiceException.operationFailed("HR关联的用户类型不正确，用户 ID: " + hrInfo.getUserId());
+        }
+      }
+    }
+
+    // 验证公司是否存在
+    if (jobInfo.getCompanyId() != null) {
+      Company company = companyMapper.selectById(jobInfo.getCompanyId());
+      if (company == null) {
+        throw AdminServiceException.operationFailed("职位关联的公司不存在，公司 ID: " + jobInfo.getCompanyId());
+      }
+    }
   }
 
   /**
