@@ -150,14 +150,14 @@
             >
               {{ user.status === 1 ? '封禁' : '启用' }}
             </NButton>
-            <NDropdown
-              :options="moreActions"
-              @select="handleMoreAction($event, user)"
+            <NButton
+              size="small"
+              type="primary"
+              ghost
+              @click.stop="openNotificationModal(user)"
             >
-              <NButton size="small" quaternary>
-                更多
-              </NButton>
-            </NDropdown>
+              发送通知
+            </NButton>
           </div>
         </div>
       </div>
@@ -322,7 +322,7 @@
 
         <div v-if="currentUserForBan" class="ban-form">
           <div class="user-info">
-            <p><strong>用户：</strong>{{ currentUserForBan.name }} ({{ currentUserForBan.username }})</p>
+            <p><strong>用户：</strong>{{ currentUserForBan.username }}</p>
             <p><strong>用户类型：</strong>{{ getUserTypeText(currentUserForBan.userType) }}</p>
           </div>
 
@@ -373,6 +373,29 @@
                 发送通知给用户
               </NCheckbox>
             </NFormItem>
+
+            <!-- 封禁通知编辑区域 -->
+            <template v-if="banFormData.sendNotification">
+              <NFormItem label="通知标题" path="banNotificationTitle">
+                <NInput
+                  v-model:value="banFormData.notificationTitle"
+                  placeholder="请输入封禁通知标题"
+                  maxlength="100"
+                  show-count
+                />
+              </NFormItem>
+
+              <NFormItem label="通知内容" path="banNotificationContent">
+                <NInput
+                  v-model:value="banFormData.notificationContent"
+                  type="textarea"
+                  placeholder="请输入封禁通知内容"
+                  :rows="4"
+                  maxlength="500"
+                  show-count
+                />
+              </NFormItem>
+            </template>
           </NForm>
         </div>
 
@@ -442,6 +465,29 @@
                 发送通知给用户
               </NCheckbox>
             </NFormItem>
+
+            <!-- 解封通知编辑区域 -->
+            <template v-if="unbanFormData.sendNotification">
+              <NFormItem label="通知标题" path="unbanNotificationTitle">
+                <NInput
+                  v-model:value="unbanFormData.notificationTitle"
+                  placeholder="请输入解封通知标题"
+                  maxlength="100"
+                  show-count
+                />
+              </NFormItem>
+
+              <NFormItem label="通知内容" path="unbanNotificationContent">
+                <NInput
+                  v-model:value="unbanFormData.notificationContent"
+                  type="textarea"
+                  placeholder="请输入解封通知内容"
+                  :rows="4"
+                  maxlength="500"
+                  show-count
+                />
+              </NFormItem>
+            </template>
           </NForm>
         </div>
 
@@ -454,6 +500,80 @@
               @click="handleUnbanUser"
             >
               确认解封
+            </NButton>
+          </div>
+        </template>
+      </NCard>
+    </NModal>
+
+    <!-- 发送通知弹窗 -->
+    <NModal v-model:show="showNotificationModal" :mask-closable="false">
+      <NCard
+        style="max-width: 600px"
+        title="发送通知"
+        :bordered="false"
+        size="huge"
+        role="dialog"
+        aria-modal
+      >
+        <template #header-extra>
+          <NButton
+            quaternary
+            circle
+            @click="showNotificationModal = false"
+          >
+            <template #icon>
+              <span class="close-icon">×</span>
+            </template>
+          </NButton>
+        </template>
+
+        <div v-if="currentUserForNotification" class="notification-form">
+          <div class="user-info">
+            <p><strong>发送给：</strong>{{ currentUserForNotification.username }}</p>
+            <p><strong>用户类型：</strong>{{ getUserTypeText(currentUserForNotification.userType) }}</p>
+            <p v-if="currentUserForNotification.email"><strong>邮箱：</strong>{{ currentUserForNotification.email }}</p>
+          </div>
+
+          <NForm
+            ref="notificationFormRef"
+            :model="notificationFormData"
+            :rules="notificationRules"
+            label-placement="top"
+            style="margin-top: 20px"
+          >
+            <NFormItem label="通知标题" path="title">
+              <NInput
+                v-model:value="notificationFormData.title"
+                placeholder="请输入通知标题"
+                maxlength="100"
+                show-count
+              />
+            </NFormItem>
+
+            <NFormItem label="通知内容" path="content">
+              <NInput
+                v-model:value="notificationFormData.content"
+                type="textarea"
+                placeholder="请输入通知内容"
+                :rows="6"
+                maxlength="1000"
+                show-count
+              />
+            </NFormItem>
+
+            </NForm>
+        </div>
+
+        <template #footer>
+          <div class="modal-actions">
+            <NButton @click="showNotificationModal = false">取消</NButton>
+            <NButton
+              type="primary"
+              :loading="notificationLoading"
+              @click="handleSendNotification"
+            >
+              发送通知
             </NButton>
           </div>
         </template>
@@ -473,7 +593,6 @@ import {
   NTag,
   NPagination,
   NModal,
-  NDropdown,
   NForm,
   NFormItem,
   NRadioGroup,
@@ -486,6 +605,7 @@ import {
 import type { FormInst } from 'naive-ui'
 import dayjs from 'dayjs'
 import { getUserList, banUser, unbanUser, type User, type UserQueryParams } from '@/api/user'
+import { sendNotification as sendNotificationApi, sendNotificationWithRelated } from '@/api/notification'
 
 // 扩展User接口以支持前端特有的字段
 interface ExtendedUser extends User {
@@ -505,6 +625,7 @@ const dialog = useDialog()
 // 表单引用
 const banFormRef = ref<FormInst | null>(null)
 const unbanFormRef = ref<FormInst | null>(null)
+const notificationFormRef = ref<FormInst | null>(null)
 
 
 const unbanRules = {
@@ -535,12 +656,48 @@ const statusOptions = [
   { label: '封禁', value: 'banned', type: 'error' as const }
 ]
 
-const moreActions = [
-  { label: '发送通知', key: 'notify' },
-  { label: '重置密码', key: 'reset-password' },
-  { label: '查看记录', key: 'view-logs' },
-  { label: '导出数据', key: 'export' }
-]
+
+// 通知弹窗相关状态
+const showNotificationModal = ref(false)
+const notificationLoading = ref(false)
+const currentUserForNotification = ref<ExtendedUser | null>(null)
+const notificationFormData = ref({
+  title: '',
+  content: '',
+  type: 1,
+  relatedId: undefined as number | undefined,
+  relatedType: 'system'
+})
+
+// 通知表单验证规则
+const notificationRules = {
+  title: [
+    {
+      required: true,
+      message: '请输入通知标题',
+      trigger: ['input', 'blur']
+    },
+    {
+      min: 2,
+      max: 100,
+      message: '标题长度应在 2-100 个字符之间',
+      trigger: ['input', 'blur']
+    }
+  ],
+  content: [
+    {
+      required: true,
+      message: '请输入通知内容',
+      trigger: ['input', 'blur']
+    },
+    {
+      min: 5,
+      max: 1000,
+      message: '内容长度应在 5-1000 个字符之间',
+      trigger: ['input', 'blur']
+    }
+  ]
+}
 
 // 状态管理
 const searchKeyword = ref('')
@@ -714,23 +871,6 @@ const toggleUserStatus = (user: ExtendedUser) => {
   }
 }
 
-// 更多操作
-const handleMoreAction = (key: string, user: ExtendedUser) => {
-  switch (key) {
-    case 'notify':
-      sendNotification(user)
-      break
-    case 'reset-password':
-      resetPassword(user)
-      break
-    case 'view-logs':
-      viewUserLogs(user)
-      break
-    case 'export':
-      exportUserData(user)
-      break
-  }
-}
 
 // 封禁弹窗相关状态
 const showBanModal = ref(false)
@@ -738,7 +878,9 @@ const banFormData = ref({
   banType: 'temporary' as 'permanent' | 'temporary',
   banDays: 7,
   banReason: '',
-  sendNotification: true
+  sendNotification: true,
+  notificationTitle: '',
+  notificationContent: ''
 })
 const currentUserForBan = ref<ExtendedUser | null>(null)
 
@@ -746,7 +888,9 @@ const currentUserForBan = ref<ExtendedUser | null>(null)
 const showUnbanModal = ref(false)
 const unbanFormData = ref({
   liftReason: '',
-  sendNotification: true
+  sendNotification: true,
+  notificationTitle: '',
+  notificationContent: ''
 })
 const currentUserForUnban = ref<ExtendedUser | null>(null)
 
@@ -796,7 +940,9 @@ const showBanUserDialog = (user: ExtendedUser) => {
     banType: 'temporary',
     banDays: 7,
     banReason: '',
-    sendNotification: true
+    sendNotification: true,
+    notificationTitle: '账户封禁通知',
+    notificationContent: `您的账户因违反社区规定已被封禁。封禁原因：${user.username}。如有疑问请联系客服。`
   }
   showBanModal.value = true
 }
@@ -806,7 +952,9 @@ const showUnbanUserDialog = (user: ExtendedUser) => {
   currentUserForUnban.value = user
   unbanFormData.value = {
     liftReason: '',
-    sendNotification: true
+    sendNotification: true,
+    notificationTitle: '账户解封通知',
+    notificationContent: `您好，您的账户已被解封。感谢您的理解与配合，请遵守社区规范。如有疑问请联系客服。`
   }
   showUnbanModal.value = true
 }
@@ -825,13 +973,32 @@ const handleBanUser = async () => {
 
   try {
     loading.value = true
+
+    // 先执行封禁操作
     await banUser(currentUserForBan.value.userId, {
       banDurationType: banFormData.value.banType,
       banDays: banFormData.value.banType === 'temporary' ? banFormData.value.banDays : undefined,
       banReason: banFormData.value.banReason,
       sendEmailNotification: false,  // 暂时不发送邮件通知
-      sendSystemNotification: banFormData.value.sendNotification  // 只发送系统通知
+      sendSystemNotification: false  // 这里我们手动发送通知
     })
+
+    // 如果选择发送通知，则发送封禁通知
+    if (banFormData.value.sendNotification) {
+      try {
+        await sendNotificationWithRelated(
+          currentUserForBan.value.userId,
+          3, // 封禁通知类型
+          banFormData.value.notificationTitle,
+          banFormData.value.notificationContent,
+          currentUserForBan.value.userId,
+          'user'
+        )
+      } catch (notificationError: any) {
+        console.error('发送封禁通知失败:', notificationError)
+        // 不影响封禁操作的完成
+      }
+    }
 
     message.success(`用户"${currentUserForBan.value.username}"已封禁`)
     showBanModal.value = false
@@ -856,10 +1023,29 @@ const handleUnbanUser = async () => {
 
   try {
     loading.value = true
+
+    // 先执行解封操作
     await unbanUser(currentUserForUnban.value.userId, {
       liftReason: unbanFormData.value.liftReason,
-      sendNotification: unbanFormData.value.sendNotification
+      sendNotification: false  // 这里我们手动发送通知
     })
+
+    // 如果选择发送通知，则发送解封通知
+    if (unbanFormData.value.sendNotification) {
+      try {
+        await sendNotificationWithRelated(
+          currentUserForUnban.value.userId,
+          3, // 同样使用封禁通知类型（用于账户状态变更通知）
+          unbanFormData.value.notificationTitle,
+          unbanFormData.value.notificationContent,
+          currentUserForUnban.value.userId,
+          'user'
+        )
+      } catch (notificationError: any) {
+        console.error('发送解封通知失败:', notificationError)
+        // 不影响解封操作的完成
+      }
+    }
 
     message.success(`用户"${currentUserForUnban.value.username}"已解封`)
     showUnbanModal.value = false
@@ -899,7 +1085,51 @@ const loadUsers = async () => {
 
 // 发送通知
 const sendNotification = (user: ExtendedUser) => {
-  message.info(`发送通知功能开发中 - 用户：${user.username}`)
+  openNotificationModal(user)
+}
+
+// 打开发送通知弹窗
+const openNotificationModal = (user: ExtendedUser) => {
+  currentUserForNotification.value = user
+  notificationFormData.value = {
+    title: '',
+    content: '',
+    type: 1,
+    relatedId: undefined,
+    relatedType: 'system'
+  }
+  showNotificationModal.value = true
+}
+
+// 处理发送通知
+const handleSendNotification = async () => {
+  if (!notificationFormRef.value || !currentUserForNotification.value) {
+    return
+  }
+
+  try {
+    await notificationFormRef.value.validate()
+  } catch (error) {
+    return
+  }
+
+  try {
+    notificationLoading.value = true
+
+    await sendNotificationApi(
+      currentUserForNotification.value.userId,
+      1, // 固定为系统消息类型
+      notificationFormData.value.title,
+      notificationFormData.value.content
+    )
+
+    message.success(`通知已发送给"${currentUserForNotification.value.username}"`)
+    showNotificationModal.value = false
+  } catch (error: any) {
+    message.error(error.message || '发送通知失败')
+  } finally {
+    notificationLoading.value = false
+  }
 }
 
 // 重置密码

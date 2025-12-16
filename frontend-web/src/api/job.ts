@@ -14,6 +14,7 @@ export interface Job {
   publisher: string
   createTime: string
   tags?: string[]  // 从job_skill_requirement表动态获取
+  hrUserId?: number  // HR的用户ID，用于发送通知
 }
 
 // 职位审核查询参数（严格匹配后端JobAuditQueryDTO）

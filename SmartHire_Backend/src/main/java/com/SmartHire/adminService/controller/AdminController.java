@@ -5,6 +5,7 @@ import com.SmartHire.adminService.dto.UserManagementDTO;
 import com.SmartHire.adminService.dto.UserStatusUpdateDTO;
 import com.SmartHire.adminService.model.BanRecord;
 import com.SmartHire.adminService.service.BanRecordService;
+import com.SmartHire.adminService.service.NotificationService;
 import com.SmartHire.adminService.service.UserService;
 import com.SmartHire.common.auth.RequireUserType;
 import com.SmartHire.common.entity.Result;
@@ -36,6 +37,8 @@ public class AdminController {
   @Autowired private UserService userService;
 
   @Autowired private BanRecordService banRecordService;
+
+  @Autowired private NotificationService notificationService;
 
   // ==================== 用户管理接口 ====================
 
@@ -187,5 +190,47 @@ public class AdminController {
     overview.put("bans", banStats);
 
     return Result.success(overview);
+  }
+
+  // ==================== 通知管理接口 ====================
+
+  /** 发送通知给指定用户 */
+  @PostMapping("/notifications/send")
+  public Result<Boolean> sendNotification(
+      @RequestParam @NotNull Long userId,
+      @RequestParam @NotNull Integer type,
+      @RequestParam String title,
+      @RequestParam @NotNull String content) {
+
+    try {
+      notificationService.sendNotification(userId, type, title, content);
+      return Result.success("通知发送成功", true);
+    } catch (Exception e) {
+      log.error("发送通知失败: {}", e.getMessage(), e);
+      return Result.error(500, "通知发送失败: " + e.getMessage());
+    }
+  }
+
+  /** 发送带关联信息的通知 */
+  @PostMapping("/notifications/send-with-related")
+  public Result<Boolean> sendNotificationWithRelated(
+      @RequestParam @NotNull Long userId,
+      @RequestParam @NotNull Integer type,
+      @RequestParam String title,
+      @RequestParam @NotNull String content,
+      @RequestParam(required = false) Long relatedId,
+      @RequestParam(required = false) String relatedType) {
+
+    try {
+      if (relatedId != null && relatedType != null) {
+        notificationService.sendNotification(userId, type, title, content, relatedId, relatedType);
+      } else {
+        notificationService.sendNotification(userId, type, title, content);
+      }
+      return Result.success("通知发送成功", true);
+    } catch (Exception e) {
+      log.error("发送通知失败: {}", e.getMessage(), e);
+      return Result.error(500, "通知发送失败: " + e.getMessage());
+    }
   }
 }

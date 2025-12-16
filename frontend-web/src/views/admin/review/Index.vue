@@ -370,6 +370,35 @@
                   :rows="4"
                 />
               </NFormItem>
+
+              <NFormItem>
+                <NCheckbox v-model:checked="actionForm.sendNotification">
+                  发送通知给HR
+                </NCheckbox>
+              </NFormItem>
+
+              <!-- 通知编辑区域 -->
+              <template v-if="actionForm.sendNotification">
+                <NFormItem label="通知标题">
+                  <NInput
+                    v-model:value="actionForm.notificationTitle"
+                    placeholder="请输入通知标题"
+                    maxlength="100"
+                    show-count
+                  />
+                </NFormItem>
+
+                <NFormItem label="通知内容">
+                  <NInput
+                    v-model:value="actionForm.notificationContent"
+                    type="textarea"
+                    placeholder="请输入通知内容"
+                    :rows="4"
+                    maxlength="500"
+                    show-count
+                  />
+                </NFormItem>
+              </template>
             </NForm>
           </div>
 
@@ -408,6 +437,7 @@ import {
   NModal,
   NForm,
   NFormItem,
+  NCheckbox,
   useMessage
 } from 'naive-ui'
 import type { FormInst } from 'naive-ui'
@@ -423,6 +453,7 @@ import {
   type JobAuditQueryParams,
   type JobAuditParams
 } from '@/api/job'
+import { sendNotificationWithRelated } from '@/api/notification'
 
 interface StatusTab {
   value: string
@@ -514,7 +545,10 @@ const actionLoading = ref(false)
 const currentJob = ref<Job | null>(null)
 const actionFormRef = ref<FormInst | null>(null)
 const actionForm = ref({
-  reason: ''
+  reason: '',
+  sendNotification: false,
+  notificationTitle: '',
+  notificationContent: ''
 })
 
 // 计算属性
@@ -617,7 +651,12 @@ const handleApprove = (job: Job) => {
 const handleReject = (job: Job) => {
   currentJob.value = job
   actionType.value = 'reject'
-  actionForm.value.reason = ''
+  actionForm.value = {
+    reason: '',
+    sendNotification: true,
+    notificationTitle: '职位审核拒绝通知',
+    notificationContent: `您好，您发布的职位《${job.title}》未通过审核。审核意见：请根据要求修改职位信息。如有疑问请联系客服。`
+  }
   showActionModal.value = true
 }
 
@@ -625,7 +664,12 @@ const handleReject = (job: Job) => {
 const handleModify = (job: Job) => {
   currentJob.value = job
   actionType.value = 'modify'
-  actionForm.value.reason = ''
+  actionForm.value = {
+    reason: '',
+    sendNotification: true,
+    notificationTitle: '职位审核修改通知',
+    notificationContent: `您好，您发布的职位《${job.title}》需要修改。修改建议：请根据审核意见完善职位信息。修改后可重新提交审核。如有疑问请联系客服。`
+  }
   showActionModal.value = true
 }
 
@@ -633,7 +677,12 @@ const handleModify = (job: Job) => {
 const handleForceOffline = (job: Job) => {
   currentJob.value = job
   actionType.value = 'offline'
-  actionForm.value.reason = ''
+  actionForm.value = {
+    reason: '',
+    sendNotification: true,
+    notificationTitle: '职位下线通知',
+    notificationContent: `您好，您发布的职位《${job.title}》已被管理员下线。下线原因：请管理员填写具体原因。如有疑问请联系客服。`
+  }
   showActionModal.value = true
 }
 
@@ -654,12 +703,60 @@ const confirmAction = async () => {
     } else if (actionType.value === 'reject') {
       await rejectJob(currentJob.value.id, params)
       message.warning(`职位已拒绝，原因：${actionForm.value.reason}`)
+
+      // 如果选择发送通知，则发送拒绝通知
+      if (actionForm.value.sendNotification && currentJob.value.hrUserId) {
+        try {
+          await sendNotificationWithRelated(
+            currentJob.value.hrUserId, // HR的user_id
+            4, // 职位下线类型
+            actionForm.value.notificationTitle,
+            actionForm.value.notificationContent,
+            currentJob.value.id,
+            'job'
+          )
+        } catch (notificationError: any) {
+          console.error('发送拒绝通知失败:', notificationError)
+        }
+      }
     } else if (actionType.value === 'modify') {
       await modifyJob(currentJob.value.id, params)
       message.info(`已要求修改职位，建议：${actionForm.value.reason}`)
+
+      // 如果选择发送通知，则发送修改通知
+      if (actionForm.value.sendNotification && currentJob.value.hrUserId) {
+        try {
+          await sendNotificationWithRelated(
+            currentJob.value.hrUserId, // HR的user_id
+            4, // 职位下线类型
+            actionForm.value.notificationTitle,
+            actionForm.value.notificationContent,
+            currentJob.value.id,
+            'job'
+          )
+        } catch (notificationError: any) {
+          console.error('发送修改通知失败:', notificationError)
+        }
+      }
     } else if (actionType.value === 'offline') {
       await forceOfflineJob(currentJob.value.id, params)
       message.warning(`职位已强制下线，原因：${actionForm.value.reason}`)
+
+      // 如果选择发送通知，则发送下线通知
+      if (actionForm.value.sendNotification && currentJob.value.hrUserId) {
+        try {
+          await sendNotificationWithRelated(
+            currentJob.value.hrUserId, // HR的user_id
+            4, // 职位下线类型
+            actionForm.value.notificationTitle,
+            actionForm.value.notificationContent,
+            currentJob.value.id,
+            'job'
+          )
+        } catch (notificationError: any) {
+          console.error('发送下线通知失败:', notificationError)
+        }
+      }
     }
 
     showActionModal.value = false

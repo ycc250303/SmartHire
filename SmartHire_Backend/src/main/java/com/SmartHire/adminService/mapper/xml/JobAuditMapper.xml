@@ -16,6 +16,7 @@
         <result column="audit_status" property="status"/>
         <result column="hr_name" property="publisher"/>
         <result column="created_at" property="createTime"/>
+        <result column="hr_user_id" property="hrUserId"/>
         <collection column="job_id" property="tags" ofType="java.lang.String"
                     select="selectJobTags" />
     </resultMap>
@@ -97,9 +98,11 @@
             jp.description as job_description,
             ja.system_audit_status as audit_status,
             ja.hr_name,
-            DATE_FORMAT(ja.created_at, '%Y-%m-%d %H:%i:%s') as created_at
+            DATE_FORMAT(ja.created_at, '%Y-%m-%d %H:%i:%s') as created_at,
+            hi.user_id as hr_user_id
         FROM job_audit_record ja
         LEFT JOIN job_info jp ON ja.job_id = jp.id
+        LEFT JOIN hr_info hi ON jp.hr_id = hi.id
         WHERE ja.company_audit_status = 'approved'
         <if test="status != null and status != ''">
             AND ja.system_audit_status = #{status}
