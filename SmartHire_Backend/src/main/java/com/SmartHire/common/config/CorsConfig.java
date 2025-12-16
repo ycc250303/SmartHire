@@ -14,14 +14,14 @@ public class CorsConfig {
     CorsConfiguration config = new CorsConfiguration();
     config.setAllowCredentials(true);
 
+    // 使用set而不是add来避免重复值
     // 指定具体的允许源，不能使用 "*" 当 allowCredentials 为 true 时
-    config.setAllowedOrigins(
-        Arrays.asList(
-            "http://localhost:5173", // Vue开发环境
-            "http://127.0.0.1:5173", // 本地IP访问
-            "http://localhost:3000", // React开发环境
-            "http://127.0.0.1:3000" // 本地IP访问
-            ));
+    config.setAllowedOriginPatterns(Arrays.asList(
+        "http://localhost:5173", // Vue开发环境
+        "http://127.0.0.1:5173", // 本地IP访问
+        "http://localhost:3000", // React开发环境
+        "http://127.0.0.1:3000" // 本地IP访问
+    ));
 
     config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
     config.setAllowedHeaders(
