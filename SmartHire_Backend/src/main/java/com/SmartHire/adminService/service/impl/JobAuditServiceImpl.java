@@ -34,78 +34,100 @@ public class JobAuditServiceImpl extends ServiceImpl<JobAuditMapper, JobAuditRec
   private final JobInfoMapper jobInfoMapper;
 
   @Override
-  public Page<JobAuditListDTO> getAuditList(Page<JobAuditListDTO> page, JobAuditQueryDTO queryDTO) {
-    return jobAuditMapper.selectAuditList(page, queryDTO.getStatus(), queryDTO.getKeyword());
+  public Page<JobAuditListDTO> getAuditList(Page<JobAuditListDTO> page,
+                                            JobAuditQueryDTO queryDTO) {
+    // 系统管理员只查看已通过公司审核的岗位（company_audit_status = 'approved'）
+    // 查询时使用 system_audit_status 作为状态筛选
+    return jobAuditMapper.selectSystemAuditList(page, queryDTO.getStatus(), queryDTO.getKeyword());
   }
 
   @Override
   @Transactional(rollbackFor = Exception.class)
   public void approveJob(Long jobId, Long auditorId, String auditorName) {
-    log.info("开始审核通过职位，职位ID: {}, 审核员: {}", jobId, auditorName);
+    log.info("开始系统审核通过职位，职位ID: {}, 审核员: {}", jobId, auditorName);
 
-    // 验证职位状态
-    JobAuditRecord auditRecord = validateJobStatus(jobId, AuditStatus.PENDING);
+    // 验证职位状态：必须已通过公司审核，且系统审核状态为待审核
+    JobAuditRecord auditRecord = validateSystemJobStatus(jobId, AuditStatus.PENDING);
 
-    // 更新审核记录
-    auditRecord.setStatus(AuditStatus.APPROVED.getCode());
-    auditRecord.setAuditorId(auditorId);
-    auditRecord.setAuditorName(auditorName);
-    auditRecord.setAuditedAt(new Date());
+    Date now = new Date();
+
+    // 更新审核记录（系统审核）
+    auditRecord.setSystemAuditStatus(AuditStatus.APPROVED.getCode());
+    auditRecord.setSystemAuditorId(auditorId);
+    auditRecord.setSystemAuditorName(auditorName);
+    auditRecord.setSystemAuditedAt(now);
+    auditRecord.setStatus(AuditStatus.APPROVED.getCode()); // 兼容字段
+    auditRecord.setAuditorId(auditorId); // 兼容字段
+    auditRecord.setAuditorName(auditorName); // 兼容字段
+    auditRecord.setAuditedAt(now); // 兼容字段
     updateById(auditRecord);
 
     // 更新职位状态
     updateJobInfoAuditStatus(jobId, AuditStatus.APPROVED);
 
-    log.info("职位审核通过完成，职位ID: {}", jobId);
+    log.info("职位系统审核通过完成，职位ID: {}", jobId);
   }
 
   @Override
   @Transactional(rollbackFor = Exception.class)
   public void rejectJob(Long jobId, String rejectReason, Long auditorId, String auditorName) {
-    log.info("开始拒绝职位，职位ID: {}, 审核员: {}, 拒绝原因: {}", jobId, auditorName, rejectReason);
+    log.info("开始系统审核拒绝职位，职位ID: {}, 审核员: {}, 拒绝原因: {}", jobId, auditorName, rejectReason);
 
-    // 验证职位状态
-    JobAuditRecord auditRecord = validateJobStatus(jobId, AuditStatus.PENDING);
+    // 验证职位状态：必须已通过公司审核，且系统审核状态为待审核
+    JobAuditRecord auditRecord = validateSystemJobStatus(jobId, AuditStatus.PENDING);
 
-    // 更新审核记录
-    auditRecord.setStatus(AuditStatus.REJECTED.getCode());
+    Date now = new Date();
+
+    // 更新审核记录（系统审核）
+    auditRecord.setSystemAuditStatus(AuditStatus.REJECTED.getCode());
+    auditRecord.setSystemAuditorId(auditorId);
+    auditRecord.setSystemAuditorName(auditorName);
     auditRecord.setRejectReason(rejectReason);
-    auditRecord.setAuditorId(auditorId);
-    auditRecord.setAuditorName(auditorName);
-    auditRecord.setAuditedAt(new Date());
+    auditRecord.setSystemAuditedAt(now);
+    auditRecord.setStatus(AuditStatus.REJECTED.getCode()); // 兼容字段
+    auditRecord.setAuditorId(auditorId); // 兼容字段
+    auditRecord.setAuditorName(auditorName); // 兼容字段
+    auditRecord.setAuditedAt(now); // 兼容字段
     updateById(auditRecord);
 
     // 更新职位状态
     updateJobInfoAuditStatus(jobId, AuditStatus.REJECTED);
 
-    log.info("职位拒绝审核完成，职位ID: {}", jobId);
+    log.info("职位系统审核拒绝完成，职位ID: {}", jobId);
   }
 
   @Override
   @Transactional(rollbackFor = Exception.class)
   public void modifyJob(Long jobId, String modifyReason, Long auditorId, String auditorName) {
-    log.info("开始要求修改职位，职位ID: {}, 审核员: {}, 修改意见: {}", jobId, auditorName, modifyReason);
+    log.info("开始系统审核要求修改职位，职位ID: {}, 审核员: {}, 修改意见: {}", jobId, auditorName, modifyReason);
 
-    // 验证职位状态
-    JobAuditRecord auditRecord = validateJobStatus(jobId, AuditStatus.PENDING);
+    // 验证职位状态：必须已通过公司审核，且系统审核状态为待审核
+    JobAuditRecord auditRecord = validateSystemJobStatus(jobId, AuditStatus.PENDING);
 
-    // 更新审核记录
-    auditRecord.setStatus(AuditStatus.MODIFIED.getCode());
+    Date now = new Date();
+
+    // 更新审核记录（系统审核）
+    auditRecord.setSystemAuditStatus(AuditStatus.MODIFIED.getCode());
+    auditRecord.setSystemAuditorId(auditorId);
+    auditRecord.setSystemAuditorName(auditorName);
     auditRecord.setAuditReason(modifyReason);
-    auditRecord.setAuditorId(auditorId);
-    auditRecord.setAuditorName(auditorName);
-    auditRecord.setAuditedAt(new Date());
+    auditRecord.setSystemAuditedAt(now);
+    auditRecord.setStatus(AuditStatus.MODIFIED.getCode()); // 兼容字段
+    auditRecord.setAuditorId(auditorId); // 兼容字段
+    auditRecord.setAuditorName(auditorName); // 兼容字段
+    auditRecord.setAuditedAt(now); // 兼容字段
     updateById(auditRecord);
 
     // 更新职位状态
     updateJobInfoAuditStatus(jobId, AuditStatus.MODIFIED);
 
-    log.info("职位要求修改完成，职位ID: {}", jobId);
+    log.info("职位系统审核要求修改完成，职位ID: {}", jobId);
   }
 
   @Override
   public Integer countByStatus(String status) {
-    return jobAuditMapper.countByStatus(status);
+    // 系统管理员统计的是 system_audit_status，且只统计已通过公司审核的
+    return jobAuditMapper.countBySystemStatus(status);
   }
 
   @Override
@@ -116,7 +138,7 @@ public class JobAuditServiceImpl extends ServiceImpl<JobAuditMapper, JobAuditRec
   }
 
   /**
-   * 验证职位状态
+   * 验证职位状态（兼容旧方法）
    *
    * @param jobId 职位ID
    * @param expectedStatus 期望状态
@@ -130,6 +152,32 @@ public class JobAuditServiceImpl extends ServiceImpl<JobAuditMapper, JobAuditRec
 
     if (!expectedStatus.getCode().equals(auditRecord.getStatus())) {
       throw AdminServiceException.operationFailed("职位状态不正确，无法进行审核操作");
+    }
+
+    return auditRecord;
+  }
+
+  /**
+   * 验证系统审核职位状态（必须已通过公司审核，且系统审核状态为待审核）
+   *
+   * @param jobId 职位ID
+   * @param expectedSystemStatus 期望的系统审核状态
+   * @return 审核记录
+   */
+  private JobAuditRecord validateSystemJobStatus(Long jobId, AuditStatus expectedSystemStatus) {
+    JobAuditRecord auditRecord = getAuditDetail(jobId);
+    if (auditRecord == null) {
+      throw AdminServiceException.jobNotFound(jobId);
+    }
+
+    // 验证必须已通过公司审核
+    if (!AuditStatus.APPROVED.getCode().equals(auditRecord.getCompanyAuditStatus())) {
+      throw AdminServiceException.operationFailed("该岗位尚未通过公司审核，无法进行系统审核");
+    }
+
+    // 验证系统审核状态
+    if (!expectedSystemStatus.getCode().equals(auditRecord.getSystemAuditStatus())) {
+      throw AdminServiceException.operationFailed("职位系统审核状态不正确，无法进行审核操作");
     }
 
     return auditRecord;

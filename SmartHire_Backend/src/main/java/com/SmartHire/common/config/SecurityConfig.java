@@ -41,7 +41,12 @@ public class SecurityConfig {
                         "/user-auth/register",
                         "/user-auth/send-verification-code",
                         "/user-auth/verify-code",
-                        "/user-auth/refresh-token")
+                        "/user-auth/refresh-token",
+                        "/swagger-ui/**",
+                        "/swagger-ui.html",
+                        "/v3/api-docs/**",
+                        "/doc.html",
+                        "/public/**")
                     .permitAll()
                     .anyRequest()
                     .authenticated())

@@ -1,5 +1,6 @@
 package com.SmartHire.hrService.service;
 
+import com.SmartHire.hrService.dto.HrInfoCreateDTO;
 import com.SmartHire.hrService.dto.HrInfoDTO;
 import com.SmartHire.hrService.dto.HrInfoUpdateDTO;
 import com.SmartHire.hrService.model.HrInfo;
@@ -16,7 +17,15 @@ public interface HrInfoService extends IService<HrInfo> {
   HrInfoDTO getHrInfo();
 
   /**
-   * 新增当前登录HR的信息（若已存在则进行更新）
+   * 注册HR信息（原 HEAD 功能）
+   *
+   * @param createDTO 创建DTO
+   * @return HR信息ID
+   */
+  Long createHrInfo(HrInfoCreateDTO createDTO);
+
+  /**
+   * 新增当前登录HR的信息（若已存在则进行更新）（原 main 功能）
    *
    * @param updateDTO HR信息
    */

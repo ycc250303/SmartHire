@@ -1,6 +1,8 @@
 package com.SmartHire.hrService.controller;
 
+import com.SmartHire.common.auth.RequireUserType;
 import com.SmartHire.common.entity.Result;
+import com.SmartHire.common.enums.UserType;
 import com.SmartHire.hrService.dto.JobInfoCreateDTO;
 import com.SmartHire.hrService.dto.JobInfoListDTO;
 import com.SmartHire.hrService.dto.JobInfoUpdateDTO;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/hr/job-position")
 @Validated
+@RequireUserType(UserType.HR) // 整个Controller要求HR身份
 public class JobInfoController {
 
   @Autowired private JobInfoService jobInfoService;
@@ -110,5 +113,18 @@ public class JobInfoController {
   public Result<JobInfoListDTO> getJobInfoById(@PathVariable Long jobId) {
     JobInfoListDTO jobInfo = jobInfoService.getJobInfoById(jobId);
     return Result.success("查询成功", jobInfo);
+  }
+
+  /**
+   * 提交岗位审核
+   *
+   * @param jobId 岗位ID
+   * @return 操作结果
+   */
+  @PostMapping("/{jobId}/submit")
+  @Operation(summary = "提交岗位审核", description = "将岗位提交给公司管理员审核")
+  public Result<?> submitJobForAudit(@PathVariable Long jobId) {
+    jobInfoService.submitJobForAudit(jobId);
+    return Result.success("岗位已提交审核");
   }
 }

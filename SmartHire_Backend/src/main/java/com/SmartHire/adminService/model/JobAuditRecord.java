@@ -74,11 +74,67 @@ public class JobAuditRecord implements Serializable {
   @TableField("auditor_name")
   private String auditorName;
 
-  /** 审核时间 */
+  /**
+   * 审核时间（保留用于兼容）
+   */
   @TableField("audited_at")
   private Date auditedAt;
 
-  /** 创建时间 */
+  // ========== 公司审核相关字段 ==========
+  
+  /**
+   * 公司审核状态: pending-待审核 approved-已通过 rejected-已拒绝 modified-需修改
+   */
+  @TableField("company_audit_status")
+  private String companyAuditStatus;
+
+  /**
+   * 公司审核员ID
+   */
+  @TableField("company_auditor_id")
+  private Long companyAuditorId;
+
+  /**
+   * 公司审核员姓名
+   */
+  @TableField("company_auditor_name")
+  private String companyAuditorName;
+
+  /**
+   * 公司审核时间
+   */
+  @TableField("company_audited_at")
+  private Date companyAuditedAt;
+
+  // ========== 系统审核相关字段 ==========
+  
+  /**
+   * 系统审核状态: pending-待审核 approved-已通过 rejected-已拒绝 modified-需修改
+   */
+  @TableField("system_audit_status")
+  private String systemAuditStatus;
+
+  /**
+   * 系统审核员ID
+   */
+  @TableField("system_auditor_id")
+  private Long systemAuditorId;
+
+  /**
+   * 系统审核员姓名
+   */
+  @TableField("system_auditor_name")
+  private String systemAuditorName;
+
+  /**
+   * 系统审核时间
+   */
+  @TableField("system_audited_at")
+  private Date systemAuditedAt;
+
+  /**
+   * 创建时间
+   */
   @TableField(value = "created_at", fill = FieldFill.INSERT)
   private Date createdAt;
 
@@ -87,7 +143,26 @@ public class JobAuditRecord implements Serializable {
   private Date updatedAt;
 
   /**
-   * 判断是否可以审核
+   * 判断是否可以审核（公司审核）
+   *
+   * @return true如果可以审核
+   */
+  public boolean isCompanyAuditable() {
+    return AuditStatus.PENDING.getCode().equals(this.companyAuditStatus);
+  }
+
+  /**
+   * 判断是否可以审核（系统审核）
+   *
+   * @return true如果可以审核
+   */
+  public boolean isSystemAuditable() {
+    return AuditStatus.PENDING.getCode().equals(this.systemAuditStatus) 
+        && AuditStatus.APPROVED.getCode().equals(this.companyAuditStatus);
+  }
+
+  /**
+   * 判断是否可以审核（兼容旧方法）
    *
    * @return true如果可以审核
    */
@@ -127,5 +202,23 @@ public class JobAuditRecord implements Serializable {
 
   public void setUpdatedAt(Date updatedAt) {
     this.updatedAt = updatedAt == null ? null : new Date(updatedAt.getTime());
+  }
+
+  // 防御性复制方法 - 公司审核时间
+  public Date getCompanyAuditedAt() {
+    return companyAuditedAt == null ? null : new Date(companyAuditedAt.getTime());
+  }
+
+  public void setCompanyAuditedAt(Date companyAuditedAt) {
+    this.companyAuditedAt = companyAuditedAt == null ? null : new Date(companyAuditedAt.getTime());
+  }
+
+  // 防御性复制方法 - 系统审核时间
+  public Date getSystemAuditedAt() {
+    return systemAuditedAt == null ? null : new Date(systemAuditedAt.getTime());
+  }
+
+  public void setSystemAuditedAt(Date systemAuditedAt) {
+    this.systemAuditedAt = systemAuditedAt == null ? null : new Date(systemAuditedAt.getTime());
   }
 }
