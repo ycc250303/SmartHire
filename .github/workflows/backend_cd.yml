@@ -1,34 +1,15 @@
 name: SmartHire Backend CD
 
 on:
-  # 方式1: 当 main 分支打 tag 时触发（格式：v*.*.*）
   push:
-    tags:
-      - 'v*'
-  # 方式2: 当 CI 流水线在 main 分支成功完成时触发（更可靠，即使 tag 已存在也会触发）
-  workflow_run:
-    workflows: ["SmartHire Backend CI"]
-    types:
-      - completed
     branches:
       - main
-  # 手动触发（可选）
-  workflow_dispatch:
-    inputs:
-      image_tag:
-        description: 'Docker image tag (默认使用 latest)'
-        required: false
-        default: 'latest'
+
 
 jobs:
   deploy:
     name: Deploy to Production
     runs-on: ubuntu-latest
-    # 只在 CI 成功完成时执行（workflow_run 触发时）
-    if: |
-      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
-      github.event_name == 'push' ||
-      github.event_name == 'workflow_dispatch'
 
     steps:
       # 1. 获取版本号（从 tag 或 pom.xml）
