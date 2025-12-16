@@ -10,6 +10,7 @@ import com.SmartHire.adminService.service.UserService;
 import com.SmartHire.common.auth.RequireUserType;
 import com.SmartHire.common.entity.Result;
 import com.SmartHire.common.enums.UserType;
+import com.SmartHire.common.exception.enums.ErrorCode;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -78,7 +79,7 @@ public class AdminController {
     if (result) {
       return Result.success("用户状态更新成功", true);
     } else {
-      return Result.error(500, "用户状态更新失败");
+      return Result.error(ErrorCode.ADMIN_OPERATION_FAILED);
     }
   }
 
@@ -135,7 +136,7 @@ public class AdminController {
     if (result) {
       return Result.success("解除封禁成功", true);
     } else {
-      return Result.error(500, "解除封禁失败");
+      return Result.error(ErrorCode.ADMIN_UNBAN_FAILED);
     }
   }
 
@@ -207,7 +208,8 @@ public class AdminController {
       return Result.success("通知发送成功", true);
     } catch (Exception e) {
       log.error("发送通知失败: {}", e.getMessage(), e);
-      return Result.error(500, "通知发送失败: " + e.getMessage());
+      return Result.error(ErrorCode.ADMIN_NOTIFICATION_SEND_FAILED.getCode(),
+                        "通知发送失败: " + e.getMessage());
     }
   }
 
@@ -230,7 +232,8 @@ public class AdminController {
       return Result.success("通知发送成功", true);
     } catch (Exception e) {
       log.error("发送通知失败: {}", e.getMessage(), e);
-      return Result.error(500, "通知发送失败: " + e.getMessage());
+      return Result.error(ErrorCode.ADMIN_NOTIFICATION_SEND_FAILED.getCode(),
+                        "通知发送失败: " + e.getMessage());
     }
   }
 }

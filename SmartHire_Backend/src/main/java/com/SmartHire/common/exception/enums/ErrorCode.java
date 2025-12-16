@@ -89,6 +89,8 @@ public enum ErrorCode {
     ADMIN_INVALID_BAN_TYPE(1506, "无效的封禁类型"),
     ADMIN_BAN_DAYS_MUST_BE_POSITIVE(1507, "封禁天数必须大于0"),
     ADMIN_OPERATION_FAILED(1508, "管理员操作失败"),
+    ADMIN_UNBAN_FAILED(1509, "解除封禁失败"),
+    ADMIN_NOTIFICATION_SEND_FAILED(1510, "通知发送失败"),
 
     // 举报管理相关错误码 (1590-1599)
     REPORT_NOT_FOUND(1590, "举报记录不存在"),

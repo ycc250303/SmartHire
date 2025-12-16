@@ -34,7 +34,7 @@ public class JobAuditController {
   @Autowired private UserContext userContext;
 
   /**
-   * 获取审核列表（完全支持前端功能）
+   * 获取审核列表
    *
    * @param queryDTO 查询条件
    * @return 分页结果
