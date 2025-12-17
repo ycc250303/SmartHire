@@ -57,10 +57,3 @@ server:
   port: 8080
   servlet:
     context-path: /smarthire/api
-
-# JWT 配置
-jwt:
-  secret-key: SmartHire  # JWT 签名密钥
-  refresh-token-valid-time: 604800000  # Refresh Token 有效期：7天（毫秒）
-  access-token-valid-time: 604800000  # Access Token 有效期：7天（毫秒）
-

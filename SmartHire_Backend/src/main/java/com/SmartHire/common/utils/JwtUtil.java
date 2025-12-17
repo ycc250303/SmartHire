@@ -53,23 +53,23 @@ public class JwtUtil {
    */
   public DecodedJWT verifyToken(String token) {
     if (token == null || token.isBlank()) {
-      log.error("❌ Token验证失败: token为空");
+      log.error("Token验证失败: token为空");
       throw new BusinessException(ErrorCode.TOKEN_IS_NULL);
     }
 
     log.info(
-        "🔐 开始验证token，长度: {}, 前缀: {}",
+        "开始验证token，长度: {}, 前缀: {}",
         token.length(),
         token.substring(0, Math.min(20, token.length())) + "...");
 
     try {
       DecodedJWT decoded = JWT.require(algorithm).build().verify(token);
-      log.info("✅ Token验证成功");
+      log.info("Token验证成功");
       log.info("- Token类型: {}", decoded.getClaim("type").asString());
       log.info("- 过期时间: {}", decoded.getExpiresAt());
       return decoded;
     } catch (JWTVerificationException e) {
-      log.error("❌ Token验证失败: {}", e.getMessage());
+      log.error("Token验证失败: {}", e.getMessage());
       log.error("失败的token前缀: {}", token.substring(0, Math.min(30, token.length())));
       throw new BusinessException(ErrorCode.TOKEN_IS_INVALID);
     }
