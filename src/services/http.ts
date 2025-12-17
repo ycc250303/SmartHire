@@ -1,3 +1,5 @@
+import apiConfig from './config.json';
+
 export type HttpMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
 
 type RequestData = UniApp.RequestOptions["data"];
@@ -17,11 +19,84 @@ export interface ApiResponse<T = unknown> {
   message: string;
 }
 
+export class ApiError<T = unknown> extends Error {
+  code: number;
+  data?: T;
+
+  constructor(code: number, message?: string, data?: T) {
+    super(message || "Request failed");
+    this.code = code;
+    this.data = data;
+    this.name = "ApiError";
+    Object.setPrototypeOf(this, ApiError.prototype);
+  }
+}
+
 const DEFAULT_TIMEOUT = 15000;
 const TOKEN_KEY = "auth_token";
 const REFRESH_TOKEN_KEY = "auth_refresh_token";
 const TOKEN_EXPIRE_KEY = "auth_token_expire";
 const SUCCESS_CODE = 0;
+
+export function getApiPathFromUrl(url: string): string {
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    try {
+      const urlObj = new URL(url);
+      return urlObj.pathname;
+    } catch {
+      return url;
+    }
+  }
+  
+  const queryIndex = url.indexOf('?');
+  if (queryIndex !== -1) {
+    return url.substring(0, queryIndex);
+  }
+  
+  return url;
+}
+
+function matchApiPath(apiPath: string, pattern: string): boolean {
+  if (pattern === apiPath) {
+    return true;
+  }
+  if (pattern.endsWith('/*')) {
+    const basePattern = pattern.slice(0, -2);
+    return apiPath.startsWith(basePattern + '/') || apiPath === basePattern;
+  }
+  return false;
+}
+
+function getEnvironmentForApi(apiPath: string): 'dev' | 'prod' | null {
+  const mappings = apiConfig.apiMappings;
+  
+  for (const [pattern, env] of Object.entries(mappings)) {
+    if (matchApiPath(apiPath, pattern)) {
+      return env as 'dev' | 'prod';
+    }
+  }
+  
+  return null;
+}
+
+export function getApiBaseUrl(apiPath: string): string {
+  const env = getEnvironmentForApi(apiPath);
+  
+  let baseUrl = "";
+  if (env === 'dev') {
+    baseUrl = import.meta.env.VITE_API_BASE_URL_DEV || import.meta.env.VITE_API_BASE_URL || "";
+  } else if (env === 'prod') {
+    baseUrl = import.meta.env.VITE_API_BASE_URL_PROD || import.meta.env.VITE_API_BASE_URL || "";
+  } else {
+    baseUrl = import.meta.env.VITE_API_BASE_URL || "";
+  }
+  
+  if (baseUrl && !baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
+    baseUrl = `http://${baseUrl}`;
+  }
+  
+  return baseUrl;
+}
 
 /**
  * Get stored access token
@@ -150,9 +225,10 @@ async function refreshAccessToken(): Promise<void> {
         throw new Error("No refresh token available");
       }
 
-      const baseUrl = import.meta.env.VITE_API_BASE_URL || "";
+      const apiPath = '/api/user-auth/refresh-token';
+      const baseUrl = getApiBaseUrl(apiPath);
       let normalizedBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
-      let normalizedPath = '/api/user-auth/refresh-token';
+      let normalizedPath = apiPath;
       
       if (normalizedBaseUrl.endsWith('/api') && normalizedPath.startsWith('/api')) {
         normalizedPath = normalizedPath.replace(/^\/api/, '');
@@ -160,13 +236,14 @@ async function refreshAccessToken(): Promise<void> {
       
       const fullUrl = `${normalizedBaseUrl}${normalizedPath}`;
 
+      const requestData = { refreshToken: refreshToken };
+      console.log('[Params]', apiPath, requestData);
+
       const response = await new Promise<UniApp.RequestSuccessCallbackResult>((resolve, reject) => {
         uni.request({
           url: fullUrl,
           method: 'POST',
-          data: {
-            refreshToken: refreshToken,
-          },
+          data: requestData,
           header: {
             "Content-Type": "application/json",
           },
@@ -184,6 +261,7 @@ async function refreshAccessToken(): Promise<void> {
         }>;
 
         if (apiResponse.code === SUCCESS_CODE && apiResponse.data) {
+          console.log('[Response]', apiPath, apiResponse.data);
           setTokens(
             apiResponse.data.accessToken,
             apiResponse.data.refreshToken,
@@ -212,9 +290,13 @@ async function refreshAccessToken(): Promise<void> {
 export function http<TResponse = unknown, TData extends RequestData = RequestData>(
   config: HttpRequestConfig<TData>,
 ): Promise<TResponse> {
-  const baseUrl = import.meta.env.VITE_API_BASE_URL || "";
+  const apiPath = getApiPathFromUrl(config.url);
+  const baseUrl = getApiBaseUrl(apiPath);
 
   return new Promise((resolve, reject) => {
+    // Ensure we only retry once after a 401 to avoid infinite loops
+    let retryCount = 0;
+
     const makeRequest = async (): Promise<void> => {
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
@@ -235,25 +317,44 @@ export function http<TResponse = unknown, TData extends RequestData = RequestDat
         normalizedPath = normalizedPath.replace(/^\/api/, '');
       }
       
-      const fullUrl = `${normalizedBaseUrl}${normalizedPath}`;
+      const fullUrl = normalizedBaseUrl ? `${normalizedBaseUrl}${normalizedPath}` : normalizedPath;
 
       uni.request({
         url: fullUrl,
-        method: config.method ?? "GET",
+        method: (config.method ?? "GET") as UniApp.RequestOptions["method"],
         data: config.data,
         header: headers,
         timeout: config.timeout ?? DEFAULT_TIMEOUT,
         success({ statusCode, data }) {
           if (statusCode >= 200 && statusCode < 300) {
             const response = data as ApiResponse<TResponse>;
-            
-            if (response.code === SUCCESS_CODE || statusCode === 200) {
-              resolve(response.data);
+
+            if (response && typeof response === 'object' && 'code' in response) {
+              if (response.code === SUCCESS_CODE) {
+                resolve(response.data as TResponse);
+              } else {
+                console.error(`API Error [${config.url}]:`, response.message);
+                reject(new ApiError(response.code, response.message, response.data));
+              }
             } else {
-              console.error(`API Error [${config.url}]:`, response.message);
-              reject(new Error(response.message || "Request failed"));
+              resolve(response as TResponse);
             }
           } else if (statusCode === 401 && !config.skipAuth) {
+            if (retryCount >= 1 || apiPath === '/api/user-auth/logout') {
+              // Already retried once, or logout explicitly: fail fast to avoid loops
+              clearToken();
+              uni.redirectTo({
+                url: '/pages/auth/login',
+                fail: () => {
+                  console.error('Failed to redirect to login page');
+                }
+              });
+              reject(new Error("Unauthorized"));
+              return;
+            }
+
+            retryCount += 1;
+
             refreshAccessToken()
               .then(() => {
                 makeRequest();
@@ -271,7 +372,12 @@ export function http<TResponse = unknown, TData extends RequestData = RequestDat
               });
           } else {
             console.error(`HTTP Error [${config.url}]: ${statusCode}`, data);
-            reject(new Error(`Request failed with status ${statusCode}`));
+            const resp = data as Partial<ApiResponse<TResponse>>;
+            if (resp && typeof resp === 'object' && 'code' in resp && 'message' in resp) {
+              reject(new ApiError(resp.code as number, resp.message as string, resp.data as TResponse));
+            } else {
+              reject(new Error(`Request failed with status ${statusCode}`));
+            }
           }
         },
         fail(error) {

@@ -35,10 +35,15 @@ export interface UpdateEducationExperienceParams {
  * Add education experience
  */
 export function addEducationExperience(params: AddEducationExperienceParams): Promise<EducationExperience> {
+  const url = '/api/seeker/add-education-experience';
+  console.log('[Params]', url, params);
   return http<EducationExperience>({
-    url: '/api/seeker/add-education-experience',
+    url,
     method: 'POST',
     data: params,
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
   });
 }
 
@@ -46,9 +51,14 @@ export function addEducationExperience(params: AddEducationExperienceParams): Pr
  * Get all education experiences
  */
 export function getEducationExperiences(): Promise<EducationExperience[]> {
+  const url = '/api/seeker/get-education-experiences';
+  console.log('[Params]', url, null);
   return http<EducationExperience[]>({
-    url: '/api/seeker/get-education-experiences',
+    url,
     method: 'GET',
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
   });
 }
 
@@ -56,10 +66,15 @@ export function getEducationExperiences(): Promise<EducationExperience[]> {
  * Update education experience
  */
 export function updateEducationExperience(id: number, params: UpdateEducationExperienceParams): Promise<EducationExperience> {
+  const url = `/api/seeker/update-education-experience/${id}`;
+  console.log('[Params]', url, { id, ...params });
   return http<EducationExperience>({
-    url: `/api/seeker/update-education-experience/${id}`,
+    url,
     method: 'PATCH',
     data: params,
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
   });
 }
 
@@ -67,9 +82,14 @@ export function updateEducationExperience(id: number, params: UpdateEducationExp
  * Delete education experience
  */
 export function deleteEducationExperience(id: number): Promise<null> {
+  const url = `/api/seeker/delete-education-experience/${id}`;
+  console.log('[Params]', url, { id });
   return http<null>({
-    url: `/api/seeker/delete-education-experience/${id}`,
+    url,
     method: 'DELETE',
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
   });
 }
 
@@ -106,10 +126,15 @@ export interface UpdateProjectExperienceParams {
  * Add project experience
  */
 export function addProjectExperience(params: AddProjectExperienceParams): Promise<ProjectExperience> {
+  const url = '/api/seeker/add-project-experience';
+  console.log('[Params]', url, params);
   return http<ProjectExperience>({
-    url: '/api/seeker/add-project-experience',
+    url,
     method: 'POST',
     data: params,
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
   });
 }
 
@@ -117,9 +142,14 @@ export function addProjectExperience(params: AddProjectExperienceParams): Promis
  * Get all project experiences
  */
 export function getProjectExperiences(): Promise<ProjectExperience[]> {
+  const url = '/api/seeker/get-project-experiences';
+  console.log('[Params]', url, null);
   return http<ProjectExperience[]>({
-    url: '/api/seeker/get-project-experiences',
+    url,
     method: 'GET',
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
   });
 }
 
@@ -127,10 +157,15 @@ export function getProjectExperiences(): Promise<ProjectExperience[]> {
  * Update project experience
  */
 export function updateProjectExperience(id: number, params: UpdateProjectExperienceParams): Promise<ProjectExperience> {
+  const url = `/api/seeker/update-project-experience/${id}`;
+  console.log('[Params]', url, { id, ...params });
   return http<ProjectExperience>({
-    url: `/api/seeker/update-project-experience/${id}`,
+    url,
     method: 'PATCH',
     data: params,
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
   });
 }
 
@@ -138,9 +173,14 @@ export function updateProjectExperience(id: number, params: UpdateProjectExperie
  * Delete project experience
  */
 export function deleteProjectExperience(id: number): Promise<null> {
+  const url = `/api/seeker/delete-project-experience/${id}`;
+  console.log('[Params]', url, { id });
   return http<null>({
-    url: `/api/seeker/delete-project-experience/${id}`,
+    url,
     method: 'DELETE',
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
   });
 }
 
@@ -183,10 +223,15 @@ export interface UpdateWorkExperienceParams {
  * Add work experience
  */
 export function addWorkExperience(params: AddWorkExperienceParams): Promise<WorkExperience> {
+  const url = '/api/seeker/add-work-experience';
+  console.log('[Params]', url, params);
   return http<WorkExperience>({
-    url: '/api/seeker/add-work-experience',
+    url,
     method: 'POST',
     data: params,
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
   });
 }
 
@@ -194,9 +239,14 @@ export function addWorkExperience(params: AddWorkExperienceParams): Promise<Work
  * Get all work experiences
  */
 export function getWorkExperiences(): Promise<WorkExperience[]> {
+  const url = '/api/seeker/get-work-experiences';
+  console.log('[Params]', url, null);
   return http<WorkExperience[]>({
-    url: '/api/seeker/get-work-experiences',
+    url,
     method: 'GET',
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
   });
 }
 
@@ -204,10 +254,15 @@ export function getWorkExperiences(): Promise<WorkExperience[]> {
  * Update work experience
  */
 export function updateWorkExperience(id: number, params: UpdateWorkExperienceParams): Promise<WorkExperience> {
+  const url = `/api/seeker/update-work-experience/${id}`;
+  console.log('[Params]', url, { id, ...params });
   return http<WorkExperience>({
-    url: `/api/seeker/update-work-experience/${id}`,
+    url,
     method: 'PATCH',
     data: params,
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
   });
 }
 
@@ -215,9 +270,14 @@ export function updateWorkExperience(id: number, params: UpdateWorkExperiencePar
  * Delete work experience
  */
 export function deleteWorkExperience(id: number): Promise<null> {
+  const url = `/api/seeker/delete-work-experience/${id}`;
+  console.log('[Params]', url, { id });
   return http<null>({
-    url: `/api/seeker/delete-work-experience/${id}`,
+    url,
     method: 'DELETE',
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
   });
 }
 
@@ -242,10 +302,15 @@ export interface UpdateSkillParams {
  * Add skill
  */
 export function addSkill(params: AddSkillParams): Promise<Skill> {
+  const url = '/api/seeker/add-skill';
+  console.log('[Params]', url, params);
   return http<Skill>({
-    url: '/api/seeker/add-skill',
+    url,
     method: 'POST',
     data: params,
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
   });
 }
 
@@ -253,9 +318,14 @@ export function addSkill(params: AddSkillParams): Promise<Skill> {
  * Get all skills
  */
 export function getSkills(): Promise<Skill[]> {
+  const url = '/api/seeker/get-skills';
+  console.log('[Params]', url, null);
   return http<Skill[]>({
-    url: '/api/seeker/get-skills',
+    url,
     method: 'GET',
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
   });
 }
 
@@ -263,10 +333,15 @@ export function getSkills(): Promise<Skill[]> {
  * Update skill
  */
 export function updateSkill(id: number, params: UpdateSkillParams): Promise<Skill> {
+  const url = `/api/seeker/update-skill/${id}`;
+  console.log('[Params]', url, { id, ...params });
   return http<Skill>({
-    url: `/api/seeker/update-skill/${id}`,
+    url,
     method: 'PATCH',
     data: params,
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
   });
 }
 
@@ -274,9 +349,14 @@ export function updateSkill(id: number, params: UpdateSkillParams): Promise<Skil
  * Delete skill
  */
 export function deleteSkill(id: number): Promise<null> {
+  const url = `/api/seeker/delete-skill/${id}`;
+  console.log('[Params]', url, { id });
   return http<null>({
-    url: `/api/seeker/delete-skill/${id}`,
+    url,
     method: 'DELETE',
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
   });
 }
 
@@ -310,10 +390,15 @@ export interface UpdateJobSeekerExpectationParams {
  * Add job seeker expectation
  */
 export function addJobSeekerExpectation(params: AddJobSeekerExpectationParams): Promise<JobSeekerExpectation> {
+  const url = '/api/seeker/add-job-seeker-expectation';
+  console.log('[Params]', url, params);
   return http<JobSeekerExpectation>({
-    url: '/api/seeker/add-job-seeker-expectation',
+    url,
     method: 'POST',
     data: params,
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
   });
 }
 
@@ -321,9 +406,14 @@ export function addJobSeekerExpectation(params: AddJobSeekerExpectationParams): 
  * Get all job seeker expectations
  */
 export function getJobSeekerExpectations(): Promise<JobSeekerExpectation[]> {
+  const url = '/api/seeker/get-job-seeker-expectations';
+  console.log('[Params]', url, null);
   return http<JobSeekerExpectation[]>({
-    url: '/api/seeker/get-job-seeker-expectations',
+    url,
     method: 'GET',
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
   });
 }
 
@@ -331,10 +421,15 @@ export function getJobSeekerExpectations(): Promise<JobSeekerExpectation[]> {
  * Update job seeker expectation
  */
 export function updateJobSeekerExpectation(id: number, params: UpdateJobSeekerExpectationParams): Promise<JobSeekerExpectation> {
+  const url = `/api/seeker/update-job-seeker-expectation/${id}`;
+  console.log('[Params]', url, { id, ...params });
   return http<JobSeekerExpectation>({
-    url: `/api/seeker/update-job-seeker-expectation/${id}`,
+    url,
     method: 'PATCH',
     data: params,
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
   });
 }
 
@@ -342,9 +437,14 @@ export function updateJobSeekerExpectation(id: number, params: UpdateJobSeekerEx
  * Delete job seeker expectation
  */
 export function deleteJobSeekerExpectation(id: number): Promise<null> {
+  const url = `/api/seeker/delete-job-seeker-expectation/${id}`;
+  console.log('[Params]', url, { id });
   return http<null>({
-    url: `/api/seeker/delete-job-seeker-expectation/${id}`,
+    url,
     method: 'DELETE',
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
   });
 }
 
@@ -371,10 +471,15 @@ export interface RegisterSeekerParams {
  * Register seeker information
  */
 export function registerSeeker(params: RegisterSeekerParams): Promise<SeekerInfo> {
+  const url = '/api/seeker/register-seeker';
+  console.log('[Params]', url, params);
   return http<SeekerInfo>({
-    url: '/api/seeker/register-seeker',
+    url,
     method: 'POST',
     data: params,
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
   });
 }
 
@@ -382,9 +487,14 @@ export function registerSeeker(params: RegisterSeekerParams): Promise<SeekerInfo
  * Get seeker information
  */
 export function getSeekerInfo(): Promise<SeekerInfo> {
+  const url = '/api/seeker/get-seeker-info';
+  console.log('[Params]', url, null);
   return http<SeekerInfo>({
-    url: '/api/seeker/get-seeker-info',
+    url,
     method: 'GET',
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
   });
 }
 
@@ -392,10 +502,15 @@ export function getSeekerInfo(): Promise<SeekerInfo> {
  * Update seeker basic information
  */
 export function updateSeekerInfo(params: Partial<SeekerInfo>): Promise<SeekerInfo> {
+  const url = '/api/seeker/update-seeker-info';
+  console.log('[Params]', url, params);
   return http<SeekerInfo>({
-    url: '/api/seeker/update-seeker-info',
+    url,
     method: 'PATCH',
     data: params,
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
   });
 }
 

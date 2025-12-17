@@ -45,9 +45,14 @@ export interface SendMessageParams {
 
 // Get conversations list
 export function getConversations(): Promise<Conversation[]> {
+  const url = '/api/message/get-conversations';
+  console.log('[Params]', url, null);
   return http<Conversation[]>({
-    url: '/api/message/get-conversations',
+    url,
     method: 'GET',
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
   });
 }
 
@@ -69,57 +74,88 @@ export function getChatHistory(params: GetChatHistoryParams): Promise<Message[]>
     .map(key => `${key}=${encodeURIComponent(queryParams[key])}`)
     .join('&');
   
+  const url = `/api/message/get-chat-history?${queryString}`;
+  console.log('[Params]', url, params);
   return http<Message[]>({
-    url: `/api/message/get-chat-history?${queryString}`,
+    url,
     method: 'GET',
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
   });
 }
 
 // Send message
 export function sendMessage(params: SendMessageParams): Promise<Message> {
+  const url = '/api/message/send-text';
+  const requestData = {
+    receiverId: params.receiverId,
+    applicationId: params.applicationId,
+    messageType: params.messageType,
+    content: params.content,
+    fileUrl: params.fileUrl,
+    replyTo: params.replyTo,
+  };
+  console.log('[Params]', url, requestData);
   return http<Message>({
-    url: '/api/message/send-text',
+    url,
     method: 'POST',
-    data: {
-      receiverId: params.receiverId,
-      applicationId: params.applicationId,
-      messageType: params.messageType,
-      content: params.content,
-      fileUrl: params.fileUrl,
-      replyTo: params.replyTo,
-    },
+    data: requestData,
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
   });
 }
 
 // Mark messages as read
 export function markAsRead(conversationId: number): Promise<null> {
   const queryString = `conversationId=${encodeURIComponent(conversationId)}`;
+  const url = `/api/message/read?${queryString}`;
+  console.log('[Params]', url, { conversationId });
   return http<null>({
-    url: `/api/message/read?${queryString}`,
+    url,
     method: 'PATCH',
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
   });
 }
 
 // Pin or unpin conversation
 export function pinConversation(id: number, pinned: boolean): Promise<null> {
+  const url = `/api/message/pin-conversation/${id}?pinned=${pinned}`;
+  console.log('[Params]', url, { id, pinned });
   return http<null>({
-    url: `/api/message/pin-conversation/${id}?pinned=${pinned}`,
+    url,
     method: 'PATCH',
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
   });
 }
 
 // Delete conversation
 export function deleteConversation(id: number): Promise<null> {
+  const url = `/api/message/delete-conversation/${id}`;
+  console.log('[Params]', url, { id });
   return http<null>({
-    url: `/api/message/delete-conversation/${id}`,
+    url,
     method: 'DELETE',
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
   });
 }
 
 // Get unread message count
 export function getUnreadCount(): Promise<number> {
+  const url = '/api/message/get-unread-count';
+  console.log('[Params]', url, null);
   return http<number>({
-    url: '/api/message/get-unread-count',
+    url,
     method: 'GET',
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
   });
 }

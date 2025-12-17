@@ -49,38 +49,57 @@ export interface RefreshTokenResponse {
 
 export function sendVerificationCode(params: SendVerificationCodeParams): Promise<null> {
   const queryString = `email=${encodeURIComponent(params.email)}`;
+  const url = `/api/user-auth/send-verification-code?${queryString}`;
+  console.log('[Params]', url, params);
   return http<null>({
-    url: `/api/user-auth/send-verification-code?${queryString}`,
+    url,
     method: 'POST',
     skipAuth: true,
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
   });
 }
 
 export function verifyCode(params: VerifyCodeParams): Promise<null> {
   const queryString = `email=${encodeURIComponent(params.email)}&code=${encodeURIComponent(params.code)}`;
+  const url = `/api/user-auth/verify-code?${queryString}`;
+  console.log('[Params]', url, params);
   return http<null>({
-    url: `/api/user-auth/verify-code?${queryString}`,
+    url,
     method: 'POST',
     skipAuth: true,
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
   });
 }
 
 export function register(params: RegisterParams): Promise<null> {
-  console.log('[DEBUG] Register request:', JSON.stringify(params, null, 2));
+  const url = '/api/user-auth/register';
+  console.log('[Params]', url, params);
   return http<null>({
-    url: '/api/user-auth/register',
+    url,
     method: 'POST',
     data: params,
     skipAuth: true,
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
   });
 }
 
 export function login(params: LoginParams): Promise<LoginResponse> {
+  const url = '/api/user-auth/login';
+  console.log('[Params]', url, params);
   return http<LoginResponse>({
-    url: '/api/user-auth/login',
+    url,
     method: 'POST',
     data: params,
     skipAuth: true,
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
   });
 }
 
@@ -88,9 +107,14 @@ export function login(params: LoginParams): Promise<LoginResponse> {
  * User logout
  */
 export function logout(): Promise<null> {
+  const url = '/api/user-auth/logout';
+  console.log('[Params]', url, null);
   return http<null>({
-    url: '/api/user-auth/logout',
+    url,
     method: 'POST',
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
   });
 }
 
@@ -99,9 +123,14 @@ export function logout(): Promise<null> {
  * @returns New tokens with accessToken, refreshToken and expiresIn
  */
 export function refreshToken(): Promise<RefreshTokenResponse> {
+  const url = '/api/user-auth/refresh-token';
+  console.log('[Params]', url, null);
   return http<RefreshTokenResponse>({
-    url: '/api/user-auth/refresh-token',
+    url,
     method: 'POST',
     skipAuth: true,
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
   });
 }

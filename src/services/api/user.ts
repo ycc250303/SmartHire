@@ -1,4 +1,4 @@
-import { http } from '../http';
+import { http, getApiBaseUrl, getApiPathFromUrl } from '../http';
 
 export interface UserInfo {
   username: string;
@@ -19,9 +19,14 @@ export interface PublicUserInfo {
  * Get current user information
  */
 export function getCurrentUserInfo(): Promise<UserInfo> {
+  const url = '/api/user-auth/user-info';
+  console.log('[Params]', url, null);
   return http<UserInfo>({
-    url: '/api/user-auth/user-info',
+    url,
     method: 'GET',
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
   });
 }
 
@@ -29,10 +34,15 @@ export function getCurrentUserInfo(): Promise<UserInfo> {
  * Get public user information by userId
  */
 export function getPublicUserInfo(userId: number): Promise<PublicUserInfo> {
+  const url = `/api/user-auth/public-user-info/${userId}`;
+  console.log('[Params]', url, { userId });
   return http<PublicUserInfo>({
-    url: `/api/user-auth/public-user-info/${userId}`,
+    url,
     method: 'GET',
     skipAuth: true,
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
   });
 }
 
@@ -40,7 +50,8 @@ export function getPublicUserInfo(userId: number): Promise<PublicUserInfo> {
  * Update user avatar with file
  */
 export function updateUserAvatarWithFile(filePath: string): Promise<UserInfo> {
-  const baseUrl = import.meta.env.VITE_API_BASE_URL || "";
+  const apiPath = '/api/user-auth/update-user-avatar';
+  const baseUrl = getApiBaseUrl(apiPath);
   let normalizedBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
   let normalizedPath = '/api/user-auth/update-user-avatar';
   
@@ -51,7 +62,7 @@ export function updateUserAvatarWithFile(filePath: string): Promise<UserInfo> {
   const fullUrl = `${normalizedBaseUrl}${normalizedPath}`;
   const token = uni.getStorageSync('auth_token');
 
-  console.log('Uploading avatar to:', fullUrl);
+  console.log('[Params]', fullUrl, { filePath });
 
   return new Promise((resolve, reject) => {
     // #ifdef H5
@@ -76,8 +87,10 @@ export function updateUserAvatarWithFile(filePath: string): Promise<UserInfo> {
             
             if (xhr.status >= 200 && xhr.status < 300) {
               if (data && data.code === 0) {
+                console.log('[Response]', fullUrl, data.data);
                 resolve(data.data);
               } else if (data && !data.code) {
+                console.log('[Response]', fullUrl, data);
                 resolve(data);
               } else {
                 reject(new Error(data?.message || 'Update failed'));
@@ -121,8 +134,10 @@ export function updateUserAvatarWithFile(filePath: string): Promise<UserInfo> {
           
           if (res.statusCode >= 200 && res.statusCode < 300) {
             if (data && data.code === 0) {
+              console.log('[Response]', fullUrl, data.data);
               resolve(data.data);
             } else if (data && !data.code) {
+              console.log('[Response]', fullUrl, data);
               resolve(data);
             } else {
               reject(new Error(data?.message || 'Update failed'));
@@ -146,10 +161,16 @@ export function updateUserAvatarWithFile(filePath: string): Promise<UserInfo> {
  * Update user avatar with URL
  */
 export function updateUserAvatar(avatarUrl: string): Promise<UserInfo> {
+  const url = '/api/user-auth/update-user-avatar';
+  const requestData = { avatarUrl };
+  console.log('[Params]', url, requestData);
   return http<UserInfo>({
-    url: '/api/user-auth/update-user-avatar',
+    url,
     method: 'PATCH',
-    data: { avatarUrl },
+    data: requestData,
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
   });
 }
 

@@ -322,6 +322,18 @@ async function handleRegister() {
       password: params.password,
     });
 
+    if (!loginResponse || !loginResponse.accessToken || !loginResponse.refreshToken) {
+      uni.showToast({
+        title: 'Auto login failed, please login manually',
+        icon: 'none',
+        duration: 1500,
+      });
+      uni.redirectTo({
+        url: '/pages/auth/login',
+      });
+      return;
+    }
+
     setTokens(
       loginResponse.accessToken,
       loginResponse.refreshToken,

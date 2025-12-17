@@ -341,7 +341,6 @@ async function fetchResume() {
     
     userInfo.value = userInfoData;
     resume.value = resumeData;
-    console.log('Resume data loaded successfully');
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
     console.error('Failed to load resume:', errorMsg);

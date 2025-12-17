@@ -1,4 +1,4 @@
-import { http } from '../http';
+import { http, getApiBaseUrl } from '../http';
 
 // Resume
 export interface Resume {
@@ -27,7 +27,8 @@ export interface UpdateResumeParams {
  * Upload resume file (PDF only)
  */
 export function uploadResume(params: UploadResumeParams): Promise<Resume> {
-  const baseUrl = import.meta.env.VITE_API_BASE_URL || "";
+  const apiPath = '/api/seeker/upload-resume';
+  const baseUrl = getApiBaseUrl(apiPath);
   let normalizedBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
   let normalizedPath = '/api/seeker/upload-resume';
   
@@ -37,6 +38,8 @@ export function uploadResume(params: UploadResumeParams): Promise<Resume> {
   
   const fullUrl = `${normalizedBaseUrl}${normalizedPath}`;
   const token = uni.getStorageSync('auth_token');
+
+  console.log('[Params]', fullUrl, params);
 
   return new Promise((resolve, reject) => {
     // #ifdef H5
@@ -64,8 +67,10 @@ export function uploadResume(params: UploadResumeParams): Promise<Resume> {
               
               if (xhr.status >= 200 && xhr.status < 300) {
                 if (data && data.code === 0) {
+                  console.log('[Response]', fullUrl, data.data);
                   resolve(data.data);
                 } else if (data && !data.code) {
+                  console.log('[Response]', fullUrl, data);
                   resolve(data);
                 } else {
                   reject(new Error(data?.message || 'Upload failed'));
@@ -110,8 +115,10 @@ export function uploadResume(params: UploadResumeParams): Promise<Resume> {
             
             if (res.statusCode >= 200 && res.statusCode < 300) {
               if (data && data.code === 0) {
+                console.log('[Response]', fullUrl, data.data);
                 resolve(data.data);
               } else if (data && !data.code) {
+                console.log('[Response]', fullUrl, data);
                 resolve(data);
               } else {
                 reject(new Error(data?.message || 'Upload failed'));
@@ -153,8 +160,10 @@ export function uploadResume(params: UploadResumeParams): Promise<Resume> {
           
           if (res.statusCode >= 200 && res.statusCode < 300) {
             if (data && data.code === 0) {
+              console.log('[Response]', fullUrl, data.data);
               resolve(data.data);
             } else if (data && !data.code) {
+              console.log('[Response]', fullUrl, data);
               resolve(data);
             } else {
               reject(new Error(data?.message || 'Upload failed'));
@@ -178,9 +187,14 @@ export function uploadResume(params: UploadResumeParams): Promise<Resume> {
  * Get all resumes
  */
 export function getResumes(): Promise<Resume[]> {
+  const url = '/api/seeker/get-resumes';
+  console.log('[Params]', url, null);
   return http<Resume[]>({
-    url: '/api/seeker/get-resumes',
+    url,
     method: 'GET',
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
   });
 }
 
@@ -188,10 +202,15 @@ export function getResumes(): Promise<Resume[]> {
  * Update resume
  */
 export function updateResume(id: number, params: UpdateResumeParams): Promise<Resume> {
+  const url = `/api/seeker/update-resume/${id}`;
+  console.log('[Params]', url, { id, ...params });
   return http<Resume>({
-    url: `/api/seeker/update-resume/${id}`,
+    url,
     method: 'PATCH',
     data: params,
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
   });
 }
 
@@ -199,9 +218,14 @@ export function updateResume(id: number, params: UpdateResumeParams): Promise<Re
  * Delete resume
  */
 export function deleteResume(id: number): Promise<null> {
+  const url = `/api/seeker/delete-resume/${id}`;
+  console.log('[Params]', url, { id });
   return http<null>({
-    url: `/api/seeker/delete-resume/${id}`,
+    url,
     method: 'DELETE',
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
   });
 }
 
