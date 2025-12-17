@@ -76,6 +76,7 @@ public class JobSeekerServiceImpl extends ServiceImpl<JobSeekerMapper, JobSeeker
     jobSeeker.setBirthDate(request.getBirthDate());
     jobSeeker.setCurrentCity(request.getCurrentCity());
     jobSeeker.setJobStatus(request.getJobStatus());
+    jobSeeker.setWorkExperienceYear(request.getWorkExperienceYear());
 
     jobSeeker.setCreatedAt(new Date());
     jobSeeker.setUpdatedAt(new Date());
@@ -126,6 +127,8 @@ public class JobSeekerServiceImpl extends ServiceImpl<JobSeekerMapper, JobSeeker
     dto.setEducation(jobSeeker.getEducation());
     dto.setJobStatus(jobSeeker.getJobStatus());
     dto.setGraduationYear(jobSeeker.getGraduationYear());
+    dto.setWorkExperienceYear(jobSeeker.getWorkExperienceYear());
+    //dto.setInternshipExperience(jobSeeker.getInternshipExperience());
     return dto;
   }
 

@@ -3,7 +3,7 @@ spring:
     name: SmartHire_AdminService
 
 server:
-  port: 8085
+  port: 8086
   servlet:
     context-path: /smarthire/api/admin
 
