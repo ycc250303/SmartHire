@@ -3,13 +3,8 @@ spring:
     import: optional:classpath:/application-local.yml
   application:
     name: SmartHire_Backend
-
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://111.229.81.45:3306/SmartHire?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
-    username: SmartHireManager
-    password: SmartHire123
-
+  jackson:
+    time-zone: Asia/Shanghai
   jpa:
     hibernate:
       ddl-auto: update   # 自动建表（可选值：none, validate, update, create, create-drop）
@@ -18,13 +13,6 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
 
-  # 邮件配置
-  mail:
-    host: smtp.163.com  # 邮件服务器地址（163邮箱）
-    port: 465  # SSL端口
-    username: your-email@163.com  # 发送邮件的邮箱地址（需要替换为实际邮箱）
-    password: your-email-password  # 邮箱授权码（需要替换为实际授权码）
-    from: your-email@163.com  # 发件人邮箱地址（通常与username相同）
 
 # MyBatis-Plus 配置（注意：必须在根节点，不能放在 spring: 下面）
 mybatis-plus:
