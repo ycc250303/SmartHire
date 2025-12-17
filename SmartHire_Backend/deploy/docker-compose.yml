@@ -1,0 +1,13 @@
+version: "3.9"
+
+services:
+  backend:
+    image: smarthire-backend:latest
+    container_name: smarthire-backend
+    restart: always
+    ports:
+      - "8080:8080" # 宿主机 8080 -> 容器 8080（按你实际端口改）
+    env_file:
+      - .env # 生产配置放这里（只在服务器上建，不提交到 git）
+    environment:
+      - TZ=Asia/Shanghai
