@@ -23,6 +23,9 @@ public enum ErrorCode {
   TOKEN_IS_REFRESH_TOKEN(1018, "JWT Token 为 refresh token"),
   PERMISSION_DENIED(1019, "权限不足，仅管理员可执行此操作"),
   CANNOT_DELETE_OTHER_USER(1020, "无权删除其他用户的账户，只能删除自己的账户"),
+  TOKEN_IS_NOT_REFRESH_TOKEN(1021, "JWT Token 不是 refresh token"),
+  TOKEN_IS_NOT_ACCESS_TOKEN(1022, "JWT Token 不是 access token"),
+      TOKEN_IS_IN_BLACKLIST(1023, "JWT Token 在黑名单中"),
 
   // 求职者相关错误码 (1100-1199)
   SEEKER_ALREADY_REGISTERED(1101, "该用户已注册求职者信息，请勿重复注册"),
