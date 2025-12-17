@@ -71,7 +71,7 @@ jobs:
           ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
 
       # 4. 部署到服务器
-      - name: Deploy to server
+            - name: Deploy to server
         env:
           SMARTHIRE_TOKEN: ${{ secrets.SMARTHIRE_TOKEN }}
           IMAGE_NAME: ${{ secrets.IMAGE_NAME }}
