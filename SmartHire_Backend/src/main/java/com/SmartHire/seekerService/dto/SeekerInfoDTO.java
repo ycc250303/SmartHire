@@ -29,6 +29,12 @@ public class SeekerInfoDTO {
   /** 毕业年份 */
   private String graduationYear;
 
+  /** 工作经验（年） */
+  private Integer workExperienceYear;
+
+  /** 是否有实习经验 */
+  private Boolean internshipExperience;
+
   /** 获取出生日期（返回防御性拷贝） */
   public Date getBirthDate() {
     return birthDate == null ? null : new Date(birthDate.getTime());

@@ -22,4 +22,19 @@ public class SeekerCardDTO {
 
   /** 求职状态 */
   private Integer jobStatus;
+
+  /** 工作经验（年） */
+  private Integer workExperienceYear;
+
+  /** 是否有实习经历 */
+  private Boolean internshipExperience;
+
+  /** 最高等级教育经历的大学 */
+  private String university;
+
+  /** 所在城市 */
+  private String city;
+
+  /** 用户头像url */
+  private String avatarUrl;
 }

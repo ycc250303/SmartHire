@@ -41,28 +41,35 @@ public class UserAuthServiceImpl extends ServiceImpl<UserAuthMapper, User>
     implements UserAuthService {
 
   private static final String AVATAR_DIRECTORY_KEY = "avatar";
-  private static final String DEFAULT_AVATAR_URL =
-      "https://smart-hire.oss-cn-shanghai.aliyuncs.com/default-avatar.png";
+  private static final String DEFAULT_AVATAR_URL = "https://smart-hire.oss-cn-shanghai.aliyuncs.com/default-avatar.png";
 
   private static final String ACCESS_BLACKLIST_PREFIX = "token:blacklist:access:";
   private static final String REFRESH_BLACKLIST_PREFIX = "token:blacklist:refresh:";
   private static final String REFRESH_SINGLE_LOGIN_PREFIX = "token:refresh:single:";
 
-  @Autowired private UserAuthMapper userMapper;
+  @Autowired
+  private UserAuthMapper userMapper;
 
-  @Autowired private VerificationCodeService verificationCodeService;
+  @Autowired
+  private VerificationCodeService verificationCodeService;
 
-  @Autowired private PasswordEncoder passwordEncoder;
+  @Autowired
+  private PasswordEncoder passwordEncoder;
 
-  @Autowired private AliOssUtil aliOssUtil;
+  @Autowired
+  private AliOssUtil aliOssUtil;
 
-  @Autowired private JwtUtil jwtUtil;
+  @Autowired
+  private JwtUtil jwtUtil;
 
-  @Autowired private UserContext userContext;
+  @Autowired
+  private UserContext userContext;
 
-  @Autowired private JwtTokenExtractor tokenExtractor;
+  @Autowired
+  private JwtTokenExtractor tokenExtractor;
 
-  @Autowired private RedisTemplate<String, String> redisTemplate;
+  @Autowired
+  private RedisTemplate<String, String> redisTemplate;
 
   @Autowired(required = false)
   private SeekerApi seekerApi;
@@ -121,11 +128,10 @@ public class UserAuthServiceImpl extends ServiceImpl<UserAuthMapper, User>
     user.setLastLoginAt(new Date());
     userMapper.updateById(user);
 
-    Map<String, Object> claims =
-        Map.of(
-            "id", user.getId(),
-            "username", user.getUsername(),
-            "userType", user.getUserType());
+    Map<String, Object> claims = Map.of(
+        "id", user.getId(),
+        "username", user.getUsername(),
+        "userType", user.getUserType());
 
     String accessToken = jwtUtil.generateAccessToken(claims);
     String refreshToken = jwtUtil.generateRefreshToken(claims);
@@ -196,8 +202,7 @@ public class UserAuthServiceImpl extends ServiceImpl<UserAuthMapper, User>
 
     String fileName = aliOssUtil.generateFileUrl(avatarFile.getOriginalFilename());
     try {
-      String avatarUrl =
-          aliOssUtil.uploadFile(AVATAR_DIRECTORY_KEY, fileName, avatarFile.getInputStream());
+      String avatarUrl = aliOssUtil.uploadFile(AVATAR_DIRECTORY_KEY, fileName, avatarFile.getInputStream());
       userMapper.updateUserAvator(avatarUrl, userId);
       removeOldAvatar(oldAvatarUrl, avatarUrl);
       return avatarUrl;
@@ -238,7 +243,7 @@ public class UserAuthServiceImpl extends ServiceImpl<UserAuthMapper, User>
 
     // 确保是 refresh token 类型
     if (!jwtUtil.isRefreshToken(decoded)) {
-      throw new BusinessException(ErrorCode.TOKEN_IS_INVALID);
+      throw new BusinessException(ErrorCode.TOKEN_IS_NOT_REFRESH_TOKEN);
     }
 
     // 检查黑名单
@@ -258,8 +263,7 @@ public class UserAuthServiceImpl extends ServiceImpl<UserAuthMapper, User>
     }
 
     long refreshExpiresInSeconds = jwtUtil.getExpiresInSeconds(decoded);
-    boolean needRenewRefreshToken =
-        TimeUnit.SECONDS.toMillis(refreshExpiresInSeconds) <= refreshTokenRenewThreshold;
+    boolean needRenewRefreshToken = TimeUnit.SECONDS.toMillis(refreshExpiresInSeconds) <= refreshTokenRenewThreshold;
 
     String effectiveRefreshToken = refreshToken;
     if (needRenewRefreshToken) {
@@ -413,7 +417,7 @@ public class UserAuthServiceImpl extends ServiceImpl<UserAuthMapper, User>
    */
   private void ensureNotBlacklisted(String token, String prefix) {
     if (Boolean.TRUE.equals(redisTemplate.hasKey(prefix + token))) {
-      throw new BusinessException(ErrorCode.TOKEN_IS_INVALID);
+      throw new BusinessException(ErrorCode.TOKEN_IS_IN_BLACKLIST);
     }
   }
 

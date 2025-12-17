@@ -3,6 +3,8 @@ package com.SmartHire.seekerService.dto;
 import jakarta.validation.constraints.*;
 import jakarta.validation.groups.Default;
 import java.util.Date;
+
+import lombok.Builder;
 import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -42,4 +44,11 @@ public class SeekerDTO {
       message = "求职状态不能大于3",
       groups = {Create.class, Update.class})
   private Integer jobStatus;
+
+  /** 工作经验（年） */
+  @Min(
+      value = 0,
+      message = "工作经验（年）不能小于0",
+      groups = {Create.class, Update.class})
+  private Integer workExperienceYear;
 }

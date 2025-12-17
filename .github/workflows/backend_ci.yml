@@ -18,7 +18,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          persist-credentials: false  # 用于自定义 token 推送 tag
+          fetch-depth: 0  # 获取完整的Git历史，以便获取提交者信息
 
       # 2. Setup JDK
       - name: Setup JDK 21
@@ -35,23 +35,6 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-m2-
-
-      # 4. Check code format (Spotless) - 自动修改并提交
-      - name: Check code format (Spotless)
-        id: spotless
-        shell: bash
-        run: |
-          echo "Running Spotless check..."
-          if mvn -B spotless:check; then
-            echo "Spotless check passed. No formatting needed."
-            echo "changed=false" >> $GITHUB_OUTPUT
-          else
-            echo "Spotless check failed. Running spotless:apply to auto-format code..."
-            mvn -B spotless:apply
-            echo "Spotless formatting applied successfully."
-            echo "changed=true" >> $GITHUB_OUTPUT
-          fi
-        working-directory: SmartHire_Backend
 
       # 5. Run circular dependency tests
       - name: Run circular dependency tests
@@ -118,8 +101,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.SMARTHIRE_TOKEN }}
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # 配置Git用户信息，使用原始提交者的信息
+          git config --global user.name "${{ github.event.head_commit.author.name }}"
+          git config --global user.email "${{ github.event.head_commit.author.email }}"
+          
           git fetch --tags
           TAG="v${{ env.VERSION }}"
           if git rev-parse "$TAG" >/dev/null 2>&1; then

@@ -48,5 +48,5 @@ public class WorkExperienceDTO {
   private String achievements;
 
   @NotNull(message = "是否是实习经历不能为空", groups = Create.class)
-  private Integer isInternship;
+  private Boolean isInternship;
 }

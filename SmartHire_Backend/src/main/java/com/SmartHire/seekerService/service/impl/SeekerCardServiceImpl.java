@@ -26,19 +26,21 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 public class SeekerCardServiceImpl implements SeekerCardService {
-  private static final Map<Integer, String> EDUCATION_LABEL =
-      Map.ofEntries(
-          Map.entry(0, "高中"),
-          Map.entry(1, "大专"),
-          Map.entry(2, "本科"),
-          Map.entry(3, "硕士"),
-          Map.entry(4, "博士"));
+  private static final Map<Integer, String> EDUCATION_LABEL = Map.ofEntries(
+      Map.entry(0, "高中"),
+      Map.entry(1, "大专"),
+      Map.entry(2, "本科"),
+      Map.entry(3, "硕士"),
+      Map.entry(4, "博士"));
 
-  @Autowired private UserAuthApi userAuthApi;
+  @Autowired
+  private UserAuthApi userAuthApi;
 
-  @Autowired private JobSeekerMapper jobSeekerMapper;
+  @Autowired
+  private JobSeekerMapper jobSeekerMapper;
 
-  @Autowired private EducationExperienceMapper educationExperienceMapper;
+  @Autowired
+  private EducationExperienceMapper educationExperienceMapper;
 
   @Override
   public SeekerCardDTO getJobCard(Long userId) {
@@ -49,9 +51,8 @@ public class SeekerCardServiceImpl implements SeekerCardService {
     try {
       User user = userAuthApi.getUserById(userId);
 
-      JobSeeker jobSeeker =
-          jobSeekerMapper.selectOne(
-              new LambdaQueryWrapper<JobSeeker>().eq(JobSeeker::getUserId, userId));
+      JobSeeker jobSeeker = jobSeekerMapper.selectOne(
+          new LambdaQueryWrapper<JobSeeker>().eq(JobSeeker::getUserId, userId));
       if (jobSeeker == null) {
         throw new BusinessException(ErrorCode.SEEKER_NOT_EXIST);
       }
@@ -85,12 +86,11 @@ public class SeekerCardServiceImpl implements SeekerCardService {
     if (jobSeekerId == null) {
       return null;
     }
-    List<EducationExperience> educationExperiences =
-        educationExperienceMapper.selectList(
-            new LambdaQueryWrapper<EducationExperience>()
-                .eq(EducationExperience::getJobSeekerId, jobSeekerId)
-                .orderByDesc(EducationExperience::getEducation)
-                .orderByDesc(EducationExperience::getEndYear));
+    List<EducationExperience> educationExperiences = educationExperienceMapper.selectList(
+        new LambdaQueryWrapper<EducationExperience>()
+            .eq(EducationExperience::getJobSeekerId, jobSeekerId)
+            .orderByDesc(EducationExperience::getEducation)
+            .orderByDesc(EducationExperience::getEndYear));
     return educationExperiences.isEmpty() ? null : educationExperiences.get(0);
   }
 
@@ -98,8 +98,7 @@ public class SeekerCardServiceImpl implements SeekerCardService {
     if (birthDate == null) {
       return null;
     }
-    LocalDate birth =
-        Instant.ofEpochMilli(birthDate.getTime()).atZone(ZoneId.systemDefault()).toLocalDate();
+    LocalDate birth = Instant.ofEpochMilli(birthDate.getTime()).atZone(ZoneId.systemDefault()).toLocalDate();
     LocalDate today = LocalDate.now();
     if (birth.isAfter(today)) {
       return null;
@@ -116,5 +115,19 @@ public class SeekerCardServiceImpl implements SeekerCardService {
 
   private String resolveEducationName(Integer education) {
     return education == null ? "未知" : EDUCATION_LABEL.getOrDefault(education, "未知");
+  }
+
+  @Override
+  public  List<SeekerCardDTO> getAllSeekerCards() {
+    return jobSeekerMapper.getAllSeekerCards();
+  }
+
+
+  @Override
+  public List<SeekerCardDTO> getSeekersByMultipleConditions(
+      String city, Integer education, Double salaryMin, Double salaryMax,
+      Integer isInternship, Integer jobStatus, Integer hasInternship) {
+    return jobSeekerMapper.getSeekerCardsByMultipleConditions(
+        city, education, salaryMin, salaryMax, isInternship, jobStatus, hasInternship);
   }
 }
