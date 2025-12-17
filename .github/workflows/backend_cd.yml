@@ -71,22 +71,24 @@ jobs:
           ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
 
       # 4. 部署到服务器
-            - name: Deploy to server
+      - name: Deploy to server
         env:
           SMARTHIRE_TOKEN: ${{ secrets.SMARTHIRE_TOKEN }}
           IMAGE_NAME: ${{ secrets.IMAGE_NAME }}
           IMAGE_TAG: ${{ steps.get_version.outputs.IMAGE_TAG || 'latest' }}
           REPO_OWNER: ${{ github.repository_owner }}
+          # workflow_run 触发时使用 workflow_run.actor，否则使用 github.actor
           GH_ACTOR: ${{ github.event.workflow_run.actor.login || github.actor }}
         run: |
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << EOF
             set -e
             echo "=== 开始部署 ==="
             echo "镜像: ghcr.io/$REPO_OWNER/$IMAGE_NAME:$IMAGE_TAG"
             
-            cd /opt/smarthire/backend || mkdir -p /opt/smarthire/backend && cd /opt/smarthire/backend
+            # 进入项目目录
+            cd /opt/smarthire/backend
             
-            # 登录 GitHub Container Registry
+            # 登录 GitHub Container Registry（在服务器上）
             echo "$SMARTHIRE_TOKEN" | docker login ghcr.io -u $GH_ACTOR --password-stdin
             
             # 拉取最新镜像
@@ -97,15 +99,12 @@ jobs:
             echo "停止旧容器..."
             docker-compose down || true
             
-            # 删除残留容器
-            docker ps -a | grep $IMAGE_NAME | awk '{print $1}' | xargs -r docker rm -f
-            
-            # 更新镜像标签为 latest
+            # 更新镜像标签为 latest（docker-compose.yml 里用的是 smarthire-backend:latest）
             docker tag ghcr.io/$REPO_OWNER/$IMAGE_NAME:$IMAGE_TAG $IMAGE_NAME:latest
             
-            # 启动新容器（强制重新创建）
+            # 启动新容器
             echo "启动新容器..."
-            docker-compose up -d --force-recreate
+            docker-compose up -d
             
             # 等待容器启动
             sleep 5
@@ -120,7 +119,6 @@ jobs:
             
             echo "=== 部署完成 ==="
           EOF
-
 
       # 5. 健康检查
       - name: Health check
