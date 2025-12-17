@@ -71,15 +71,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
       // 检查黑名单
       ensureNotBlacklisted(token);
+      log.info("Token不在黑名单中");
 
       // 验证Token
       DecodedJWT decoded = jwtUtil.verifyToken(token);
+      log.info("Token验证成功");
 
       // 确保是Access Token
       if (!jwtUtil.isAccessToken(decoded)) {
         log.warn("refresh token 访问受保护接口, path={}", path);
         throw new BusinessException(ErrorCode.TOKEN_IS_REFRESH_TOKEN);
       }
+      log.info("Token是Access Token");
 
       // 提取Claims并设置到SecurityContext
       Map<String, Object> claims = jwtUtil.getClaims(decoded);
