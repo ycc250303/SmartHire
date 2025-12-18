@@ -5,6 +5,9 @@ import com.SmartHire.common.exception.enums.ErrorCode;
 import com.SmartHire.common.exception.exception.BusinessException;
 import com.SmartHire.userAuthService.mapper.UserAuthMapper;
 import com.SmartHire.userAuthService.model.User;
+import com.SmartHire.adminService.dto.UserManagementDTO;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -47,5 +50,43 @@ public class UserAuthApiImpl implements UserAuthApi {
     }
     User user = userAuthMapper.selectById(userId);
     return user != null && userType.equals(user.getUserType());
+  }
+
+  @Override
+  public Page<UserManagementDTO> getUserManagementList(
+      Page<UserManagementDTO> page,
+      String userType,
+      String status,
+      String keyword) {
+    return userAuthMapper.selectUserManagementList(page, userType, status, keyword);
+  }
+
+  @Override
+  public UserManagementDTO getUserManagementInfo(Long userId) {
+    if (userId == null) {
+      return null;
+    }
+    return userAuthMapper.selectUserManagementInfo(userId);
+  }
+
+  @Override
+  public int batchUpdateUserStatus(List<Long> userIds, Byte status) {
+    if (userIds == null || userIds.isEmpty() || status == null) {
+      return 0;
+    }
+    return userAuthMapper.batchUpdateStatus(userIds, status);
+  }
+
+  @Override
+  public int countUsersByTypeAndStatus(String userType, String status) {
+    return userAuthMapper.countByTypeAndStatus(userType, status);
+  }
+
+  @Override
+  public boolean updateUser(User user) {
+    if (user == null || user.getId() == null) {
+      return false;
+    }
+    return userAuthMapper.updateById(user) > 0;
   }
 }

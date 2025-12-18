@@ -1,10 +1,10 @@
 package com.SmartHire.adminService.service.impl;
 
 import com.SmartHire.adminService.mapper.NotificationMapper;
-import com.SmartHire.adminService.mapper.UserMapper;
 import com.SmartHire.adminService.model.Notification;
 import com.SmartHire.adminService.service.NotificationService;
 import com.SmartHire.common.exception.exception.AdminServiceException;
+import com.SmartHire.common.api.UserAuthApi;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -25,7 +25,7 @@ import java.util.List;
 public class NotificationServiceImpl implements NotificationService {
 
     private final NotificationMapper notificationMapper;
-    private final UserMapper userMapper;
+    private final UserAuthApi userAuthApi;
 
     @Override
     public void sendNotification(Long userId, Integer type, String title, String content) {
@@ -169,7 +169,7 @@ public class NotificationServiceImpl implements NotificationService {
      * @param userId 用户ID
      */
     private void validateUserExistence(Long userId) {
-        if (userMapper.selectById(userId) == null) {
+        if (!userAuthApi.existsUser(userId)) {
             throw AdminServiceException.userNotFound(userId);
         }
     }
@@ -192,7 +192,7 @@ public class NotificationServiceImpl implements NotificationService {
 
         // 验证每个用户是否存在
         for (Long userId : userIds) {
-            if (userMapper.selectById(userId) == null) {
+            if (!userAuthApi.existsUser(userId)) {
                 throw AdminServiceException.userNotFound(userId);
             }
         }

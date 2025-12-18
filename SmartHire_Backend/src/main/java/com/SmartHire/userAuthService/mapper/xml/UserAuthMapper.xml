@@ -32,4 +32,106 @@
         )
     </insert>
 
+    <!-- 用户管理DTO映射结果 -->
+    <resultMap id="UserManagementDTOMap" type="com.SmartHire.adminService.dto.UserManagementDTO">
+        <id column="user_id" property="userId" />
+        <result column="username" property="username" />
+        <result column="email" property="email" />
+        <result column="user_type" property="userType" />
+        <result column="status" property="status" />
+        <result column="create_time" property="createTime" />
+        <result column="last_login_time" property="lastLoginTime" />
+    </resultMap>
+
+    <!-- 分页查询用户管理列表 -->
+    <select id="selectUserManagementList" resultMap="UserManagementDTOMap">
+        SELECT
+            u.id as user_id,
+            u.username,
+            u.email,
+            CASE
+                WHEN u.user_type = 1 THEN 'jobseeker'
+                WHEN u.user_type = 2 THEN 'hr'
+                WHEN u.user_type = 3 THEN 'admin'
+                ELSE 'unknown'
+            END as user_type,
+            u.status,
+            DATE_FORMAT(u.created_at, '%Y-%m-%d %H:%i:%s') as create_time,
+            DATE_FORMAT(u.last_login_at, '%Y-%m-%d %H:%i:%s') as last_login_time
+        FROM user u
+        WHERE 1=1
+        <if test="userType != null and userType != ''">
+            AND u.user_type =
+            <choose>
+                <when test="userType == 'jobseeker'">1</when>
+                <when test="userType == 'hr'">2</when>
+                <when test="userType == 'admin'">3</when>
+            </choose>
+        </if>
+        <if test="status != null and status != ''">
+            AND u.status =
+            <choose>
+                <when test="status == 'active'">1</when>
+                <when test="status == 'banned'">0</when>
+            </choose>
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND (u.username LIKE CONCAT('%', #{keyword}, '%')
+                 OR u.email LIKE CONCAT('%', #{keyword}, '%')
+                 OR u.phone LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+        ORDER BY u.created_at DESC
+    </select>
+
+    <!-- 根据用户ID获取用户管理信息 -->
+    <select id="selectUserManagementInfo" resultMap="UserManagementDTOMap">
+        SELECT
+            u.id as user_id,
+            u.username,
+            u.email,
+            CASE
+                WHEN u.user_type = 1 THEN 'jobseeker'
+                WHEN u.user_type = 2 THEN 'hr'
+                WHEN u.user_type = 3 THEN 'admin'
+                ELSE 'unknown'
+            END as user_type,
+            u.status,
+            DATE_FORMAT(u.created_at, '%Y-%m-%d %H:%i:%s') as create_time,
+            DATE_FORMAT(u.last_login_at, '%Y-%m-%d %H:%i:%s') as last_login_time
+        FROM user u
+        WHERE u.id = #{userId}
+    </select>
+
+    <!-- 批量更新用户状态 -->
+    <update id="batchUpdateStatus">
+        UPDATE user
+        SET status = #{status}, updated_at = NOW()
+        WHERE id IN
+        <foreach collection="userIds" item="userId" open="(" separator="," close=")">
+            #{userId}
+        </foreach>
+    </update>
+
+    <!-- 根据用户类型和状态统计用户数量 -->
+    <select id="countByTypeAndStatus" resultType="int">
+        SELECT COUNT(*)
+        FROM user u
+        WHERE 1=1
+        <if test="userType != null and userType != ''">
+            AND u.user_type =
+            <choose>
+                <when test="userType == 'jobseeker'">1</when>
+                <when test="userType == 'hr'">2</when>
+                <when test="userType == 'admin'">3</when>
+            </choose>
+        </if>
+        <if test="status != null and status != ''">
+            AND u.status =
+            <choose>
+                <when test="status == 'active'">1</when>
+                <when test="status == 'banned'">0</when>
+            </choose>
+        </if>
+    </select>
+
 </mapper>

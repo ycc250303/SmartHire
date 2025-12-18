@@ -3,12 +3,11 @@ package com.SmartHire.adminService.service.impl;
 import com.SmartHire.adminService.dto.UserManagementDTO;
 import com.SmartHire.adminService.dto.UserStatusUpdateDTO;
 import com.SmartHire.common.exception.exception.AdminServiceException;
-import com.SmartHire.adminService.mapper.UserMapper;
 import com.SmartHire.adminService.service.BanRecordService;
 import com.SmartHire.adminService.service.UserService;
+import com.SmartHire.common.api.UserAuthApi;
 import com.SmartHire.userAuthService.model.User;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,16 +24,16 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Slf4j
 @Service
-public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
+public class UserServiceImpl implements UserService {
 
-  @Autowired private UserMapper userMapper;
+  @Autowired private UserAuthApi userAuthApi;
 
   @Autowired private BanRecordService banRecordService;
 
   @Override
   public Page<UserManagementDTO> getUserManagementList(
       Page<UserManagementDTO> page, String userType, String status, String keyword) {
-    return userMapper.selectUserManagementList(page, userType, status, keyword);
+    return userAuthApi.getUserManagementList(page, userType, status, keyword);
   }
 
   @Override
@@ -47,7 +46,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         userStatusUpdateDTO.getAdminUsername());
 
     // 1. 检查用户是否存在
-    User user = userMapper.selectById(userStatusUpdateDTO.getUserId());
+    User user = userAuthApi.getUserById(userStatusUpdateDTO.getUserId());
     if (user == null) {
       throw AdminServiceException.userNotFound(userStatusUpdateDTO.getUserId());
     }
@@ -69,7 +68,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     // 4. 更新用户状态
     user.setStatus(targetStatus);
-    boolean updated = userMapper.updateById(user) > 0;
+    boolean updated = userAuthApi.updateUser(user);
 
     if (updated) {
       log.info(
@@ -86,7 +85,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
   @Override
   public UserManagementDTO getUserManagementInfo(Long userId) {
-    UserManagementDTO userInfo = userMapper.selectUserManagementInfo(userId);
+    UserManagementDTO userInfo = userAuthApi.getUserManagementInfo(userId);
     if (userInfo == null) {
       throw AdminServiceException.userNotFound(userId);
     }
@@ -99,7 +98,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
       User user = new User();
       user.setId(userId);
       user.setStatus(0);
-      userMapper.updateById(user);
+      userAuthApi.updateUser(user);
     }
 
     return userInfo;
@@ -107,10 +106,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
   @Override
   public boolean userExists(Long userId) {
-    if (userId == null) {
-      return false;
-    }
-    return userMapper.selectById(userId) != null;
+    return userAuthApi.existsUser(userId);
   }
 
   @Override
@@ -121,7 +117,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     // 验证所有用户是否存在且非管理员
     for (Long userId : userIds) {
-      User user = userMapper.selectById(userId);
+      User user = userAuthApi.getUserById(userId);
       if (user == null) {
         throw AdminServiceException.userNotFound(userId);
       }
@@ -131,7 +127,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     // 批量更新状态
-    int affectedRows = userMapper.batchUpdateStatus(userIds, status);
+    int affectedRows = userAuthApi.batchUpdateUserStatus(userIds, status);
 
     log.info("批量更新用户状态完成，影响行数: {}", affectedRows);
     return affectedRows;
@@ -139,15 +135,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
   @Override
   public int countUsersByTypeAndStatus(String userType, String status) {
-    return userMapper.countByTypeAndStatus(userType, status);
+    return userAuthApi.countUsersByTypeAndStatus(userType, status);
   }
 
   @Override
   public Map<String, Object> getUserStatistics() {
     Map<String, Object> statistics = new HashMap<>();
 
-    // 总用户数
-    int totalCount = Math.toIntExact(this.count());
+    // 总用户数 - 通过API统计所有用户
+    int totalCount = userAuthApi.countUsersByTypeAndStatus("", "");
     statistics.put("total", totalCount);
 
     // 按类型统计

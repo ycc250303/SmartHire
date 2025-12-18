@@ -10,12 +10,12 @@ import com.SmartHire.adminService.service.BanRecordService;
 import com.SmartHire.adminService.service.JobAuditService;
 import com.SmartHire.adminService.service.NotificationService;
 import com.SmartHire.hrService.model.HrInfo;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.SmartHire.adminService.dto.ReportDetailDTO;
 import com.SmartHire.adminService.dto.ReportQueryDTO;
 import com.SmartHire.adminService.dto.ReportHandleDTO;
 import com.SmartHire.adminService.dto.UserBanDTO;
 import com.SmartHire.common.auth.UserContext;
+import com.SmartHire.common.api.HrApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,7 +42,7 @@ public class ReportServiceImpl extends ServiceImpl<ReportMapper, Report> impleme
     private UserContext userContext;
 
     @Autowired
-    private com.SmartHire.hrService.mapper.HrInfoMapper hrInfoMapper;
+    private HrApi hrApi;
 
     @Override
     public Page<ReportDetailDTO> getReportList(ReportQueryDTO queryDTO) {
@@ -270,10 +270,8 @@ public class ReportServiceImpl extends ServiceImpl<ReportMapper, Report> impleme
      */
     private Long getHrUserIdByJobId(Long hrInfoId) {
         try {
-            // 查询hr_info表获取user_id
-            LambdaQueryWrapper<HrInfo> wrapper = new LambdaQueryWrapper<>();
-            wrapper.select(HrInfo::getUserId).eq(HrInfo::getId, hrInfoId);
-            HrInfo hrInfo = hrInfoMapper.selectOne(wrapper);
+            // 通过API查询hr_info获取user_id
+            HrInfo hrInfo = hrApi.getHrInfoById(hrInfoId);
             return hrInfo != null ? hrInfo.getUserId() : null;
         } catch (Exception e) {
             log.error("获取HR用户ID失败，hrInfoId: {}", hrInfoId, e);

@@ -5,15 +5,14 @@ import com.SmartHire.adminService.dto.JobAuditQueryDTO;
 import com.SmartHire.adminService.enums.AuditStatus;
 import com.SmartHire.common.exception.exception.AdminServiceException;
 import com.SmartHire.adminService.mapper.JobAuditMapper;
-import com.SmartHire.adminService.mapper.UserMapper;
 import com.SmartHire.adminService.model.JobAuditRecord;
 import com.SmartHire.adminService.service.JobAuditService;
-import com.SmartHire.hrService.mapper.CompanyMapper;
-import com.SmartHire.hrService.mapper.HrInfoMapper;
-import com.SmartHire.hrService.mapper.JobInfoMapper;
+import com.SmartHire.common.api.HrApi;
+import com.SmartHire.common.api.UserAuthApi;
 import com.SmartHire.hrService.model.Company;
 import com.SmartHire.hrService.model.HrInfo;
 import com.SmartHire.hrService.model.JobInfo;
+import com.SmartHire.userAuthService.model.User;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -36,10 +35,8 @@ public class JobAuditServiceImpl extends ServiceImpl<JobAuditMapper, JobAuditRec
     implements JobAuditService {
 
   private final JobAuditMapper jobAuditMapper;
-  private final JobInfoMapper jobInfoMapper;
-  private final UserMapper userMapper;
-  private final HrInfoMapper hrInfoMapper;
-  private final CompanyMapper companyMapper;
+  private final HrApi hrApi;
+  private final UserAuthApi userAuthApi;
 
   @Override
   public Page<JobAuditListDTO> getAuditList(Page<JobAuditListDTO> page,
@@ -177,7 +174,7 @@ public class JobAuditServiceImpl extends ServiceImpl<JobAuditMapper, JobAuditRec
         jobInfo.setAuditStatus("rejected"); // 设置审核状态为rejected
         jobInfo.setAuditedAt(now);
         jobInfo.setUpdatedAt(now);
-        jobInfoMapper.updateById(jobInfo);
+        hrApi.updateJobInfo(jobInfo);
 
         log.info("职位强制下线完成，职位ID: {}", jobId);
     }
@@ -269,26 +266,25 @@ public class JobAuditServiceImpl extends ServiceImpl<JobAuditMapper, JobAuditRec
    */
   private void validateJobExistence(Long jobId) {
     // 验证职位是否存在
-    JobInfo jobInfo = jobInfoMapper.selectById(jobId);
+    JobInfo jobInfo = hrApi.getJobInfoById(jobId);
     if (jobInfo == null) {
       throw AdminServiceException.jobNotFound(jobId);
     }
 
     // 验证HR是否存在
     if (jobInfo.getHrId() != null) {
-      HrInfo hrInfo = hrInfoMapper.selectById(jobInfo.getHrId());
+      HrInfo hrInfo = hrApi.getHrInfoById(jobInfo.getHrId());
       if (hrInfo == null) {
         throw AdminServiceException.operationFailed("职位关联的HR不存在，HR ID: " + jobInfo.getHrId());
       }
 
-      // 验证HR关联的用户是否存在
+      // 验证HR关联的用户是否存在且用户类型正确
       if (hrInfo.getUserId() != null) {
-        var user = userMapper.selectById(hrInfo.getUserId());
-        if (user == null) {
+        if (!userAuthApi.existsUser(hrInfo.getUserId())) {
           throw AdminServiceException.operationFailed("HR关联的用户不存在，用户 ID: " + hrInfo.getUserId());
         }
         // 验证用户类型是否为HR
-        if (user.getUserType() != 2) {
+        if (!userAuthApi.validateUserType(hrInfo.getUserId(), 2)) {
           throw AdminServiceException.operationFailed("HR关联的用户类型不正确，用户 ID: " + hrInfo.getUserId());
         }
       }
@@ -296,7 +292,7 @@ public class JobAuditServiceImpl extends ServiceImpl<JobAuditMapper, JobAuditRec
 
     // 验证公司是否存在
     if (jobInfo.getCompanyId() != null) {
-      Company company = companyMapper.selectById(jobInfo.getCompanyId());
+      Company company = hrApi.getCompanyById(jobInfo.getCompanyId());
       if (company == null) {
         throw AdminServiceException.operationFailed("职位关联的公司不存在，公司 ID: " + jobInfo.getCompanyId());
       }
@@ -314,6 +310,6 @@ public class JobAuditServiceImpl extends ServiceImpl<JobAuditMapper, JobAuditRec
     jobInfo.setId(jobId);
     jobInfo.setAuditStatus(auditStatus.getCode());
     jobInfo.setAuditedAt(new Date());
-    jobInfoMapper.updateById(jobInfo);
+    hrApi.updateJobInfo(jobInfo);
   }
 }
