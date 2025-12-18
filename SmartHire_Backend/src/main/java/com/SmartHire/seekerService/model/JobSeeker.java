@@ -48,6 +48,12 @@ public class JobSeeker implements Serializable {
   /** 毕业年份 */
   private String graduationYear;
 
+  /** 是否有实习经历 */
+  private boolean internshipExperience;
+
+  /** 工作经验年数 */
+  private Integer workExperienceYear;
+
   /** 创建时间 */
   @JsonIgnore private Date createdAt;
 

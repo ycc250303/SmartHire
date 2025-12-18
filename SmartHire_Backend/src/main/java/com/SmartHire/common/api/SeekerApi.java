@@ -3,6 +3,7 @@ package com.SmartHire.common.api;
 import com.SmartHire.seekerService.dto.SeekerCardDTO;
 import com.SmartHire.seekerService.model.JobSeeker;
 import com.SmartHire.seekerService.model.Resume;
+import java.util.List;
 
 /** 求职者服务API接口 用于模块间通信，避免直接访问数据库 */
 public interface SeekerApi {
@@ -34,7 +35,7 @@ public interface SeekerApi {
   /**
    * 验证简历是否属于指定求职者
    *
-   * @param resumeId 简历ID
+   * @param resumeId    简历ID
    * @param jobSeekerId 求职者ID
    * @return 是否属于
    */
@@ -55,8 +56,4 @@ public interface SeekerApi {
    */
   SeekerCardDTO getSeekerCard(Long userId);
 
-  /**
-   * @return 所有求职者卡片信息
-   */
-  // List<SeekerCardDTO> getSeekerCards();
 }

@@ -72,7 +72,7 @@ class WorkExperienceServiceTest {
     dto.setEndMonth("2024-01");
     dto.setDescription("负责后端开发");
     dto.setAchievements("优化性能30%");
-    dto.setIsInternship(0);
+    dto.setIsInternship(false);
     return dto;
   }
 
@@ -84,7 +84,7 @@ class WorkExperienceServiceTest {
     work.setPosition("Java工程师");
     work.setStartDate(DATE_FORMAT.parse("2022-01"));
     work.setEndDate(DATE_FORMAT.parse("2024-01"));
-    work.setIsInternship((byte) 0);
+    work.setIsInternship(false);
     return work;
   }
 

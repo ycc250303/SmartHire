@@ -17,20 +17,22 @@ import org.springframework.stereotype.Service;
 @Service
 public class SeekerApiImpl implements SeekerApi {
 
-  @Autowired private JobSeekerMapper jobSeekerMapper;
+  @Autowired
+  private JobSeekerMapper jobSeekerMapper;
 
-  @Autowired private ResumeMapper resumeMapper;
+  @Autowired
+  private ResumeMapper resumeMapper;
 
-  @Autowired private SeekerCardService seekerCardService;
+  @Autowired
+  private SeekerCardService seekerCardService;
 
   @Override
   public Long getJobSeekerIdByUserId(Long userId) {
     if (userId == null) {
       throw new BusinessException(ErrorCode.VALIDATION_ERROR);
     }
-    JobSeeker jobSeeker =
-        jobSeekerMapper.selectOne(
-            new LambdaQueryWrapper<JobSeeker>().eq(JobSeeker::getUserId, userId));
+    JobSeeker jobSeeker = jobSeekerMapper.selectOne(
+        new LambdaQueryWrapper<JobSeeker>().eq(JobSeeker::getUserId, userId));
     if (jobSeeker == null) {
       throw new BusinessException(ErrorCode.SEEKER_NOT_EXIST);
     }
@@ -70,7 +72,8 @@ public class SeekerApiImpl implements SeekerApi {
     return resume != null && jobSeekerId.equals(resume.getJobSeekerId());
   }
 
-  @Autowired private com.SmartHire.seekerService.service.JobSeekerService jobSeekerService;
+  @Autowired
+  private com.SmartHire.seekerService.service.JobSeekerService jobSeekerService;
 
   @Override
   public void deleteJobSeekerByUserId(Long userId) {

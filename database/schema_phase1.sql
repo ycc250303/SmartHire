@@ -40,6 +40,8 @@ CREATE TABLE `job_seeker` (
     `current_city` VARCHAR(50) COMMENT '当前城市',
     `education` TINYINT COMMENT '最高学历 0-高中及以下 1-专科 2-本科 3-硕士 4-博士',
     `graduation_year` VARCHAR(10) COMMENT '毕业年份',
+    `work_experience_year` INT NOT NULL DEFAULT 0 COMMENT '工作经验年数',
+    `internship_experience` TINYINT NOT NULL DEFAULT 0 COMMENT '是否有实习经历 0-否 1-是',
     `job_status` TINYINT COMMENT '求职状态 0-离校-尽快到岗 1-在校-尽快到岗 2-在校-考虑机会 3-在校-暂不考虑',
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',

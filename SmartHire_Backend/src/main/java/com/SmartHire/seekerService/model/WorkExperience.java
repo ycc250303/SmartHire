@@ -44,7 +44,7 @@ public class WorkExperience implements Serializable {
   private Date endDate;
 
   /** 是否实习 */
-  private Byte isInternship;
+  private Boolean isInternship;
 
   /** 工作内容 */
   private String description;

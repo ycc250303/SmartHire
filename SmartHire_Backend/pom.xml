@@ -137,13 +137,21 @@
             <artifactId>spring-boot-starter-aop</artifactId>
         </dependency>
 
-        <!-- Redis 连接池（可选，但推荐） -->
+        <!-- ArchUnit 架构测试框架，用于检查代码架构规则 -->
+        <dependency>
+            <groupId>com.tngtech.archunit</groupId>
+            <artifactId>archunit-junit5</artifactId>
+            <version>1.4.1</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Redis 连接池 -->
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-pool2</artifactId>
         </dependency>
 
-        <!-- Jedis Redis 客户端，用于操作 Redis 数据库 -->
+        <!-- Redis 客户端，用于操作 Redis 数据库 -->
         <dependency>
             <groupId>redis.clients</groupId>
             <artifactId>jedis</artifactId>

@@ -18,7 +18,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          persist-credentials: false  # 用于自定义 token 推送 tag
+          fetch-depth: 0  # 获取完整的Git历史，以便获取提交者信息
 
       # 2. Setup JDK
       - name: Setup JDK 21
@@ -36,41 +36,14 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-m2-
 
-      # 4. Check code format (Spotless) - 自动修改并提交
-      - name: Check code format (Spotless)
-        id: spotless
-        shell: bash
-        run: |
-          echo "Running Spotless check..."
-          if mvn -B spotless:check; then
-            echo "Spotless check passed. No formatting needed."
-            echo "changed=false" >> $GITHUB_OUTPUT
-          else
-            echo "Spotless check failed. Running spotless:apply to auto-format code..."
-            mvn -B spotless:apply
-            echo "Spotless formatting applied successfully."
-            echo "changed=true" >> $GITHUB_OUTPUT
-          fi
+      # 5. Run circular dependency tests
+      - name: Run circular dependency tests
+        run: mvn -B test -Dtest=ServiceCycleArchitectureTest
         working-directory: SmartHire_Backend
 
-      # 4.1. Commit formatting changes if needed
-      - name: Commit formatting changes
-        if: steps.spotless.outputs.changed == 'true'
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add -A
-          git commit -m "Auto-format code with Spotless [skip ci]" || exit 0
-          git push
-
-      # 5. Run tests + PMD + SpotBugs + FindSecBugs（verify 会执行完整流水线）
+      # 6. Run tests + PMD + SpotBugs + FindSecBugs（verify 会执行完整流水线）
       - name: Run tests & static analysis (verify)
-        run: mvn -B clean verify
-        working-directory: SmartHire_Backend
-
-      # 6. Build JAR（在 verify 通过后再次打包，跳过测试以加快速度）
-      - name: Build JAR
-        run: mvn -B package -DskipTests=true
+        run: mvn -B clean verify -Dpmd.failurePriority=5
         working-directory: SmartHire_Backend
 
       # 7. Upload artifact (both main & dev)
@@ -128,8 +101,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.SMARTHIRE_TOKEN }}
         run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
+          # 配置Git用户信息，使用原始提交者的信息
+          git config --global user.name "${{ github.event.head_commit.author.name }}"
+          git config --global user.email "${{ github.event.head_commit.author.email }}"
+          
           git fetch --tags
           TAG="v${{ env.VERSION }}"
           if git rev-parse "$TAG" >/dev/null 2>&1; then
@@ -147,5 +122,11 @@ jobs:
           tag_name: v${{ env.VERSION }}
           name: Release v${{ env.VERSION }}
           files: SmartHire_Backend/target/*.jar
+          overwrite: true
+          # 确保覆盖已存在的文件
+          file_glob: true
+          # 如果release已存在，则更新它而不是创建新的
+          draft: false
+          prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.SMARTHIRE_TOKEN }}
