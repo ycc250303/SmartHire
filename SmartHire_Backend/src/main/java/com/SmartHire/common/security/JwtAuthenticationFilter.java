@@ -51,7 +51,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     String fullPath = contextPath + path;
 
     log.debug(
-        "🔍 路径检查 - ContextPath: {}, ServletPath: {}, FullPath: {}", contextPath, path, fullPath);
+        "路径检查 - ContextPath: {}, ServletPath: {}, FullPath: {}", contextPath, path, fullPath);
 
     // 公开路径直接放行（检查完整路径和相对路径）
     if (PUBLIC_PATHS.contains(path) || PUBLIC_PATHS.stream().anyMatch(p -> fullPath.endsWith(p))) {
@@ -71,15 +71,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
       // 检查黑名单
       ensureNotBlacklisted(token);
+      log.info("Token不在黑名单中");
 
       // 验证Token
       DecodedJWT decoded = jwtUtil.verifyToken(token);
+      log.info("Token验证成功");
 
       // 确保是Access Token
       if (!jwtUtil.isAccessToken(decoded)) {
         log.warn("refresh token 访问受保护接口, path={}", path);
         throw new BusinessException(ErrorCode.TOKEN_IS_REFRESH_TOKEN);
       }
+      log.info("Token是Access Token");
 
       // 提取Claims并设置到SecurityContext
       Map<String, Object> claims = jwtUtil.getClaims(decoded);
@@ -105,7 +108,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       throw new BusinessException(ErrorCode.TOKEN_IS_NULL);
     }
     if (Boolean.TRUE.equals(redisTemplate.hasKey(ACCESS_BLACKLIST_PREFIX + token))) {
-      throw new BusinessException(ErrorCode.TOKEN_IS_INVALID);
+      throw new BusinessException(ErrorCode.TOKEN_IS_IN_BLACKLIST);
     }
   }
 

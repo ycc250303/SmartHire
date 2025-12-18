@@ -86,7 +86,7 @@ jobs:
             echo "镜像: ghcr.io/$REPO_OWNER/$IMAGE_NAME:$IMAGE_TAG"
             
             # 进入项目目录
-            cd /opt/SmartHire/SmartHire_Backend
+            cd /opt/smarthire/backend
             
             # 登录 GitHub Container Registry（在服务器上）
             echo "$SMARTHIRE_TOKEN" | docker login ghcr.io -u $GH_ACTOR --password-stdin

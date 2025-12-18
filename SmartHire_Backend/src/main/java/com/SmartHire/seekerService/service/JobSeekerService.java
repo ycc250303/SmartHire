@@ -49,4 +49,6 @@ public interface JobSeekerService extends IService<JobSeeker> {
    * @param userId 用户ID
    */
   void deleteJobSeekerByUserId(Long userId);
+
+
 }
