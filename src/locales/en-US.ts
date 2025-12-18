@@ -436,12 +436,36 @@ export default {
         phoneRequired: 'Phone number is required',
         phoneInvalid: 'Phone number must be 11 digits',
         genderRequired: 'Please select gender',
-        verifyCodeRequired: 'Verification code is required'
+        verifyCodeRequired: 'Verification code is required',
+        realNameRequired: 'Please enter real name',
+        birthDateRequired: 'Please select birth date',
+        currentCityRequired: 'Please select current city',
+        jobStatusRequired: 'Please select job status',
+        positionRequired: 'Please enter position',
+        workPhoneRequired: 'Please enter work phone',
+        workPhoneInvalid: 'Invalid work phone format'
       },
       sending: 'Sending...',
       codeSent: 'Code sent',
       registering: 'Registering...',
-      registerSuccess: 'Registration successful'
+      registerSuccess: 'Registration successful',
+      nextStep: 'Next Step',
+      completeRegistration: 'Complete Registration',
+      additionalInfo: 'Additional Information',
+      realName: 'Real Name',
+      birthDate: 'Birth Date',
+      currentCity: 'Current City',
+      jobStatus: 'Job Status',
+      position: 'Position',
+      workPhone: 'Work Phone',
+      jobStatusOptions: {
+        '0': 'Graduated - Available Now',
+        '1': 'In School - Available Now',
+        '2': 'In School - Considering',
+        '3': 'In School - Not Available'
+      },
+      completing: 'Completing...',
+      completeSuccess: 'Registration completed'
     },
     help: {
       title: 'Help',

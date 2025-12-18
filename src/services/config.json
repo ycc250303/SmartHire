@@ -3,7 +3,7 @@
   "apiMappings": {
     "/api/user-auth/send-verification-code": "prod",
     "/api/user-auth/verify-code": "prod",
-    "/api/user-auth/register": "prod  ",
+    "/api/user-auth/register": "prod",
     "/api/user-auth/login": "prod",
     "/api/user-auth/logout": "prod",
     "/api/user-auth/refresh-token": "prod",

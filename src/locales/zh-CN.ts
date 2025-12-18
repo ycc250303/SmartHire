@@ -435,12 +435,36 @@ export default {
         phoneRequired: '请输入手机号',
         phoneInvalid: '手机号必须为11位',
         genderRequired: '请选择性别',
-        verifyCodeRequired: '请输入验证码'
+        verifyCodeRequired: '请输入验证码',
+        realNameRequired: '请输入真实姓名',
+        birthDateRequired: '请选择出生日期',
+        currentCityRequired: '请选择所在城市',
+        jobStatusRequired: '请选择求职状态',
+        positionRequired: '请输入职位',
+        workPhoneRequired: '请输入工作电话',
+        workPhoneInvalid: '工作电话格式不正确'
       },
       sending: '发送中...',
       codeSent: '验证码已发送',
       registering: '注册中...',
-      registerSuccess: '注册成功'
+      registerSuccess: '注册成功',
+      nextStep: '下一步',
+      completeRegistration: '完成注册',
+      additionalInfo: '补充信息',
+      realName: '真实姓名',
+      birthDate: '出生日期',
+      currentCity: '所在城市',
+      jobStatus: '求职状态',
+      position: '职位',
+      workPhone: '工作电话',
+      jobStatusOptions: {
+        '0': '离校-尽快到岗',
+        '1': '在校-尽快到岗',
+        '2': '在校-考虑机会',
+        '3': '在校-暂不考虑'
+      },
+      completing: '完成中...',
+      completeSuccess: '注册完成'
     },
     help: {
       title: '帮助',

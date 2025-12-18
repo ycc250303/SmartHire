@@ -19,6 +19,29 @@ export interface HrInfoUpdatePayload {
   workPhone?: string;
 }
 
+export interface RegisterHrParams {
+  realName: string;
+  position: string;
+  workPhone: string;
+}
+
+/**
+ * Register HR information
+ * @returns Operation result
+ */
+export function registerHr(params: RegisterHrParams): Promise<null> {
+  const url = '/api/hr/info';
+  console.log('[Params]', url, params);
+  return http<null>({
+    url,
+    method: 'POST',
+    data: params,
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
+  });
+}
+
 /**
  * Get current HR information
  * @returns HR information

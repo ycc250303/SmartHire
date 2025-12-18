@@ -103,9 +103,8 @@
         </view>
 
         <!-- Submit Button -->
-        <button class="submit-btn" :disabled="loading" @click="handleRegister">
-          <text v-if="loading">{{ t('auth.register.registering') }}</text>
-          <text v-else>{{ t('auth.register.registerButton') }}</text>
+        <button class="submit-btn" :disabled="loading" @click="handleNext">
+          <text>{{ t('auth.register.nextStep') }}</text>
         </button>
 
         <!-- Bottom Links -->
@@ -118,6 +117,110 @@
           </view>
         </view>
     </view>
+
+    <!-- Step 3: Additional Information Form -->
+    <view v-if="step === 3" class="registration-form">
+      <view class="header-section">
+        <text class="main-title">{{ t('auth.register.additionalInfo') }}</text>
+      </view>
+
+      <!-- Seeker Form -->
+      <template v-if="formData.userType === UserType.Seeker">
+        <view class="form-field">
+          <input
+            class="field-input"
+            v-model="additionalFormData.realName"
+            :placeholder="t('auth.register.realName')"
+          />
+        </view>
+
+        <view class="form-field">
+          <picker
+            mode="date"
+            :value="additionalFormData.birthDate"
+            @change="onBirthDateChange"
+          >
+            <view class="picker-input">
+              <text class="picker-text" :class="{ 'placeholder': !additionalFormData.birthDate }">
+                {{ additionalFormData.birthDate || t('auth.register.birthDate') }}
+              </text>
+              <text class="picker-arrow">›</text>
+            </view>
+          </picker>
+        </view>
+
+        <view class="form-field">
+          <view class="city-picker-wrapper">
+            <CityPicker
+              v-model="additionalFormData.currentCity"
+              :placeholder="t('auth.register.currentCity')"
+            />
+          </view>
+        </view>
+
+        <view class="form-field">
+          <picker
+            mode="selector"
+            :range="jobStatusOptions"
+            :range-key="'label'"
+            @change="onJobStatusChange"
+            :value="jobStatusIndex"
+          >
+            <view class="picker-input">
+              <text class="picker-text" :class="{ 'placeholder': additionalFormData.jobStatus === undefined }">
+                {{ selectedJobStatusLabel }}
+              </text>
+              <text class="picker-arrow">›</text>
+            </view>
+          </picker>
+        </view>
+      </template>
+
+      <!-- HR Form -->
+      <template v-else>
+        <view class="form-field">
+          <input
+            class="field-input"
+            v-model="additionalFormData.realName"
+            :placeholder="t('auth.register.realName')"
+          />
+        </view>
+
+        <view class="form-field">
+          <input
+            class="field-input"
+            v-model="additionalFormData.position"
+            :placeholder="t('auth.register.position')"
+          />
+        </view>
+
+        <view class="form-field">
+          <input
+            class="field-input"
+            v-model="additionalFormData.workPhone"
+            :placeholder="t('auth.register.workPhone')"
+          />
+        </view>
+      </template>
+
+      <!-- Error Message -->
+      <view v-if="errorMessage" class="error-message">
+        <text class="error-text">{{ errorMessage }}</text>
+      </view>
+
+      <!-- Submit Button -->
+      <button class="submit-btn" :disabled="loading" @click="handleCompleteRegistration">
+        <text v-if="loading">{{ t('auth.register.completing') }}</text>
+        <text v-else>{{ t('auth.register.completeRegistration') }}</text>
+      </button>
+
+      <!-- Bottom Links -->
+      <view class="bottom-links">
+        <view class="link-item" @click="goBackToStep2">
+          <text class="link-text link-muted">{{ t('auth.register.backToPrevious') }}</text>
+        </view>
+      </view>
+    </view>
   </view>
 </template>
 
@@ -126,8 +229,11 @@ import { ref, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { t } from '@/locales';
 import { useNavigationTitle } from '@/utils/useNavigationTitle';
-import { Gender, UserType, register, sendVerificationCode, login, type RegisterParams } from '@/services/api/auth';
-import { setTokens } from '@/services/http';
+import { Gender, UserType, register, sendVerificationCode, login, type RegisterParams, type LoginResponse } from '@/services/api/auth';
+import { setTokens, ApiError } from '@/services/http';
+import { registerSeeker, type RegisterSeekerParams } from '@/services/api/seeker';
+import { registerHr, type RegisterHrParams } from '@/services/api/hr';
+import CityPicker from '@/components/common/CityPicker.vue';
 
 useNavigationTitle('navigation.register');
 
@@ -155,6 +261,42 @@ const formData = ref<{
   gender: null,
   verifyCode: '',
   userType: UserType.Seeker,
+});
+
+const additionalFormData = ref<{
+  realName: string;
+  birthDate: string;
+  currentCity: string;
+  jobStatus: number | undefined;
+  position: string;
+  workPhone: string;
+}>({
+  realName: '',
+  birthDate: '',
+  currentCity: '',
+  jobStatus: undefined,
+  position: '',
+  workPhone: '',
+});
+
+const jobStatusOptions = [
+  { label: t('auth.register.jobStatusOptions.0'), value: 0 },
+  { label: t('auth.register.jobStatusOptions.1'), value: 1 },
+  { label: t('auth.register.jobStatusOptions.2'), value: 2 },
+  { label: t('auth.register.jobStatusOptions.3'), value: 3 },
+];
+
+const jobStatusIndex = computed(() => {
+  if (additionalFormData.value.jobStatus === undefined) return 0;
+  return jobStatusOptions.findIndex(opt => opt.value === additionalFormData.value.jobStatus);
+});
+
+const selectedJobStatusLabel = computed(() => {
+  if (additionalFormData.value.jobStatus === undefined) {
+    return t('auth.register.jobStatus');
+  }
+  const option = jobStatusOptions.find(item => item.value === additionalFormData.value.jobStatus);
+  return option ? option.label : t('auth.register.jobStatus');
 });
 
 const genderOptions = computed(() => [
@@ -190,6 +332,24 @@ function goBack() {
   if (step.value === 2) {
     step.value = 1;
     errorMessage.value = '';
+  }
+}
+
+function goBackToStep2() {
+  if (step.value === 3) {
+    step.value = 2;
+    errorMessage.value = '';
+  }
+}
+
+function onBirthDateChange(e: any) {
+  additionalFormData.value.birthDate = e.detail.value;
+}
+
+function onJobStatusChange(e: any) {
+  const option = jobStatusOptions[e.detail.value];
+  if (option) {
+    additionalFormData.value.jobStatus = option.value;
   }
 }
 
@@ -287,7 +447,7 @@ async function handleSendCode() {
   }
 }
 
-async function handleRegister() {
+async function handleNext() {
   errorMessage.value = '';
 
   const validationError = validateForm();
@@ -299,7 +459,7 @@ async function handleRegister() {
   loading.value = true;
 
   try {
-    const params: RegisterParams = {
+    const registerParams: RegisterParams = {
       username: formData.value.username.trim(),
       password: formData.value.password,
       email: formData.value.email.trim(),
@@ -309,18 +469,104 @@ async function handleRegister() {
       verifyCode: formData.value.verifyCode.trim(),
     };
 
-    await register(params);
+    await register(registerParams);
 
-    uni.showToast({
-      title: t('auth.register.registerSuccess'),
-      icon: 'success',
-      duration: 1000,
-    });
+    step.value = 3;
+  } catch (err) {
+    if (err instanceof ApiError) {
+      console.error('Unexpected API Error:', err.code, err.message);
+      errorMessage.value = err.message || 'An error occurred';
+    } else if (err instanceof Error) {
+      console.error('Unexpected Error:', err.message);
+      errorMessage.value = err.message || 'An error occurred';
+    } else {
+      console.error('Unexpected Error:', err);
+      errorMessage.value = 'An error occurred';
+    }
+  } finally {
+    loading.value = false;
+  }
+}
 
-    const loginResponse = await login({
-      username: params.username,
-      password: params.password,
-    });
+function validateAdditionalForm(): string | null {
+  if (!additionalFormData.value.realName.trim()) {
+    return t('auth.register.validation.realNameRequired');
+  }
+
+  if (formData.value.userType === UserType.Seeker) {
+    if (!additionalFormData.value.birthDate) {
+      return t('auth.register.validation.birthDateRequired');
+    }
+    if (!additionalFormData.value.currentCity) {
+      return t('auth.register.validation.currentCityRequired');
+    }
+    if (additionalFormData.value.jobStatus === undefined) {
+      return t('auth.register.validation.jobStatusRequired');
+    }
+  } else {
+    if (!additionalFormData.value.position.trim()) {
+      return t('auth.register.validation.positionRequired');
+    }
+    if (!additionalFormData.value.workPhone.trim()) {
+      return t('auth.register.validation.workPhoneRequired');
+    }
+    if (!isValidPhone(additionalFormData.value.workPhone)) {
+      return t('auth.register.validation.workPhoneInvalid');
+    }
+  }
+
+  return null;
+}
+
+async function handleCompleteRegistration() {
+  errorMessage.value = '';
+
+  const validationError = validateAdditionalForm();
+  if (validationError) {
+    errorMessage.value = validationError;
+    return;
+  }
+
+  loading.value = true;
+
+  try {
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    let loginResponse: LoginResponse | null = null;
+    let loginAttempts = 0;
+    const maxAttempts = 5;
+    const loginDelay = 1000;
+
+    const loginParams = {
+      username: formData.value.username.trim(),
+      password: formData.value.password,
+    };
+
+    while (loginAttempts < maxAttempts && !loginResponse) {
+      try {
+        loginResponse = await login(loginParams);
+        break;
+      } catch (err) {
+        loginAttempts++;
+        if (loginAttempts < maxAttempts) {
+          await new Promise(resolve => setTimeout(resolve, loginDelay));
+        } else {
+          const errorMsg = err instanceof Error ? err.message : 'Login failed';
+          errorMessage.value = `Login failed: ${errorMsg}. Please try logging in manually.`;
+          uni.showToast({
+            title: 'Login failed, please try manually',
+            icon: 'none',
+            duration: 2000,
+          });
+          setTimeout(() => {
+            uni.redirectTo({
+              url: '/pages/auth/login',
+            });
+          }, 2000);
+          return;
+        }
+      }
+    }
 
     if (!loginResponse || !loginResponse.accessToken || !loginResponse.refreshToken) {
       uni.showToast({
@@ -340,8 +586,25 @@ async function handleRegister() {
       loginResponse.expiresIn
     );
 
+    if (formData.value.userType === UserType.Seeker) {
+      const seekerParams: RegisterSeekerParams = {
+        realName: additionalFormData.value.realName.trim(),
+        birthDate: additionalFormData.value.birthDate,
+        currentCity: additionalFormData.value.currentCity,
+        jobStatus: additionalFormData.value.jobStatus!,
+      };
+      await registerSeeker(seekerParams);
+    } else {
+      const hrParams: RegisterHrParams = {
+        realName: additionalFormData.value.realName.trim(),
+        position: additionalFormData.value.position.trim(),
+        workPhone: additionalFormData.value.workPhone.trim(),
+      };
+      await registerHr(hrParams);
+    }
+
     uni.showToast({
-      title: t('auth.login.loginSuccess'),
+      title: t('auth.register.completeSuccess'),
       icon: 'success',
       duration: 1000,
     });
@@ -358,7 +621,16 @@ async function handleRegister() {
       }
     }, 1000);
   } catch (err) {
-    errorMessage.value = err instanceof Error ? err.message : 'Registration failed';
+    if (err instanceof ApiError) {
+      console.error('Registration API Error:', err.code, err.message);
+      errorMessage.value = err.message || 'Registration failed';
+    } else if (err instanceof Error) {
+      console.error('Registration Error:', err.message);
+      errorMessage.value = err.message || 'Registration failed';
+    } else {
+      console.error('Registration Error:', err);
+      errorMessage.value = 'Registration failed';
+    }
   } finally {
     loading.value = false;
   }
@@ -576,6 +848,7 @@ async function handleRegister() {
   padding: 0 vars.$spacing-md;
   display: flex;
   align-items: center;
+  justify-content: space-between;
 }
 
 .picker-text {
@@ -585,6 +858,12 @@ async function handleRegister() {
   &.placeholder {
     color: vars.$text-muted;
   }
+}
+
+.picker-arrow {
+  font-size: 36rpx;
+  color: vars.$text-muted;
+  margin-left: vars.$spacing-sm;
 }
 
 .error-message {
@@ -647,5 +926,38 @@ async function handleRegister() {
 .link-primary {
   color: vars.$primary-color;
   font-weight: 500;
+}
+
+.city-picker-wrapper {
+  width: 100%;
+  
+  :deep(.city-picker) {
+    width: 100%;
+  }
+  
+  :deep(.picker-trigger) {
+    width: 100%;
+    height: 106rpx;
+    background-color: #f5f7fa;
+    border-radius: vars.$border-radius;
+    padding: 0 vars.$spacing-md;
+    box-sizing: border-box;
+  }
+  
+  :deep(.picker-text),
+  :deep(.picker-placeholder) {
+    font-size: 30rpx;
+    color: vars.$text-color;
+  }
+  
+  :deep(.picker-placeholder) {
+    color: vars.$text-muted;
+  }
+  
+  :deep(.picker-arrow) {
+    font-size: 36rpx;
+    color: vars.$text-muted;
+    margin-left: vars.$spacing-sm;
+  }
 }
 </style>
