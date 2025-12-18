@@ -6,13 +6,7 @@
         <h1 class="page-title">用户管理</h1>
         <p class="page-description">管理平台所有用户信息，支持精细化用户操作</p>
       </div>
-      <div class="header-actions">
-        <NButton type="primary" @click="exportUsers">
-          <template #icon>📤</template>
-          导出用户
-        </NButton>
       </div>
-    </div>
 
     <!-- 筛选和搜索 -->
     <NCard :bordered="false" class="filter-card">
@@ -94,7 +88,14 @@
           class="user-item"
         >
           <div class="user-avatar">
-            <div class="avatar-circle" :class="user.userType">
+            <img
+              v-if="user.avatarUrl"
+              :src="user.avatarUrl"
+              :alt="user.username"
+              class="avatar-image"
+              @error="handleAvatarError"
+            />
+            <div v-else class="avatar-circle" :class="user.userType">
               {{ getUserIcon(user.userType) }}
             </div>
           </div>
@@ -209,7 +210,14 @@
           <!-- 用户头像和基本信息 -->
           <div class="detail-header">
             <div class="detail-avatar">
-              <div class="avatar-circle large" :class="selectedUser.userType">
+              <img
+                v-if="selectedUser.avatarUrl"
+                :src="selectedUser.avatarUrl"
+                :alt="selectedUser.username"
+                class="avatar-image large"
+                @error="handleAvatarError"
+              />
+              <div v-else class="avatar-circle large" :class="selectedUser.userType">
                 {{ getUserIcon(selectedUser.userType) }}
               </div>
             </div>
@@ -815,6 +823,20 @@ const formatTime = (time: string | undefined) => {
   return dayjs(time).format('YYYY-MM-DD HH:mm')
 }
 
+// 处理头像加载失败
+const handleAvatarError = (event: Event) => {
+  const img = event.target as HTMLImageElement
+  // 隐藏图片，显示默认头像
+  img.style.display = 'none'
+  const parent = img.parentElement
+  if (parent) {
+    const fallback = parent.querySelector('.avatar-circle') as HTMLElement
+    if (fallback) {
+      fallback.style.display = 'flex'
+    }
+  }
+}
+
 
 // 事件处理
 const handleFilter = () => {
@@ -1150,15 +1172,6 @@ const viewUserLogs = (user: ExtendedUser) => {
   message.info(`查看用户记录功能开发中 - 用户：${user.username}`)
 }
 
-// 导出用户数据
-const exportUserData = (user: ExtendedUser) => {
-  message.info(`导出用户数据功能开发中 - 用户：${user.username}`)
-}
-
-// 批量导出用户
-const exportUsers = () => {
-  message.info('批量导出功能开发中')
-}
 
 // 页面初始化
 onMounted(() => {
@@ -1297,6 +1310,19 @@ onMounted(() => {
         .user-avatar {
           flex-shrink: 0;
 
+          .avatar-image {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #f0f0f0;
+
+            &.large {
+              width: 80px;
+              height: 80px;
+            }
+          }
+
           .avatar-circle {
             width: 64px;
             height: 64px;
@@ -1306,6 +1332,12 @@ onMounted(() => {
             justify-content: center;
             font-size: 24px;
             font-weight: 600;
+
+            &.large {
+              width: 80px;
+              height: 80px;
+              font-size: 32px;
+            }
 
             &.jobseeker {
               background: linear-gradient(135deg, #2f7cff, #1e5fcc);
@@ -1470,10 +1502,19 @@ onMounted(() => {
       color: white;
 
       .detail-avatar {
+        .avatar-image.large {
+          width: 80px;
+          height: 80px;
+          border-radius: 50%;
+          object-fit: cover;
+          border: 4px solid rgba(255, 255, 255, 0.3);
+          backdrop-filter: blur(10px);
+        }
+
         .avatar-circle.large {
-          width: 64px;
-          height: 64px;
-          font-size: 28px;
+          width: 80px;
+          height: 80px;
+          font-size: 32px;
           background: rgba(255, 255, 255, 0.2);
           backdrop-filter: blur(10px);
         }
@@ -1650,6 +1691,14 @@ onMounted(() => {
 
         .user-avatar {
           align-self: center;
+
+          .avatar-image {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #f0f0f0;
+          }
 
           .avatar-circle {
             width: 48px;

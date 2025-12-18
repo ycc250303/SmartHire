@@ -459,7 +459,7 @@ interface StatusTab {
   value: string
   label: string
   description: string
-  count: number
+  count: number | null
   type: 'info' | 'success' | 'warning' | 'error'
   emptyText: string
   emptyDesc: string
@@ -474,12 +474,12 @@ const selectedJob = ref<Job | null>(null)
 
 // 状态标签页
 const activeTab = ref('pending')
-const statusTabs: StatusTab[] = [
+const statusTabs = ref<StatusTab[]>([
   {
     value: 'pending',
     label: '待审核',
     description: '需要审核的职位',
-    count: 12,
+    count: null,
     type: 'info',
     emptyText: '待审核职位',
     emptyDesc: '当前没有需要审核的职位'
@@ -488,7 +488,7 @@ const statusTabs: StatusTab[] = [
     value: 'approved',
     label: '已通过',
     description: '已通过审核的职位',
-    count: 45,
+    count: null,
     type: 'success',
     emptyText: '已通过职位',
     emptyDesc: '当前没有已通过的职位'
@@ -497,7 +497,7 @@ const statusTabs: StatusTab[] = [
     value: 'rejected',
     label: '已拒绝',
     description: '被拒绝的职位',
-    count: 8,
+    count: null,
     type: 'error',
     emptyText: '已拒绝职位',
     emptyDesc: '当前没有已拒绝的职位'
@@ -506,12 +506,12 @@ const statusTabs: StatusTab[] = [
     value: 'modified',
     label: '需修改',
     description: '需要修改的职位',
-    count: 3,
+    count: null,
     type: 'warning',
     emptyText: '需修改职位',
     emptyDesc: '当前没有需要修改的职位'
   }
-]
+])
 
 // 状态数据
 const jobsData = ref<Job[]>([])
@@ -552,7 +552,7 @@ const actionForm = ref({
 })
 
 // 计算属性
-const currentTab = computed(() => statusTabs.find(tab => tab.value === activeTab.value)!)
+const currentTab = computed(() => statusTabs.value.find(tab => tab.value === activeTab.value)!)
 const filteredJobs = computed(() => {
   let filtered = jobsData.value.filter(job => job.status === activeTab.value)
 
@@ -570,7 +570,7 @@ const filteredJobs = computed(() => {
 
 // 获取当前标签页的标题
 const getCurrentTabTitle = computed(() => {
-  const tab = statusTabs.find(t => t.value === activeTab.value)
+  const tab = statusTabs.value.find(t => t.value === activeTab.value)
   return tab ? tab.label : '职位列表'
 })
 
@@ -776,7 +776,7 @@ const updateStatusStats = async () => {
   try {
     const stats = await getJobAuditStats()
 
-    statusTabs.forEach(tab => {
+    statusTabs.value.forEach(tab => {
       tab.count = stats[tab.value as keyof typeof stats] || 0
     })
   } catch (error) {

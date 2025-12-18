@@ -66,6 +66,7 @@ public class AdminController {
     return Result.success(userInfo);
   }
 
+  
   /** 更新用户状态 */
   @PutMapping("/users/{userId}/status")
   public Result<Boolean> updateUserStatus(

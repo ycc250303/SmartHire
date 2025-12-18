@@ -7,6 +7,7 @@ export {}
 
 declare module 'vue' {
   export interface GlobalComponents {
+    NCarousel: typeof import('naive-ui')['NCarousel']
     NCheckboxGroup: typeof import('naive-ui')['NCheckboxGroup']
     NDialogProvider: typeof import('naive-ui')['NDialogProvider']
     NInputNumber: typeof import('naive-ui')['NInputNumber']

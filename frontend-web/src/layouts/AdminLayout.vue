@@ -59,12 +59,6 @@
             @select="handleUserAction"
           >
             <div class="user-info">
-              <NAvatar
-                :size="32"
-                :src="userStore.auth.user?.avatar"
-                fallback-src="/default-avatar.png"
-                round
-              />
               <span class="username">{{ userStore.displayName() }}</span>
             </div>
           </NDropdown>
@@ -102,12 +96,9 @@ const isDark = ref(themeStore.isDark)
 const activeMenu = computed(() => {
   const path = route.path
   if (path === '/dashboard' || path === '/') return 'DashboardHome'
-  if (path.startsWith('/dashboard/statistics')) return 'Statistics'
   if (path.startsWith('/dashboard/review')) return 'Review'
   if (path.startsWith('/dashboard/users')) return 'Users'
-  if (path.startsWith('/dashboard/announcement')) return 'Announcement'
   if (path.startsWith('/dashboard/reports')) return 'Reports'
-  if (path.startsWith('/dashboard/system')) return 'System'
   return route.name as string
 })
 
@@ -136,13 +127,7 @@ const menuOptions = computed(() => [
     icon: () => h('span', '🏠'),
     onClick: () => router.push('/dashboard')
   },
-  {
-    label: () => '数据统计',
-    key: 'Statistics',
-    icon: () => h('span', '📊'),
-    onClick: () => router.push('/dashboard/statistics')
-  },
-  {
+    {
     label: () => '招聘审核',
     key: 'Review',
     icon: () => h('span', '✅'),
@@ -155,35 +140,15 @@ const menuOptions = computed(() => [
     onClick: () => router.push('/dashboard/users')
   },
   {
-    label: () => '公告管理',
-    key: 'Announcement',
-    icon: () => h('span', '📢'),
-    onClick: () => router.push('/dashboard/announcement')
-  },
-  {
     label: () => '举报处理',
     key: 'Reports',
     icon: () => h('span', '⚠️'),
     onClick: () => router.push('/dashboard/reports')
-  },
-  {
-    label: () => '系统管理',
-    key: 'System',
-    icon: () => h('span', '⚙️'),
-    onClick: () => router.push('/dashboard/system')
   }
 ])
 
 // 用户下拉菜单
 const userDropdownOptions = [
-  {
-    label: '个人设置',
-    key: 'profile',
-    icon: () => '👤'
-  },
-  {
-    type: 'divider'
-  },
   {
     label: '退出登录',
     key: 'logout',
@@ -204,14 +169,8 @@ const handleThemeChange = (value: boolean) => {
 }
 
 const handleUserAction = (key: string) => {
-  switch (key) {
-    case 'profile':
-      // TODO: 跳转到个人设置页面
-      message.info('个人设置功能开发中')
-      break
-    case 'logout':
-      handleLogout()
-      break
+  if (key === 'logout') {
+    handleLogout()
   }
 }
 

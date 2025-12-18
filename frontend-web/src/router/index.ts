@@ -37,17 +37,7 @@ const routes: RouteRecordRaw[] = [
           requiresAuth: true
         }
       },
-      {
-        path: 'statistics',
-        name: 'Statistics',
-        component: () => import('@/views/admin/statistics/Index.vue'),
-        meta: {
-          title: '数据统计',
-          icon: 'chart',
-          requiresAuth: true
-        }
-      },
-      {
+        {
         path: 'review',
         name: 'Review',
         component: () => import('@/views/admin/review/Index.vue'),
@@ -67,27 +57,7 @@ const routes: RouteRecordRaw[] = [
           requiresAuth: true
         }
       },
-      {
-        path: 'announcement',
-        name: 'Announcement',
-        component: () => import('@/views/admin/announcement/Index.vue'),
-        meta: {
-          title: '公告管理',
-          icon: 'announcement',
-          requiresAuth: true
-        }
-      },
-      {
-        path: 'announcement/edit',
-        name: 'AnnouncementEdit',
-        component: () => import('@/views/admin/announcement/Edit.vue'),
-        meta: {
-          title: '编辑公告',
-          requiresAuth: true,
-          hideInMenu: true
-        }
-      },
-      {
+        {
         path: 'reports',
         name: 'Reports',
         component: () => import('@/views/admin/reports/Index.vue'),
@@ -107,27 +77,7 @@ const routes: RouteRecordRaw[] = [
           hideInMenu: true
         }
       },
-      {
-        path: 'system',
-        name: 'System',
-        component: () => import('@/views/admin/system/Index.vue'),
-        meta: {
-          title: '系统管理',
-          icon: 'settings',
-          requiresAuth: true
-        }
-      },
-      {
-        path: 'system/logs',
-        name: 'Logs',
-        component: () => import('@/views/admin/system/Logs.vue'),
-        meta: {
-          title: '操作日志',
-          requiresAuth: true,
-          hideInMenu: true
-        }
-      }
-    ]
+      ]
   },
   {
     path: '/:pathMatch(.*)*',
@@ -211,9 +161,8 @@ router.beforeEach(async (to, from, next) => {
       return
     }
 
-    // 检查管理员权限 - 某些页面需要管理员权限
-    const adminOnlyRoutes = ['Users', 'System', 'Reports', 'Announcement']
-    if (adminOnlyRoutes.includes(to.name as string) && !isAdmin) {
+    // 检查管理员权限 - 除了登录页面外，所有页面都需要管理员权限
+    if (to.name !== 'Login' && !isAdmin) {
       console.warn('访问管理员专用页面被拒绝:', to.name, '用户类型:', userType)
       next({ name: 'DashboardHome' })
       return

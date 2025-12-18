@@ -13,6 +13,7 @@ public class UserManagementDTO {
   private String email;
   private String userType; // "hr", "job_seeker", "admin"
   private Integer status; // 0-禁用, 1-启用
+  private String avatarUrl;
   private String createTime;
   private String lastLoginTime;
 
@@ -25,6 +26,7 @@ public class UserManagementDTO {
       String email,
       String userType,
       Integer status,
+      String avatarUrl,
       String createTime,
       String lastLoginTime) {
     this.userId = userId;
@@ -32,6 +34,7 @@ public class UserManagementDTO {
     this.email = email;
     this.userType = userType;
     this.status = status;
+    this.avatarUrl = avatarUrl;
     this.createTime = createTime;
     this.lastLoginTime = lastLoginTime;
   }
@@ -75,6 +78,14 @@ public class UserManagementDTO {
 
   public void setStatus(Integer status) {
     this.status = status;
+  }
+
+  public String getAvatarUrl() {
+    return avatarUrl;
+  }
+
+  public void setAvatarUrl(String avatarUrl) {
+    this.avatarUrl = avatarUrl;
   }
 
   public String getCreateTime() {
