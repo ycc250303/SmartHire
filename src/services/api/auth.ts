@@ -47,6 +47,11 @@ export interface RefreshTokenResponse {
   expiresIn: number;
 }
 
+
+/**
+ * Send verification code to email
+ * @returns Operation result
+ */
 export function sendVerificationCode(params: SendVerificationCodeParams): Promise<null> {
   const queryString = `email=${encodeURIComponent(params.email)}`;
   const url = `/api/user-auth/send-verification-code?${queryString}`;
@@ -61,6 +66,10 @@ export function sendVerificationCode(params: SendVerificationCodeParams): Promis
   });
 }
 
+/**
+ * Verify email verification code
+ * @returns Operation result
+ */
 export function verifyCode(params: VerifyCodeParams): Promise<null> {
   const queryString = `email=${encodeURIComponent(params.email)}&code=${encodeURIComponent(params.code)}`;
   const url = `/api/user-auth/verify-code?${queryString}`;
@@ -75,6 +84,10 @@ export function verifyCode(params: VerifyCodeParams): Promise<null> {
   });
 }
 
+/**
+ * Register new user
+ * @returns Operation result
+ */
 export function register(params: RegisterParams): Promise<null> {
   const url = '/api/user-auth/register';
   console.log('[Params]', url, params);
@@ -89,6 +102,10 @@ export function register(params: RegisterParams): Promise<null> {
   });
 }
 
+/**
+ * User login
+ * @returns Login response with access token and refresh token
+ */
 export function login(params: LoginParams): Promise<LoginResponse> {
   const url = '/api/user-auth/login';
   console.log('[Params]', url, params);
@@ -105,6 +122,7 @@ export function login(params: LoginParams): Promise<LoginResponse> {
 
 /**
  * User logout
+ * @returns Operation result
  */
 export function logout(): Promise<null> {
   const url = '/api/user-auth/logout';
@@ -120,14 +138,16 @@ export function logout(): Promise<null> {
 
 /**
  * Refresh access token using refresh token
- * @returns New tokens with accessToken, refreshToken and expiresIn
+ * @returns New access token and refresh token
  */
-export function refreshToken(): Promise<RefreshTokenResponse> {
+export function refreshToken(refreshToken: string): Promise<RefreshTokenResponse> {
   const url = '/api/user-auth/refresh-token';
-  console.log('[Params]', url, null);
+  const requestData = { refreshToken };
+  console.log('[Params]', url, requestData);
   return http<RefreshTokenResponse>({
     url,
     method: 'POST',
+    data: requestData,
     skipAuth: true,
   }).then(response => {
     console.log('[Response]', url, response);

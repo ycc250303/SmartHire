@@ -115,6 +115,7 @@ async function handleUpload() {
       filePath: filePath.value,
       resumeName: resumeName.value.trim(),
       privacyLevel: privacyLevel.value,
+      fileName: fileName.value || 'resume.pdf',
     });
 
     uni.showToast({

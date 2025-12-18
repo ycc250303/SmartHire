@@ -16,6 +16,7 @@ export interface UploadResumeParams {
   filePath: string;
   resumeName: string;
   privacyLevel: number;
+  fileName?: string;
 }
 
 export interface UpdateResumeParams {
@@ -24,7 +25,8 @@ export interface UpdateResumeParams {
 }
 
 /**
- * Upload resume file (PDF only)
+ * Upload resume file
+ * @returns Uploaded resume data
  */
 export function uploadResume(params: UploadResumeParams): Promise<Resume> {
   const apiPath = '/api/seeker/upload-resume';
@@ -48,7 +50,8 @@ export function uploadResume(params: UploadResumeParams): Promise<Resume> {
         .then(res => res.blob())
         .then(blob => {
           const formData = new FormData();
-          formData.append('resumeFile', blob);
+          const fileName = params.fileName || 'resume.pdf';
+          formData.append('resumeFile', blob, fileName);
           formData.append('resumeName', params.resumeName);
           formData.append('privacyLevel', params.privacyLevel.toString());
           
@@ -185,6 +188,7 @@ export function uploadResume(params: UploadResumeParams): Promise<Resume> {
 
 /**
  * Get all resumes
+ * @returns List of resumes
  */
 export function getResumes(): Promise<Resume[]> {
   const url = '/api/seeker/get-resumes';
@@ -200,6 +204,7 @@ export function getResumes(): Promise<Resume[]> {
 
 /**
  * Update resume
+ * @returns Updated resume data
  */
 export function updateResume(id: number, params: UpdateResumeParams): Promise<Resume> {
   const url = `/api/seeker/update-resume/${id}`;
@@ -216,6 +221,7 @@ export function updateResume(id: number, params: UpdateResumeParams): Promise<Re
 
 /**
  * Delete resume
+ * @returns Operation result
  */
 export function deleteResume(id: number): Promise<null> {
   const url = `/api/seeker/delete-resume/${id}`;

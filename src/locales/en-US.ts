@@ -349,7 +349,7 @@ export default {
         expectedIndustry: 'Industry',
         expectedCity: 'City',
         salaryRange: 'Salary Range',
-        salaryUnit: '',
+        salaryUnit: 'k',
         salaryTo: '-',
         positionTypes: 'Position Types',
         educationTitle: 'Education',

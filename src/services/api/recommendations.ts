@@ -28,7 +28,7 @@ export interface InternJobRecommendationsResponse {
 
 /**
  * Get intern job recommendations
- * @param userId 
+ * @returns Intern job recommendations response
  */
 export function getInternJobRecommendations(userId?: number | null): Promise<InternJobRecommendationsResponse> {
   const params: Record<string, any> = {};

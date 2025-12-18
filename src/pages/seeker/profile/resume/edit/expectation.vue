@@ -36,24 +36,30 @@
 
         <view class="form-item">
           <text class="form-label">{{ t('pages.resume.edit.expectation.salaryMin') }}</text>
-          <input
-            class="form-input"
-            v-model.number="formData.salaryMin"
-            type="number"
-            :placeholder="t('pages.resume.edit.expectation.salaryMinPlaceholder')"
-            placeholder-class="input-placeholder"
-          />
+          <view class="salary-input-wrapper">
+            <input
+              class="form-input"
+              v-model.number="salaryMinK"
+              type="number"
+              :placeholder="t('pages.resume.edit.expectation.salaryMinPlaceholder')"
+              placeholder-class="input-placeholder"
+            />
+            <text class="salary-unit">k</text>
+          </view>
         </view>
 
         <view class="form-item">
           <text class="form-label">{{ t('pages.resume.edit.expectation.salaryMax') }}</text>
-          <input
-            class="form-input"
-            v-model.number="formData.salaryMax"
-            type="number"
-            :placeholder="t('pages.resume.edit.expectation.salaryMaxPlaceholder')"
-            placeholder-class="input-placeholder"
-          />
+          <view class="salary-input-wrapper">
+            <input
+              class="form-input"
+              v-model.number="salaryMaxK"
+              type="number"
+              :placeholder="t('pages.resume.edit.expectation.salaryMaxPlaceholder')"
+              placeholder-class="input-placeholder"
+            />
+            <text class="salary-unit">k</text>
+          </view>
         </view>
       </view>
     </scroll-view>
@@ -74,7 +80,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { t } from '@/locales';
 import { useNavigationTitle } from '@/utils/useNavigationTitle';
@@ -101,6 +107,20 @@ const formData = ref<AddJobSeekerExpectationParams>({
   workCity: '',
   salaryMin: 0,
   salaryMax: 0,
+});
+
+const salaryMinK = computed({
+  get: () => formData.value.salaryMin ? Math.round(formData.value.salaryMin / 1000) : 0,
+  set: (value: number) => {
+    formData.value.salaryMin = value ? value * 1000 : 0;
+  },
+});
+
+const salaryMaxK = computed({
+  get: () => formData.value.salaryMax ? Math.round(formData.value.salaryMax / 1000) : 0,
+  set: (value: number) => {
+    formData.value.salaryMax = value ? value * 1000 : 0;
+  },
 });
 
 onLoad((options: any) => {
@@ -150,7 +170,7 @@ async function handleSave() {
     return;
   }
 
-  if (formData.value.salaryMin && formData.value.salaryMax && formData.value.salaryMin > formData.value.salaryMax) {
+  if (salaryMinK.value && salaryMaxK.value && salaryMinK.value > salaryMaxK.value) {
     uni.showToast({
       title: t('pages.resume.edit.expectation.salaryInvalid'),
       icon: 'none',
@@ -278,6 +298,17 @@ async function handleDelete() {
   color: #000000;
   line-height: 1.5;
   padding: 0;
+}
+
+.salary-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.salary-unit {
+  font-size: 30rpx;
+  color: #000000;
 }
 
 .input-placeholder {

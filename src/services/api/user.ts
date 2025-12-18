@@ -17,6 +17,7 @@ export interface PublicUserInfo {
 
 /**
  * Get current user information
+ * @returns Current user information
  */
 export function getCurrentUserInfo(): Promise<UserInfo> {
   const url = '/api/user-auth/user-info';
@@ -32,6 +33,7 @@ export function getCurrentUserInfo(): Promise<UserInfo> {
 
 /**
  * Get public user information by userId
+ * @returns Public user information
  */
 export function getPublicUserInfo(userId: number): Promise<PublicUserInfo> {
   const url = `/api/user-auth/public-user-info/${userId}`;
@@ -48,6 +50,7 @@ export function getPublicUserInfo(userId: number): Promise<PublicUserInfo> {
 
 /**
  * Update user avatar with file
+ * @returns Updated user information
  */
 export function updateUserAvatarWithFile(filePath: string): Promise<UserInfo> {
   const apiPath = '/api/user-auth/update-user-avatar';
@@ -159,6 +162,7 @@ export function updateUserAvatarWithFile(filePath: string): Promise<UserInfo> {
 
 /**
  * Update user avatar with URL
+ * @returns Updated user information
  */
 export function updateUserAvatar(avatarUrl: string): Promise<UserInfo> {
   const url = '/api/user-auth/update-user-avatar';
@@ -168,6 +172,22 @@ export function updateUserAvatar(avatarUrl: string): Promise<UserInfo> {
     url,
     method: 'PATCH',
     data: requestData,
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
+  });
+}
+
+/**
+ * Delete user account by userId
+ * @returns Operation result
+ */
+export function deleteUser(userId: number): Promise<null> {
+  const url = `/api/user-auth/user/${userId}`;
+  console.log('[Params]', url, { userId });
+  return http<null>({
+    url,
+    method: 'DELETE',
   }).then(response => {
     console.log('[Response]', url, response);
     return response;

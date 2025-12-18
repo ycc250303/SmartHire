@@ -349,7 +349,7 @@ export default {
         expectedIndustry: '期望行业',
         expectedCity: '期望城市',
         salaryRange: '薪资范围',
-        salaryUnit: '元',
+        salaryUnit: 'k',
         salaryTo: '至',
         educationTitle: '教育经历',
         educationEmpty: '请完善教育经历',

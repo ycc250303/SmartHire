@@ -1,4 +1,4 @@
-import { http } from '../http';
+import { http, getApiBaseUrl } from '../http';
 
 export interface Conversation {
   id: number;
@@ -43,7 +43,10 @@ export interface SendMessageParams {
   replyTo: number | null;
 }
 
-// Get conversations list
+/**
+ * Get conversations list
+ * @returns List of conversations
+ */
 export function getConversations(): Promise<Conversation[]> {
   const url = '/api/message/get-conversations';
   console.log('[Params]', url, null);
@@ -56,7 +59,10 @@ export function getConversations(): Promise<Conversation[]> {
   });
 }
 
-// Get chat history
+/**
+ * Get chat history
+ * @returns List of messages
+ */
 export function getChatHistory(params: GetChatHistoryParams): Promise<Message[]> {
   const queryParams: Record<string, any> = {
     conversationId: params.conversationId,
@@ -85,7 +91,10 @@ export function getChatHistory(params: GetChatHistoryParams): Promise<Message[]>
   });
 }
 
-// Send message
+/**
+ * Send message
+ * @returns Sent message data
+ */
 export function sendMessage(params: SendMessageParams): Promise<Message> {
   const url = '/api/message/send-text';
   const requestData = {
@@ -107,7 +116,10 @@ export function sendMessage(params: SendMessageParams): Promise<Message> {
   });
 }
 
-// Mark messages as read
+/**
+ * Mark messages as read
+ * @returns Operation result
+ */
 export function markAsRead(conversationId: number): Promise<null> {
   const queryString = `conversationId=${encodeURIComponent(conversationId)}`;
   const url = `/api/message/read?${queryString}`;
@@ -121,7 +133,10 @@ export function markAsRead(conversationId: number): Promise<null> {
   });
 }
 
-// Pin or unpin conversation
+/**
+ * Pin or unpin conversation
+ * @returns Operation result
+ */
 export function pinConversation(id: number, pinned: boolean): Promise<null> {
   const url = `/api/message/pin-conversation/${id}?pinned=${pinned}`;
   console.log('[Params]', url, { id, pinned });
@@ -134,7 +149,10 @@ export function pinConversation(id: number, pinned: boolean): Promise<null> {
   });
 }
 
-// Delete conversation
+/**
+ * Delete conversation
+ * @returns Operation result
+ */
 export function deleteConversation(id: number): Promise<null> {
   const url = `/api/message/delete-conversation/${id}`;
   console.log('[Params]', url, { id });
@@ -147,7 +165,10 @@ export function deleteConversation(id: number): Promise<null> {
   });
 }
 
-// Get unread message count
+/**
+ * Get unread message count
+ * @returns Unread message count
+ */
 export function getUnreadCount(): Promise<number> {
   const url = '/api/message/get-unread-count';
   console.log('[Params]', url, null);
@@ -157,5 +178,177 @@ export function getUnreadCount(): Promise<number> {
   }).then(response => {
     console.log('[Response]', url, response);
     return response;
+  });
+}
+
+export interface SendMediaParams {
+  receiverId: number;
+  applicationId: number;
+  messageType: number;
+  filePath: string;
+}
+
+/**
+ * Send media message (image)
+ * @returns Sent message data
+ */
+export function sendMedia(params: SendMediaParams): Promise<Message> {
+  const apiPath = '/api/message/send-media';
+  const baseUrl = getApiBaseUrl(apiPath);
+  let normalizedBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+  let normalizedPath = '/api/message/send-media';
+  
+  if (normalizedBaseUrl.endsWith('/api') && normalizedPath.startsWith('/api')) {
+    normalizedPath = normalizedPath.replace(/^\/api/, '');
+  }
+  
+  const fullUrl = `${normalizedBaseUrl}${normalizedPath}`;
+  const token = uni.getStorageSync('auth_token');
+
+  console.log('[Params]', fullUrl, params);
+
+  return new Promise((resolve, reject) => {
+    const payload = JSON.stringify({
+      receiverId: params.receiverId,
+      applicationId: params.applicationId,
+      messageType: params.messageType,
+    });
+
+    // #ifdef H5
+    if (params.filePath.startsWith('data:') || params.filePath.startsWith('blob:')) {
+      fetch(params.filePath)
+        .then(res => res.blob())
+        .then(blob => {
+          const formData = new FormData();
+          const fileName = params.filePath.includes('image') ? 'image.png' : 'file';
+          formData.append('file', blob, fileName);
+          formData.append('payload', payload);
+          
+          const xhr = new XMLHttpRequest();
+          xhr.open('POST', fullUrl, true);
+          xhr.setRequestHeader('Authorization', token ? `Bearer ${token}` : '');
+          
+          xhr.onload = () => {
+            try {
+              let data: any;
+              if (typeof xhr.responseText === 'string') {
+                data = JSON.parse(xhr.responseText);
+              } else {
+                data = xhr.responseText;
+              }
+              
+              if (xhr.status >= 200 && xhr.status < 300) {
+                if (data && data.code === 0) {
+                  console.log('[Response]', fullUrl, data.data);
+                  resolve(data.data);
+                } else if (data && !data.code) {
+                  console.log('[Response]', fullUrl, data);
+                  resolve(data);
+                } else {
+                  reject(new Error(data?.message || 'Send failed'));
+                }
+              } else {
+                reject(new Error(`Request failed with status ${xhr.status}`));
+              }
+            } catch (error) {
+              reject(new Error('Failed to parse response: ' + (error instanceof Error ? error.message : String(error))));
+            }
+          };
+          
+          xhr.onerror = () => {
+            reject(new Error('Network error'));
+          };
+          
+          xhr.send(formData);
+        })
+        .catch(error => {
+          reject(new Error('Failed to read file: ' + (error instanceof Error ? error.message : String(error))));
+        });
+    } else {
+      uni.uploadFile({
+        url: fullUrl,
+        filePath: params.filePath,
+        name: 'file',
+        formData: {
+          payload: payload,
+        },
+        header: {
+          'Authorization': token ? `Bearer ${token}` : '',
+        },
+        success: (res) => {
+          try {
+            let data: any;
+            if (typeof res.data === 'string') {
+              data = JSON.parse(res.data);
+            } else {
+              data = res.data;
+            }
+            
+            if (res.statusCode >= 200 && res.statusCode < 300) {
+              if (data && data.code === 0) {
+                console.log('[Response]', fullUrl, data.data);
+                resolve(data.data);
+              } else if (data && !data.code) {
+                console.log('[Response]', fullUrl, data);
+                resolve(data);
+              } else {
+                reject(new Error(data?.message || 'Send failed'));
+              }
+            } else {
+              reject(new Error(`Request failed with status ${res.statusCode}`));
+            }
+          } catch (error) {
+            reject(new Error('Failed to parse response: ' + (error instanceof Error ? error.message : String(error))));
+          }
+        },
+        fail: (error) => {
+          reject(new Error(error.errMsg || 'Upload failed'));
+        },
+      });
+    }
+    // #endif
+    
+    // #ifndef H5
+    uni.uploadFile({
+      url: fullUrl,
+      filePath: params.filePath,
+      name: 'file',
+      formData: {
+        payload: payload,
+      },
+      header: {
+        'Authorization': token ? `Bearer ${token}` : '',
+      },
+      success: (res) => {
+        try {
+          let data: any;
+          if (typeof res.data === 'string') {
+            data = JSON.parse(res.data);
+          } else {
+            data = res.data;
+          }
+          
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            if (data && data.code === 0) {
+              console.log('[Response]', fullUrl, data.data);
+              resolve(data.data);
+            } else if (data && !data.code) {
+              console.log('[Response]', fullUrl, data);
+              resolve(data);
+            } else {
+              reject(new Error(data?.message || 'Send failed'));
+            }
+          } else {
+            reject(new Error(`Request failed with status ${res.statusCode}`));
+          }
+        } catch (error) {
+          reject(new Error('Failed to parse response: ' + (error instanceof Error ? error.message : String(error))));
+        }
+      },
+      fail: (error) => {
+        reject(new Error(error.errMsg || 'Upload failed'));
+      },
+    });
+    // #endif
   });
 }
