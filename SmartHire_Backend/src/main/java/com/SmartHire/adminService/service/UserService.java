@@ -2,9 +2,7 @@ package com.SmartHire.adminService.service;
 
 import com.SmartHire.adminService.dto.UserManagementDTO;
 import com.SmartHire.adminService.dto.UserStatusUpdateDTO;
-import com.SmartHire.userAuthService.model.User;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.baomidou.mybatisplus.extension.service.IService;
 import java.util.List;
 
 /**
@@ -13,7 +11,7 @@ import java.util.List;
  * @author SmartHire Team
  * @since 2025-12-02
  */
-public interface UserService extends IService<User> {
+public interface UserService {
 
   /**
    * 分页查询用户管理列表

@@ -3,7 +3,6 @@ package com.SmartHire.hrService.service;
 import com.SmartHire.hrService.dto.HrInfoDTO;
 import com.SmartHire.hrService.model.Company;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import java.util.List;
 
 /**
  * 公司管理员服务接口

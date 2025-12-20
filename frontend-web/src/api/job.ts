@@ -1,5 +1,4 @@
 import { adminRequest } from '@/utils/request'
-import { useUserStore } from '@/store/user'
 
 // 职位审核信息接口定义（严格匹配后端JobAuditListDTO）
 export interface Job {
@@ -15,6 +14,7 @@ export interface Job {
   publisher: string
   createTime: string
   tags?: string[]  // 从job_skill_requirement表动态获取
+  hrUserId?: number  // HR的用户ID，用于发送通知
 }
 
 // 职位审核查询参数（严格匹配后端JobAuditQueryDTO）
@@ -91,6 +91,11 @@ export const rejectJob = (jobId: number, params: JobAuditParams): Promise<void> 
 // 要求修改
 export const modifyJob = (jobId: number, params: JobAuditParams): Promise<void> => {
   return adminRequest.post(`/admin/review/jobs/${jobId}/modify`, params)
+}
+
+// 强制下线
+export const forceOfflineJob = (jobId: number, params: JobAuditParams): Promise<void> => {
+  return adminRequest.post(`/admin/review/jobs/${jobId}/offline`, params)
 }
 
 // 按状态统计职位数量

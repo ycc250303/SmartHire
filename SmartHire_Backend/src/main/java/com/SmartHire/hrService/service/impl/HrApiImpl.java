@@ -97,4 +97,36 @@ public class HrApiImpl implements HrApi {
 
     return jobCard;
   }
+
+  @Override
+  public HrInfo getHrInfoById(Long hrId) {
+    if (hrId == null) {
+      return null;
+    }
+    return hrInfoMapper.selectById(hrId);
+  }
+
+  @Override
+  public JobInfo getJobInfoById(Long jobId) {
+    if (jobId == null) {
+      return null;
+    }
+    return jobInfoMapper.selectById(jobId);
+  }
+
+  @Override
+  public Company getCompanyById(Long companyId) {
+    if (companyId == null) {
+      return null;
+    }
+    return companyMapper.selectById(companyId);
+  }
+
+  @Override
+  public boolean updateJobInfo(JobInfo jobInfo) {
+    if (jobInfo == null || jobInfo.getId() == null) {
+      return false;
+    }
+    return jobInfoMapper.updateById(jobInfo) > 0;
+  }
 }

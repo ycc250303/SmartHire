@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.SmartHire.adminService.mapper.JobAuditMapper">
+
+    <!-- 结果映射（支持技能标签和详情） -->
+    <resultMap id="AuditListMap" type="com.SmartHire.adminService.dto.JobAuditListDTO">
+        <id column="job_id" property="id"/>
+        <result column="job_title" property="title"/>
+        <result column="company_name" property="company"/>
+        <result column="location" property="location"/>
+        <result column="salary_range" property="salary"/>
+        <result column="experience_required" property="experience"/>
+        <result column="education_required" property="education"/>
+        <result column="job_description" property="description"/>
+        <result column="audit_status" property="status"/>
+        <result column="hr_name" property="publisher"/>
+        <result column="created_at" property="createTime"/>
+        <result column="hr_user_id" property="hrUserId"/>
+        <collection column="job_id" property="tags" ofType="java.lang.String"
+                    select="selectJobTags" />
+    </resultMap>
+
+    <!-- 查询技能标签 -->
+    <select id="selectJobTags" resultType="java.lang.String">
+        SELECT skill_name FROM job_skill_requirement WHERE job_id = #{jobId}
+    </select>
+
+    <!-- 分页查询审核列表（支持前端所有功能） -->
+    <select id="selectAuditList" resultMap="AuditListMap">
+        SELECT
+            ja.job_id,
+            ja.job_title,
+            ja.company_name,
+            COALESCE(jp.city, '未知') as location,
+            COALESCE(CONCAT(jp.salary_min, '-', jp.salary_max), '面议') as salary_range,
+            CASE jp.experience_required
+                WHEN 1 THEN '不限'
+                WHEN 2 THEN '1-3年'
+                WHEN 3 THEN '3-5年'
+                WHEN 4 THEN '5-10年'
+                ELSE '10年以上'
+            END as experience_required,
+            CASE jp.education_required
+                WHEN 1 THEN '不限'
+                WHEN 2 THEN '大专'
+                WHEN 3 THEN '本科'
+                WHEN 4 THEN '硕士'
+                ELSE '博士'
+            END as education_required,
+            jp.description as job_description,
+            ja.audit_status,
+            ja.hr_name,
+            DATE_FORMAT(ja.created_at, '%Y-%m-%d %H:%i:%s') as created_at
+        FROM job_audit_record ja
+        LEFT JOIN job_info jp ON ja.job_id = jp.id
+        WHERE 1=1
+        <if test="status != null and status != ''">
+            AND ja.audit_status = #{status}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND (ja.job_title LIKE CONCAT('%', #{keyword}, '%')
+                 OR ja.company_name LIKE CONCAT('%', #{keyword}, '%')
+                 OR ja.hr_name LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+        ORDER BY ja.created_at DESC
+    </select>
+
+    <!-- 按状态统计 -->
+    <select id="countByStatus" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM job_audit_record
+        WHERE audit_status = #{status}
+    </select>
+
+    <!-- 分页查询系统审核列表（只查询已通过公司审核的岗位） -->
+    <select id="selectSystemAuditList" resultMap="AuditListMap">
+        SELECT
+            ja.job_id,
+            ja.job_title,
+            ja.company_name,
+            COALESCE(jp.city, '未知') as location,
+            COALESCE(CONCAT(jp.salary_min, '-', jp.salary_max), '面议') as salary_range,
+            CASE jp.experience_required
+                WHEN 1 THEN '不限'
+                WHEN 2 THEN '1-3年'
+                WHEN 3 THEN '3-5年'
+                WHEN 4 THEN '5-10年'
+                ELSE '10年以上'
+            END as experience_required,
+            CASE jp.education_required
+                WHEN 1 THEN '不限'
+                WHEN 2 THEN '大专'
+                WHEN 3 THEN '本科'
+                WHEN 4 THEN '硕士'
+                ELSE '博士'
+            END as education_required,
+            jp.description as job_description,
+            ja.system_audit_status as audit_status,
+            ja.hr_name,
+            DATE_FORMAT(ja.created_at, '%Y-%m-%d %H:%i:%s') as created_at,
+            hi.user_id as hr_user_id
+        FROM job_audit_record ja
+        LEFT JOIN job_info jp ON ja.job_id = jp.id
+        LEFT JOIN hr_info hi ON jp.hr_id = hi.id
+        WHERE ja.company_audit_status = 'approved'
+        <if test="status != null and status != ''">
+            AND ja.system_audit_status = #{status}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND (ja.job_title LIKE CONCAT('%', #{keyword}, '%')
+                 OR ja.company_name LIKE CONCAT('%', #{keyword}, '%')
+                 OR ja.hr_name LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+        ORDER BY ja.created_at DESC
+    </select>
+
+    <!-- 按系统审核状态统计（只统计已通过公司审核的） -->
+    <select id="countBySystemStatus" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM job_audit_record
+        WHERE company_audit_status = 'approved'
+        <if test="status != null and status != ''">
+            AND system_audit_status = #{status}
+        </if>
+    </select>
+
+    <!-- 分页查询公司审核列表（查询指定公司的岗位审核记录） -->
+    <select id="selectCompanyAuditList" resultMap="AuditListMap">
+        SELECT
+            ja.job_id,
+            ja.job_title,
+            ja.company_name,
+            COALESCE(jp.city, '未知') as location,
+            COALESCE(CONCAT(jp.salary_min, '-', jp.salary_max), '面议') as salary_range,
+            CASE jp.experience_required
+                WHEN 1 THEN '不限'
+                WHEN 2 THEN '1-3年'
+                WHEN 3 THEN '3-5年'
+                WHEN 4 THEN '5-10年'
+                ELSE '10年以上'
+            END as experience_required,
+            CASE jp.education_required
+                WHEN 1 THEN '不限'
+                WHEN 2 THEN '大专'
+                WHEN 3 THEN '本科'
+                WHEN 4 THEN '硕士'
+                ELSE '博士'
+            END as education_required,
+            jp.description as job_description,
+            ja.company_audit_status as audit_status,
+            ja.hr_name,
+            DATE_FORMAT(ja.created_at, '%Y-%m-%d %H:%i:%s') as created_at
+        FROM job_audit_record ja
+        LEFT JOIN job_info jp ON ja.job_id = jp.id
+        WHERE ja.company_id = #{companyId}
+        <if test="status != null and status != ''">
+            AND ja.company_audit_status = #{status}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND (ja.job_title LIKE CONCAT('%', #{keyword}, '%')
+                 OR ja.company_name LIKE CONCAT('%', #{keyword}, '%')
+                 OR ja.hr_name LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+        ORDER BY ja.created_at DESC
+    </select>
+
+</mapper>

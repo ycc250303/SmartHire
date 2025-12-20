@@ -1,6 +1,6 @@
 package com.SmartHire.common.exception.handler;
 
-import com.SmartHire.adminService.exception.AdminServiceException;
+import com.SmartHire.common.exception.exception.AdminServiceException;
 import com.SmartHire.common.entity.Result;
 import com.SmartHire.common.exception.enums.ErrorCode;
 import com.SmartHire.common.exception.exception.AuthenticationException;

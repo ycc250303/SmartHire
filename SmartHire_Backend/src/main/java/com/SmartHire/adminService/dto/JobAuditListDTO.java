@@ -50,6 +50,9 @@ public class JobAuditListDTO {
   /** 技能标签 */
   private List<String> tags;
 
+  /** HR用户ID，用于发送通知 */
+  private Long hrUserId;
+
   // 防御性复制方法
   public List<String> getTags() {
     return tags == null ? Collections.emptyList() : new ArrayList<>(tags);

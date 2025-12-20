@@ -34,7 +34,7 @@ public class JobAuditController {
   @Autowired private UserContext userContext;
 
   /**
-   * 获取审核列表（完全支持前端功能）
+   * 获取审核列表
    *
    * @param queryDTO 查询条件
    * @return 分页结果
@@ -96,17 +96,35 @@ public class JobAuditController {
     return Result.success("已要求修改该职位");
   }
 
-  /**
-   * 获取审核详情
-   *
-   * @param jobId 职位ID
-   * @return 审核详情
-   */
-  @GetMapping("/jobs/{jobId}")
-  public Result<JobAuditRecord> getAuditDetail(@PathVariable Long jobId) {
-    JobAuditRecord detail = jobAuditService.getAuditDetail(jobId);
-    return Result.success(detail);
-  }
+    /**
+     * 获取审核详情
+     *
+     * @param jobId 职位ID
+     * @return 审核详情
+     */
+    @GetMapping("/jobs/{jobId}")
+    public Result<JobAuditRecord> getAuditDetail(@PathVariable Long jobId) {
+        JobAuditRecord detail = jobAuditService.getAuditDetail(jobId);
+        return Result.success(detail);
+    }
+
+    /**
+     * 强制下线职位
+     *
+     * @param jobId 职位ID
+     * @param auditDTO 审核DTO（包含下线原因）
+     * @return 操作结果
+     */
+    @PostMapping("/jobs/{jobId}/offline")
+    public Result<?> forceOfflineJob(@PathVariable Long jobId,
+                                   @Valid @RequestBody JobAuditDTO auditDTO) {
+        // 从SecurityContext获取当前管理员信息
+        Long auditorId = userContext.getCurrentUserId();
+        String auditorName = userContext.getCurrentUsername();
+
+        jobAuditService.forceOfflineJob(jobId, auditDTO.getReason(), auditorId, auditorName);
+        return Result.success("职位已强制下线");
+    }
 
   /**
    * 按状态统计数量
