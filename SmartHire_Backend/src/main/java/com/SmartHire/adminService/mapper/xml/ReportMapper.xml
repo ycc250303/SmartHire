@@ -8,6 +8,7 @@
         <result column="reporter_id" property="reporterId"/>
         <result column="reporter_name" property="reporterName"/>
         <result column="reporter_type" property="reporterType"/>
+        <result column="reporter_avatar" property="reporterAvatar"/>
         <result column="target_type" property="targetType"/>
         <result column="target_id" property="targetId"/>
         <result column="target_title" property="targetTitle"/>
@@ -29,6 +30,7 @@
             r.reporter_id,
             u.username as reporter_name,
             u.user_type as reporter_type,
+            u.avatar_url as reporter_avatar,
             r.target_type,
             r.target_id,
             CASE r.target_type
@@ -80,6 +82,7 @@
             r.reporter_id,
             u.username as reporter_name,
             u.user_type as reporter_type,
+            u.avatar_url as reporter_avatar,
             r.target_type,
             r.target_id,
             CASE r.target_type
@@ -113,6 +116,7 @@
             r.reporter_id,
             u.username as reporter_name,
             u.user_type as reporter_type,
+            u.avatar_url as reporter_avatar,
             r.target_type,
             r.target_id,
             CASE r.target_type

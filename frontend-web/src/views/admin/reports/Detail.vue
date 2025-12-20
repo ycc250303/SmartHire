@@ -49,11 +49,18 @@
             </NDescriptionsItem>
             <NDescriptionsItem label="举报人">
               <NSpace align="center">
-                <NAvatar
-                  :size="24"
-                  fallback-src="/default-avatar.png"
-                  round
-                />
+                <div class="user-avatar-small">
+                  <img
+                    v-if="reportData.reporterAvatar"
+                    :src="reportData.reporterAvatar"
+                    :alt="reportData.reporterName"
+                    class="avatar-image-small"
+                    @error="handleAvatarError"
+                  />
+                  <div v-else class="avatar-circle-small" :class="reportData.reporterType === 1 ? 'jobseeker' : 'hr'">
+                    {{ reportData.reporterType === 1 ? '👤' : '💼' }}
+                  </div>
+                </div>
                 <span>{{ reportData.reporterName }}</span>
                 <NText depth="3">({{ reportData.reporterType === 1 ? '求职者' : 'HR' }})</NText>
               </NSpace>
@@ -63,11 +70,23 @@
             </NDescriptionsItem>
             <NDescriptionsItem label="被举报对象">
               <NSpace align="center">
-                <NAvatar
-                  :size="24"
-                  fallback-src="/default-avatar.png"
-                  round
-                />
+                <div v-if="reportData.targetType === 1" class="user-avatar-small">
+                  <img
+                    v-if="reportData.targetUser?.avatarUrl"
+                    :src="reportData.targetUser.avatarUrl"
+                    :alt="reportData.targetUser.username"
+                    class="avatar-image-small"
+                    @error="handleAvatarError"
+                  />
+                  <div v-else class="avatar-circle-small" :class="reportData.targetUser?.userType === 2 ? 'hr' : 'jobseeker'">
+                    {{ reportData.targetUser?.userType === 2 ? '💼' : '👤' }}
+                  </div>
+                </div>
+                <div v-else class="job-avatar-small">
+                  <div class="avatar-circle-small job">
+                    💼
+                  </div>
+                </div>
                 <span>{{ reportData.targetTitle }}</span>
                 <NText depth="3">({{ reportData.targetType === 1 ? '用户' : '职位' }})</NText>
               </NSpace>
@@ -490,6 +509,20 @@ const getUserStatusType = (status: string) => {
   return statusMap[status] || 'default'
 }
 
+// 处理头像加载失败
+const handleAvatarError = (event: Event) => {
+  const img = event.target as HTMLImageElement
+  // 隐藏图片，显示默认头像
+  img.style.display = 'none'
+  const parent = img.parentElement
+  if (parent) {
+    const fallback = parent.querySelector('.avatar-circle-small') as HTMLElement
+    if (fallback) {
+      fallback.style.display = 'flex'
+    }
+  }
+}
+
 // 事件处理
 const viewTargetContent = () => {
   if (reportData.value.targetType === 2) {
@@ -671,6 +704,41 @@ onMounted(() => {
   .detail-title {
     font-size: 16px;
     font-weight: 600;
+  }
+
+  // 小头像样式
+  .user-avatar-small, .job-avatar-small {
+    .avatar-image-small {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1px solid #f0f0f0;
+    }
+
+    .avatar-circle-small {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: white;
+
+      &.jobseeker {
+        background: linear-gradient(135deg, #2f7cff, #1e5fcc);
+      }
+
+      &.hr {
+        background: linear-gradient(135deg, #faad14, #d48806);
+      }
+
+      &.job {
+        background: linear-gradient(135deg, #52c41a, #389e0d);
+      }
+    }
   }
 
   .loading-container {

@@ -22,6 +22,9 @@ public class ReportDetailDTO {
     /** 举报人类型（1-求职者，2-HR） */
     private Integer reporterType;
 
+    /** 举报人头像URL */
+    private String reporterAvatar;
+
     /** 举报对象类型：1-用户, 2-职位 */
     private Integer targetType;
 

@@ -19,6 +19,7 @@ export interface ReportDetail {
   reporterId: string
   reporterName: string
   reporterType: number
+  reporterAvatar?: string  // 添加举报人头像字段
   targetType: number
   targetId: string
   targetTitle: string
