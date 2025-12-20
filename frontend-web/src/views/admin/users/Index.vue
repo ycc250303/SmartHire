@@ -206,84 +206,103 @@
           </NButton>
         </template>
 
-        <div v-if="selectedUser" class="user-detail">
-          <!-- 用户头像和基本信息 -->
-          <div class="detail-header">
-            <div class="detail-avatar">
-              <img
-                v-if="selectedUser.avatarUrl"
-                :src="selectedUser.avatarUrl"
-                :alt="selectedUser.username"
-                class="avatar-image large"
-                @error="handleAvatarError"
-              />
-              <div v-else class="avatar-circle large" :class="selectedUser.userType">
-                {{ getUserIcon(selectedUser.userType) }}
+        <div v-if="selectedUser" class="user-detail" style="background: white;">
+          <!-- 用户信息头部 -->
+          <div class="user-header" style="display: flex !important; align-items: flex-start !important; gap: 24px !important; padding: 8px 0 !important;">
+            <div class="user-avatar-section">
+              <div class="avatar-container" style="width: 48px !important; height: 48px !important; border-radius: 50% !important; overflow: hidden !important; flex-shrink: 0 !important;">
+                <img
+                  v-if="selectedUser.avatarUrl"
+                  :src="selectedUser.avatarUrl"
+                  :alt="selectedUser.username"
+                  class="avatar-image"
+                  style="width: 48px !important; height: 48px !important; object-fit: cover !important; border-radius: 50% !important;"
+                  @error="handleAvatarError"
+                />
+                <div
+                  v-else
+                  class="avatar-circle"
+                  :class="selectedUser.userType"
+                  :style="{
+                    width: '48px !important',
+                    height: '48px !important',
+                    borderRadius: '50% !important',
+                    display: 'flex !important',
+                    alignItems: 'center !important',
+                    justifyContent: 'center !important',
+                    fontSize: '18px !important',
+                    fontWeight: '600 !important',
+                    color: 'white !important',
+                    background: selectedUser.userType === 'jobseeker' ? 'linear-gradient(135deg, #2f7cff, #1e5fcc)' : selectedUser.userType === 'hr' ? 'linear-gradient(135deg, #faad14, #d48806)' : 'linear-gradient(135deg, #f5222d, #cf1322)'
+                  }"
+                >
+                  {{ getUserIcon(selectedUser.userType) }}
+                </div>
               </div>
             </div>
-            <div class="detail-basic-info">
-              <h3 class="detail-username">{{ selectedUser.username }}</h3>
-              <div class="detail-tags">
-                <NTag :type="getUserTypeType(selectedUser.userType)" size="medium">
-                  {{ getUserTypeText(selectedUser.userType) }}
-                </NTag>
-                <NTag :type="getStatusType(selectedUser.status)" size="medium">
-                  {{ getStatusText(selectedUser.status) }}
-                </NTag>
+
+            <div class="user-info-section" style="flex: 1 !important; min-width: 0 !important;">
+              <div class="user-name-section">
+                <h3 class="user-name" style="font-size: 18px !important; font-weight: 600 !important; margin: 0 0 8px 0 !important; color: #333 !important; line-height: 1.4 !important;">{{ selectedUser.username }}</h3>
+                <div class="user-tags" style="display: flex !important; gap: 8px !important; flex-wrap: wrap !important;">
+                  <NTag :type="getUserTypeType(selectedUser.userType)" size="small">
+                    {{ getUserTypeText(selectedUser.userType) }}
+                  </NTag>
+                  <NTag :type="getStatusType(selectedUser.status)" size="small">
+                    {{ getStatusText(selectedUser.status) }}
+                  </NTag>
+                </div>
               </div>
             </div>
           </div>
 
-          <!-- 详细信息网格 -->
-          <div class="detail-info-grid">
-            <div class="info-card">
-              <div class="info-card-header">
-                <span class="info-icon"></span>
-                <h4>联系方式</h4>
+          <!-- 分隔线 -->
+          <NDivider />
+
+          <!-- 详细信息列表 -->
+          <div class="detail-list" style="margin-top: 16px !important;">
+            <div class="detail-group" style="margin-bottom: 24px !important;">
+              <div class="group-title" style="display: flex !important; align-items: center !important; gap: 8px !important; margin-bottom: 16px !important; font-size: 14px !important; font-weight: 600 !important; color: #333 !important;">
+                <span class="group-icon" style="font-size: 16px !important;">📱</span>
+                <span>联系方式</span>
               </div>
-              <div class="info-content">
-                <div class="info-item">
-                  <label>手机号码</label>
-                  <span>{{ selectedUser.phone || '未提供' }}</span>
-                </div>
-                <div class="info-item">
-                  <label>邮箱地址</label>
-                  <span>{{ selectedUser.email || '未提供' }}</span>
-                </div>
+              <div class="detail-item" style="display: flex !important; justify-content: space-between !important; align-items: flex-start !important; padding: 12px 0 !important; border-bottom: 1px solid #f5f5f5 !important;">
+                <span class="detail-label" style="font-size: 14px !important; color: #666 !important; font-weight: 500 !important; flex-shrink: 0 !important; min-width: 80px !important;">手机号码</span>
+                <span class="detail-value" style="font-size: 14px !important; color: #333 !important; font-weight: 400 !important; text-align: right !important; word-break: break-all !important; flex: 1 !important; margin-left: 16px !important;">{{ selectedUser.phone || '未提供' }}</span>
+              </div>
+              <div class="detail-item" style="display: flex !important; justify-content: space-between !important; align-items: flex-start !important; padding: 12px 0 !important; border-bottom: 1px solid #f5f5f5 !important; border-bottom: none !important; padding-bottom: 0 !important;">
+                <span class="detail-label" style="font-size: 14px !important; color: #666 !important; font-weight: 500 !important; flex-shrink: 0 !important; min-width: 80px !important;">邮箱地址</span>
+                <span class="detail-value" style="font-size: 14px !important; color: #333 !important; font-weight: 400 !important; text-align: right !important; word-break: break-all !important; flex: 1 !important; margin-left: 16px !important;">{{ selectedUser.email || '未提供' }}</span>
               </div>
             </div>
 
-            <div class="info-card">
-              <div class="info-card-header">
-                <span class="info-icon"></span>
-                <h4>时间信息</h4>
+            <div class="detail-group" style="margin-bottom: 24px !important;">
+              <div class="group-title" style="display: flex !important; align-items: center !important; gap: 8px !important; margin-bottom: 16px !important; font-size: 14px !important; font-weight: 600 !important; color: #333 !important;">
+                <span class="group-icon" style="font-size: 16px !important;">⏰</span>
+                <span>时间信息</span>
               </div>
-              <div class="info-content">
-                <div class="info-item">
-                  <label>注册时间</label>
-                  <span>{{ formatTime(selectedUser.createTime) }}</span>
-                </div>
-                <div class="info-item">
-                  <label>最后登录</label>
-                  <span>{{ formatTime(selectedUser.lastLoginTime) }}</span>
-                </div>
+              <div class="detail-item" style="display: flex !important; justify-content: space-between !important; align-items: flex-start !important; padding: 12px 0 !important; border-bottom: 1px solid #f5f5f5 !important;">
+                <span class="detail-label" style="font-size: 14px !important; color: #666 !important; font-weight: 500 !important; flex-shrink: 0 !important; min-width: 80px !important;">注册时间</span>
+                <span class="detail-value" style="font-size: 14px !important; color: #333 !important; font-weight: 400 !important; text-align: right !important; word-break: break-all !important; flex: 1 !important; margin-left: 16px !important;">{{ formatTime(selectedUser.createTime) }}</span>
+              </div>
+              <div class="detail-item" style="display: flex !important; justify-content: space-between !important; align-items: flex-start !important; padding: 12px 0 !important; border-bottom: 1px solid #f5f5f5 !important; border-bottom: none !important; padding-bottom: 0 !important;">
+                <span class="detail-label" style="font-size: 14px !important; color: #666 !important; font-weight: 500 !important; flex-shrink: 0 !important; min-width: 80px !important;">最后登录</span>
+                <span class="detail-value" style="font-size: 14px !important; color: #333 !important; font-weight: 400 !important; text-align: right !important; word-break: break-all !important; flex: 1 !important; margin-left: 16px !important;">{{ formatTime(selectedUser.lastLoginTime) }}</span>
               </div>
             </div>
 
-            <div class="info-card" v-if="selectedUser.company">
-              <div class="info-card-header">
-                <span class="info-icon">🏢</span>
-                <h4>公司信息</h4>
+            <div class="detail-group" v-if="selectedUser.company" style="margin-bottom: 0 !important;">
+              <div class="group-title" style="display: flex !important; align-items: center !important; gap: 8px !important; margin-bottom: 16px !important; font-size: 14px !important; font-weight: 600 !important; color: #333 !important;">
+                <span class="group-icon" style="font-size: 16px !important;">🏢</span>
+                <span>公司信息</span>
               </div>
-              <div class="info-content">
-                <div class="info-item">
-                  <label>公司名称</label>
-                  <span>{{ selectedUser.company }}</span>
-                </div>
-                <div class="info-item" v-if="selectedUser.position">
-                  <label>职位</label>
-                  <span>{{ selectedUser.position }}</span>
-                </div>
+              <div class="detail-item" style="display: flex !important; justify-content: space-between !important; align-items: flex-start !important; padding: 12px 0 !important; border-bottom: 1px solid #f5f5f5 !important;">
+                <span class="detail-label" style="font-size: 14px !important; color: #666 !important; font-weight: 500 !important; flex-shrink: 0 !important; min-width: 80px !important;">公司名称</span>
+                <span class="detail-value" style="font-size: 14px !important; color: #333 !important; font-weight: 400 !important; text-align: right !important; word-break: break-all !important; flex: 1 !important; margin-left: 16px !important;">{{ selectedUser.company }}</span>
+              </div>
+              <div class="detail-item" v-if="selectedUser.position" style="display: flex !important; justify-content: space-between !important; align-items: flex-start !important; padding: 12px 0 !important; border-bottom: 1px solid #f5f5f5 !important; border-bottom: none !important; padding-bottom: 0 !important;">
+                <span class="detail-label" style="font-size: 14px !important; color: #666 !important; font-weight: 500 !important; flex-shrink: 0 !important; min-width: 80px !important;">职位</span>
+                <span class="detail-value" style="font-size: 14px !important; color: #333 !important; font-weight: 400 !important; text-align: right !important; word-break: break-all !important; flex: 1 !important; margin-left: 16px !important;">{{ selectedUser.position }}</span>
               </div>
             </div>
           </div>
@@ -1490,127 +1509,132 @@ onMounted(() => {
 
   // 用户详情弹窗
   .user-detail {
-    // 头部区域：头像和基本信息
-    .detail-header {
+    // 用户头部区域
+    .user-header {
       display: flex;
-      align-items: center;
-      gap: 20px;
-      padding: 24px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      border-radius: 12px;
-      margin-bottom: 24px;
-      color: white;
+      align-items: flex-start;
+      gap: 24px;
+      padding: 8px 0;
 
-      .detail-avatar {
-        .avatar-image.large {
-          width: 80px;
-          height: 80px;
+      .user-avatar-section {
+        flex-shrink: 0;
+
+        .avatar-container {
+          width: 48px;
+          height: 48px;
           border-radius: 50%;
-          object-fit: cover;
-          border: 4px solid rgba(255, 255, 255, 0.3);
-          backdrop-filter: blur(10px);
-        }
+          overflow: hidden;
 
-        .avatar-circle.large {
-          width: 80px;
-          height: 80px;
-          font-size: 32px;
-          background: rgba(255, 255, 255, 0.2);
-          backdrop-filter: blur(10px);
+          .avatar-image {
+            width: 48px !important;
+            height: 48px !important;
+            object-fit: cover;
+            border-radius: 50%;
+          }
+
+          .avatar-circle {
+            width: 48px !important;
+            height: 48px !important;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px !important;
+            font-weight: 600;
+            color: white;
+
+            &.jobseeker {
+              background: linear-gradient(135deg, #2f7cff, #1e5fcc);
+            }
+
+            &.hr {
+              background: linear-gradient(135deg, #faad14, #d48806);
+            }
+
+            &.admin {
+              background: linear-gradient(135deg, #f5222d, #cf1322);
+            }
+          }
         }
       }
 
-      .detail-basic-info {
+      .user-info-section {
         flex: 1;
+        min-width: 0;
 
-        .detail-username {
-          font-size: 24px;
-          font-weight: 600;
-          margin: 0 0 12px 0;
-          color: white;
-        }
+        .user-name-section {
+          .user-name {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0 0 8px 0;
+            color: #333;
+            line-height: 1.4;
+          }
 
-        .detail-tags {
-          display: flex;
-          gap: 8px;
-          flex-wrap: wrap;
-
-          .n-tag {
-            background: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            backdrop-filter: blur(10px);
+          .user-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
           }
         }
       }
     }
 
-    // 信息网格
-    .detail-info-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 20px;
+    // 详细信息列表
+    .detail-list {
+      .detail-group {
+        margin-bottom: 32px;
 
-      .info-card {
-        background: #ffffff;
-        border: 1px solid #e8e8e8;
-        border-radius: 12px;
-        padding: 20px;
-        transition: all 0.3s ease;
-
-        &:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        &:last-child {
+          margin-bottom: 0;
         }
 
-        .info-card-header {
+        .group-title {
           display: flex;
           align-items: center;
-          gap: 12px;
+          gap: 8px;
           margin-bottom: 16px;
+          font-size: 14px;
+          font-weight: 600;
+          color: #333;
 
-          .info-icon {
-            font-size: 20px;
-          }
-
-          h4 {
+          .group-icon {
             font-size: 16px;
-            font-weight: 600;
-            color: #333333;
-            margin: 0;
           }
         }
 
-        .info-content {
-          .info-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 0;
-            border-bottom: 1px solid #f0f0f0;
+        .detail-item {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          padding: 12px 0;
+          border-bottom: 1px solid #f5f5f5;
 
-            &:last-child {
-              border-bottom: none;
-              padding-bottom: 0;
-            }
+          &:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+          }
 
-            &:first-child {
-              padding-top: 0;
-            }
+          &:first-child {
+            padding-top: 0;
+          }
 
-            label {
-              font-size: 14px;
-              color: #666666;
-              font-weight: 500;
-            }
+          .detail-label {
+            font-size: 14px;
+            color: #666;
+            font-weight: 500;
+            flex-shrink: 0;
+            min-width: 80px;
+          }
 
-            span {
-              font-size: 14px;
-              color: #333333;
-              font-weight: 500;
-              text-align: right;
-              word-break: break-all;
-            }
+          .detail-value {
+            font-size: 14px;
+            color: #333;
+            font-weight: 400;
+            text-align: right;
+            word-break: break-all;
+            flex: 1;
+            margin-left: 16px;
           }
         }
       }

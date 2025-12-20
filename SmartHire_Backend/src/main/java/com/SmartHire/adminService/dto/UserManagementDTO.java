@@ -17,6 +17,10 @@ public class UserManagementDTO {
   private String createTime;
   private String lastLoginTime;
 
+  // HR用户的扩展信息
+  private String company;
+  private String position;
+
   // 构造函数
   public UserManagementDTO() {}
 
@@ -37,6 +41,29 @@ public class UserManagementDTO {
     this.avatarUrl = avatarUrl;
     this.createTime = createTime;
     this.lastLoginTime = lastLoginTime;
+  }
+
+  public UserManagementDTO(
+      Long userId,
+      String username,
+      String email,
+      String userType,
+      Integer status,
+      String avatarUrl,
+      String createTime,
+      String lastLoginTime,
+      String company,
+      String position) {
+    this.userId = userId;
+    this.username = username;
+    this.email = email;
+    this.userType = userType;
+    this.status = status;
+    this.avatarUrl = avatarUrl;
+    this.createTime = createTime;
+    this.lastLoginTime = lastLoginTime;
+    this.company = company;
+    this.position = position;
   }
 
   // Getter和Setter
@@ -102,5 +129,21 @@ public class UserManagementDTO {
 
   public void setLastLoginTime(String lastLoginTime) {
     this.lastLoginTime = lastLoginTime;
+  }
+
+  public String getCompany() {
+    return company;
+  }
+
+  public void setCompany(String company) {
+    this.company = company;
+  }
+
+  public String getPosition() {
+    return position;
+  }
+
+  public void setPosition(String position) {
+    this.position = position;
   }
 }

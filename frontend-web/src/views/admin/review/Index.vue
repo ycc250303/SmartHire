@@ -160,7 +160,7 @@
     <!-- 岗位详情弹窗 -->
     <NModal v-model:show="showDetailModal" :mask-closable="false">
       <NCard
-        style="max-width: 900px; max-height: 85vh; overflow-y: auto;"
+        style="max-width: 900px !important; max-height: 85vh !important; overflow-y: auto !important; border-radius: 16px !important; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15) !important;"
         title="岗位详情"
         :bordered="false"
         size="huge"
@@ -172,20 +172,21 @@
             quaternary
             circle
             @click="showDetailModal = false"
+            style="width: 36px !important; height: 36px !important; border-radius: 50% !important; transition: all 0.3s ease !important;"
           >
             <template #icon>
-              <span class="close-icon">×</span>
+              <span class="close-icon" style="font-size: 20px !important; color: #666 !important; line-height: 1 !important; display: block !important;">×</span>
             </template>
           </NButton>
         </template>
 
-        <div v-if="selectedJob" class="job-detail">
+        <div v-if="selectedJob" class="job-detail" style="padding: 0 !important; margin: 0 !important;">
           <!-- 岗位基本信息 -->
-          <div class="detail-header">
-            <div class="detail-basic-info">
-              <h3 class="detail-title">{{ selectedJob.title }}</h3>
-              <div class="detail-tags">
-                <NTag :type="getStatusType(selectedJob.status)" size="medium">
+          <div class="detail-header" style="display: flex !important; align-items: center !important; gap: 20px !important; padding: 32px !important; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border-radius: 12px !important; margin: 0 0 32px 0 !important; color: white !important; position: relative !important; overflow: hidden !important;">
+            <div class="detail-basic-info" style="flex: 1 !important; position: relative !important; z-index: 2 !important;">
+              <h3 class="detail-title" style="font-size: 28px !important; font-weight: 700 !important; margin: 0 0 16px 0 !important; color: white !important; line-height: 1.3 !important; text-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;">{{ selectedJob.title }}</h3>
+              <div class="detail-tags" style="display: flex !important; gap: 12px !important; flex-wrap: wrap !important;">
+                <NTag :type="getStatusType(selectedJob.status)" size="medium" style="background: rgba(255, 255, 255, 0.25) !important; border: 1px solid rgba(255, 255, 255, 0.35) !important; color: white !important; backdrop-filter: blur(10px) !important; font-weight: 600 !important; padding: 6px 16px !important; border-radius: 20px !important;">
                   {{ getStatusText(selectedJob.status) }}
                 </NTag>
               </div>
@@ -193,90 +194,91 @@
           </div>
 
           <!-- 详细信息网格 -->
-          <div class="detail-info-grid">
-            <div class="info-card">
-              <div class="info-card-header">
-                <span class="info-icon">🏢</span>
-                <h4>公司信息</h4>
+          <div class="detail-info-grid" style="display: grid !important; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important; gap: 24px !important; margin-bottom: 32px !important;">
+            <div class="info-card" style="background: #ffffff !important; border: 1px solid #e8e8e8 !important; border-radius: 16px !important; padding: 24px !important; transition: all 0.3s ease !important; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;">
+              <div class="info-card-header" style="display: flex !important; align-items: center !important; gap: 12px !important; margin-bottom: 20px !important;">
+                <span class="info-icon" style="font-size: 24px !important; width: 48px !important; height: 48px !important; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%) !important; border-radius: 12px !important; display: flex !important; align-items: center !important; justify-content: center !important; flex-shrink: 0 !important;">🏢</span>
+                <h4 style="font-size: 18px !important; font-weight: 700 !important; color: #1a1a1a !important; margin: 0 !important; line-height: 1.3 !important;">公司信息</h4>
               </div>
               <div class="info-content">
-                <div class="info-item">
-                  <label>公司名称</label>
-                  <span>{{ selectedJob.company }}</span>
+                <div class="info-item" style="display: flex !important; justify-content: space-between !important; align-items: center !important; padding: 16px 0 !important; border-bottom: 1px solid #f0f0f0 !important;">
+                  <label style="font-size: 14px !important; color: #6b7280 !important; font-weight: 600 !important; flex-shrink: 0 !important; margin-right: 16px !important; text-transform: uppercase !important; letter-spacing: 0.5px !important;">公司名称</label>
+                  <span style="font-size: 16px !important; color: #1a1a1a !important; font-weight: 600 !important; text-align: right !important; word-break: break-all !important;">{{ selectedJob.company }}</span>
                 </div>
-                <div class="info-item">
-                  <label>工作地点</label>
-                  <span>📍 {{ selectedJob.location }}</span>
+                <div class="info-item" style="display: flex !important; justify-content: space-between !important; align-items: center !important; padding: 16px 0 !important; border-bottom: 1px solid #f0f0f0 !important;">
+                  <label style="font-size: 14px !important; color: #6b7280 !important; font-weight: 600 !important; flex-shrink: 0 !important; margin-right: 16px !important; text-transform: uppercase !important; letter-spacing: 0.5px !important;">工作地点</label>
+                  <span style="font-size: 16px !important; color: #1a1a1a !important; font-weight: 600 !important; text-align: right !important; word-break: break-all !important;">📍 {{ selectedJob.location }}</span>
                 </div>
               </div>
             </div>
 
-            <div class="info-card">
-              <div class="info-card-header">
-                <span class="info-icon">💰</span>
-                <h4>薪资待遇</h4>
+            <div class="info-card" style="background: #ffffff !important; border: 1px solid #e8e8e8 !important; border-radius: 16px !important; padding: 24px !important; transition: all 0.3s ease !important; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;">
+              <div class="info-card-header" style="display: flex !important; align-items: center !important; gap: 12px !important; margin-bottom: 20px !important;">
+                <span class="info-icon" style="font-size: 24px !important; width: 48px !important; height: 48px !important; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%) !important; border-radius: 12px !important; display: flex !important; align-items: center !important; justify-content: center !important; flex-shrink: 0 !important;">💰</span>
+                <h4 style="font-size: 18px !important; font-weight: 700 !important; color: #1a1a1a !important; margin: 0 !important; line-height: 1.3 !important;">薪资待遇</h4>
               </div>
               <div class="info-content">
-                <div class="info-item">
-                  <label>薪资范围</label>
-                  <span>{{ selectedJob.salary }}</span>
+                <div class="info-item" style="display: flex !important; justify-content: space-between !important; align-items: center !important; padding: 16px 0 !important; border-bottom: 1px solid #f0f0f0 !important;">
+                  <label style="font-size: 14px !important; color: #6b7280 !important; font-weight: 600 !important; flex-shrink: 0 !important; margin-right: 16px !important; text-transform: uppercase !important; letter-spacing: 0.5px !important;">薪资范围</label>
+                  <span style="font-size: 16px !important; color: #1a1a1a !important; font-weight: 600 !important; text-align: right !important; word-break: break-all !important;">{{ selectedJob.salary }}</span>
                 </div>
-                <div class="info-item">
-                  <label>经验要求</label>
-                  <span>{{ selectedJob.experience }}</span>
+                <div class="info-item" style="display: flex !important; justify-content: space-between !important; align-items: center !important; padding: 16px 0 !important; border-bottom: 1px solid #f0f0f0 !important;">
+                  <label style="font-size: 14px !important; color: #6b7280 !important; font-weight: 600 !important; flex-shrink: 0 !important; margin-right: 16px !important; text-transform: uppercase !important; letter-spacing: 0.5px !important;">经验要求</label>
+                  <span style="font-size: 16px !important; color: #1a1a1a !important; font-weight: 600 !important; text-align: right !important; word-break: break-all !important;">{{ selectedJob.experience }}</span>
                 </div>
-                <div class="info-item">
-                  <label>学历要求</label>
-                  <span>{{ selectedJob.education }}</span>
+                <div class="info-item" style="display: flex !important; justify-content: space-between !important; align-items: center !important; padding: 16px 0 !important;">
+                  <label style="font-size: 14px !important; color: #6b7280 !important; font-weight: 600 !important; flex-shrink: 0 !important; margin-right: 16px !important; text-transform: uppercase !important; letter-spacing: 0.5px !important;">学历要求</label>
+                  <span style="font-size: 16px !important; color: #1a1a1a !important; font-weight: 600 !important; text-align: right !important; word-break: break-all !important;">{{ selectedJob.education }}</span>
                 </div>
               </div>
             </div>
 
-            <div class="info-card">
-              <div class="info-card-header">
-                <span class="info-icon">👤</span>
-                <h4>发布信息</h4>
+            <div class="info-card" style="background: #ffffff !important; border: 1px solid #e8e8e8 !important; border-radius: 16px !important; padding: 24px !important; transition: all 0.3s ease !important; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;">
+              <div class="info-card-header" style="display: flex !important; align-items: center !important; gap: 12px !important; margin-bottom: 20px !important;">
+                <span class="info-icon" style="font-size: 24px !important; width: 48px !important; height: 48px !important; background: linear-gradient(135deg, #fa709a 0%, #fee140 100%) !important; border-radius: 12px !important; display: flex !important; align-items: center !important; justify-content: center !important; flex-shrink: 0 !important;">👤</span>
+                <h4 style="font-size: 18px !important; font-weight: 700 !important; color: #1a1a1a !important; margin: 0 !important; line-height: 1.3 !important;">发布信息</h4>
               </div>
               <div class="info-content">
-                <div class="info-item">
-                  <label>发布者</label>
-                  <span>{{ selectedJob.publisher }}</span>
+                <div class="info-item" style="display: flex !important; justify-content: space-between !important; align-items: center !important; padding: 16px 0 !important; border-bottom: 1px solid #f0f0f0 !important;">
+                  <label style="font-size: 14px !important; color: #6b7280 !important; font-weight: 600 !important; flex-shrink: 0 !important; margin-right: 16px !important; text-transform: uppercase !important; letter-spacing: 0.5px !important;">发布者</label>
+                  <span style="font-size: 16px !important; color: #1a1a1a !important; font-weight: 600 !important; text-align: right !important; word-break: break-all !important;">{{ selectedJob.publisher }}</span>
                 </div>
-                <div class="info-item">
-                  <label>发布时间</label>
-                  <span>{{ formatTime(selectedJob.createTime) }}</span>
+                <div class="info-item" style="display: flex !important; justify-content: space-between !important; align-items: center !important; padding: 16px 0 !important;">
+                  <label style="font-size: 14px !important; color: #6b7280 !important; font-weight: 600 !important; flex-shrink: 0 !important; margin-right: 16px !important; text-transform: uppercase !important; letter-spacing: 0.5px !important;">发布时间</label>
+                  <span style="font-size: 16px !important; color: #1a1a1a !important; font-weight: 600 !important; text-align: right !important; word-break: break-all !important;">{{ formatTime(selectedJob.createTime) }}</span>
                 </div>
               </div>
             </div>
           </div>
 
           <!-- 岗位描述 -->
-          <div class="info-card full-width">
-            <div class="info-card-header">
-              <span class="info-icon">📝</span>
-              <h4>岗位描述</h4>
+          <div class="info-card full-width" style="background: #ffffff !important; border: 1px solid #e8e8e8 !important; border-radius: 16px !important; padding: 24px !important; margin-bottom: 32px !important; transition: all 0.3s ease !important; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;">
+            <div class="info-card-header" style="display: flex !important; align-items: center !important; gap: 12px !important; margin-bottom: 20px !important;">
+              <span class="info-icon" style="font-size: 24px !important; width: 48px !important; height: 48px !important; background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%) !important; border-radius: 12px !important; display: flex !important; align-items: center !important; justify-content: center !important; flex-shrink: 0 !important;">📝</span>
+              <h4 style="font-size: 18px !important; font-weight: 700 !important; color: #1a1a1a !important; margin: 0 !important; line-height: 1.3 !important;">岗位描述</h4>
             </div>
             <div class="info-content">
-              <div class="description-full">
+              <div class="description-full" style="font-size: 16px !important; color: #374151 !important; line-height: 1.7 !important; white-space: pre-wrap !important; word-break: break-word !important; background: #fafbfc !important; padding: 20px !important; border-radius: 8px !important; border: 1px solid #f0f2f5 !important;">
                 {{ selectedJob.description }}
               </div>
             </div>
           </div>
 
           <!-- 技能标签 -->
-          <div class="info-card full-width" v-if="selectedJob.tags && selectedJob.tags.length > 0">
-            <div class="info-card-header">
-              <span class="info-icon">🏷️</span>
-              <h4>技能标签</h4>
+          <div class="info-card full-width" v-if="selectedJob.tags && selectedJob.tags.length > 0" style="background: #ffffff !important; border: 1px solid #e8e8e8 !important; border-radius: 16px !important; padding: 24px !important; margin-bottom: 32px !important; transition: all 0.3s ease !important; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;">
+            <div class="info-card-header" style="display: flex !important; align-items: center !important; gap: 12px !important; margin-bottom: 20px !important;">
+              <span class="info-icon" style="font-size: 24px !important; width: 48px !important; height: 48px !important; background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%) !important; border-radius: 12px !important; display: flex !important; align-items: center !important; justify-content: center !important; flex-shrink: 0 !important;">🏷️</span>
+              <h4 style="font-size: 18px !important; font-weight: 700 !important; color: #1a1a1a !important; margin: 0 !important; line-height: 1.3 !important;">技能标签</h4>
             </div>
             <div class="info-content">
-              <div class="tags-full">
+              <div class="tags-full" style="display: flex !important; gap: 12px !important; flex-wrap: wrap !important;">
                 <NTag
                   v-for="tag in selectedJob.tags"
                   :key="tag"
                   size="medium"
                   type="info"
                   class="detail-tag"
+                  style="font-size: 14px !important; font-weight: 600 !important; padding: 6px 16px !important; border-radius: 20px !important; background: rgba(32, 128, 240, 0.1) !important; border-color: rgba(32, 128, 240, 0.2) !important;"
                 >
                   {{ tag }}
                 </NTag>
@@ -286,25 +288,28 @@
         </div>
 
         <template #footer>
-          <div class="modal-actions">
-            <NButton @click="showDetailModal = false">关闭</NButton>
-            <div v-if="selectedJob" class="action-buttons">
+          <div class="modal-actions" style="display: flex !important; justify-content: space-between !important; align-items: center !important; gap: 16px !important; padding-top: 24px !important; border-top: 1px solid #f0f2f5 !important;">
+            <NButton @click="showDetailModal = false" style="padding: 12px 24px !important; height: auto !important; font-size: 16px !important; font-weight: 500 !important; border-radius: 8px !important;">关闭</NButton>
+            <div v-if="selectedJob" class="action-buttons" style="display: flex !important; gap: 12px !important;">
               <template v-if="selectedJob.status === 'pending'">
                 <NButton
                   type="success"
                   @click="handleApprove(selectedJob)"
+                  style="padding: 12px 24px !important; height: auto !important; font-size: 16px !important; font-weight: 600 !important; border-radius: 8px !important;"
                 >
                   通过
                 </NButton>
                 <NButton
                   type="warning"
                   @click="handleModify(selectedJob)"
+                  style="padding: 12px 24px !important; height: auto !important; font-size: 16px !important; font-weight: 600 !important; border-radius: 8px !important;"
                 >
                   要求修改
                 </NButton>
                 <NButton
                   type="error"
                   @click="handleReject(selectedJob)"
+                  style="padding: 12px 24px !important; height: auto !important; font-size: 16px !important; font-weight: 600 !important; border-radius: 8px !important;"
                 >
                   拒绝
                 </NButton>
@@ -313,6 +318,7 @@
                 v-if="selectedJob.status === 'approved'"
                 type="error"
                 @click="handleForceOffline(selectedJob)"
+                style="padding: 12px 24px !important; height: auto !important; font-size: 16px !important; font-weight: 600 !important; border-radius: 8px !important;"
               >
                 强制下线
               </NButton>

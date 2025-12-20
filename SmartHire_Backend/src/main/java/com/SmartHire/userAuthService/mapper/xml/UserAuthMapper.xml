@@ -42,6 +42,8 @@
         <result column="avatar_url" property="avatarUrl" />
         <result column="create_time" property="createTime" />
         <result column="last_login_time" property="lastLoginTime" />
+        <result column="company" property="company" />
+        <result column="position" property="position" />
     </resultMap>
 
     <!-- 分页查询用户管理列表 -->
@@ -59,8 +61,12 @@
             u.status,
             u.avatar_url,
             DATE_FORMAT(u.created_at, '%Y-%m-%d %H:%i:%s') as create_time,
-            DATE_FORMAT(u.last_login_at, '%Y-%m-%d %H:%i:%s') as last_login_time
+            DATE_FORMAT(u.last_login_at, '%Y-%m-%d %H:%i:%s') as last_login_time,
+            c.company_name as company,
+            hr.position
         FROM user u
+        LEFT JOIN hr_info hr ON u.id = hr.user_id
+        LEFT JOIN company c ON hr.company_id = c.id
         WHERE 1=1
         <if test="userType != null and userType != ''">
             AND u.user_type =
@@ -100,8 +106,12 @@
             u.status,
             u.avatar_url,
             DATE_FORMAT(u.created_at, '%Y-%m-%d %H:%i:%s') as create_time,
-            DATE_FORMAT(u.last_login_at, '%Y-%m-%d %H:%i:%s') as last_login_time
+            DATE_FORMAT(u.last_login_at, '%Y-%m-%d %H:%i:%s') as last_login_time,
+            c.company_name as company,
+            hr.position
         FROM user u
+        LEFT JOIN hr_info hr ON u.id = hr.user_id
+        LEFT JOIN company c ON hr.company_id = c.id
         WHERE u.id = #{userId}
     </select>
 
