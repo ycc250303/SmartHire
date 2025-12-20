@@ -63,7 +63,7 @@ import {
 import { getHrInfo } from '@/services/api/hr';
 import { useHrStore } from '@/store/hr';
 
-const jobTypes = ['全职', '兼职', '实习'];
+const jobTypes = ['Full-time', 'Internship'];
 const jobTypeValue = ref<number | null>(null);
 const jobId = ref<number | null>(null);
 const loading = ref(false);
@@ -144,17 +144,33 @@ const loadJob = async (id: number) => {
 };
 
 const handleSubmit = async () => {
-  if (!form.jobTitle || !form.city || form.companyId === 0) {
-    uni.showToast({ title: '请填写必填信息', icon: 'none' });
-    return;
-  }
+  if (saving.value) return;
   saving.value = true;
   try {
+    await ensureCompanyId();
+
+    const jobTitle = form.jobTitle?.trim();
+    const city = form.city?.trim();
+    const description = form.description?.trim();
+
+    if (form.companyId === 0) {
+      uni.showToast({ title: '无法获取企业信息', icon: 'none' });
+      return;
+    }
+
+    if (!jobTitle || !city || !description) {
+      uni.showToast({ title: '请填写必填信息', icon: 'none' });
+      return;
+    }
+
+    form.jobTitle = jobTitle;
+    form.city = city;
+    form.description = description;
+
     if (jobId.value) {
       await updateJobPosition(jobId.value, { ...form });
       uni.showToast({ title: '保存成功', icon: 'success' });
     } else {
-      await ensureCompanyId();
       const newId = await createJobPosition({ ...form });
       jobId.value = newId;
       uni.showToast({ title: '发布成功', icon: 'success' });
@@ -210,6 +226,7 @@ onLoad(async (options) => {
 
 .salary-field {
   flex: 1;
+  min-width: 0;
 }
 
 .label {
@@ -222,15 +239,24 @@ onLoad(async (options) => {
 input,
 textarea {
   width: 100%;
-  padding: 20rpx;
   border-radius: 16rpx;
   background: #f5f7fb;
   border: none;
   box-sizing: border-box;
 }
 
+input {
+  height: 72rpx;
+  line-height: 72rpx;
+  padding: 0 20rpx;
+  font-size: 28rpx;
+}
+
 textarea {
   min-height: 200rpx;
+  padding: 20rpx;
+  font-size: 28rpx;
+  line-height: 1.6;
 }
 
 .picker-value {

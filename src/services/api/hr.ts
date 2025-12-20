@@ -25,12 +25,20 @@ export interface RegisterHrParams {
   workPhone: string;
 }
 
+interface PageResult<T> {
+  records: T[];
+  total?: number;
+  size?: number;
+  current?: number;
+  pages?: number;
+}
+
 /**
  * Register HR information
  * @returns Operation result
  */
 export function registerHr(params: RegisterHrParams): Promise<null> {
-  const url = '/api/hr/info';
+  const url = '/api/hr/info/register';
   console.log('[Params]', url, params);
   return http<null>({
     url,
@@ -93,7 +101,7 @@ export interface JobPosition {
   publishedAt?: string;
   createdAt?: string;
   updatedAt?: string;
-  skills?: JobSkill[];
+  skills?: Array<JobSkill | string>;
 }
 
 export interface JobPositionCreatePayload {
@@ -170,9 +178,8 @@ export function getJobPositionById(jobId: number): Promise<JobPosition> {
  */
 export function updateJobPositionStatus(jobId: number, status: number): Promise<null> {
   return http<null>({
-    url: `/api/hr/job-position/${jobId}/status`,
+    url: `/api/hr/job-position/${jobId}/status?status=${encodeURIComponent(status)}`,
     method: "PATCH",
-    data: { status },
   });
 }
 
@@ -195,18 +202,21 @@ export interface SeekerCard {
   highestEducation?: string;
   major?: string;
   jobStatus?: number;
-  userId?: number;
+  workExperienceYear?: number;
+  internshipExperience?: boolean;
+  university?: string;
+  city?: string;
+  avatarUrl?: string;
 }
 
 /**
- * Get seeker cards
- * @returns List of seeker cards
+ * Get seeker card by user ID
+ * @returns Seeker card
  */
-export function getSeekerCards(params?: { userId?: number }): Promise<SeekerCard[]> {
-  return http<SeekerCard[]>({
-    url: "/api/recruitment/hr/seeker-card",
+export function getSeekerCard(userId: number): Promise<SeekerCard> {
+  return http<SeekerCard>({
+    url: `/api/recruitment/hr/seeker-card?userId=${encodeURIComponent(userId)}`,
     method: "GET",
-    data: params,
   });
 }
 
@@ -239,87 +249,78 @@ export interface PriorityListResponse {
  * @returns Priority list response
  */
 export function getPriorityList(): Promise<PriorityListResponse> {
-  return http<PriorityListResponse>({
-    url: "/api/hr/candidates/priority-list",
-    method: "GET",
+  return getApplications({ pageNum: 1, pageSize: 50 }).then((items) => {
+    const summary = {
+      newApplications: 0,
+      highMatch: 0,
+      awaitingFeedback: 0,
+      awaitingInterview: 0,
+    };
+    const candidates = items.map((item) => {
+      const score = typeof item.matchScore === "number" ? item.matchScore : Number(item.matchScore ?? 0);
+      if (item.status === 0) summary.newApplications += 1;
+      if (item.status === 1) summary.awaitingFeedback += 1;
+      if (item.status === 2) summary.awaitingInterview += 1;
+      if (!Number.isNaN(score) && score >= 80) summary.highMatch += 1;
+
+      return {
+        candidateId: item.id,
+        name: item.jobSeekerName || "Candidate",
+        position: item.jobTitle || "Position",
+        status: getApplicationStatusLabel(item.status),
+        overallMatch: Number.isNaN(score) ? 0 : Math.round(score),
+        skillMatch: 0,
+        experienceFit: 0,
+        cultureMatch: 0,
+        skills: [],
+      };
+    });
+
+    return { candidates, summary };
   });
 }
 
-export interface CandidateDetail {
-  candidateId: number;
-  name: string;
-  position: string;
-  location: string;
-  salary: string;
-  overallMatch: number;
-  technicalMatch: {
-    score: number;
-    description: string;
-  };
-  experienceAlignment: {
-    score: number;
-    description: string;
-  };
-  gapReminder: {
-    description: string;
-  };
-  skillMatrix: Array<{
-    skillName: string;
-    candidateProficiency: number;
-    targetProficiency: number;
-    overallMatch: number;
-  }>;
-  aiAnalysis: {
-    summary: string;
-  };
-}
-
-/**
- * Get candidate detail
- * @returns Candidate detail data
- */
-export function getCandidateDetail(candidateId: number): Promise<CandidateDetail> {
-  return http<CandidateDetail>({
-    url: `/api/hr/candidates/${candidateId}/detail`,
-    method: "GET",
-  });
-}
-
-// ============ 投递相关 ============ 
+// ============ Applications ============ 
 export interface ApplicationItem {
   id: number;
-  applicantName: string;
+  jobId: number;
   jobTitle: string;
+  jobSeekerId: number;
+  jobSeekerName: string;
+  resumeId: number;
   status: number;
-  createdAt: string;
-  updatedAt: string;
+  matchScore?: number;
+  matchAnalysis?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
-export interface ApplicationDetail extends ApplicationItem {
-  resumeUrl?: string;
-  contactPhone?: string;
-  contactEmail?: string;
-  remarks?: string;
+export interface ApplicationQueryParams {
+  pageNum?: number;
+  pageSize?: number;
+  jobId?: number;
+  status?: number;
+  keyword?: string;
 }
 
 /**
  * Get application list
  * @returns List of applications
  */
-export function getApplications(params?: { status?: number }): Promise<ApplicationItem[]> {
-  return http<ApplicationItem[]>({
+export function getApplications(params?: ApplicationQueryParams): Promise<ApplicationItem[]> {
+  return http<PageResult<ApplicationItem>>({
     url: "/api/hr/application",
     method: "GET",
     data: params,
-  });
+  }).then((page) => page?.records ?? []);
 }
 
 /**
  * Get application detail
  * @returns Application detail data
  */
-export function getApplicationDetail(applicationId: number): Promise<ApplicationDetail> {
-  return http<ApplicationDetail>({
+export function getApplicationDetail(applicationId: number): Promise<ApplicationItem> {
+  return http<ApplicationItem>({
     url: `/api/hr/application/${applicationId}`,
     method: "GET",
   });
@@ -337,7 +338,20 @@ export function updateApplicationStatus(applicationId: number, status: number): 
   });
 }
 
-// ============ 旧命名兼容（新接口别名） ============
+function getApplicationStatusLabel(status?: number): string {
+  const map: Record<number, string> = {
+    0: "Submitted",
+    1: "Viewed",
+    2: "Interview",
+    3: "Interviewed",
+    4: "Hired",
+    5: "Rejected",
+    6: "Withdrawn",
+  };
+  if (status === undefined || status === null) return "Unknown";
+  return map[status] || "Unknown";
+}
+
 export type JobPosting = JobPosition;
 
 /**

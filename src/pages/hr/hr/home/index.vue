@@ -39,23 +39,6 @@
       </view>
     </view>
 
-    <view class="card insights-card">
-      <view class="section-title">智能洞察</view>
-      <view class="insight-list">
-        <view
-          class="insight-item"
-          v-for="insight in insights"
-          :key="insight.id"
-          :class="insight.severity"
-          @click="handleTodoClick(insight.route)"
-        >
-          <view class="insight-title">{{ insight.title }}</view>
-          <view class="insight-desc">{{ insight.desc }}</view>
-          <view class="insight-action" v-if="insight.actionText">{{ insight.actionText }}</view>
-        </view>
-      </view>
-    </view>
-
     <CustomTabBar />
   </view>
 </template>
@@ -63,20 +46,18 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
-import { fetchDashboardData, type DashboardTodoItem, type RecruitStatistic, type InsightCardItem } from '@/mock/hr';
+import { fetchDashboardData, type DashboardTodoItem, type RecruitStatistic } from '@/mock/hr';
 import avatarImg from '@/static/user-avatar.png';
 import CustomTabBar from '@/components/common/CustomTabBar.vue';
 
 const todos = ref<DashboardTodoItem[]>([]);
 const stats = ref<RecruitStatistic[]>([]);
-const insights = ref<InsightCardItem[]>([]);
 
 const loadDashboard = async () => {
   // TODO: 替换为真实接口 GET /api/hr/dashboard
   const data = await fetchDashboardData();
   todos.value = data.todos;
   stats.value = data.stats;
-  insights.value = data.insights;
 };
 
 const goProfile = () => {
@@ -253,38 +234,6 @@ onShow(() => {
 
 .stat-trend.down {
   color: #ff5f5f;
-}
-
-.insight-item {
-  padding: 24rpx;
-  border-radius: 20rpx;
-  margin-bottom: 20rpx;
-  background: #f5f6fb;
-}
-
-.insight-item.warning {
-  border: 2rpx solid #ffb347;
-}
-
-.insight-item.danger {
-  border: 2rpx solid #ff5f5f;
-}
-
-.insight-title {
-  font-size: 28rpx;
-  font-weight: 600;
-  margin-bottom: 10rpx;
-}
-
-.insight-desc {
-  font-size: 24rpx;
-  color: #6b758a;
-}
-
-.insight-action {
-  margin-top: 8rpx;
-  color: #2f7cff;
-  font-size: 24rpx;
 }
 
 </style>

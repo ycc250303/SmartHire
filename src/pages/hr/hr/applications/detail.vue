@@ -2,19 +2,22 @@
   <view class="application-detail">
     <view class="card">
       <view class="row">
-        <text class="title">{{ detail?.applicantName || '候选人' }}</text>
+        <text class="title">{{ detail?.jobSeekerName || 'Candidate' }}</text>
         <text class="status" :class="statusClass(detail?.status || 0)">{{ statusText(detail?.status || 0) }}</text>
       </view>
-      <view class="meta">岗位：{{ detail?.jobTitle || '--' }}</view>
-      <view class="meta">投递时间：{{ formatTime(detail?.createdAt) }}</view>
-      <view class="meta">联系方式：{{ detail?.contactPhone || '--' }} / {{ detail?.contactEmail || '--' }}</view>
-      <view class="meta" v-if="detail?.resumeUrl">
-        <text class="link" @click="openResume(detail?.resumeUrl)">查看简历</text>
-      </view>
+      <view class="meta">Position: {{ detail?.jobTitle || '--' }}</view>
+      <view class="meta">Applied: {{ formatTime(detail?.createdAt) }}</view>
+      <view class="meta">Match: {{ matchScoreText }}</view>
+      <view class="meta" v-if="detail?.resumeId">Resume ID: {{ detail?.resumeId }}</view>
+    </view>
+
+    <view class="card" v-if="detail?.matchAnalysis">
+      <view class="section-title">Match Analysis</view>
+      <view class="meta">{{ detail?.matchAnalysis }}</view>
     </view>
 
     <view class="card">
-      <view class="section-title">状态更新</view>
+      <view class="section-title">Status Update</view>
       <view class="status-buttons">
         <button
           v-for="item in statusOptions"
@@ -29,28 +32,40 @@
     </view>
 
     <view class="card actions">
-      <button class="primary" @click="goChat">与候选人沟通</button>
+      <button class="primary" @click="goChat">Message Candidate</button>
     </view>
 
-    <view class="loading" v-if="loading">加载中...</view>
+    <view class="loading" v-if="loading">Loading..</view>
   </view>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, computed } from 'vue';
 import dayjs from 'dayjs';
-import { getApplicationDetail, updateApplicationStatus, type ApplicationDetail } from '@/services/api/hr';
+import { getApplicationDetail, updateApplicationStatus, type ApplicationItem } from '@/services/api/hr';
 import { getConversations } from '@/services/api/message';
 
-const detail = ref<ApplicationDetail | null>(null);
+const detail = ref<ApplicationItem | null>(null);
 const applicationId = ref<number>(0);
 const loading = ref(false);
 
 const statusOptions = [
-  { label: '待处理', value: 0 },
-  { label: '进行中', value: 1 },
-  { label: '已完成', value: 2 },
+  { label: 'Submitted', value: 0 },
+  { label: 'Viewed', value: 1 },
+  { label: 'Interview', value: 2 },
+  { label: 'Interviewed', value: 3 },
+  { label: 'Hired', value: 4 },
+  { label: 'Rejected', value: 5 },
+  { label: 'Withdrawn', value: 6 },
 ];
+
+const matchScoreText = computed(() => {
+  const score = detail.value?.matchScore;
+  if (score === undefined || score === null) return '--';
+  const value = Number(score);
+  if (Number.isNaN(value)) return '--';
+  return `${Math.round(value)}%`;
+});
 
 const loadDetail = async () => {
   if (!applicationId.value) return;
@@ -60,7 +75,7 @@ const loadDetail = async () => {
     detail.value = data;
   } catch (err) {
     console.error('Failed to load application detail:', err);
-    uni.showToast({ title: '加载失败', icon: 'none' });
+    uni.showToast({ title: 'Load failed', icon: 'none' });
   } finally {
     loading.value = false;
   }
@@ -73,32 +88,21 @@ const changeStatus = async (status: number) => {
     if (detail.value) {
       detail.value.status = status;
     }
-    uni.showToast({ title: '更新成功', icon: 'success' });
+    uni.showToast({ title: 'Updated', icon: 'success' });
   } catch (err) {
     console.error('Failed to update status:', err);
-    uni.showToast({ title: '更新失败', icon: 'none' });
+    uni.showToast({ title: 'Update failed', icon: 'none' });
   }
-};
-
-const openResume = (url?: string) => {
-  if (!url) return;
-  uni.setClipboardData({
-    data: url,
-    success: () => {
-      uni.showToast({ title: '已复制简历链接', icon: 'none' });
-    },
-  });
 };
 
 const goChat = async () => {
-  if (!detail.value?.applicantName) {
-    uni.showToast({ title: '缺少候选人信息', icon: 'none' });
+  if (!detail.value?.jobSeekerName) {
+    uni.showToast({ title: 'Missing candidate info', icon: 'none' });
     return;
   }
-  // 如果已有会话，跳转现有；否则回到消息列表
   try {
     const conversations = await getConversations();
-    const target = conversations.find((c) => c.otherUserName === detail.value?.applicantName);
+    const target = conversations.find((c) => c.otherUserName === detail.value?.jobSeekerName);
     if (target) {
       uni.navigateTo({
         url: `/pages/hr/hr/messages/chat?id=${target.id}&userId=${target.otherUserId || ''}&username=${encodeURIComponent(
@@ -118,30 +122,32 @@ const formatTime = (time?: string) => (time ? dayjs(time).format('YYYY-MM-DD HH:
 
 const statusText = (status: number) => {
   const map: Record<number, string> = {
-    0: '待处理',
-    1: '进行中',
-    2: '已完成',
+    0: 'Submitted',
+    1: 'Viewed',
+    2: 'Interview',
+    3: 'Interviewed',
+    4: 'Hired',
+    5: 'Rejected',
+    6: 'Withdrawn',
   };
-  return map[status] ?? '未知';
+  return map[status] ?? 'Unknown';
 };
 
 const statusClass = (status: number) => {
-  if (status === 0) return 'pending';
-  if (status === 1) return 'processing';
+  if (status <= 1) return 'pending';
+  if (status <= 3) return 'processing';
   return 'done';
 };
 
-onMounted(() => {
-  const pages = getCurrentPages();
-  const current = pages[pages.length - 1] as any;
-  const params = current?.options || {};
-  if (params?.applicationId) {
-    applicationId.value = Number(params.applicationId);
-    loadDetail();
-  } else {
-    uni.showToast({ title: '缺少投递ID', icon: 'none' });
-  }
-});
+const pages = getCurrentPages();
+const current = pages[pages.length - 1] as any;
+const params = current?.options || {};
+if (params?.applicationId) {
+  applicationId.value = Number(params.applicationId);
+  loadDetail();
+} else {
+  uni.showToast({ title: 'Missing application ID', icon: 'none' });
+}
 </script>
 
 <style scoped lang="scss">
@@ -204,11 +210,12 @@ onMounted(() => {
 
 .status-buttons {
   display: flex;
+  flex-wrap: wrap;
   gap: 12rpx;
 }
 
 .status-btn {
-  flex: 1;
+  flex: 1 1 30%;
   height: 72rpx;
   border-radius: 12rpx;
   border: 1rpx solid #d9deea;
@@ -229,10 +236,6 @@ onMounted(() => {
   background: #2f7cff;
   color: #fff;
   border: none;
-}
-
-.link {
-  color: #2f7cff;
 }
 
 .loading {

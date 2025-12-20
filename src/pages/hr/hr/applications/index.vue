@@ -15,12 +15,12 @@
     </view>
 
     <scroll-view scroll-y class="list" refresher-enabled :refresher-triggered="refreshing" @refresherrefresh="refresh">
-      <view v-if="loading && applications.length === 0" class="hint">加载中...</view>
-      <view v-else-if="!loading && applications.length === 0" class="hint">暂无投递</view>
+      <view v-if="loading && applications.length === 0" class="hint">Loading..</view>
+      <view v-else-if="!loading && applications.length === 0" class="hint">No applications</view>
 
       <view v-for="item in filtered" :key="item.id" class="card" @click="goDetail(item.id)">
         <view class="row">
-          <text class="title">{{ item.applicantName }}</text>
+          <text class="title">{{ item.jobSeekerName }}</text>
           <text class="status" :class="statusClass(item.status)">{{ statusText(item.status) }}</text>
         </view>
         <view class="row meta">
@@ -30,7 +30,7 @@
       </view>
     </scroll-view>
 
-    <view class="loading" v-if="loading && applications.length > 0">加载中...</view>
+    <view class="loading" v-if="loading && applications.length > 0">Loading..</view>
   </view>
 </template>
 
@@ -45,10 +45,14 @@ const refreshing = ref(false);
 const activeStatus = ref<'all' | number>('all');
 
 const statusOptions = [
-  { label: '全部', value: 'all' as const },
-  { label: '待处理', value: 0 },
-  { label: '进行中', value: 1 },
-  { label: '已完成', value: 2 },
+  { label: 'All', value: 'all' as const },
+  { label: 'Submitted', value: 0 },
+  { label: 'Viewed', value: 1 },
+  { label: 'Interview', value: 2 },
+  { label: 'Interviewed', value: 3 },
+  { label: 'Hired', value: 4 },
+  { label: 'Rejected', value: 5 },
+  { label: 'Withdrawn', value: 6 },
 ];
 
 const loadData = async () => {
@@ -58,7 +62,7 @@ const loadData = async () => {
     applications.value = data || [];
   } catch (err) {
     console.error('Failed to load applications:', err);
-    uni.showToast({ title: '加载失败', icon: 'none' });
+    uni.showToast({ title: 'Load failed', icon: 'none' });
   } finally {
     loading.value = false;
   }
@@ -81,16 +85,20 @@ const formatTime = (time?: string) => (time ? dayjs(time).format('MM/DD HH:mm') 
 
 const statusText = (status: number) => {
   const map: Record<number, string> = {
-    0: '待处理',
-    1: '进行中',
-    2: '已完成',
+    0: 'Submitted',
+    1: 'Viewed',
+    2: 'Interview',
+    3: 'Interviewed',
+    4: 'Hired',
+    5: 'Rejected',
+    6: 'Withdrawn',
   };
-  return map[status] ?? '未知';
+  return map[status] ?? 'Unknown';
 };
 
 const statusClass = (status: number) => {
-  if (status === 0) return 'pending';
-  if (status === 1) return 'processing';
+  if (status <= 1) return 'pending';
+  if (status <= 3) return 'processing';
   return 'done';
 };
 

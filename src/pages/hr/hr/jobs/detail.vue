@@ -116,7 +116,7 @@ const editJob = () => {
 };
 
 const statusText = (status: number) => {
-  const map: Record<number, string> = { 1: '招聘中', 2: '已暂停', 0: '已下线' };
+  const map: Record<number, string> = { 0: 'Full-time', 1: 'Internship' };
   return map[status] || '未知';
 };
 
@@ -127,7 +127,10 @@ const statusClass = (status: number) => {
 };
 
 const jobTypeText = (type?: number) => {
-  const map: Record<number, string> = { 0: '全职', 1: '兼职', 2: '实习' };
+  const map: Record<number, string> = { 0: '??', 1: '??' };
+  if (type === undefined || type === null) return 'Not set';
+  return map[type] || 'Not set';
+};
   if (type === undefined || type === null) return '未填写';
   return map[type] || '未填写';
 };
@@ -154,8 +157,11 @@ const salaryText = (jobInfo: JobPosition) => {
 };
 
 const skillText = (skills?: JobPosition['skills']) => {
-  if (!skills || skills.length === 0) return '未填写';
-  return skills.map((s) => s.skillName).join(' / ');
+  if (!skills || skills.length === 0) return 'Not set';
+  return skills
+    .map((skill) => (typeof skill === 'string' ? skill : skill.skillName))
+    .filter((item) => item)
+    .join(' / ');
 };
 
 onLoad((options) => {
