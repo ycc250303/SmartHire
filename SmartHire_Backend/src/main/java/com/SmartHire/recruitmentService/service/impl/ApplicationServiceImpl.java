@@ -10,6 +10,7 @@ import com.SmartHire.common.event.ApplicationCreatedEvent;
 import com.SmartHire.recruitmentService.dto.ApplicationListDTO;
 import com.SmartHire.recruitmentService.dto.ApplicationQueryDTO;
 import com.SmartHire.recruitmentService.dto.SubmitResumeDTO;
+import com.SmartHire.recruitmentService.dto.RecommendRequest;
 import com.SmartHire.recruitmentService.service.ApplicationEventProducer;
 import com.SmartHire.recruitmentService.mapper.ApplicationMapper;
 import com.SmartHire.recruitmentService.model.Application;
@@ -51,6 +52,94 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
 
     @Autowired
     private ApplicationEventProducer applicationEventProducer;
+    @Autowired
+    private com.SmartHire.recruitmentService.service.ApplicationRejectedEventProducer applicationRejectedEventProducer;
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Long recommend(RecommendRequest request) {
+        // 参数校验
+        if (request == null || request.getJobId() == null || request.getSeekerUserId() == null) {
+            throw new BusinessException(ErrorCode.VALIDATION_ERROR);
+        }
+
+        Long jobId = request.getJobId();
+        Long resumeId = request.getResumeId();
+
+        // 获取当前HR用户ID
+        Long hrUserId = userContext.getCurrentUserId();
+
+        // 获取当前 HR id（hr_info 表的 id），并校验是 HR
+        Long hrId = hrApi.getHrIdByUserId(hrUserId);
+        if (hrId == null) {
+            throw new BusinessException(ErrorCode.HR_NOT_EXIST);
+        }
+
+        // 获取目标求职者的 seekerId（jobSeekerId）
+        Long seekerId = seekerApi.getJobSeekerIdByUserId(request.getSeekerUserId());
+        if (seekerId == null) {
+            throw new BusinessException(ErrorCode.SEEKER_NOT_EXIST);
+        }
+
+        // 如果提供了简历ID，则校验附件简历是否存在且属于目标求职者
+        if (resumeId != null && !seekerApi.validateResumeOwnership(resumeId, seekerId)) {
+            throw new BusinessException(ErrorCode.RESUME_NOT_BELONG_TO_USER);
+        }
+
+        // 校验岗位是否存在并且属于当前 HR（或 HR 有权限推荐此岗位）
+        Long jobHrId = hrApi.getHrIdByJobId(jobId);
+        if (jobHrId == null) {
+            throw new BusinessException(ErrorCode.JOB_NOT_EXIST);
+        }
+        if (!jobHrId.equals(hrId)) {
+            throw new BusinessException(ErrorCode.PERMISSION_DENIED);
+        }
+
+        // 检查是否已投递/已推荐过该职位（避免重复）
+        long existingCount = lambdaQuery()
+                .eq(Application::getJobId, jobId)
+                .eq(Application::getJobSeekerId, seekerId)
+                .count();
+        if (existingCount > 0) {
+            throw new BusinessException(ErrorCode.APPLICATION_ALREADY_EXISTS);
+        }
+
+        // 创建推荐记录（作为 application）
+        Application application = new Application();
+        application.setJobId(jobId);
+        application.setJobSeekerId(seekerId);
+        application.setResumeId(resumeId); // 可能为null（在线简历）
+        application.setInitiator((byte) 1); // 1-HR推荐
+        application.setStatus((byte) 0); // 0-已投递/已推荐
+
+        Date now = new Date();
+        application.setCreatedAt(now);
+        application.setUpdatedAt(now);
+
+        boolean saved = this.save(application);
+        if (!saved) {
+            log.error("保存推荐记录失败, jobId={}, seekerId={}, resumeId={}", jobId, seekerId, resumeId);
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR);
+        }
+
+        // 发布投递/推荐岗位创建事件，由 messageService 异步发送通知
+        Long targetHrId = hrApi.getHrIdByJobId(jobId);
+        Long targetHrUserId = hrApi.getHrUserIdByHrId(targetHrId);
+        ApplicationCreatedEvent event = new ApplicationCreatedEvent();
+        event.setApplicationId(application.getId());
+        event.setJobId(jobId);
+        event.setJobSeekerId(seekerId);
+        event.setSeekerUserId(request.getSeekerUserId());
+        event.setHrId(targetHrId);
+        event.setHrUserId(targetHrUserId);
+        event.setMessageContent(request.getNote() != null ? request.getNote() : "HR 推荐岗位给您");
+        event.setInitiator((byte) 1);
+
+        applicationEventProducer.publishApplicationCreated(event);
+        log.info("推荐岗位创建事件已发布: applicationId={}, jobId={}, seekerId={}", application.getId(), jobId, seekerId);
+
+        return application.getId();
+    }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -202,4 +291,44 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
 
         updateById(application);
     }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void rejectApplication(Long applicationId, String reason, Boolean sendNotification, String templateId) {
+        Long hrId = getCurrentHrId();
+        Application application = validateApplicationOwnership(applicationId, hrId);
+
+        // 如果已被拒绝，直接返回（幂等）
+        if (application.getStatus() != null && application.getStatus() == 5) {
+            log.info("application {} already rejected", applicationId);
+            return;
+        }
+
+        Date now = new Date();
+        application.setStatus((byte)5); // 5 = 已拒绝
+        // 将拒绝原因写入 matchAnalysis 字段作为最小可行审计（建议后续迁移到专门的审计表）
+        String prev = application.getMatchAnalysis();
+        String note = String.format("rejected_by_hr:%s reason:%s at:%s", hrId, reason == null ? "" : reason, now.toString());
+        application.setMatchAnalysis((prev == null ? "" : prev + " | ") + note);
+        application.setUpdatedAt(now);
+        updateById(application);
+
+        // 发布被拒事件（通知候选人）
+        Long jobSeekerId = application.getJobSeekerId();
+        Long seekerUserId = seekerApi.getJobSeekerById(jobSeekerId).getUserId();
+        Long hrUserId = hrApi.getHrUserIdByHrId(hrId);
+
+        com.SmartHire.common.event.ApplicationRejectedEvent event = new com.SmartHire.common.event.ApplicationRejectedEvent();
+        event.setApplicationId(applicationId);
+        event.setSeekerUserId(seekerUserId);
+        event.setHrUserId(hrUserId);
+        event.setReason(reason);
+        event.setTemplateId(templateId);
+
+        // 使用应用已有的 ApplicationEventProducer 发布到 MQ（添加新方法）
+        applicationRejectedEventProducer.publishApplicationRejected(event);
+        log.info("Application rejected and event published: applicationId={}, reason={}", applicationId, reason);
+    }
+
+ 
 }
