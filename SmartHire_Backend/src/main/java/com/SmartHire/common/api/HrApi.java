@@ -1,6 +1,9 @@
 package com.SmartHire.common.api;
 
 import com.SmartHire.hrService.dto.JobCardDTO;
+import com.SmartHire.hrService.model.HrInfo;
+import com.SmartHire.hrService.model.JobInfo;
+import com.SmartHire.hrService.model.Company;
 
 /** HR服务API接口 用于模块间通信，避免直接访问数据库 */
 public interface HrApi {

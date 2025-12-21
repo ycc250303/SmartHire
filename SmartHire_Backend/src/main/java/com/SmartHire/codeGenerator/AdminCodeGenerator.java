@@ -157,56 +157,5 @@ public class AdminCodeGenerator {
       throw new IllegalStateException("Failed to create admin service profile yml", e);
     }
   }
-
-  @SuppressWarnings("unused")
-  //    private static void generateAdminController(String projectPath) {
-  //        // TODO:修改controller文件的路径
-  //        if (projectPath == null) {
-  //            throw new IllegalArgumentException("Project path cannot be null");
-  //        }
-  //        Path controllerPath = Paths.get(projectPath +
-  // "\\src\\main\\java\\com\\SmartHire\\adminService\\controller", "AdminController.java");
-  //
-  //        try {
-  //            if (controllerPath == null) {
-  //                throw new IllegalStateException("Failed to create controller path");
-  //            }
-  //            Path parentDir = controllerPath.getParent();
-  //            if (parentDir != null) {
-  //                Files.createDirectories(parentDir);
-  //            }
-  //
-  //            // TODO：需要修改controller文件内容
-  //            String content = """
-  //                    package com.SmartHire.adminService.controller;
-  //
-  //                    import org.springframework.web.bind.annotation.RequestMapping;
-  //                    import org.springframework.web.bind.annotation.RestController;
-  //
-  //                    /**
-  //                     * <p>
-  //                     * 管理员服务统一控制器
-  //                     * </p>
-  //                     *
-  //                     * @author SmartHire Team
-  //                     * @since 2025-12-02
-  //                     */
-  //                    @RestController
-  //                    @RequestMapping("/admin")
-  //                    public class AdminController {
-  //
-  //                    }
-  //                    """;
-  //
-  //            Files.writeString(controllerPath, content, StandardCharsets.UTF_8);
-  //            Path absolutePath = controllerPath.toAbsolutePath();
-  //            if (absolutePath != null) {
-  //                System.out.println("SeekerController generated at: " + absolutePath);
-  //            }
-  //        } catch (IOException e) {
-  //            throw new IllegalStateException("Failed to create SeekerController", e);
-  //        }
-  //    }
-
   private record DatabaseConfig(String url, String username, String password) {}
 }

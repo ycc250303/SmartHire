@@ -83,15 +83,23 @@ public enum ErrorCode {
   MEDIA_URL_IS_EMPTY(1406, "媒体消息URL不能为空"),
   MEDIA_UPLOAD_FAILED(1407, "媒体消息附件上传失败"),
 
-  // 管理员相关错误码 (1500-1599)
-  ADMIN_USER_NOT_FOUND(1501, "用户不存在"),
-  ADMIN_USER_ALREADY_BANNED(1502, "用户已被封禁"),
-  ADMIN_USER_NOT_BANNED(1503, "用户当前未被封禁"),
-  ADMIN_CANNOT_BAN_ADMIN(1504, "不能封禁管理员账户"),
-  ADMIN_CANNOT_MODIFY_ADMIN_STATUS(1505, "不能修改管理员账户状态"),
-  ADMIN_INVALID_BAN_TYPE(1506, "无效的封禁类型"),
-  ADMIN_BAN_DAYS_MUST_BE_POSITIVE(1507, "封禁天数必须大于0"),
-  ADMIN_OPERATION_FAILED(1508, "管理员操作失败"),
+    // 管理员相关错误码 (1500-1599)
+    ADMIN_USER_NOT_FOUND(1501, "用户不存在"),
+    ADMIN_USER_ALREADY_BANNED(1502, "用户已被封禁"),
+    ADMIN_USER_NOT_BANNED(1503, "用户当前未被封禁"),
+    ADMIN_CANNOT_BAN_ADMIN(1504, "不能封禁管理员账户"),
+    ADMIN_CANNOT_MODIFY_ADMIN_STATUS(1505, "不能修改管理员账户状态"),
+    ADMIN_INVALID_BAN_TYPE(1506, "无效的封禁类型"),
+    ADMIN_BAN_DAYS_MUST_BE_POSITIVE(1507, "封禁天数必须大于0"),
+    ADMIN_OPERATION_FAILED(1508, "管理员操作失败"),
+    ADMIN_UNBAN_FAILED(1509, "解除封禁失败"),
+    ADMIN_NOTIFICATION_SEND_FAILED(1510, "通知发送失败"),
+
+    // 举报管理相关错误码 (1590-1599)
+    REPORT_NOT_FOUND(1590, "举报记录不存在"),
+    REPORT_ALREADY_HANDLED(1591, "该举报已处理"),
+    REPORT_HANDLE_FAILED(1592, "举报处理失败"),
+    REPORT_EVIDENCE_NOT_FOUND(1593, "该举报没有证据图片"),
 
   SYSTEM_ERROR(9999, "系统内部错误,请检查业务处理逻辑,以及是否存在未处理的异常情况");
 

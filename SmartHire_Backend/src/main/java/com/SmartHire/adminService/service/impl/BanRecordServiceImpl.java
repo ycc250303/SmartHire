@@ -1,11 +1,11 @@
 package com.SmartHire.adminService.service.impl;
 
 import com.SmartHire.adminService.dto.UserBanDTO;
-import com.SmartHire.adminService.exception.AdminServiceException;
+import com.SmartHire.common.exception.exception.AdminServiceException;
 import com.SmartHire.adminService.mapper.BanRecordMapper;
-import com.SmartHire.adminService.mapper.UserMapper;
 import com.SmartHire.adminService.model.BanRecord;
 import com.SmartHire.adminService.service.BanRecordService;
+import com.SmartHire.common.api.UserAuthApi;
 import com.SmartHire.userAuthService.model.User;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import java.util.Date;
@@ -30,42 +30,42 @@ public class BanRecordServiceImpl extends ServiceImpl<BanRecordMapper, BanRecord
 
   @Autowired private BanRecordMapper banRecordMapper;
 
-  @Autowired private UserMapper userMapper;
+  @Autowired private UserAuthApi userAuthApi;
 
-  @Override
-  @Transactional(rollbackFor = Exception.class)
-  public BanRecord banUser(UserBanDTO userBanDTO) {
-    log.info("开始封禁用户，用户ID: {}, 操作管理员: {}", userBanDTO.getUserId(), userBanDTO.getAdminUsername());
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public BanRecord banUser(Long userId, UserBanDTO userBanDTO) {
+        log.info("开始封禁用户，用户ID: {}, 操作管理员: {}", userId, userBanDTO.getAdminUsername());
 
-    // 1. 验证用户是否存在
-    User user = userMapper.selectById(userBanDTO.getUserId());
-    if (user == null) {
-      throw AdminServiceException.userNotFound(userBanDTO.getUserId());
-    }
+        // 1. 验证用户是否存在
+        User user = userAuthApi.getUserById(userId);
+        if (user == null) {
+            throw AdminServiceException.userNotFound(userId);
+        }
 
     // 2. 验证用户类型（不能封禁管理员）
     if (user.getUserType() == 3) {
       throw AdminServiceException.cannotBanAdmin();
     }
 
-    // 3. 检查用户是否已经被封禁
-    BanRecord existingBan = banRecordMapper.findActiveBanByUserId(userBanDTO.getUserId());
-    if (existingBan != null) {
-      throw AdminServiceException.userAlreadyBanned(userBanDTO.getUserId());
-    }
+        // 3. 检查用户是否已经被封禁
+        BanRecord existingBan = banRecordMapper.findActiveBanByUserId(userId);
+        if (existingBan != null) {
+            throw AdminServiceException.userAlreadyBanned(userId);
+        }
 
-    // 4. 创建封禁记录
-    BanRecord banRecord = new BanRecord();
-    banRecord.setUserId(userBanDTO.getUserId());
-    banRecord.setUsername(user.getUsername());
-    banRecord.setEmail(user.getEmail());
-    banRecord.setUserType(user.getUserType().byteValue());
-    banRecord.setBanReason(userBanDTO.getBanReason());
-    banRecord.setBanType(userBanDTO.getBanDurationType());
-    banRecord.setBanStartTime(new Date());
-    banRecord.setBanStatus("active");
-    banRecord.setOperatorId(userBanDTO.getAdminId());
-    banRecord.setOperatorName(userBanDTO.getAdminUsername());
+        // 4. 创建封禁记录
+        BanRecord banRecord = new BanRecord();
+        banRecord.setUserId(userId);
+        banRecord.setUsername(user.getUsername());
+        banRecord.setEmail(user.getEmail());
+        banRecord.setUserType(user.getUserType().byteValue());
+        banRecord.setBanReason(userBanDTO.getBanReason());
+        banRecord.setBanType(userBanDTO.getBanDurationType());
+        banRecord.setBanStartTime(new Date());
+        banRecord.setBanStatus("active");
+        banRecord.setOperatorId(userBanDTO.getAdminId());
+        banRecord.setOperatorName(userBanDTO.getAdminUsername());
 
     // 计算封禁结束时间
     if ("temporary".equals(userBanDTO.getBanDurationType()) && userBanDTO.getBanDays() != null) {
@@ -85,11 +85,11 @@ public class BanRecordServiceImpl extends ServiceImpl<BanRecordMapper, BanRecord
 
     // 6. 更新用户状态为禁用
     user.setStatus(0); // 0-禁用
-    userMapper.updateById(user);
+    userAuthApi.updateUser(user);
 
-    log.info("用户封禁成功，用户ID: {}, 封禁类型: {}", userBanDTO.getUserId(), userBanDTO.getBanDurationType());
-    return banRecord;
-  }
+        log.info("用户封禁成功，用户ID: {}, 封禁类型: {}", userId, userBanDTO.getBanDurationType());
+        return banRecord;
+    }
 
   @Override
   @Transactional(rollbackFor = Exception.class)
@@ -99,7 +99,7 @@ public class BanRecordServiceImpl extends ServiceImpl<BanRecordMapper, BanRecord
     try {
       // 1. 检查用户是否存在
       log.info("步骤1: 检查用户是否存在, userId={}", userId);
-      User user = userMapper.selectById(userId);
+      User user = userAuthApi.getUserById(userId);
       if (user == null) {
         log.error("用户不存在: userId={}", userId);
         throw AdminServiceException.userNotFound(userId);
@@ -127,7 +127,7 @@ public class BanRecordServiceImpl extends ServiceImpl<BanRecordMapper, BanRecord
       // 4. 恢复用户状态
       log.info("步骤4: 恢复用户状态");
       user.setStatus(1); // 1-正常
-      userMapper.updateById(user);
+      userAuthApi.updateUser(user);
       log.info("用户状态已更新为正常");
 
       log.info("用户封禁解除成功，用户ID: {}", userId);
@@ -174,10 +174,10 @@ public class BanRecordServiceImpl extends ServiceImpl<BanRecordMapper, BanRecord
         banRecordMapper.updateById(ban);
 
         // 恢复用户状态
-        User user = userMapper.selectById(ban.getUserId());
+        User user = userAuthApi.getUserById(ban.getUserId());
         if (user != null) {
           user.setStatus(1); // 1-正常
-          userMapper.updateById(user);
+          userAuthApi.updateUser(user);
         }
 
         processedCount++;

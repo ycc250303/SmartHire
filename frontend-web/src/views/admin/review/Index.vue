@@ -101,6 +101,14 @@
               >
                 拒绝
               </NButton>
+              <NButton
+                v-if="job.status === 'approved'"
+                size="small"
+                type="error"
+                @click.stop="handleForceOffline(job)"
+              >
+                强制下线
+              </NButton>
             </div>
           </div>
 
@@ -152,7 +160,7 @@
     <!-- 岗位详情弹窗 -->
     <NModal v-model:show="showDetailModal" :mask-closable="false">
       <NCard
-        style="max-width: 900px; max-height: 85vh; overflow-y: auto;"
+        style="max-width: 900px !important; max-height: 85vh !important; overflow-y: auto !important; border-radius: 16px !important; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15) !important;"
         title="岗位详情"
         :bordered="false"
         size="huge"
@@ -164,20 +172,21 @@
             quaternary
             circle
             @click="showDetailModal = false"
+            style="width: 36px !important; height: 36px !important; border-radius: 50% !important; transition: all 0.3s ease !important;"
           >
             <template #icon>
-              <span class="close-icon">×</span>
+              <span class="close-icon" style="font-size: 20px !important; color: #666 !important; line-height: 1 !important; display: block !important;">×</span>
             </template>
           </NButton>
         </template>
 
-        <div v-if="selectedJob" class="job-detail">
+        <div v-if="selectedJob" class="job-detail" style="padding: 0 !important; margin: 0 !important;">
           <!-- 岗位基本信息 -->
-          <div class="detail-header">
-            <div class="detail-basic-info">
-              <h3 class="detail-title">{{ selectedJob.title }}</h3>
-              <div class="detail-tags">
-                <NTag :type="getStatusType(selectedJob.status)" size="medium">
+          <div class="detail-header" style="display: flex !important; align-items: center !important; gap: 20px !important; padding: 32px !important; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border-radius: 12px !important; margin: 0 0 32px 0 !important; color: white !important; position: relative !important; overflow: hidden !important;">
+            <div class="detail-basic-info" style="flex: 1 !important; position: relative !important; z-index: 2 !important;">
+              <h3 class="detail-title" style="font-size: 28px !important; font-weight: 700 !important; margin: 0 0 16px 0 !important; color: white !important; line-height: 1.3 !important; text-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;">{{ selectedJob.title }}</h3>
+              <div class="detail-tags" style="display: flex !important; gap: 12px !important; flex-wrap: wrap !important;">
+                <NTag :type="getStatusType(selectedJob.status)" size="medium" style="background: rgba(255, 255, 255, 0.25) !important; border: 1px solid rgba(255, 255, 255, 0.35) !important; color: white !important; backdrop-filter: blur(10px) !important; font-weight: 600 !important; padding: 6px 16px !important; border-radius: 20px !important;">
                   {{ getStatusText(selectedJob.status) }}
                 </NTag>
               </div>
@@ -185,90 +194,91 @@
           </div>
 
           <!-- 详细信息网格 -->
-          <div class="detail-info-grid">
-            <div class="info-card">
-              <div class="info-card-header">
-                <span class="info-icon">🏢</span>
-                <h4>公司信息</h4>
+          <div class="detail-info-grid" style="display: grid !important; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important; gap: 24px !important; margin-bottom: 32px !important;">
+            <div class="info-card" style="background: #ffffff !important; border: 1px solid #e8e8e8 !important; border-radius: 16px !important; padding: 24px !important; transition: all 0.3s ease !important; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;">
+              <div class="info-card-header" style="display: flex !important; align-items: center !important; gap: 12px !important; margin-bottom: 20px !important;">
+                <span class="info-icon" style="font-size: 24px !important; width: 48px !important; height: 48px !important; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%) !important; border-radius: 12px !important; display: flex !important; align-items: center !important; justify-content: center !important; flex-shrink: 0 !important;">🏢</span>
+                <h4 style="font-size: 18px !important; font-weight: 700 !important; color: #1a1a1a !important; margin: 0 !important; line-height: 1.3 !important;">公司信息</h4>
               </div>
               <div class="info-content">
-                <div class="info-item">
-                  <label>公司名称</label>
-                  <span>{{ selectedJob.company }}</span>
+                <div class="info-item" style="display: flex !important; justify-content: space-between !important; align-items: center !important; padding: 16px 0 !important; border-bottom: 1px solid #f0f0f0 !important;">
+                  <label style="font-size: 14px !important; color: #6b7280 !important; font-weight: 600 !important; flex-shrink: 0 !important; margin-right: 16px !important; text-transform: uppercase !important; letter-spacing: 0.5px !important;">公司名称</label>
+                  <span style="font-size: 16px !important; color: #1a1a1a !important; font-weight: 600 !important; text-align: right !important; word-break: break-all !important;">{{ selectedJob.company }}</span>
                 </div>
-                <div class="info-item">
-                  <label>工作地点</label>
-                  <span>📍 {{ selectedJob.location }}</span>
+                <div class="info-item" style="display: flex !important; justify-content: space-between !important; align-items: center !important; padding: 16px 0 !important; border-bottom: 1px solid #f0f0f0 !important;">
+                  <label style="font-size: 14px !important; color: #6b7280 !important; font-weight: 600 !important; flex-shrink: 0 !important; margin-right: 16px !important; text-transform: uppercase !important; letter-spacing: 0.5px !important;">工作地点</label>
+                  <span style="font-size: 16px !important; color: #1a1a1a !important; font-weight: 600 !important; text-align: right !important; word-break: break-all !important;">📍 {{ selectedJob.location }}</span>
                 </div>
               </div>
             </div>
 
-            <div class="info-card">
-              <div class="info-card-header">
-                <span class="info-icon">💰</span>
-                <h4>薪资待遇</h4>
+            <div class="info-card" style="background: #ffffff !important; border: 1px solid #e8e8e8 !important; border-radius: 16px !important; padding: 24px !important; transition: all 0.3s ease !important; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;">
+              <div class="info-card-header" style="display: flex !important; align-items: center !important; gap: 12px !important; margin-bottom: 20px !important;">
+                <span class="info-icon" style="font-size: 24px !important; width: 48px !important; height: 48px !important; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%) !important; border-radius: 12px !important; display: flex !important; align-items: center !important; justify-content: center !important; flex-shrink: 0 !important;">💰</span>
+                <h4 style="font-size: 18px !important; font-weight: 700 !important; color: #1a1a1a !important; margin: 0 !important; line-height: 1.3 !important;">薪资待遇</h4>
               </div>
               <div class="info-content">
-                <div class="info-item">
-                  <label>薪资范围</label>
-                  <span>{{ selectedJob.salary }}</span>
+                <div class="info-item" style="display: flex !important; justify-content: space-between !important; align-items: center !important; padding: 16px 0 !important; border-bottom: 1px solid #f0f0f0 !important;">
+                  <label style="font-size: 14px !important; color: #6b7280 !important; font-weight: 600 !important; flex-shrink: 0 !important; margin-right: 16px !important; text-transform: uppercase !important; letter-spacing: 0.5px !important;">薪资范围</label>
+                  <span style="font-size: 16px !important; color: #1a1a1a !important; font-weight: 600 !important; text-align: right !important; word-break: break-all !important;">{{ selectedJob.salary }}</span>
                 </div>
-                <div class="info-item">
-                  <label>经验要求</label>
-                  <span>{{ selectedJob.experience }}</span>
+                <div class="info-item" style="display: flex !important; justify-content: space-between !important; align-items: center !important; padding: 16px 0 !important; border-bottom: 1px solid #f0f0f0 !important;">
+                  <label style="font-size: 14px !important; color: #6b7280 !important; font-weight: 600 !important; flex-shrink: 0 !important; margin-right: 16px !important; text-transform: uppercase !important; letter-spacing: 0.5px !important;">经验要求</label>
+                  <span style="font-size: 16px !important; color: #1a1a1a !important; font-weight: 600 !important; text-align: right !important; word-break: break-all !important;">{{ selectedJob.experience }}</span>
                 </div>
-                <div class="info-item">
-                  <label>学历要求</label>
-                  <span>{{ selectedJob.education }}</span>
+                <div class="info-item" style="display: flex !important; justify-content: space-between !important; align-items: center !important; padding: 16px 0 !important;">
+                  <label style="font-size: 14px !important; color: #6b7280 !important; font-weight: 600 !important; flex-shrink: 0 !important; margin-right: 16px !important; text-transform: uppercase !important; letter-spacing: 0.5px !important;">学历要求</label>
+                  <span style="font-size: 16px !important; color: #1a1a1a !important; font-weight: 600 !important; text-align: right !important; word-break: break-all !important;">{{ selectedJob.education }}</span>
                 </div>
               </div>
             </div>
 
-            <div class="info-card">
-              <div class="info-card-header">
-                <span class="info-icon">👤</span>
-                <h4>发布信息</h4>
+            <div class="info-card" style="background: #ffffff !important; border: 1px solid #e8e8e8 !important; border-radius: 16px !important; padding: 24px !important; transition: all 0.3s ease !important; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;">
+              <div class="info-card-header" style="display: flex !important; align-items: center !important; gap: 12px !important; margin-bottom: 20px !important;">
+                <span class="info-icon" style="font-size: 24px !important; width: 48px !important; height: 48px !important; background: linear-gradient(135deg, #fa709a 0%, #fee140 100%) !important; border-radius: 12px !important; display: flex !important; align-items: center !important; justify-content: center !important; flex-shrink: 0 !important;">👤</span>
+                <h4 style="font-size: 18px !important; font-weight: 700 !important; color: #1a1a1a !important; margin: 0 !important; line-height: 1.3 !important;">发布信息</h4>
               </div>
               <div class="info-content">
-                <div class="info-item">
-                  <label>发布者</label>
-                  <span>{{ selectedJob.publisher }}</span>
+                <div class="info-item" style="display: flex !important; justify-content: space-between !important; align-items: center !important; padding: 16px 0 !important; border-bottom: 1px solid #f0f0f0 !important;">
+                  <label style="font-size: 14px !important; color: #6b7280 !important; font-weight: 600 !important; flex-shrink: 0 !important; margin-right: 16px !important; text-transform: uppercase !important; letter-spacing: 0.5px !important;">发布者</label>
+                  <span style="font-size: 16px !important; color: #1a1a1a !important; font-weight: 600 !important; text-align: right !important; word-break: break-all !important;">{{ selectedJob.publisher }}</span>
                 </div>
-                <div class="info-item">
-                  <label>发布时间</label>
-                  <span>{{ formatTime(selectedJob.createTime) }}</span>
+                <div class="info-item" style="display: flex !important; justify-content: space-between !important; align-items: center !important; padding: 16px 0 !important;">
+                  <label style="font-size: 14px !important; color: #6b7280 !important; font-weight: 600 !important; flex-shrink: 0 !important; margin-right: 16px !important; text-transform: uppercase !important; letter-spacing: 0.5px !important;">发布时间</label>
+                  <span style="font-size: 16px !important; color: #1a1a1a !important; font-weight: 600 !important; text-align: right !important; word-break: break-all !important;">{{ formatTime(selectedJob.createTime) }}</span>
                 </div>
               </div>
             </div>
           </div>
 
           <!-- 岗位描述 -->
-          <div class="info-card full-width">
-            <div class="info-card-header">
-              <span class="info-icon">📝</span>
-              <h4>岗位描述</h4>
+          <div class="info-card full-width" style="background: #ffffff !important; border: 1px solid #e8e8e8 !important; border-radius: 16px !important; padding: 24px !important; margin-bottom: 32px !important; transition: all 0.3s ease !important; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;">
+            <div class="info-card-header" style="display: flex !important; align-items: center !important; gap: 12px !important; margin-bottom: 20px !important;">
+              <span class="info-icon" style="font-size: 24px !important; width: 48px !important; height: 48px !important; background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%) !important; border-radius: 12px !important; display: flex !important; align-items: center !important; justify-content: center !important; flex-shrink: 0 !important;">📝</span>
+              <h4 style="font-size: 18px !important; font-weight: 700 !important; color: #1a1a1a !important; margin: 0 !important; line-height: 1.3 !important;">岗位描述</h4>
             </div>
             <div class="info-content">
-              <div class="description-full">
+              <div class="description-full" style="font-size: 16px !important; color: #374151 !important; line-height: 1.7 !important; white-space: pre-wrap !important; word-break: break-word !important; background: #fafbfc !important; padding: 20px !important; border-radius: 8px !important; border: 1px solid #f0f2f5 !important;">
                 {{ selectedJob.description }}
               </div>
             </div>
           </div>
 
           <!-- 技能标签 -->
-          <div class="info-card full-width" v-if="selectedJob.tags && selectedJob.tags.length > 0">
-            <div class="info-card-header">
-              <span class="info-icon">🏷️</span>
-              <h4>技能标签</h4>
+          <div class="info-card full-width" v-if="selectedJob.tags && selectedJob.tags.length > 0" style="background: #ffffff !important; border: 1px solid #e8e8e8 !important; border-radius: 16px !important; padding: 24px !important; margin-bottom: 32px !important; transition: all 0.3s ease !important; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;">
+            <div class="info-card-header" style="display: flex !important; align-items: center !important; gap: 12px !important; margin-bottom: 20px !important;">
+              <span class="info-icon" style="font-size: 24px !important; width: 48px !important; height: 48px !important; background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%) !important; border-radius: 12px !important; display: flex !important; align-items: center !important; justify-content: center !important; flex-shrink: 0 !important;">🏷️</span>
+              <h4 style="font-size: 18px !important; font-weight: 700 !important; color: #1a1a1a !important; margin: 0 !important; line-height: 1.3 !important;">技能标签</h4>
             </div>
             <div class="info-content">
-              <div class="tags-full">
+              <div class="tags-full" style="display: flex !important; gap: 12px !important; flex-wrap: wrap !important;">
                 <NTag
                   v-for="tag in selectedJob.tags"
                   :key="tag"
                   size="medium"
                   type="info"
                   class="detail-tag"
+                  style="font-size: 14px !important; font-weight: 600 !important; padding: 6px 16px !important; border-radius: 20px !important; background: rgba(32, 128, 240, 0.1) !important; border-color: rgba(32, 128, 240, 0.2) !important;"
                 >
                   {{ tag }}
                 </NTag>
@@ -278,26 +288,39 @@
         </div>
 
         <template #footer>
-          <div class="modal-actions">
-            <NButton @click="showDetailModal = false">关闭</NButton>
-            <div v-if="selectedJob && selectedJob.status === 'pending'" class="action-buttons">
+          <div class="modal-actions" style="display: flex !important; justify-content: space-between !important; align-items: center !important; gap: 16px !important; padding-top: 24px !important; border-top: 1px solid #f0f2f5 !important;">
+            <NButton @click="showDetailModal = false" style="padding: 12px 24px !important; height: auto !important; font-size: 16px !important; font-weight: 500 !important; border-radius: 8px !important;">关闭</NButton>
+            <div v-if="selectedJob" class="action-buttons" style="display: flex !important; gap: 12px !important;">
+              <template v-if="selectedJob.status === 'pending'">
+                <NButton
+                  type="success"
+                  @click="handleApprove(selectedJob)"
+                  style="padding: 12px 24px !important; height: auto !important; font-size: 16px !important; font-weight: 600 !important; border-radius: 8px !important;"
+                >
+                  通过
+                </NButton>
+                <NButton
+                  type="warning"
+                  @click="handleModify(selectedJob)"
+                  style="padding: 12px 24px !important; height: auto !important; font-size: 16px !important; font-weight: 600 !important; border-radius: 8px !important;"
+                >
+                  要求修改
+                </NButton>
+                <NButton
+                  type="error"
+                  @click="handleReject(selectedJob)"
+                  style="padding: 12px 24px !important; height: auto !important; font-size: 16px !important; font-weight: 600 !important; border-radius: 8px !important;"
+                >
+                  拒绝
+                </NButton>
+              </template>
               <NButton
-                type="success"
-                @click="handleApprove(selectedJob)"
-              >
-                通过
-              </NButton>
-              <NButton
-                type="warning"
-                @click="handleModify(selectedJob)"
-              >
-                要求修改
-              </NButton>
-              <NButton
+                v-if="selectedJob.status === 'approved'"
                 type="error"
-                @click="handleReject(selectedJob)"
+                @click="handleForceOffline(selectedJob)"
+                style="padding: 12px 24px !important; height: auto !important; font-size: 16px !important; font-weight: 600 !important; border-radius: 8px !important;"
               >
-                拒绝
+                强制下线
               </NButton>
             </div>
           </div>
@@ -333,7 +356,7 @@
             <p class="preview-company">{{ currentJob?.company }}</p>
           </div>
 
-          <div class="action-form" v-if="actionType === 'reject' || actionType === 'modify'">
+          <div class="action-form" v-if="actionType === 'reject' || actionType === 'modify' || actionType === 'offline'">
             <NForm
               ref="actionFormRef"
               :model="actionForm"
@@ -341,18 +364,47 @@
               label-width="auto"
             >
               <NFormItem
-                label="审核意见"
+                :label="actionType === 'offline' ? '下线原因' : '审核意见'"
                 :rule="[
-                  { required: true, message: '请输入审核意见', trigger: ['blur'] }
+                  { required: true, message: actionType === 'offline' ? '请输入下线原因' : '请输入审核意见', trigger: ['blur'] }
                 ]"
               >
                 <NInput
                   v-model:value="actionForm.reason"
                   type="textarea"
-                  placeholder="请输入审核意见"
+                  :placeholder="actionType === 'offline' ? '请输入强制下线的原因' : '请输入审核意见'"
                   :rows="4"
                 />
               </NFormItem>
+
+              <NFormItem>
+                <NCheckbox v-model:checked="actionForm.sendNotification">
+                  发送通知给HR
+                </NCheckbox>
+              </NFormItem>
+
+              <!-- 通知编辑区域 -->
+              <template v-if="actionForm.sendNotification">
+                <NFormItem label="通知标题">
+                  <NInput
+                    v-model:value="actionForm.notificationTitle"
+                    placeholder="请输入通知标题"
+                    maxlength="100"
+                    show-count
+                  />
+                </NFormItem>
+
+                <NFormItem label="通知内容">
+                  <NInput
+                    v-model:value="actionForm.notificationContent"
+                    type="textarea"
+                    placeholder="请输入通知内容"
+                    :rows="4"
+                    maxlength="500"
+                    show-count
+                  />
+                </NFormItem>
+              </template>
             </NForm>
           </div>
 
@@ -368,7 +420,7 @@
               type="primary"
               :loading="actionLoading"
               @click="confirmAction"
-              :disabled="actionType === 'reject' && !actionForm.reason.trim()"
+              :disabled="(actionType === 'reject' || actionType === 'modify' || actionType === 'offline') && !actionForm.reason.trim()"
             >
               {{ actionText }}
             </NButton>
@@ -391,34 +443,36 @@ import {
   NModal,
   NForm,
   NFormItem,
-  FormInst,
-  useMessage,
-  useDialog
+  NCheckbox,
+  useMessage
 } from 'naive-ui'
+import type { FormInst } from 'naive-ui'
 import dayjs from 'dayjs'
 import {
   getJobAuditList,
   approveJob,
   rejectJob,
   modifyJob,
+  forceOfflineJob,
   getJobAuditStats,
   type Job,
   type JobAuditQueryParams,
   type JobAuditParams
 } from '@/api/job'
+import { sendNotificationWithRelated } from '@/api/notification'
 
 interface StatusTab {
   value: string
   label: string
   description: string
-  count: number
+  count: number | null
   type: 'info' | 'success' | 'warning' | 'error'
   emptyText: string
   emptyDesc: string
+  title?: string  // 可选的title属性
 }
 
 const message = useMessage()
-const dialog = useDialog()
 
 // 岗位详情弹窗状态
 const showDetailModal = ref(false)
@@ -426,12 +480,12 @@ const selectedJob = ref<Job | null>(null)
 
 // 状态标签页
 const activeTab = ref('pending')
-const statusTabs: StatusTab[] = [
+const statusTabs = ref<StatusTab[]>([
   {
     value: 'pending',
     label: '待审核',
     description: '需要审核的职位',
-    count: 12,
+    count: null,
     type: 'info',
     emptyText: '待审核职位',
     emptyDesc: '当前没有需要审核的职位'
@@ -440,7 +494,7 @@ const statusTabs: StatusTab[] = [
     value: 'approved',
     label: '已通过',
     description: '已通过审核的职位',
-    count: 45,
+    count: null,
     type: 'success',
     emptyText: '已通过职位',
     emptyDesc: '当前没有已通过的职位'
@@ -449,7 +503,7 @@ const statusTabs: StatusTab[] = [
     value: 'rejected',
     label: '已拒绝',
     description: '被拒绝的职位',
-    count: 8,
+    count: null,
     type: 'error',
     emptyText: '已拒绝职位',
     emptyDesc: '当前没有已拒绝的职位'
@@ -458,12 +512,12 @@ const statusTabs: StatusTab[] = [
     value: 'modified',
     label: '需修改',
     description: '需要修改的职位',
-    count: 3,
+    count: null,
     type: 'warning',
     emptyText: '需修改职位',
     emptyDesc: '当前没有需要修改的职位'
   }
-]
+])
 
 // 状态数据
 const jobsData = ref<Job[]>([])
@@ -480,12 +534,13 @@ const loading = ref(false)
 
 // 搜索和筛选
 const searchKeyword = ref('')
-const actionType = ref<'approve' | 'reject' | 'modify'>('approve')
+const actionType = ref<'approve' | 'reject' | 'modify' | 'offline'>('approve')
 const actionText = computed(() => {
   const textMap = {
     approve: '通过',
     reject: '拒绝',
-    modify: '要求修改'
+    modify: '要求修改',
+    offline: '强制下线'
   }
   return textMap[actionType.value] || '操作'
 })
@@ -496,11 +551,14 @@ const actionLoading = ref(false)
 const currentJob = ref<Job | null>(null)
 const actionFormRef = ref<FormInst | null>(null)
 const actionForm = ref({
-  reason: ''
+  reason: '',
+  sendNotification: false,
+  notificationTitle: '',
+  notificationContent: ''
 })
 
 // 计算属性
-const currentTab = computed(() => statusTabs.find(tab => tab.value === activeTab.value)!)
+const currentTab = computed(() => statusTabs.value.find(tab => tab.value === activeTab.value)!)
 const filteredJobs = computed(() => {
   let filtered = jobsData.value.filter(job => job.status === activeTab.value)
 
@@ -518,7 +576,7 @@ const filteredJobs = computed(() => {
 
 // 获取当前标签页的标题
 const getCurrentTabTitle = computed(() => {
-  const tab = statusTabs.find(t => t.value === activeTab.value)
+  const tab = statusTabs.value.find(t => t.value === activeTab.value)
   return tab ? tab.label : '职位列表'
 })
 
@@ -599,7 +657,12 @@ const handleApprove = (job: Job) => {
 const handleReject = (job: Job) => {
   currentJob.value = job
   actionType.value = 'reject'
-  actionForm.value.reason = ''
+  actionForm.value = {
+    reason: '',
+    sendNotification: true,
+    notificationTitle: '职位审核拒绝通知',
+    notificationContent: `您好，您发布的职位《${job.title}》未通过审核。审核意见：请根据要求修改职位信息。如有疑问请联系客服。`
+  }
   showActionModal.value = true
 }
 
@@ -607,7 +670,25 @@ const handleReject = (job: Job) => {
 const handleModify = (job: Job) => {
   currentJob.value = job
   actionType.value = 'modify'
-  actionForm.value.reason = ''
+  actionForm.value = {
+    reason: '',
+    sendNotification: true,
+    notificationTitle: '职位审核修改通知',
+    notificationContent: `您好，您发布的职位《${job.title}》需要修改。修改建议：请根据审核意见完善职位信息。修改后可重新提交审核。如有疑问请联系客服。`
+  }
+  showActionModal.value = true
+}
+
+// 强制下线
+const handleForceOffline = (job: Job) => {
+  currentJob.value = job
+  actionType.value = 'offline'
+  actionForm.value = {
+    reason: '',
+    sendNotification: true,
+    notificationTitle: '职位下线通知',
+    notificationContent: `您好，您发布的职位《${job.title}》已被管理员下线。下线原因：请管理员填写具体原因。如有疑问请联系客服。`
+  }
   showActionModal.value = true
 }
 
@@ -628,9 +709,60 @@ const confirmAction = async () => {
     } else if (actionType.value === 'reject') {
       await rejectJob(currentJob.value.id, params)
       message.warning(`职位已拒绝，原因：${actionForm.value.reason}`)
+
+      // 如果选择发送通知，则发送拒绝通知
+      if (actionForm.value.sendNotification && currentJob.value.hrUserId) {
+        try {
+          await sendNotificationWithRelated(
+            currentJob.value.hrUserId, // HR的user_id
+            4, // 职位下线类型
+            actionForm.value.notificationTitle,
+            actionForm.value.notificationContent,
+            currentJob.value.id,
+            'job'
+          )
+        } catch (notificationError: any) {
+          console.error('发送拒绝通知失败:', notificationError)
+        }
+      }
     } else if (actionType.value === 'modify') {
       await modifyJob(currentJob.value.id, params)
       message.info(`已要求修改职位，建议：${actionForm.value.reason}`)
+
+      // 如果选择发送通知，则发送修改通知
+      if (actionForm.value.sendNotification && currentJob.value.hrUserId) {
+        try {
+          await sendNotificationWithRelated(
+            currentJob.value.hrUserId, // HR的user_id
+            4, // 职位下线类型
+            actionForm.value.notificationTitle,
+            actionForm.value.notificationContent,
+            currentJob.value.id,
+            'job'
+          )
+        } catch (notificationError: any) {
+          console.error('发送修改通知失败:', notificationError)
+        }
+      }
+    } else if (actionType.value === 'offline') {
+      await forceOfflineJob(currentJob.value.id, params)
+      message.warning(`职位已强制下线，原因：${actionForm.value.reason}`)
+
+      // 如果选择发送通知，则发送下线通知
+      if (actionForm.value.sendNotification && currentJob.value.hrUserId) {
+        try {
+          await sendNotificationWithRelated(
+            currentJob.value.hrUserId, // HR的user_id
+            4, // 职位下线类型
+            actionForm.value.notificationTitle,
+            actionForm.value.notificationContent,
+            currentJob.value.id,
+            'job'
+          )
+        } catch (notificationError: any) {
+          console.error('发送下线通知失败:', notificationError)
+        }
+      }
     }
 
     showActionModal.value = false
@@ -650,7 +782,7 @@ const updateStatusStats = async () => {
   try {
     const stats = await getJobAuditStats()
 
-    statusTabs.forEach(tab => {
+    statusTabs.value.forEach(tab => {
       tab.count = stats[tab.value as keyof typeof stats] || 0
     })
   } catch (error) {

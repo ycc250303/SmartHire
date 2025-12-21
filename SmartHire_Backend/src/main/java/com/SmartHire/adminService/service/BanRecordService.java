@@ -14,13 +14,13 @@ import java.util.List;
  */
 public interface BanRecordService extends IService<BanRecord> {
 
-  /**
-   * 封禁用户
-   *
-   * @param userBanDTO 封禁信息
-   * @return 封禁记录
-   */
-  BanRecord banUser(UserBanDTO userBanDTO);
+    /**
+     * 封禁用户
+     * @param userId 用户ID
+     * @param userBanDTO 封禁信息
+     * @return 封禁记录
+     */
+    BanRecord banUser(Long userId, UserBanDTO userBanDTO);
 
   /**
    * 解除用户封禁

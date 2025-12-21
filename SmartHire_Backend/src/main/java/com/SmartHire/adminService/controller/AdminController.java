@@ -5,10 +5,12 @@ import com.SmartHire.adminService.dto.UserManagementDTO;
 import com.SmartHire.adminService.dto.UserStatusUpdateDTO;
 import com.SmartHire.adminService.model.BanRecord;
 import com.SmartHire.adminService.service.BanRecordService;
+import com.SmartHire.adminService.service.NotificationService;
 import com.SmartHire.adminService.service.UserService;
 import com.SmartHire.common.auth.RequireUserType;
 import com.SmartHire.common.entity.Result;
 import com.SmartHire.common.auth.UserType;
+import com.SmartHire.common.exception.enums.ErrorCode;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -37,6 +39,8 @@ public class AdminController {
 
   @Autowired private BanRecordService banRecordService;
 
+  @Autowired private NotificationService notificationService;
+
   // ==================== 用户管理接口 ====================
 
   /** 分页查询用户列表 */
@@ -62,6 +66,7 @@ public class AdminController {
     return Result.success(userInfo);
   }
 
+  
   /** 更新用户状态 */
   @PutMapping("/users/{userId}/status")
   public Result<Boolean> updateUserStatus(
@@ -75,7 +80,7 @@ public class AdminController {
     if (result) {
       return Result.success("用户状态更新成功", true);
     } else {
-      return Result.error(500, "用户状态更新失败");
+      return Result.error(ErrorCode.ADMIN_OPERATION_FAILED);
     }
   }
 
@@ -107,9 +112,7 @@ public class AdminController {
   public Result<BanRecord> banUser(
       @PathVariable @NotNull Long userId, @Valid @RequestBody UserBanDTO userBanDTO) {
 
-    // 确保用户ID匹配
-    userBanDTO.setUserId(userId);
-    BanRecord banRecord = banRecordService.banUser(userBanDTO);
+        BanRecord banRecord = banRecordService.banUser(userId, userBanDTO);
 
     return Result.success("用户封禁成功", banRecord);
   }
@@ -134,7 +137,7 @@ public class AdminController {
     if (result) {
       return Result.success("解除封禁成功", true);
     } else {
-      return Result.error(500, "解除封禁失败");
+      return Result.error(ErrorCode.ADMIN_UNBAN_FAILED);
     }
   }
 
@@ -189,5 +192,49 @@ public class AdminController {
     overview.put("bans", banStats);
 
     return Result.success(overview);
+  }
+
+  // ==================== 通知管理接口 ====================
+
+  /** 发送通知给指定用户 */
+  @PostMapping("/notifications/send")
+  public Result<Boolean> sendNotification(
+      @RequestParam @NotNull Long userId,
+      @RequestParam @NotNull Integer type,
+      @RequestParam String title,
+      @RequestParam @NotNull String content) {
+
+    try {
+      notificationService.sendNotification(userId, type, title, content);
+      return Result.success("通知发送成功", true);
+    } catch (Exception e) {
+      log.error("发送通知失败: {}", e.getMessage(), e);
+      return Result.error(ErrorCode.ADMIN_NOTIFICATION_SEND_FAILED.getCode(),
+                        "通知发送失败: " + e.getMessage());
+    }
+  }
+
+  /** 发送带关联信息的通知 */
+  @PostMapping("/notifications/send-with-related")
+  public Result<Boolean> sendNotificationWithRelated(
+      @RequestParam @NotNull Long userId,
+      @RequestParam @NotNull Integer type,
+      @RequestParam String title,
+      @RequestParam @NotNull String content,
+      @RequestParam(required = false) Long relatedId,
+      @RequestParam(required = false) String relatedType) {
+
+    try {
+      if (relatedId != null && relatedType != null) {
+        notificationService.sendNotification(userId, type, title, content, relatedId, relatedType);
+      } else {
+        notificationService.sendNotification(userId, type, title, content);
+      }
+      return Result.success("通知发送成功", true);
+    } catch (Exception e) {
+      log.error("发送通知失败: {}", e.getMessage(), e);
+      return Result.error(ErrorCode.ADMIN_NOTIFICATION_SEND_FAILED.getCode(),
+                        "通知发送失败: " + e.getMessage());
+    }
   }
 }

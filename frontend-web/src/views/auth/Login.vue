@@ -8,20 +8,7 @@
             <div class="logo-emoji">💼</div>
             <h1 class="title">SmartHire</h1>
             <p class="subtitle">智能招聘管理平台</p>
-          </div>
-          <div class="features">
-            <div class="feature-item">
-              <div class="feature-icon">🚀</div>
-              <div class="feature-text">高效招聘</div>
-            </div>
-            <div class="feature-item">
-              <div class="feature-icon">📊</div>
-              <div class="feature-text">数据分析</div>
-            </div>
-            <div class="feature-item">
-              <div class="feature-icon">🛡️</div>
-              <div class="feature-text">安全可靠</div>
-            </div>
+            <p class="subtitle">管理员界面</p>
           </div>
         </div>
       </div>
@@ -75,9 +62,6 @@
                 <NCheckbox v-model:checked="rememberMe">
                   记住我
                 </NCheckbox>
-                <NButton text type="primary" @click="handleForgotPassword">
-                  忘记密码？
-                </NButton>
               </div>
             </NFormItem>
 
@@ -94,13 +78,6 @@
               </NButton>
             </NFormItem>
           </NForm>
-
-          <div class="form-footer">
-            <p class="footer-text">
-              还没有账号？
-              <NButton text type="primary">联系管理员</NButton>
-            </p>
-          </div>
         </div>
       </div>
     </div>
@@ -227,6 +204,14 @@ const handleSubmit = async () => {
         }
         console.log('从token解析的用户数据:', userData)
         console.log('用户类型:', userData.userType, '(1=求职者, 2=HR, 3=管理员)')
+
+        // 检查是否为管理员，如果不是则阻止登录
+        if (userData.userType !== 3) {
+          console.warn('❌ 非管理员用户尝试登录管理员界面:', userData.username)
+          message.error('只有管理员才能登录管理员界面')
+          loading.value = false
+          return
+        }
       } else {
         throw new Error('Token中没有claims字段')
       }
@@ -248,8 +233,51 @@ const handleSubmit = async () => {
     // 保存登录信息 - 根据userType动态生成权限
     const permissions = generatePermissionsByUserType(userData.userType)
     console.log('生成的权限列表:', permissions)
-    
+
     userStore.login(response.accessToken, userData, permissions)
+
+    // 如果是管理员，获取完整的用户信息（包括头像）
+    if (userData.userType === 3) {
+      try {
+        console.log('✅ 管理员登录，调用getUserDetail接口获取头像信息...')
+        console.log('✅ 用户ID:', userData.id)
+        console.log('✅ API路径: /smarthire/api/admin/users/' + userData.id)
+
+        // 直接调用现有的getUserDetail接口
+        const apiResponse = await fetch('/smarthire/api/admin/users/' + userData.id, {
+          method: 'GET',
+          headers: {
+            'Authorization': 'Bearer ' + response.accessToken,
+            'Content-Type': 'application/json'
+          }
+        })
+
+        console.log('✅ API响应状态:', apiResponse.status)
+
+        if (apiResponse.ok) {
+          const result = await apiResponse.json()
+          console.log('✅ 获取到用户详细信息:', result)
+
+          // 检查Result格式的响应结构
+          if (result.success && result.data && result.data.avatarUrl) {
+            // 更新用户store中的头像信息，同时兼容avatarUrl和avatar字段
+            userStore.updateUser({
+              avatarUrl: result.data.avatarUrl,
+              avatar: result.data.avatarUrl // 兼容字段
+            })
+            console.log('✅ 管理员头像已更新:', result.data.avatarUrl)
+          } else {
+            console.log('ℹ️ 用户没有设置头像或头像为空')
+          }
+        } else {
+          console.error('❌ 获取用户信息失败，状态码:', apiResponse.status)
+          const errorText = await apiResponse.text()
+          console.error('❌ 错误响应:', errorText)
+        }
+      } catch (error) {
+        console.error('❌ 获取用户信息时发生异常:', error)
+      }
+    }
     
     // 保存 refreshToken（修复401错误后无法刷新的问题）
     if (response.refreshToken) {
@@ -286,10 +314,6 @@ const handleSubmit = async () => {
   }
 }
 
-// 忘记密码
-const handleForgotPassword = () => {
-  message.info('请联系系统管理员重置密码')
-}
 </script>
 
 <style scoped lang="scss">
@@ -298,7 +322,7 @@ const handleForgotPassword = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #ffffff 0%, #000000 100%);
   padding: 20px;
 }
 
@@ -315,7 +339,7 @@ const handleForgotPassword = () => {
 
 .login-bg {
   flex: 1;
-  background: linear-gradient(135deg, var(--primary-color), #6366f1);
+  background:  url('@/assets/images/login-bg.jpg') center/cover no-repeat;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -360,12 +384,14 @@ const handleForgotPassword = () => {
     font-size: 36px;
     font-weight: 700;
     margin: 0 0 8px 0;
+    color: #000000;
   }
 
   .subtitle {
     font-size: 18px;
     opacity: 0.9;
     margin: 0;
+    color: #000000;
   }
 }
 

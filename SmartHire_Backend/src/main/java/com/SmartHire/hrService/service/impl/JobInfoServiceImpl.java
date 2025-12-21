@@ -55,7 +55,7 @@ public class JobInfoServiceImpl extends ServiceImpl<JobInfoMapper, JobInfo>
     // 通过user_id查询hr_info表获取hr_id（hr_info.id）
     HrInfo hrInfo =
         hrInfoMapper.selectOne(
-            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<HrInfo>()
+            new LambdaQueryWrapper<HrInfo>()
                 .eq(HrInfo::getUserId, userId));
 
     if (hrInfo == null) {
