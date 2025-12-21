@@ -1,6 +1,5 @@
 package com.SmartHire.common.auth;
 
-import com.SmartHire.common.enums.UserType;
 import com.SmartHire.common.exception.enums.ErrorCode;
 import com.SmartHire.common.exception.exception.BusinessException;
 import java.lang.reflect.Method;

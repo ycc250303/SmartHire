@@ -2,7 +2,7 @@ package com.SmartHire.messageService.service.impl;
 
 import com.SmartHire.common.api.ApplicationApi;
 import com.SmartHire.common.api.UserAuthApi;
-import com.SmartHire.common.enums.UserType;
+import com.SmartHire.common.auth.UserType;
 import com.SmartHire.common.exception.enums.ErrorCode;
 import com.SmartHire.common.exception.exception.BusinessException;
 import com.SmartHire.common.utils.AliOssUtil;
@@ -13,7 +13,7 @@ import com.SmartHire.messageService.model.ChatMessage;
 import com.SmartHire.messageService.model.Conversation;
 import com.SmartHire.messageService.service.ChatMessageService;
 import com.SmartHire.messageService.service.ConversationService;
-import com.SmartHire.messageService.service.MQProducerService;
+import com.SmartHire.messageService.service.MessageEventProducer;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -37,28 +37,35 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class ChatMessageServiceImpl extends ServiceImpl<ChatMessageMapper, ChatMessage>
     implements ChatMessageService {
-  @Autowired private ConversationService conversationService;
+  @Autowired
+  private ConversationService conversationService;
 
-  @Autowired private MQProducerService mqProducerService;
+  @Autowired
+  private MessageEventProducer mqProducerService;
 
-  @Autowired private UserAuthApi userAuthApi;
+  @Autowired
+  private UserAuthApi userAuthApi;
 
-  @Autowired private AliOssUtil aliOssUtil;
+  @Autowired
+  private AliOssUtil aliOssUtil;
 
-  @Autowired private ApplicationApi applicationApi;
+  @Autowired
+  private ApplicationApi applicationApi;
 
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public MessageDTO sendMessage(Long senderId, SendMessageDTO dto) {
+  public MessageDTO sendMessage(Long senderId, SendMessageDTO dto, boolean skipApplicationValidation) {
 
     // 检查receiverId对应的用户是否存在
     if (!userAuthApi.existsUser(dto.getReceiverId())) {
       throw new BusinessException(ErrorCode.USER_ID_NOT_EXIST);
     }
 
-    // 检查applicationId对应的投递记录是否存在
-    if (!applicationApi.existsApplication(dto.getApplicationId())) {
-      throw new BusinessException(ErrorCode.APPLICATION_NOT_EXIST);
+    // 检查applicationId对应的投递记录是否存在（事件驱动的消息可以跳过此验证）
+    if (!skipApplicationValidation && dto.getApplicationId() != null) {
+      if (!applicationApi.existsApplication(dto.getApplicationId())) {
+        throw new BusinessException(ErrorCode.APPLICATION_NOT_EXIST);
+      }
     }
 
     // 验证用户类型：求职者只能和HR发消息，HR只能和求职者发消息
@@ -101,9 +108,9 @@ public class ChatMessageServiceImpl extends ServiceImpl<ChatMessageMapper, ChatM
       throw new BusinessException(ErrorCode.MESSAGE_TYPE_INVALID);
     }
 
+    log.info("开始获取或创建会话");
     // 1. 获取或创建会话
-    Conversation conversation =
-        conversationService.getOrCreateConversation(senderId, dto.getReceiverId());
+    Conversation conversation = conversationService.getOrCreateConversation(senderId, dto.getReceiverId());
 
     // 2. 创建消息对象
     ChatMessage message = getChatMessage(senderId, dto, conversation);
@@ -215,15 +222,13 @@ public class ChatMessageServiceImpl extends ServiceImpl<ChatMessageMapper, ChatM
 
   @Override
   public Integer getUnreadCount(Long userId) {
-    List<Conversation> conversations =
-        conversationService.list(
-            new LambdaQueryWrapper<Conversation>()
-                .and(
-                    wrapper ->
-                        wrapper
-                            .eq(Conversation::getUser1Id, userId)
-                            .or()
-                            .eq(Conversation::getUser2Id, userId)));
+    List<Conversation> conversations = conversationService.list(
+        new LambdaQueryWrapper<Conversation>()
+            .and(
+                wrapper -> wrapper
+                    .eq(Conversation::getUser1Id, userId)
+                    .or()
+                    .eq(Conversation::getUser2Id, userId)));
 
     int total = 0;
     for (Conversation conv : conversations) {
@@ -241,7 +246,7 @@ public class ChatMessageServiceImpl extends ServiceImpl<ChatMessageMapper, ChatM
   private String generateMessagePreview(Integer messageType, String content) {
     return switch (messageType) {
       case 1 -> // 文本
-      content == null ? "" : content.length() > 50 ? content.substring(0, 50) + "..." : content;
+        content == null ? "" : content.length() > 50 ? content.substring(0, 50) + "..." : content;
       case 2 -> "[图片]";
       case 3 -> "[文件]";
       case 4 -> "[语音]";
@@ -260,7 +265,7 @@ public class ChatMessageServiceImpl extends ServiceImpl<ChatMessageMapper, ChatM
   /**
    * 验证用户类型：求职者只能和HR发消息，HR只能和求职者发消息
    *
-   * @param senderId 发送者ID
+   * @param senderId   发送者ID
    * @param receiverId 接收者ID
    * @throws BusinessException 如果用户类型不匹配
    */

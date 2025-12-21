@@ -2,7 +2,7 @@ package com.SmartHire.hrService.controller;
 
 import com.SmartHire.common.auth.RequireUserType;
 import com.SmartHire.common.entity.Result;
-import com.SmartHire.common.enums.UserType;
+import com.SmartHire.common.auth.UserType;
 import com.SmartHire.hrService.service.MatchingService;
 import com.SmartHire.recruitmentService.dto.ApplicationListDTO;
 import io.swagger.v3.oas.annotations.Operation;

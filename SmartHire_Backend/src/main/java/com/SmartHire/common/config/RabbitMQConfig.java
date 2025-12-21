@@ -23,11 +23,17 @@ public class RabbitMQConfig {
   /** 通知消息队列（预留） */
   public static final String NOTIFICATION_QUEUE = "smarthire.notification.queue";
 
+  /** 投递/推荐创建事件队列 */
+  public static final String APPLICATION_CREATED_QUEUE = "smarthire.application.created.queue";
+
   /** 聊天消息路由键 */
   public static final String ROUTING_KEY_CHAT = "message.chat";
 
   /** 通知消息路由键（预留） */
   public static final String ROUTING_KEY_NOTIFICATION = "message.notification";
+
+  /** 投递/推荐创建事件路由键 */
+  public static final String ROUTING_KEY_APPLICATION_CREATED = "application.created";
 
   /** 配置消息转换器（JSON 格式） 将 Java 对象自动序列化为 JSON，消费时自动反序列化 */
   @Bean

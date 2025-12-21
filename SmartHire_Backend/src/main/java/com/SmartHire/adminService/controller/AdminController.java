@@ -9,7 +9,7 @@ import com.SmartHire.adminService.service.NotificationService;
 import com.SmartHire.adminService.service.UserService;
 import com.SmartHire.common.auth.RequireUserType;
 import com.SmartHire.common.entity.Result;
-import com.SmartHire.common.enums.UserType;
+import com.SmartHire.common.auth.UserType;
 import com.SmartHire.common.exception.enums.ErrorCode;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import jakarta.validation.Valid;

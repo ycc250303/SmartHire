@@ -1,12 +1,26 @@
 package com.SmartHire.common.api;
 
-/** 消息服务API接口 用于模块间通信，避免直接访问数据库 */
+import com.SmartHire.messageService.dto.MessageDTO;
+import com.SmartHire.messageService.dto.SendMessageDTO;
+
+/**
+ * 消息服务API接口 用于模块间通信，避免直接访问数据库
+ */
 public interface MessageApi {
 
-  /**
-   * 删除用户相关的所有消息和会话
-   *
-   * @param userId 用户ID
-   */
-  void deleteUserMessages(Long userId);
+    /**
+     * 删除用户相关的所有消息和会话
+     *
+     * @param userId 用户ID
+     */
+    void deleteUserMessages(Long userId);
+
+    /**
+     * 发送消息
+     *
+     * @param senderId 发送者ID
+     * @param dto      发送消息参数
+     * @return 发送结果
+     */
+    MessageDTO sendMessage(Long senderId, SendMessageDTO dto);
 }
