@@ -18,21 +18,24 @@ import org.springframework.stereotype.Service;
 @Service
 public class HrApiImpl implements HrApi {
 
-  @Autowired private HrInfoMapper hrInfoMapper;
+  @Autowired
+  private HrInfoMapper hrInfoMapper;
 
-  @Autowired private JobInfoMapper jobInfoMapper;
+  @Autowired
+  private JobInfoMapper jobInfoMapper;
 
-  @Autowired private CompanyMapper companyMapper;
+  @Autowired
+  private CompanyMapper companyMapper;
 
-  @Autowired private UserAuthApi userAuthApi;
+  @Autowired
+  private UserAuthApi userAuthApi;
 
   @Override
   public Long getHrIdByUserId(Long userId) {
     if (userId == null) {
       return null;
     }
-    HrInfo hrInfo =
-        hrInfoMapper.selectOne(new LambdaQueryWrapper<HrInfo>().eq(HrInfo::getUserId, userId));
+    HrInfo hrInfo = hrInfoMapper.selectOne(new LambdaQueryWrapper<HrInfo>().eq(HrInfo::getUserId, userId));
     return hrInfo == null ? null : hrInfo.getId();
   }
 
@@ -96,5 +99,14 @@ public class HrApiImpl implements HrApi {
     jobCard.setEducationRequired(jobInfo.getEducationRequired());
 
     return jobCard;
+  }
+
+  @Override
+  public Long getHrUserIdByHrId(Long hrId) {
+    if (hrId == null) {
+      return null;
+    }
+    HrInfo hrInfo = hrInfoMapper.selectById(hrId);
+    return hrInfo == null ? null : hrInfo.getUserId();
   }
 }

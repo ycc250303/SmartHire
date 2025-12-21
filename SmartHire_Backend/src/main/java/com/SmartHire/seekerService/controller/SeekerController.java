@@ -2,7 +2,7 @@ package com.SmartHire.seekerService.controller;
 
 import com.SmartHire.common.auth.RequireUserType;
 import com.SmartHire.common.entity.Result;
-import com.SmartHire.common.enums.UserType;
+import com.SmartHire.common.auth.UserType;
 import com.SmartHire.seekerService.dto.JobFavoriteDTO;
 import com.SmartHire.seekerService.dto.SeekerDTO;
 import com.SmartHire.seekerService.dto.SeekerInfoDTO;

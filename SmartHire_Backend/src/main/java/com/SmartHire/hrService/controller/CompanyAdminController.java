@@ -2,7 +2,7 @@ package com.SmartHire.hrService.controller;
 
 import com.SmartHire.common.auth.RequireUserType;
 import com.SmartHire.common.entity.Result;
-import com.SmartHire.common.enums.UserType;
+import com.SmartHire.common.auth.UserType;
 import com.SmartHire.hrService.dto.HrInfoDTO;
 import com.SmartHire.hrService.model.Company;
 import com.SmartHire.hrService.service.CompanyAdminService;

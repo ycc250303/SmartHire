@@ -1,6 +1,8 @@
 package com.SmartHire.recruitmentService.controller;
 
 import com.SmartHire.common.api.HrApi;
+import com.SmartHire.common.auth.RequireUserType;
+import com.SmartHire.common.auth.UserType;
 import com.SmartHire.common.entity.Result;
 import com.SmartHire.common.exception.enums.ErrorCode;
 import com.SmartHire.common.exception.exception.BusinessException;
@@ -29,6 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/recruitment/seeker")
+@RequireUserType(UserType.SEEKER)
 @Validated
 public class SeekerRecruitmentController {
   @Autowired

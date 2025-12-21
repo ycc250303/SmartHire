@@ -2,7 +2,7 @@ package com.SmartHire.seekerService.controller;
 
 import com.SmartHire.common.auth.RequireUserType;
 import com.SmartHire.common.entity.Result;
-import com.SmartHire.common.enums.UserType;
+import com.SmartHire.common.auth.UserType;
 import com.SmartHire.seekerService.dto.SeekerCardDTO;
 import com.SmartHire.seekerService.service.OnlineResumeService;
 import com.SmartHire.seekerService.service.SeekerCardService;

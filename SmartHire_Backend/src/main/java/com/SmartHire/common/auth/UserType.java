@@ -1,4 +1,4 @@
-package com.SmartHire.common.enums;
+package com.SmartHire.common.auth;
 
 public enum UserType {
   /** 求职者 */

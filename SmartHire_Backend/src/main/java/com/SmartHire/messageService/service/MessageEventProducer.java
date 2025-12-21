@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 /** 消息队列生产者服务 负责将消息发送到 RabbitMQ 队列 */
 @Slf4j
 @Service
-public class MQProducerService {
+public class MessageEventProducer {
   @Autowired private RabbitTemplate rabbitTemplate;
 
   /**

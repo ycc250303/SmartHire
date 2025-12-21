@@ -17,7 +17,7 @@ public interface HrApi {
    * 验证岗位是否属于指定HR
    *
    * @param jobId 岗位ID
-   * @param hrId HR ID
+   * @param hrId  HR ID
    * @return 是否属于
    */
   boolean validateJobOwnership(Long jobId, Long hrId);
@@ -37,4 +37,12 @@ public interface HrApi {
    * @return 岗位卡片信息，如果岗位不存在返回null
    */
   JobCardDTO getJobCardByJobId(Long jobId);
+
+  /**
+   * 根据HR ID获取HR用户ID
+   *
+   * @param hrId HR ID（hr_info表的id）
+   * @return HR用户ID（user表的id），如果HR不存在返回null
+   */
+  Long getHrUserIdByHrId(Long hrId);
 }
