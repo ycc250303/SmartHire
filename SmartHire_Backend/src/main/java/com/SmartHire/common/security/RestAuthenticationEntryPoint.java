@@ -9,6 +9,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.IOException;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
@@ -16,6 +18,7 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 
 /** 未登录时返回的错误信息 */
+@Slf4j
 @Component
 public class RestAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
@@ -41,6 +44,8 @@ public class RestAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
   private Result<?> determineErrorResult(HttpServletRequest request) {
     String token = request.getHeader("Authorization");
+    log.info("token1: {}", token);
+    log.info("token.isBlank(): {}", token.isBlank());
     if (token != null && !token.isBlank()) {
       // 处理 "Bearer " 前缀
       if (token.startsWith("Bearer ")) {
@@ -56,6 +61,7 @@ public class RestAuthenticationEntryPoint implements AuthenticationEntryPoint {
       } catch (Exception ignored) {
       }
     }
+    log.info("token2: {}", token);
     return Result.error(ErrorCode.USER_NOT_LOGIN);
   }
 }

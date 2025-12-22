@@ -46,7 +46,8 @@ public class JwtUtil {
   }
 
   /**
-   * 验证令牌（基础方法） 验证 token 的有效性（签名、过期时间等），返回完整的 DecodedJWT 适用于需要检查 token 类型、过期时间等完整信息的场景
+   * 验证令牌（基础方法） 验证 token 的有效性（签名、过期时间等），返回完整的 DecodedJWT 适用于需要检查 token
+   * 类型、过期时间等完整信息的场景
    *
    * @param token JWT token 字符串
    * @return DecodedJWT 解码后的 JWT 对象
@@ -84,6 +85,7 @@ public class JwtUtil {
    */
   public Map<String, Object> parseToken(String token) {
     DecodedJWT decodedJWT = verifyToken(token);
+    log.info("decodedJWT: {}", decodedJWT);
     return getClaims(decodedJWT);
   }
 

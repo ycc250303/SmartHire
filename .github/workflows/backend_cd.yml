@@ -1,56 +1,49 @@
 name: SmartHire Backend CD
 
 on:
-  push:
-    branches:
-      - main
+  workflow_run:
+    workflows: ["SmartHire Backend CI"]
+    types:
+      - completed
+    branches: [main]
 
 jobs:
   deploy:
     name: Deploy to Production
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     steps:
-      # 1. 获取版本号（从 tag 或 pom.xml）
+      # 1. 检查 CI 工作流状态
+      - name: Check CI workflow status
+        run: |
+          if [ "${{ github.event.workflow_run.conclusion }}" != "success" ]; then
+            echo "❌ CI 工作流未成功完成，状态为: ${{ github.event.workflow_run.conclusion }}"
+            echo "🚫 部署已取消，请先修复 CI 失败问题"
+            exit 1
+          else
+            echo "✅ CI 工作流成功完成，开始部署流程"
+          fi
+
+      # 2. 获取版本号（从 pom.xml）
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0  # 需要获取所有 tag 信息
 
-      - name: Install xmllint (if needed)
-        if: github.event_name == 'workflow_run'
+      - name: Install xmllint
         run: sudo apt-get update && sudo apt-get install -y libxml2-utils
 
-      - name: Get version from tag or pom.xml
+      - name: Get version from pom.xml
         id: get_version
         shell: bash
         run: |
-          TAG=""
-          if [ "${{ github.event_name }}" == "push" ] && [ "${{ github.ref_type }}" == "tag" ]; then
-            # 从 tag 获取版本（格式：v0.0.1）
-            TAG="${{ github.ref_name }}"
-            VERSION="${TAG#v}"  # 去掉 v 前缀
-            echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-            echo "Using tag: $TAG"
-          elif [ "${{ github.event_name }}" == "workflow_dispatch" ] && [ "${{ github.event.inputs.image_tag }}" != "" ] && [ "${{ github.event.inputs.image_tag }}" != "latest" ]; then
-            # 手动触发时使用指定的 tag
-            TAG="${{ github.event.inputs.image_tag }}"
-            echo "VERSION=${TAG#v}" >> $GITHUB_OUTPUT
-            echo "Using manual tag: $TAG"
-          elif [ "${{ github.event_name }}" == "workflow_run" ]; then
-            # 从 pom.xml 获取最新版本（workflow_run 触发时）
-            VERSION=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='version']/text()" SmartHire_Backend/pom.xml)
-            CLEAN_VERSION="${VERSION/-SNAPSHOT/}"
-            TAG="v$CLEAN_VERSION"
-            echo "VERSION=$CLEAN_VERSION" >> $GITHUB_OUTPUT
-            echo "Using version from pom.xml: $TAG"
-          fi
-          
-          # 如果还是没有 tag，使用 latest
-          if [ -z "$TAG" ]; then
-            TAG="latest"
-            echo "Using default: latest"
-          fi
+          # 从 pom.xml 获取最新版本
+          VERSION=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='version']/text()" SmartHire_Backend/pom.xml)
+          CLEAN_VERSION="${VERSION/-SNAPSHOT/}"
+          TAG="v$CLEAN_VERSION"
+          echo "VERSION=$CLEAN_VERSION" >> $GITHUB_OUTPUT
+          echo "Using version from pom.xml: $TAG"
           
           # 设置最终的 IMAGE_TAG
           echo "IMAGE_TAG=$TAG" >> $GITHUB_OUTPUT
@@ -58,26 +51,26 @@ jobs:
           echo "Final image tag: $TAG"
           echo "Deploying image: ghcr.io/${{ github.repository_owner }}/${{ secrets.IMAGE_NAME }}:$TAG"
 
-      # 2. 配置 SSH
+      # 3. 配置 SSH
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
 
-      # 3. 添加服务器到 known_hosts（避免首次连接确认）
+      # 4. 添加服务器到 known_hosts（避免首次连接确认）
       - name: Add server to known_hosts
         run: |
           ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
 
-      # 4. 部署到服务器
+      # 5. 部署到服务器
       - name: Deploy to server
         env:
           SMARTHIRE_TOKEN: ${{ secrets.SMARTHIRE_TOKEN }}
           IMAGE_NAME: ${{ secrets.IMAGE_NAME }}
           IMAGE_TAG: ${{ steps.get_version.outputs.IMAGE_TAG || 'latest' }}
           REPO_OWNER: ${{ github.repository_owner }}
-          # workflow_run 触发时使用 workflow_run.actor，否则使用 github.actor
-          GH_ACTOR: ${{ github.event.workflow_run.actor.login || github.actor }}
+          # 使用 workflow_run.actor
+          GH_ACTOR: ${{ github.event.workflow_run.actor.login }}
         run: |
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << EOF
             set -e
@@ -131,7 +124,7 @@ jobs:
             echo "=== 部署完成 ==="
           EOF
 
-      # 5. 健康检查
+      # 6. 健康检查
       - name: Health check
         run: |
           echo "等待服务启动..."
