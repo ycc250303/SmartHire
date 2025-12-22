@@ -121,4 +121,143 @@ public class MessageEventConsumer {
       // 可以考虑实现重试机制或死信队列
     }
   }
+
+  /**
+   * 消费面试安排事件，发送面试通知给求职者（HR -> 求职者）
+   *
+   * @param event 面试安排事件
+   */
+  @RabbitListener(bindings = @QueueBinding(value = @Queue(value = RabbitMQConfig.INTERVIEW_SCHEDULED_QUEUE, durable = "true"), exchange = @Exchange(value = RabbitMQConfig.MESSAGE_EXCHANGE, type = ExchangeTypes.TOPIC, durable = "true"), key = RabbitMQConfig.ROUTING_KEY_INTERVIEW_SCHEDULED))
+  public void consumeInterviewScheduledEvent(com.SmartHire.common.event.InterviewScheduledEvent event) {
+    try {
+      if (event == null || event.getInterviewId() == null) {
+        log.warn("收到无效的面试安排事件: {}", event);
+        return;
+      }
+
+      log.info(
+          "收到面试安排事件: interviewId={}, applicationId={}, seekerUserId={}",
+          event.getInterviewId(),
+          event.getApplicationId(),
+          event.getSeekerUserId());
+
+      // 构建发送消息DTO，由 HR 作为 sender 发送给求职者
+      SendMessageDTO sendMessageDTO = new SendMessageDTO();
+      sendMessageDTO.setReceiverId(event.getSeekerUserId());
+      sendMessageDTO.setApplicationId(event.getApplicationId());
+      sendMessageDTO.setMessageType(1); // 文本消息
+
+      // 构建通知内容
+      String content =
+          String.format(
+              "您好，您有一场新的面试安排：时间：%s，地点：%s，面试官：%s。请按时参加。如有问题请联系HR。",
+              event.getInterviewTime() != null ? event.getInterviewTime().toString() : "未指定",
+              event.getLocation() != null ? event.getLocation() : "未指定",
+              event.getInterviewer() != null ? event.getInterviewer() : "未指定");
+
+      // 如果事件携带自定义 note，优先使用
+      if (event.getNote() != null && !event.getNote().isEmpty()) {
+        content = event.getNote();
+      }
+
+      sendMessageDTO.setContent(content);
+      sendMessageDTO.setFileUrl(null);
+      sendMessageDTO.setReplyTo(null);
+      sendMessageDTO.setFile(null);
+
+      // 以 hrUserId 为 sender 发送给 seekerUserId
+      chatMessageService.sendMessage(event.getHrUserId(), sendMessageDTO, true);
+
+      log.info("面试通知已发送: interviewId={}, seekerUserId={}", event.getInterviewId(), event.getSeekerUserId());
+    } catch (Exception e) {
+      log.error("消费面试安排事件失败: interviewId={}, applicationId={}", event != null ? event.getInterviewId() : null, event != null ? event.getApplicationId() : null, e);
+    }
+  }
+
+  /**
+   * 消费 Offer 发送事件，发送 Offer 通知给求职者（HR -> 求职者）
+   *
+   * @param event OfferSentEvent
+   */
+  @RabbitListener(bindings = @QueueBinding(value = @Queue(value = RabbitMQConfig.OFFER_SENT_QUEUE, durable = "true"), exchange = @Exchange(value = RabbitMQConfig.MESSAGE_EXCHANGE, type = ExchangeTypes.TOPIC, durable = "true"), key = RabbitMQConfig.ROUTING_KEY_OFFER_SENT))
+  public void consumeOfferSentEvent(com.SmartHire.common.event.OfferSentEvent event) {
+    try {
+      if (event == null || event.getApplicationId() == null) {
+        log.warn("收到无效的 OfferSentEvent: {}", event);
+        return;
+      }
+
+      log.info(
+          "收到 OfferSentEvent: applicationId={}, seekerUserId={}, hrUserId={}",
+          event.getApplicationId(),
+          event.getSeekerUserId(),
+          event.getHrUserId());
+
+      SendMessageDTO sendMessageDTO = new SendMessageDTO();
+      sendMessageDTO.setReceiverId(event.getSeekerUserId());
+      sendMessageDTO.setApplicationId(event.getApplicationId());
+      sendMessageDTO.setMessageType(1); // 文本消息
+
+      StringBuilder content = new StringBuilder();
+      content.append("恭喜，您收到录用通知！");
+      if (event.getTitle() != null) {
+        content.append(" 职位：").append(event.getTitle()).append("；");
+      }
+      if (event.getBaseSalary() != null) {
+        content.append(" 薪资：").append(event.getBaseSalary()).append("；");
+      }
+      if (event.getStartDate() != null) {
+        content.append(" 到岗：").append(event.getStartDate().toString()).append("；");
+      }
+      if (event.getNote() != null && !event.getNote().isEmpty()) {
+        content.append(" 备注：").append(event.getNote());
+      }
+
+      sendMessageDTO.setContent(content.toString());
+      sendMessageDTO.setFileUrl(null);
+      sendMessageDTO.setReplyTo(null);
+      sendMessageDTO.setFile(null);
+
+      chatMessageService.sendMessage(event.getHrUserId(), sendMessageDTO, true);
+
+      log.info("Offer 通知已发送: applicationId={}, seekerUserId={}", event.getApplicationId(), event.getSeekerUserId());
+    } catch (Exception e) {
+      log.error("消费 OfferSentEvent 失败: applicationId={}", event != null ? event.getApplicationId() : null, e);
+    }
+  }
+
+  /**
+   * 消费 Application 被拒事件，发送拒绝通知给求职者
+   */
+  @RabbitListener(bindings = @QueueBinding(value = @Queue(value = RabbitMQConfig.APPLICATION_REJECTED_QUEUE, durable = "true"), exchange = @Exchange(value = RabbitMQConfig.MESSAGE_EXCHANGE, type = ExchangeTypes.TOPIC, durable = "true"), key = RabbitMQConfig.ROUTING_KEY_APPLICATION_REJECTED))
+  public void consumeApplicationRejectedEvent(com.SmartHire.common.event.ApplicationRejectedEvent event) {
+    try {
+      if (event == null || event.getApplicationId() == null) {
+        log.warn("收到无效的 ApplicationRejectedEvent: {}", event);
+        return;
+      }
+
+      log.info("收到拒绝事件: applicationId={}, seekerUserId={}", event.getApplicationId(), event.getSeekerUserId());
+
+      SendMessageDTO sendMessageDTO = new SendMessageDTO();
+      sendMessageDTO.setReceiverId(event.getSeekerUserId());
+      sendMessageDTO.setApplicationId(event.getApplicationId());
+      sendMessageDTO.setMessageType(1);
+
+      String content = "很抱歉，您的本次应聘未通过。";
+      if (event.getReason() != null && !event.getReason().isEmpty()) {
+        content += " 原因：" + event.getReason();
+      }
+
+      sendMessageDTO.setContent(content);
+      sendMessageDTO.setFileUrl(null);
+      sendMessageDTO.setReplyTo(null);
+      sendMessageDTO.setFile(null);
+
+      chatMessageService.sendMessage(event.getHrUserId(), sendMessageDTO, true);
+      log.info("拒绝通知已发送: applicationId={}, seekerUserId={}", event.getApplicationId(), event.getSeekerUserId());
+    } catch (Exception e) {
+      log.error("消费 ApplicationRejectedEvent 失败: applicationId={}", event != null ? event.getApplicationId() : null, e);
+    }
+  }
 }

@@ -6,6 +6,7 @@ import com.SmartHire.recruitmentService.dto.SubmitResumeDTO;
 import com.SmartHire.recruitmentService.model.Application;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.SmartHire.recruitmentService.dto.RecommendRequest;
 
 /**
  * 投递/推荐记录表 服务类
@@ -45,4 +46,22 @@ public interface ApplicationService extends IService<Application> {
    * @param status 新状态
    */
   void updateApplicationStatus(Long applicationId, Byte status);
+
+  /**
+   * HR 拒绝候选人（将 application.status 置为 5，并可触发通知）
+   *
+   * @param applicationId 投递ID
+   * @param reason 拒绝原因
+   * @param sendNotification 是否发送通知
+   * @param templateId 模板ID（可选）
+   */
+  void rejectApplication(Long applicationId, String reason, Boolean sendNotification, String templateId);
+
+  /**
+   * HR 推荐岗位（HR -> 求职者）
+   *
+   * @param request 推荐请求
+   * @return 新建的 applicationId
+   */
+  Long recommend(RecommendRequest request);
 }

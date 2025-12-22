@@ -18,6 +18,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import com.SmartHire.recruitmentService.dto.RecommendRequest;
+import com.SmartHire.common.auth.RequireUserType;
+import com.SmartHire.common.auth.UserType;
 
 /** 简历管理控制器（HR端） */
 @RestController
@@ -28,6 +31,8 @@ public class HrRecruitmentController {
   @Autowired
   @Qualifier("applicationServiceImpl")
   private ApplicationService applicationService;
+
+  @Autowired private com.SmartHire.recruitmentService.service.InterviewService interviewService;
 
   @Autowired private SeekerApi seekerApi;
 
@@ -69,5 +74,61 @@ public class HrRecruitmentController {
       throw new BusinessException(ErrorCode.SEEKER_NOT_EXIST);
     }
     return Result.success("获取求职者卡片成功", seekerCard);
+  }
+
+  /**
+   * HR 推荐岗位给求职者（创建推荐记录）
+   *
+   * @param req 推荐请求
+   */
+  @PostMapping("/recommend")
+  @RequireUserType(UserType.HR)
+  @Operation(summary = "HR 推荐岗位", description = "公司 HR 推荐岗位给指定求职者（创建推荐记录）")
+  public Result<?> recommend(@Valid @RequestBody RecommendRequest req) {
+    Long applicationId = applicationService.recommend(req);
+    return Result.success("推荐成功", applicationId);
+  }
+
+  @Autowired private com.SmartHire.recruitmentService.service.OfferService offerService;
+
+  /**
+   * HR 发 Offer（最小可行：发送即置为已录用）
+   *
+   * @param req Offer 请求
+   */
+  @PostMapping("/offers")
+  @RequireUserType(UserType.HR)
+  @Operation(summary = "HR 发 Offer", description = "HR 向求职者发 Offer（发送则将 application.status 置为已录用）")
+  public Result<?> sendOffer(@Valid @RequestBody com.SmartHire.recruitmentService.dto.OfferRequest req) {
+    Long applicationId = offerService.sendOffer(req);
+    return Result.success("Offer 处理成功", applicationId);
+  }
+
+  /**
+   * HR 安排面试（创建面试记录并通知求职者）
+   *
+   * @param req 面试安排请求
+   */
+  @PostMapping("/interviews")
+  @RequireUserType(UserType.HR)
+  @Operation(summary = "HR 安排面试", description = "HR 为指定投递安排面试并通知候选人")
+  public Result<?> scheduleInterview(@Valid @RequestBody com.SmartHire.recruitmentService.dto.InterviewScheduleRequest req) {
+    Long interviewId = interviewService.scheduleInterview(req);
+    return Result.success("面试安排成功", interviewId);
+  }
+
+  /**
+   * HR 拒绝候选人（单条）
+   *
+   * @param applicationId 投递ID
+   * @param req 拒绝请求体
+   */
+  @PatchMapping("/applications/{applicationId}/reject")
+  @RequireUserType(UserType.HR)
+  @Operation(summary = "HR 拒绝候选人", description = "HR 对指定投递执行拒绝操作（记录原因并通知候选人）")
+  public Result<?> rejectApplication(
+      @PathVariable Long applicationId, @Valid @RequestBody com.SmartHire.recruitmentService.dto.RejectRequest req) {
+    applicationService.rejectApplication(applicationId, req.getReason(), req.getSendNotification(), req.getTemplateId());
+    return Result.success("拒绝成功", applicationId);
   }
 }

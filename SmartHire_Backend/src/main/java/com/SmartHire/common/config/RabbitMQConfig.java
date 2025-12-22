@@ -34,6 +34,18 @@ public class RabbitMQConfig {
 
   /** 投递/推荐创建事件路由键 */
   public static final String ROUTING_KEY_APPLICATION_CREATED = "application.created";
+  /** 面试安排事件路由键 */
+  public static final String ROUTING_KEY_INTERVIEW_SCHEDULED = "interview.scheduled";
+  /** 面试安排事件队列 */
+  public static final String INTERVIEW_SCHEDULED_QUEUE = "smarthire.interview.scheduled.queue";
+  /** Offer 发送事件路由键 */
+  public static final String ROUTING_KEY_OFFER_SENT = "offer.sent";
+  /** Offer 发送事件队列 */
+  public static final String OFFER_SENT_QUEUE = "smarthire.offer.sent.queue";
+  /** 投递被拒事件路由键 */
+  public static final String ROUTING_KEY_APPLICATION_REJECTED = "application.rejected";
+  /** 投递被拒事件队列 */
+  public static final String APPLICATION_REJECTED_QUEUE = "smarthire.application.rejected.queue";
 
   /** 配置消息转换器（JSON 格式） 将 Java 对象自动序列化为 JSON，消费时自动反序列化 */
   @Bean
