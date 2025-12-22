@@ -28,11 +28,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
   private static final String ACCESS_BLACKLIST_PREFIX = "token:blacklist:access:";
   private static final Set<String> PUBLIC_PATHS = Set.of(
+      "/health",
       "/user-auth/login",
       "/user-auth/register",
       "/user-auth/send-verification-code",
       "/user-auth/verify-code",
       "/user-auth/refresh-token",
+      "/seeker/public",
       "/swagger-ui",
       "/swagger-ui/",
       "/swagger-ui/index.html",
@@ -69,7 +71,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       // 检查完整路径是否以公开路径开头
       isPublicPath = PUBLIC_PATHS.stream().anyMatch(p -> fullPath.startsWith(p) || path.startsWith(p));
     }
-    
+
     if (isPublicPath) {
       log.info("路径匹配公开路径，直接放行: {}", path);
       filterChain.doFilter(request, response);
