@@ -183,6 +183,14 @@
       }
     },
     {
+      "path": "pages/hr/hr/seeker/detail",
+      "style": {
+        "navigationBarTitleText": "求职者详情",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
       "path": "pages/hr/hr/jobs/index",
       "style": {
         "navigationBarTitleText": "岗位管理",

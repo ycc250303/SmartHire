@@ -116,8 +116,8 @@ const editJob = () => {
 };
 
 const statusText = (status: number) => {
-  const map: Record<number, string> = { 0: 'Full-time', 1: 'Internship' };
-  return map[status] || '未知';
+  const map: Record<number, string> = { 0: '已下线', 1: '招聘中', 2: '已暂停' };
+  return map[status] ?? '未知';
 };
 
 const statusClass = (status: number) => {
@@ -127,12 +127,9 @@ const statusClass = (status: number) => {
 };
 
 const jobTypeText = (type?: number) => {
-  const map: Record<number, string> = { 0: '??', 1: '??' };
-  if (type === undefined || type === null) return 'Not set';
-  return map[type] || 'Not set';
-};
+  const map: Record<number, string> = { 0: '全职', 1: '实习' };
   if (type === undefined || type === null) return '未填写';
-  return map[type] || '未填写';
+  return map[type] ?? '未填写';
 };
 
 const educationText = (edu?: number) => {
@@ -194,6 +191,51 @@ onLoad((options) => {
   padding: 28rpx;
   margin-bottom: 24rpx;
   box-shadow: 0 10rpx 32rpx rgba(0, 34, 90, 0.08);
+}
+
+.job-actions {
+  display: flex;
+  gap: 16rpx;
+  margin-top: 22rpx;
+}
+
+.job-actions button {
+  flex: 1;
+  height: 84rpx;
+  line-height: 84rpx;
+  border-radius: 18rpx;
+  font-size: 30rpx;
+  font-weight: 600;
+  padding: 0 12rpx;
+  box-sizing: border-box;
+}
+
+.job-actions button:active {
+  transform: translateY(1rpx);
+  opacity: 0.92;
+}
+
+.job-actions button[disabled] {
+  opacity: 0.55;
+}
+
+button.ghost {
+  background: #f3f6ff;
+  color: #2f7cff;
+  border: 2rpx solid rgba(47, 124, 255, 0.18);
+}
+
+button.primary {
+  background: linear-gradient(135deg, #2f7cff 0%, #4ba3ff 100%);
+  color: #fff;
+  border: none;
+  box-shadow: 0 12rpx 26rpx rgba(47, 124, 255, 0.26);
+}
+
+button.outline {
+  background: #fff;
+  color: #ff7a00;
+  border: 2rpx solid rgba(255, 122, 0, 0.55);
 }
 
 .header {

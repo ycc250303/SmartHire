@@ -29,6 +29,24 @@
           <view class="picker-value">{{ jobTypeLabel }}</view>
         </picker>
       </view>
+
+      <view class="form-item" v-if="jobTypeValue === 0">
+        <text class="label">经验要求</text>
+        <picker :range="experienceOptions" @change="onExperienceChange">
+          <view class="picker-value">{{ experienceLabel }}</view>
+        </picker>
+      </view>
+
+      <view class="form-item salary-row" v-if="jobTypeValue === 1">
+        <view class="salary-field">
+          <text class="label">每周实习天数</text>
+          <input v-model.number="form.internshipDaysPerWeek" type="number" placeholder="如 3" />
+        </view>
+        <view class="salary-field">
+          <text class="label">实习时长(月)</text>
+          <input v-model.number="form.internshipDurationMonths" type="number" placeholder="如 6" />
+        </view>
+      </view>
       <view class="form-item textarea">
         <text class="label">岗位描述</text>
         <textarea v-model="form.description" placeholder="职责、项目背景等"></textarea>
@@ -65,6 +83,8 @@ import { useHrStore } from '@/store/hr';
 
 const jobTypes = ['Full-time', 'Internship'];
 const jobTypeValue = ref<number | null>(null);
+const experienceOptions = ['应届生', '1年以内', '1-3年', '3-5年', '5-10年', '10年以上'];
+const experienceValue = ref<number | null>(null);
 const jobId = ref<number | null>(null);
 const loading = ref(false);
 const saving = ref(false);
@@ -78,6 +98,9 @@ const form = reactive<JobPositionCreatePayload>({
   salaryMax: undefined,
   salaryMonths: undefined,
   jobType: 0,
+  experienceRequired: undefined,
+  internshipDaysPerWeek: undefined,
+  internshipDurationMonths: undefined,
   description: '',
   responsibilities: '',
   requirements: '',
@@ -87,6 +110,11 @@ const submitText = computed(() => (jobId.value ? '保存修改' : '发布岗位'
 const jobTypeLabel = computed(() => {
   if (jobTypeValue.value === null) return '请选择工作类型';
   return jobTypes[jobTypeValue.value] || '请选择工作类型';
+});
+
+const experienceLabel = computed(() => {
+  if (experienceValue.value === null) return '请选择经验要求';
+  return experienceOptions[experienceValue.value] || '请选择经验要求';
 });
 
 const ensureCompanyId = async () => {
@@ -118,10 +146,14 @@ const populateForm = (data?: JobPosition) => {
   form.salaryMax = data.salaryMax;
   form.salaryMonths = data.salaryMonths;
   form.jobType = data.jobType ?? 0;
+  form.experienceRequired = data.experienceRequired;
+  form.internshipDaysPerWeek = data.internshipDaysPerWeek;
+  form.internshipDurationMonths = data.internshipDurationMonths;
   form.description = data.description || '';
   form.responsibilities = data.responsibilities || '';
   form.requirements = data.requirements || '';
   jobTypeValue.value = data.jobType ?? null;
+  experienceValue.value = typeof data.experienceRequired === 'number' ? data.experienceRequired : null;
 };
 
 const loadJob = async (id: number) => {
@@ -153,6 +185,11 @@ const handleSubmit = async () => {
     const city = form.city?.trim();
     const description = form.description?.trim();
 
+    if (jobTypeValue.value === null) {
+      uni.showToast({ title: '请选择工作类型', icon: 'none' });
+      return;
+    }
+
     if (form.companyId === 0) {
       uni.showToast({ title: '无法获取企业信息', icon: 'none' });
       return;
@@ -161,6 +198,23 @@ const handleSubmit = async () => {
     if (!jobTitle || !city || !description) {
       uni.showToast({ title: '请填写必填信息', icon: 'none' });
       return;
+    }
+
+    form.jobType = jobTypeValue.value;
+    if (form.jobType === 0) {
+      if (typeof form.experienceRequired !== 'number') {
+        uni.showToast({ title: '全职岗位需填写经验要求', icon: 'none' });
+        return;
+      }
+    } else if (form.jobType === 1) {
+      if (typeof form.internshipDaysPerWeek !== 'number') {
+        uni.showToast({ title: '实习岗位需填写每周实习天数', icon: 'none' });
+        return;
+      }
+      if (typeof form.internshipDurationMonths !== 'number') {
+        uni.showToast({ title: '实习岗位需填写实习时长', icon: 'none' });
+        return;
+      }
     }
 
     form.jobTitle = jobTitle;
@@ -188,6 +242,19 @@ const onTypeChange = (event: any) => {
   const index = Number(event.detail.value);
   jobTypeValue.value = index;
   form.jobType = index;
+  if (index === 0) {
+    form.internshipDaysPerWeek = undefined;
+    form.internshipDurationMonths = undefined;
+  } else if (index === 1) {
+    form.experienceRequired = undefined;
+    experienceValue.value = null;
+  }
+};
+
+const onExperienceChange = (event: any) => {
+  const index = Number(event.detail.value);
+  experienceValue.value = index;
+  form.experienceRequired = index;
 };
 
 onLoad(async (options) => {

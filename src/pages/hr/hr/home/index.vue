@@ -39,6 +39,25 @@
       </view>
     </view>
 
+    <view class="card recommend-card">
+      <view class="recommend-header">
+        <view class="section-title">推荐求职者</view>
+        <view class="action-link" @click="refreshSeekerCards">刷新</view>
+      </view>
+
+      <view v-if="seekerLoading" class="hint">加载中...</view>
+      <view v-else-if="seekerError" class="hint">{{ seekerError }}</view>
+      <view v-else class="seeker-list">
+        <view v-if="seekerCards.length === 0" class="hint">暂无推荐</view>
+        <SeekerRecommendCard
+          v-for="card in seekerCards"
+          :key="card.userId ?? card.id ?? card.username"
+          :seeker="card"
+          @click="openSeekerDetail"
+        />
+      </view>
+    </view>
+
     <CustomTabBar />
   </view>
 </template>
@@ -49,15 +68,35 @@ import { onShow } from '@dcloudio/uni-app';
 import { fetchDashboardData, type DashboardTodoItem, type RecruitStatistic } from '@/mock/hr';
 import avatarImg from '@/static/user-avatar.png';
 import CustomTabBar from '@/components/common/CustomTabBar.vue';
+import { getPublicSeekerCards, type PublicSeekerCard } from '@/services/api/hr';
+import SeekerRecommendCard from '@/pages/hr/hr/seeker/components/SeekerRecommendCard.vue';
 
 const todos = ref<DashboardTodoItem[]>([]);
 const stats = ref<RecruitStatistic[]>([]);
+
+const seekerCards = ref<PublicSeekerCard[]>([]);
+const seekerLoading = ref(false);
+const seekerError = ref('');
 
 const loadDashboard = async () => {
   // TODO: 替换为真实接口 GET /api/hr/dashboard
   const data = await fetchDashboardData();
   todos.value = data.todos;
   stats.value = data.stats;
+};
+
+const refreshSeekerCards = async () => {
+  seekerLoading.value = true;
+  seekerError.value = '';
+  try {
+    const data = await getPublicSeekerCards();
+    seekerCards.value = Array.isArray(data) ? data : [];
+  } catch (err) {
+    console.error('Failed to load public seeker cards:', err);
+    seekerError.value = '推荐加载失败';
+  } finally {
+    seekerLoading.value = false;
+  }
 };
 
 const goProfile = () => {
@@ -93,6 +132,19 @@ const handleTodoClick = (route?: string) => {
   uni.navigateTo({ url: route });
 };
 
+const openSeekerDetail = (card: PublicSeekerCard) => {
+  const userId = (card.userId ?? card.id) as number | undefined;
+  if (!userId || Number.isNaN(Number(userId))) {
+    uni.showToast({ title: '缺少用户ID', icon: 'none' });
+    return;
+  }
+  uni.navigateTo({
+    url: `/pages/hr/hr/seeker/detail?userId=${encodeURIComponent(userId)}&username=${encodeURIComponent(card.username || '')}`,
+  });
+};
+
+
+
 const trendText = (trend: RecruitStatistic['trend']) => {
   switch (trend) {
     case 'up':
@@ -106,10 +158,12 @@ const trendText = (trend: RecruitStatistic['trend']) => {
 
 onMounted(() => {
   loadDashboard();
+  refreshSeekerCards();
 });
 
 onShow(() => {
-  uni.hideTabBar();
+  uni.hideTabBar({ fail: () => {} });
+  refreshSeekerCards();
 });
 </script>
 
@@ -234,6 +288,27 @@ onShow(() => {
 
 .stat-trend.down {
   color: #ff5f5f;
+}
+
+.recommend-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.action-link {
+  font-size: 24rpx;
+  color: #2f7cff;
+}
+
+.hint {
+  color: #8a92a7;
+  font-size: 24rpx;
+  padding: 10rpx 0;
+}
+
+.seeker-list {
+  padding-top: 6rpx;
 }
 
 </style>

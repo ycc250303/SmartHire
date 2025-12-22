@@ -1,9 +1,5 @@
 ﻿<template>
   <view class="chat-page">
-    <view class="chat-header">
-      <view class="title">{{ chatTitle }}</view>
-    </view>
-
     <scroll-view
       scroll-y
       class="chat-body"
@@ -17,7 +13,17 @@
         class="bubble"
         :class="message.senderId === otherUserId ? 'candidate' : 'hr'"
       >
-        <text class="content">{{ message.content }}</text>
+        <template v-if="isImageMessage(message)">
+          <image
+            v-if="message.fileUrl"
+            class="image"
+            :src="message.fileUrl"
+            mode="widthFix"
+            @click="previewImage(message.fileUrl)"
+          />
+          <text v-else class="content">{{ message.content || '[图片]' }}</text>
+        </template>
+        <text v-else class="content">{{ message.content }}</text>
         <text class="time">{{ formatTime(message.createdAt) }}</text>
       </view>
     </scroll-view>
@@ -55,6 +61,16 @@ const loading = ref(false);
 const sending = ref(false);
 
 const sortedMessages = computed(() => messages.value);
+
+const isImageMessage = (message: Message) => message.messageType === 2;
+
+const previewImage = (url: string) => {
+  if (!url) return;
+  uni.previewImage({
+    current: url,
+    urls: [url],
+  });
+};
 
 const loadChat = async () => {
   if (!conversationId.value) return;
@@ -158,6 +174,7 @@ onLoad((options) => {
       chatTitle.value = options.username as string;
     }
   }
+  uni.setNavigationBarTitle({ title: chatTitle.value || t('pages.chat.conversation.title') });
   loadChat();
 });
 
@@ -175,29 +192,14 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  padding-top: calc(var(--status-bar-height) + 32rpx);
+  background: #f6f7fb;
   box-sizing: border-box;
-}
-
-.chat-header {
-  padding: 20rpx 24rpx;
-  background: #fff;
-  box-shadow: 0 8rpx 16rpx rgba(0, 0, 0, 0.04);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.title {
-  font-size: 30rpx;
-  font-weight: 600;
-  margin-bottom: 0;
 }
 
 .chat-body {
   flex: 1;
   padding: 24rpx;
-  background: #f6f7fb;
+  padding-bottom: calc(24rpx + 120rpx + env(safe-area-inset-bottom));
 }
 
 .bubble {
@@ -207,6 +209,13 @@ onMounted(() => {
   margin-bottom: 16rpx;
   display: flex;
   flex-direction: column;
+}
+
+.image {
+  width: 440rpx;
+  max-width: 100%;
+  border-radius: 16rpx;
+  background: rgba(0, 0, 0, 0.03);
 }
 
 .bubble.candidate {
@@ -228,11 +237,17 @@ onMounted(() => {
 
 .chat-input {
   display: flex;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
   padding: 16rpx 24rpx;
   background: #fff;
   gap: 12rpx;
   align-items: center;
   border-top: 1rpx solid #f0f0f0;
+  box-shadow: 0 -10rpx 24rpx rgba(0, 0, 0, 0.06);
   padding-bottom: calc(16rpx + env(safe-area-inset-bottom));
 }
 

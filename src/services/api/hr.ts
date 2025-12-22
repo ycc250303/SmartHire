@@ -92,6 +92,9 @@ export interface JobPosition {
   salaryMonths?: number;
   educationRequired?: number;
   jobType: number;
+  experienceRequired?: number;
+  internshipDaysPerWeek?: number;
+  internshipDurationMonths?: number;
   description?: string;
   responsibilities?: string;
   requirements?: string;
@@ -116,6 +119,9 @@ export interface JobPositionCreatePayload {
   salaryMonths?: number;
   educationRequired?: number;
   jobType: number;
+  experienceRequired?: number;
+  internshipDaysPerWeek?: number;
+  internshipDurationMonths?: number;
   description: string;
   responsibilities?: string;
   requirements?: string;
@@ -196,6 +202,7 @@ export function offlineJobPosition(jobId: number): Promise<null> {
 
 // ============ HR 侧求职卡片 ============
 export interface SeekerCard {
+  userId?: number;
   username: string;
   graduationYear?: string;
   age?: number;
@@ -217,6 +224,46 @@ export function getSeekerCard(userId: number): Promise<SeekerCard> {
   return http<SeekerCard>({
     url: `/api/recruitment/hr/seeker-card?userId=${encodeURIComponent(userId)}`,
     method: "GET",
+  });
+}
+
+// ============ HR 推荐求职者/推荐岗位 ============
+export type PublicSeekerCard = SeekerCard & {
+  id?: number;
+};
+
+/**
+ * Get all public seeker cards (for HR recommendations)
+ * @returns List of seeker cards
+ */
+export function getPublicSeekerCards(): Promise<PublicSeekerCard[]> {
+  return http<PublicSeekerCard[]>({
+    url: "/api/seeker/public/cards",
+    method: "GET",
+  });
+}
+
+export interface RecommendJobPayload {
+  jobId: number;
+  seekerUserId: number;
+  resumeId?: number;
+  note?: string;
+}
+
+export interface RecommendJobResult {
+  applicationId?: number;
+  conversationId?: number;
+  message?: string;
+}
+
+/**
+ * Recommend a job to a seeker (HR action)
+ */
+export function recommendJob(payload: RecommendJobPayload): Promise<RecommendJobResult | null> {
+  return http<RecommendJobResult | null>({
+    url: "/api/recruitment/hr/recommend",
+    method: "POST",
+    data: payload,
   });
 }
 

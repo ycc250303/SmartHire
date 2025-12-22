@@ -17,6 +17,7 @@
     "/api/seeker/update-seeker-info": "prod",
     "/api/seeker/cards": "prod",
     "/api/seeker/cards/filter": "prod",
+    "/api/seeker/public/cards": "prod",
     "/api/seeker/delete-seeker": "prod",
     "/api/seeker/favorite-job/*": "prod",
     "/api/seeker/favorite-jobs": "prod",
@@ -46,6 +47,7 @@
     "/api/seeker/delete-resume/*": "prod",
     "/api/seeker/job-recommendations/intern": "prod",
     "/api/hr/info": "prod",
+    "/api/hr/info/*": "prod",
     "/api/hr/job-position": "prod",
     "/api/hr/job-position/*": "prod",
     "/api/hr/job-position/*/status": "prod",
@@ -55,6 +57,7 @@
     "/api/hr/matching/job/*": "prod",
     "/api/recruitment/seeker/submit-resume": "prod",
     "/api/recruitment/hr/seeker-card": "prod",
+    "/api/recruitment/hr/recommend": "prod",
     "/api/recruitment/hr/application/*/comment": "prod",
     "/api/hr/application": "prod",
     "/api/hr/application/*": "prod",
@@ -99,6 +102,6 @@
     "/hr/company/job-audit/*/approve": "prod",
     "/hr/company/job-audit/*/reject": "prod",
     "/hr/company/job-audit/*/modify": "prod",
-    "/public/job-position/search": "dev"
+    "/public/job-position/search": "prod"
   }
 }
