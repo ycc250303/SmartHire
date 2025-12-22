@@ -50,3 +50,5 @@ nginx安装步骤.md
 # RAG
 embedding-store.json
 .rag_fingerprint
+
+ServiceCycleArchitectureTest.java
