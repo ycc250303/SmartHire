@@ -5,6 +5,9 @@ import lombok.Data;
 /** 求职卡片展示 DTO。 */
 @Data
 public class SeekerCardDTO {
+    /** 用户ID */
+    private Integer userId;
+
   /** 用户名 */
   private String username;
 

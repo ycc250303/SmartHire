@@ -118,8 +118,10 @@ public class SeekerCardServiceImpl implements SeekerCardService {
   }
 
   @Override
-  public  List<SeekerCardDTO> getAllSeekerCards() {
-    return jobSeekerMapper.getAllSeekerCards();
+  public  List<SeekerCardDTO> getAllSeekerCards(Integer pageNum, Integer pageSize) {
+    // 计算偏移量
+    Integer offset = (pageNum - 1) * pageSize;
+    return jobSeekerMapper.getAllSeekerCardsByPage(offset, pageSize);
   }
 
 

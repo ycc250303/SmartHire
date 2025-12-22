@@ -132,4 +132,13 @@ public class HrApiImpl implements HrApi {
     }
     return jobInfoMapper.updateById(jobInfo) > 0;
   }
+
+  @Override
+  public Long getHrUserIdByHrId(Long hrId) {
+    if (hrId == null) {
+      return null;
+    }
+    HrInfo hrInfo = hrInfoMapper.selectById(hrId);
+    return hrInfo == null ? null : hrInfo.getUserId();
+  }
 }
