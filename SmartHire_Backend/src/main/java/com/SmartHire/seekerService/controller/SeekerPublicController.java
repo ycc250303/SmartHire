@@ -23,7 +23,7 @@ import com.SmartHire.common.auth.UserType;
  */
 @Slf4j
 @RestController
-@RequestMapping("/seeker")
+@RequestMapping("/public-seeker")
 @RequireUserType({ UserType.SEEKER, UserType.HR, UserType.ADMIN })
 public class SeekerPublicController {
 

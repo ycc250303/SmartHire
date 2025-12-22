@@ -64,8 +64,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         contextPath, path, fullPath, request.getRequestURI(), request.getRequestURL());
 
     // 公开路径直接放行（检查完整路径和相对路径）
-    if (PUBLIC_PATHS.contains(path) || PUBLIC_PATHS.stream().anyMatch(p -> fullPath.endsWith(p))
-        || PUBLIC_PATHS.stream().anyMatch(p -> path.endsWith(p))) {
+    boolean isPublicPath = PUBLIC_PATHS.contains(path);
+    if (!isPublicPath) {
+      // 检查完整路径是否以公开路径开头
+      isPublicPath = PUBLIC_PATHS.stream().anyMatch(p -> fullPath.startsWith(p) || path.startsWith(p));
+    }
+    
+    if (isPublicPath) {
       log.info("路径匹配公开路径，直接放行: {}", path);
       filterChain.doFilter(request, response);
       return;
