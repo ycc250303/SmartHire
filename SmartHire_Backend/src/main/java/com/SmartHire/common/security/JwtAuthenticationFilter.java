@@ -27,19 +27,21 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
   private static final String ACCESS_BLACKLIST_PREFIX = "token:blacklist:access:";
-  private static final Set<String> PUBLIC_PATHS =
-      Set.of(
-          "/user-auth/login",
-          "/user-auth/register",
-          "/user-auth/send-verification-code",
-          "/user-auth/verify-code",
-          "/user-auth/refresh-token");
+  private static final Set<String> PUBLIC_PATHS = Set.of(
+      "/user-auth/login",
+      "/user-auth/register",
+      "/user-auth/send-verification-code",
+      "/user-auth/verify-code",
+      "/user-auth/refresh-token");
 
-  @Autowired private JwtUtil jwtUtil;
+  @Autowired
+  private JwtUtil jwtUtil;
 
-  @Autowired private JwtTokenExtractor tokenExtractor;
+  @Autowired
+  private JwtTokenExtractor tokenExtractor;
 
-  @Autowired private RedisTemplate<String, String> redisTemplate;
+  @Autowired
+  private RedisTemplate<String, String> redisTemplate;
 
   /** 过滤器内部处理 */
   @Override
@@ -50,11 +52,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     String contextPath = request.getContextPath();
     String fullPath = contextPath + path;
 
-    log.debug(
-        "路径检查 - ContextPath: {}, ServletPath: {}, FullPath: {}", contextPath, path, fullPath);
+    log.info(
+        "路径检查 - ContextPath: {}, ServletPath: {}, FullPath: {}, RequestURI: {}, RequestURL: {}",
+        contextPath, path, fullPath, request.getRequestURI(), request.getRequestURL());
 
     // 公开路径直接放行（检查完整路径和相对路径）
-    if (PUBLIC_PATHS.contains(path) || PUBLIC_PATHS.stream().anyMatch(p -> fullPath.endsWith(p))) {
+    if (PUBLIC_PATHS.contains(path) || PUBLIC_PATHS.stream().anyMatch(p -> fullPath.endsWith(p))
+        || PUBLIC_PATHS.stream().anyMatch(p -> path.endsWith(p))) {
+      log.info("路径匹配公开路径，直接放行: {}", path);
       filterChain.doFilter(request, response);
       return;
     }
@@ -86,8 +91,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
       // 提取Claims并设置到SecurityContext
       Map<String, Object> claims = jwtUtil.getClaims(decoded);
-      UsernamePasswordAuthenticationToken authentication =
-          new UsernamePasswordAuthenticationToken(claims, null, Collections.emptyList());
+      UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(claims, null,
+          Collections.emptyList());
       SecurityContextHolder.getContext().setAuthentication(authentication);
 
       filterChain.doFilter(request, response);
