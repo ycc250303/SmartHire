@@ -20,6 +20,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 
 import java.util.Date;
+import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,6 +50,9 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
 
     @Autowired
     private UserContext userContext;
+
+    @Autowired
+    private ApplicationMapper applicationMapper;
 
     @Autowired
     private ApplicationEventProducer applicationEventProducer;
@@ -329,5 +333,12 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
         // 使用应用已有的 ApplicationEventProducer 发布到 MQ（添加新方法）
         applicationRejectedEventProducer.publishApplicationRejected(event);
         log.info("Application rejected and event published: applicationId={}, reason={}", applicationId, reason);
+    }
+
+    @Override
+    public List<Long> getJobIdListBySeekerId(){
+        Long userId = userContext.getCurrentUserId();
+        Long seekerId = seekerApi.getJobSeekerIdByUserId(userId);
+        return applicationMapper.getJobIdListBySeekerId(seekerId);
     }
 }

@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 
 /**
  * 投递/推荐记录表 Mapper 接口
@@ -67,4 +68,13 @@ public interface ApplicationMapper extends BaseMapper<Application> {
       @Param("score") java.math.BigDecimal score,
       @Param("analysis") String analysis,
       @Param("updatedAt") java.util.Date updatedAt);
+
+  /**
+   * 获取指定求职者的所有岗位ID列表
+   *
+   * @param seekerId 求职者ID
+   * @return 岗位ID列表
+   */
+  @Select("SELECT job_id FROM application WHERE job_seeker_id = #{seekerId}")
+  List<Long>getJobIdListBySeekerId(@Param("seekerId") Long seekerId);
 }

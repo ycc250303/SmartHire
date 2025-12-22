@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * 简历服务实现类
@@ -150,5 +151,10 @@ public class ApplicationServiceImpl extends ServiceImpl<HrApplicationMapper, App
         // 暂时抛出异常，说明这个实现位置不正确
         throw new UnsupportedOperationException(
                 "This method should be implemented in recruitmentService module, not hrService module");
+    }
+
+    @Override
+    public List<Long> getJobIdListBySeekerId() {
+        throw new BusinessException(ErrorCode.SYSTEM_ERROR, "HR服务不支持获取职位列表功能，请使用求职者端接口");
     }
 }

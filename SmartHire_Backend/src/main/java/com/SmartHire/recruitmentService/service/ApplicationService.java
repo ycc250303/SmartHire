@@ -8,6 +8,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.SmartHire.recruitmentService.dto.RecommendRequest;
 
+import java.util.List;
+
 /**
  * 投递/推荐记录表 服务类
  *
@@ -64,4 +66,6 @@ public interface ApplicationService extends IService<Application> {
    * @return 新建的 applicationId
    */
   Long recommend(RecommendRequest request);
+
+  List<Long> getJobIdListBySeekerId();
 }
