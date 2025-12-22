@@ -37,11 +37,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
   // 公共路径（支持前缀匹配）
   private static final Set<String> PUBLIC_PATHS = Set.of(
       "/health",
-      "/swagger-ui",
+      "/user-auth/login",
+      "/user-auth/register",
+      "/user-auth/send-verification-code",
+      "/user-auth/verify-code",
+      "/user-auth/refresh-token",
+      "/swagger-ui/**",
+      "/swagger-ui.html",
+      "/swagger-resources/**",
+      "/configuration/**",
+      "/configuration/security",
+      "/configuration/ui",
+      "/v3/api-docs/**",
       "/v3/api-docs",
-      "/swagger-resources",
-      "/configuration",
-      "/webjars");
+      "/webjars/**",
+      "/doc.html");
 
   @Autowired
   private JwtUtil jwtUtil;
