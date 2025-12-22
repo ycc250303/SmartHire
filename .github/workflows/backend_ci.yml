@@ -41,10 +41,10 @@ jobs:
       #   run: mvn -B test -Dtest=ServiceCycleArchitectureTest
       #   working-directory: SmartHire_Backend
 
-      # # 6. Run tests + PMD + SpotBugs + FindSecBugs（verify 会执行完整流水线）
-      # - name: Run tests & static analysis (verify)
-      #   run: mvn -B clean verify -Dpmd.failurePriority=5
-      #   working-directory: SmartHire_Backend
+      # 6. Build JAR file (without tests to speed up CI)
+      - name: Build JAR file
+        run: mvn -B clean package -DskipTests
+        working-directory: SmartHire_Backend
 
       # 7. Upload artifact (both main & dev)
       - name: Upload build artifact
