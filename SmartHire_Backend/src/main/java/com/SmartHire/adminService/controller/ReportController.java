@@ -7,7 +7,7 @@ import com.SmartHire.adminService.dto.ReportHandleDTO;
 import com.SmartHire.adminService.service.ReportService;
 import com.SmartHire.common.entity.Result;
 import com.SmartHire.common.auth.RequireUserType;
-import com.SmartHire.common.enums.UserType;
+import com.SmartHire.common.auth.UserType;
 import com.SmartHire.common.exception.enums.ErrorCode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;

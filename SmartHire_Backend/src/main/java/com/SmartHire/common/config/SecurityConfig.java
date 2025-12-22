@@ -16,39 +16,40 @@ import org.springframework.web.cors.CorsConfigurationSource;
 @ConditionalOnWebApplication
 public class SecurityConfig {
 
-  @Bean
-  public SecurityFilterChain securityFilterChain(
-      HttpSecurity http,
-      JwtAuthenticationFilter jwtAuthenticationFilter,
-      RestAuthenticationEntryPoint authenticationEntryPoint,
-      CorsConfigurationSource corsConfigurationSource)
-      throws Exception {
-    http.csrf(csrf -> csrf.disable())
-        .cors(cors -> cors.configurationSource(corsConfigurationSource))
-        .sessionManagement(
-            session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-        .authorizeHttpRequests(
-            auth -> auth.requestMatchers(HttpMethod.OPTIONS, "/**")
-                .permitAll()
-                .requestMatchers(
-                    "/health",
-                    "/user-auth/login",
-                    "/user-auth/register",
-                    "/user-auth/send-verification-code",
-                    "/user-auth/verify-code",
-                    "/user-auth/refresh-token",
-                    "/swagger-ui/**",
-                    "/swagger-ui.html",
-                    "/v3/api-docs/**",
-                    "/doc.html",
-                    "/public/**")
-                .permitAll()
-                .anyRequest()
-                .authenticated())
-        .exceptionHandling(
-            exception -> exception.authenticationEntryPoint(authenticationEntryPoint));
+    @Bean
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http,
+            JwtAuthenticationFilter jwtAuthenticationFilter,
+            RestAuthenticationEntryPoint authenticationEntryPoint,
+            CorsConfigurationSource corsConfigurationSource)
+            throws Exception {
+        http.csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource))
+                .sessionManagement(
+                        session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(
+                        auth -> auth.requestMatchers(HttpMethod.OPTIONS, "/**")
+                                .permitAll()
+                                .requestMatchers(
+                                        "/health",
+                                        "/user-auth/login",
+                                        "/user-auth/register",
+                                        "/user-auth/send-verification-code",
+                                        "/user-auth/verify-code",
+                                        "/user-auth/refresh-token",
+                                        "/swagger-ui/**",
+                                        "/swagger-ui.html",
+                                        "/v3/api-docs/**",
+                                        "/doc.html",
+                                        "/public/**",
+                                        "/seeker/**")
+                                .permitAll()
+                                .anyRequest()
+                                .authenticated())
+                .exceptionHandling(
+                        exception -> exception.authenticationEntryPoint(authenticationEntryPoint));
 
-    http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-    return http.build();
-  }
+        http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+        return http.build();
+    }
 }

@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @Slf4j
 @RestController
-@RequestMapping("/seeker")
+@RequestMapping("/public/seeker")
 public class SeekerPublicController {
 
   @Autowired
@@ -57,6 +57,7 @@ public class SeekerPublicController {
   public Result<List<SeekerCardDTO>> getAllSeekerCards(
       @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum,
       @RequestParam(value = "pageSize", defaultValue = "20") Integer pageSize) {
+    log.info("getAllSeekerCards被调用，pageNum={}, pageSize={}", pageNum, pageSize);
     List<SeekerCardDTO> seekerCards = seekerCardService.getAllSeekerCards(pageNum, pageSize);
     return Result.success("获取所有求职者卡片成功", seekerCards);
   }
