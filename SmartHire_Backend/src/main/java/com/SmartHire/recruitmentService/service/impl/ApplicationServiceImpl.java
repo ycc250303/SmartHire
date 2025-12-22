@@ -305,10 +305,11 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
         }
 
         Date now = new Date();
-        application.setStatus((byte)5); // 5 = 已拒绝
+        application.setStatus((byte) 5); // 5 = 已拒绝
         // 将拒绝原因写入 matchAnalysis 字段作为最小可行审计（建议后续迁移到专门的审计表）
         String prev = application.getMatchAnalysis();
-        String note = String.format("rejected_by_hr:%s reason:%s at:%s", hrId, reason == null ? "" : reason, now.toString());
+        String note = String.format("rejected_by_hr:%s reason:%s at:%s", hrId, reason == null ? "" : reason,
+                now.toString());
         application.setMatchAnalysis((prev == null ? "" : prev + " | ") + note);
         application.setUpdatedAt(now);
         updateById(application);
@@ -329,6 +330,4 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
         applicationRejectedEventProducer.publishApplicationRejected(event);
         log.info("Application rejected and event published: applicationId={}, reason={}", applicationId, reason);
     }
-
- 
 }

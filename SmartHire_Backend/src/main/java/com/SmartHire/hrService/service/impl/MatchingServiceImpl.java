@@ -32,28 +32,34 @@ import org.springframework.util.StringUtils;
 @Service
 public class MatchingServiceImpl implements MatchingService {
 
-  @Autowired private UserContext userContext;
+  @Autowired
+  private UserContext userContext;
 
-  @Autowired private HrInfoMapper hrInfoMapper;
+  @Autowired
+  private HrInfoMapper hrInfoMapper;
 
-  @Autowired private JobInfoMapper jobInfoMapper;
+  @Autowired
+  private JobInfoMapper jobInfoMapper;
 
-  @Autowired private JobSkillRequirementMapper jobSkillRequirementMapper;
+  @Autowired
+  private JobSkillRequirementMapper jobSkillRequirementMapper;
 
-  @Autowired private JobSeekerSkillMapper jobSeekerSkillMapper;
+  @Autowired
+  private JobSeekerSkillMapper jobSeekerSkillMapper;
 
-  @Autowired private HrApplicationMapper hrApplicationMapper;
+  @Autowired
+  private HrApplicationMapper hrApplicationMapper;
 
-  /** 获取当前登录HR的ID（hr_info表ID）
+  /**
+   * 获取当前登录HR的ID（hr_info表ID）
    * 注意：用户身份验证已由AOP在Controller层统一处理，此处无需再次验证
    */
   private Long getCurrentHrId() {
     Long userId = userContext.getCurrentUserId();
 
-    HrInfo hrInfo =
-        hrInfoMapper.selectOne(
-            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<HrInfo>()
-                .eq(HrInfo::getUserId, userId));
+    HrInfo hrInfo = hrInfoMapper.selectOne(
+        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<HrInfo>()
+            .eq(HrInfo::getUserId, userId));
 
     if (hrInfo == null) {
       throw new BusinessException(ErrorCode.HR_NOT_EXIST);
@@ -81,13 +87,12 @@ public class MatchingServiceImpl implements MatchingService {
     validateJobOwnership(jobId, hrId);
 
     List<String> requiredSkills = jobSkillRequirementMapper.selectSkillNamesByJobId(jobId);
-    Set<String> requiredSkillSet =
-        requiredSkills == null
-            ? new LinkedHashSet<>()
-            : requiredSkills.stream()
-                .filter(StringUtils::hasText)
-                .map(this::normalizeSkill)
-                .collect(Collectors.toCollection(LinkedHashSet::new));
+    Set<String> requiredSkillSet = requiredSkills == null
+        ? new LinkedHashSet<>()
+        : requiredSkills.stream()
+            .filter(StringUtils::hasText)
+            .map(this::normalizeSkill)
+            .collect(Collectors.toCollection(LinkedHashSet::new));
 
     List<ApplicationListDTO> applications = hrApplicationMapper.selectApplicationsByJob(hrId, jobId);
     if (CollectionUtils.isEmpty(applications)) {
@@ -96,15 +101,13 @@ public class MatchingServiceImpl implements MatchingService {
 
     Date now = new Date();
     for (ApplicationListDTO application : applications) {
-      List<String> seekerSkills =
-          jobSeekerSkillMapper.selectSkillNamesByJobSeekerId(application.getJobSeekerId());
-      Set<String> seekerSkillSet =
-          seekerSkills == null
-              ? new LinkedHashSet<>()
-              : seekerSkills.stream()
-                  .filter(StringUtils::hasText)
-                  .map(this::normalizeSkill)
-                  .collect(Collectors.toCollection(LinkedHashSet::new));
+      List<String> seekerSkills = jobSeekerSkillMapper.selectSkillNamesByJobSeekerId(application.getJobSeekerId());
+      Set<String> seekerSkillSet = seekerSkills == null
+          ? new LinkedHashSet<>()
+          : seekerSkills.stream()
+              .filter(StringUtils::hasText)
+              .map(this::normalizeSkill)
+              .collect(Collectors.toCollection(LinkedHashSet::new));
 
       Set<String> matchedSkills = new LinkedHashSet<>();
       for (String req : requiredSkillSet) {
@@ -113,8 +116,7 @@ public class MatchingServiceImpl implements MatchingService {
         }
       }
 
-      BigDecimal score =
-          calculateScore(requiredSkillSet.size(), matchedSkills.size(), seekerSkillSet.size());
+      BigDecimal score = calculateScore(requiredSkillSet.size(), matchedSkills.size(), seekerSkillSet.size());
       String analysis = buildMatchAnalysis(requiredSkills, seekerSkills, matchedSkills);
 
       hrApplicationMapper.updateMatchResult(application.getId(), score, analysis, now);
@@ -146,8 +148,7 @@ public class MatchingServiceImpl implements MatchingService {
       baseScore = seekerTotal > 0 ? 70D : 50D;
     }
 
-    double bonus =
-        seekerTotal > matchedCount ? Math.min(20D, (seekerTotal - matchedCount) * 5D) : 0D;
+    double bonus = seekerTotal > matchedCount ? Math.min(20D, (seekerTotal - matchedCount) * 5D) : 0D;
     double finalScore = Math.min(100D, baseScore + bonus);
     return BigDecimal.valueOf(finalScore).setScale(2, RoundingMode.HALF_UP);
   }
@@ -159,12 +160,11 @@ public class MatchingServiceImpl implements MatchingService {
     int seekerSize = seekerSkills == null ? 0 : seekerSkills.size();
     int matchedSize = matchedSkills == null ? 0 : matchedSkills.size();
 
-    String matchedStr =
-        matchedSkills == null || matchedSkills.isEmpty()
-            ? "[]"
-            : matchedSkills.stream()
-                .map(skill -> "\"" + skill + "\"")
-                .collect(Collectors.joining(", ", "[", "]"));
+    String matchedStr = matchedSkills == null || matchedSkills.isEmpty()
+        ? "[]"
+        : matchedSkills.stream()
+            .map(skill -> "\"" + skill + "\"")
+            .collect(Collectors.joining(", ", "[", "]"));
 
     return String.format(
         "{\"required\":%d,\"seeker\":%d,\"matched\":%d,\"matchedSkills\":%s}",
