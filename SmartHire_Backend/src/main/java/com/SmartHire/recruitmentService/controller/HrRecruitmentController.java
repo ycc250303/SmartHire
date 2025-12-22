@@ -20,7 +20,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import com.SmartHire.recruitmentService.dto.RecommendRequest;
 import com.SmartHire.common.auth.RequireUserType;
-import com.SmartHire.common.enums.UserType;
+import com.SmartHire.common.auth.UserType;
 
 /** 简历管理控制器（HR端） */
 @RestController

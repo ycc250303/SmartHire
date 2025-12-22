@@ -2,7 +2,7 @@ package com.SmartHire.recruitmentService.service.impl;
 
 import com.SmartHire.common.api.SeekerApi;
 import com.SmartHire.common.api.HrApi;
-import com.SmartHire.common.context.UserContext;
+import com.SmartHire.common.auth.UserContext;
 import com.SmartHire.common.exception.enums.ErrorCode;
 import com.SmartHire.common.exception.exception.BusinessException;
 import com.SmartHire.common.event.OfferSentEvent;

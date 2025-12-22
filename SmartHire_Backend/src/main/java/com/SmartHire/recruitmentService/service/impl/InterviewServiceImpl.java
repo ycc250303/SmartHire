@@ -14,7 +14,7 @@ import com.SmartHire.recruitmentService.service.InterviewService;
 import com.SmartHire.recruitmentService.service.ApplicationEventProducer;
 import com.SmartHire.recruitmentService.service.InterviewEventProducer;
 import com.SmartHire.common.event.InterviewScheduledEvent;
-import com.SmartHire.common.context.UserContext;
+import com.SmartHire.common.auth.UserContext;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import java.util.Date;
 import lombok.extern.slf4j.Slf4j;
@@ -57,7 +57,7 @@ public class InterviewServiceImpl extends ServiceImpl<InterviewMapper, Interview
     // 验证 application 存在
     Application application = applicationMapper.selectById(applicationId);
     if (application == null) {
-      throw new BusinessException(ErrorCode.DATA_NOT_FOUND);
+      throw new BusinessException(ErrorCode.APPLICATION_NOT_EXIST);
     }
 
     // 校验当前用户是该岗位的 HR
