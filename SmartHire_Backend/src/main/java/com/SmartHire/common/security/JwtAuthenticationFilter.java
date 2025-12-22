@@ -64,6 +64,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       return;
     }
 
+    // /public/** 路径直接放行（与SecurityConfig中的permitAll保持一致）
+    if (path.startsWith("/public/")) {
+      log.info("/public/路径直接放行: {}", path);
+      filterChain.doFilter(request, response);
+      return;
+    }
+
     // OPTIONS请求直接放行（用于CORS预检）
     if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
       filterChain.doFilter(request, response);
