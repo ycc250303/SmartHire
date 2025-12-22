@@ -11,6 +11,8 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import com.SmartHire.common.auth.RequireUserType;
+import com.SmartHire.common.auth.UserType;
 
 /**
  * 求职者公开服务控制器（对外） 供HR或其他系统使用，用于查看求职者的公开信息
@@ -22,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 @RestController
 @RequestMapping("/seeker")
+@RequireUserType({ UserType.SEEKER, UserType.HR, UserType.ADMIN })
 public class SeekerPublicController {
 
   @Autowired
