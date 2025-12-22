@@ -21,27 +21,29 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-/** JWT 认证过滤器 统一处理JWT Token的验证和用户信息提取 */
+/**
+ * JWT 认证过滤器
+ * - 支持公共路径放行
+ * - 支持前缀匹配
+ * - 支持 context-path 自动处理
+ * - 支持 Redis 黑名单检查
+ */
 @Slf4j
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
   private static final String ACCESS_BLACKLIST_PREFIX = "token:blacklist:access:";
+
+  // 公共路径（支持前缀匹配）
   private static final Set<String> PUBLIC_PATHS = Set.of(
       "/health",
-      "/user-auth/login",
-      "/user-auth/register",
-      "/user-auth/send-verification-code",
-      "/user-auth/verify-code",
-      "/user-auth/refresh-token",
-      "/seeker/public",
+      "/user-auth/",
+      "/seeker/public/",
       "/swagger-ui",
-      "/swagger-ui/",
-      "/swagger-ui/index.html",
       "/v3/api-docs",
       "/swagger-resources",
       "/configuration",
-      "/webjars/");
+      "/webjars");
 
   @Autowired
   private JwtUtil jwtUtil;
@@ -52,58 +54,47 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
   @Autowired
   private RedisTemplate<String, String> redisTemplate;
 
-  /** 过滤器内部处理 */
   @Override
   protected void doFilterInternal(
-      HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-      throws ServletException, IOException {
-    String path = request.getServletPath();
-    String contextPath = request.getContextPath();
-    String fullPath = contextPath + path;
+      HttpServletRequest request,
+      HttpServletResponse response,
+      FilterChain filterChain) throws ServletException, IOException {
 
-    log.info(
-        "路径检查 - ContextPath: {}, ServletPath: {}, FullPath: {}, RequestURI: {}, RequestURL: {}",
-        contextPath, path, fullPath, request.getRequestURI(), request.getRequestURL());
+    String servletPath = request.getServletPath(); // 不含 context-path
+    String contextPath = request.getContextPath(); // /smarthire/api
+    String fullPath = contextPath + servletPath;
+    String method = request.getMethod();
 
-    // 公开路径直接放行（检查完整路径和相对路径）
-    boolean isPublicPath = PUBLIC_PATHS.contains(path);
-    if (!isPublicPath) {
-      // 检查完整路径是否以公开路径开头
-      isPublicPath = PUBLIC_PATHS.stream().anyMatch(p -> fullPath.startsWith(p) || path.startsWith(p));
-    }
+    log.info("请求路径: contextPath={}, servletPath={}, fullPath={}, method={}",
+        contextPath, servletPath, fullPath, method);
 
-    if (isPublicPath) {
-      log.info("路径匹配公开路径，直接放行: {}", path);
+    // OPTIONS 请求放行
+    if ("OPTIONS".equalsIgnoreCase(method)) {
+      log.debug("OPTIONS 请求放行");
       filterChain.doFilter(request, response);
       return;
     }
 
-    // OPTIONS请求直接放行（用于CORS预检）
-    if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+    // 公共路径放行（前缀匹配）
+    boolean isPublic = PUBLIC_PATHS.stream().anyMatch(servletPath::startsWith);
+    if (isPublic) {
+      log.debug("路径匹配公共路径，直接放行: {}", servletPath);
       filterChain.doFilter(request, response);
       return;
     }
 
     try {
-      // 从HTTP请求中提取Token
+      // 提取 token
       String token = tokenExtractor.extractToken(request);
-
-      // 检查黑名单
       ensureNotBlacklisted(token);
-      log.info("Token不在黑名单中");
-
-      // 验证Token
       DecodedJWT decoded = jwtUtil.verifyToken(token);
-      log.info("Token验证成功");
 
-      // 确保是Access Token
       if (!jwtUtil.isAccessToken(decoded)) {
-        log.warn("refresh token 访问受保护接口, path={}", path);
+        log.warn("Refresh token 访问受保护接口, path={}", servletPath);
         throw new BusinessException(ErrorCode.TOKEN_IS_REFRESH_TOKEN);
       }
-      log.info("Token是Access Token");
 
-      // 提取Claims并设置到SecurityContext
+      // 设置 SecurityContext
       Map<String, Object> claims = jwtUtil.getClaims(decoded);
       UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(claims, null,
           Collections.emptyList());
@@ -112,16 +103,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       filterChain.doFilter(request, response);
     } catch (BusinessException ex) {
       SecurityContextHolder.clearContext();
-      // 将BusinessException转换为AuthenticationException，让Spring Security处理
+      log.warn("业务异常: {}", ex.getMessage());
       throw new BusinessAuthenticationException(ex.getMessage());
     } catch (Exception ex) {
       SecurityContextHolder.clearContext();
-      // 其他异常也转换为AuthenticationException
+      log.error("认证失败: {}", ex.getMessage(), ex);
       throw new GeneralAuthenticationException("认证失败: " + ex.getMessage());
     }
   }
 
-  /** 确保Token不在黑名单中 */
+  /** 检查 token 是否在黑名单 */
   private void ensureNotBlacklisted(String token) {
     if (token == null || token.isBlank()) {
       throw new BusinessException(ErrorCode.TOKEN_IS_NULL);
