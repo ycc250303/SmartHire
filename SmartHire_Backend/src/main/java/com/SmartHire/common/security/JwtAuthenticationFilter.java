@@ -32,7 +32,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       "/user-auth/register",
       "/user-auth/send-verification-code",
       "/user-auth/verify-code",
-      "/user-auth/refresh-token");
+      "/user-auth/refresh-token",
+      "/swagger-ui",
+      "/swagger-ui/",
+      "/swagger-ui/index.html",
+      "/v3/api-docs",
+      "/swagger-resources",
+      "/configuration",
+      "/webjars/");
 
   @Autowired
   private JwtUtil jwtUtil;

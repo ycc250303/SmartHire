@@ -28,26 +28,32 @@ public class SecurityConfig {
                                 .sessionManagement(
                                                 session -> session
                                                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                                .authorizeHttpRequests(
-                                                auth -> auth.requestMatchers(HttpMethod.OPTIONS, "/**")
-                                                                .permitAll()
-                                                                .requestMatchers(
-                                                                                "/health",
-                                                                                "/user-auth/login",
-                                                                                "/user-auth/register",
-                                                                                "/user-auth/send-verification-code",
-                                                                                "/user-auth/verify-code",
-                                                                                "/user-auth/refresh-token",
-                                                                                "/public-seeker/online-resume",
-                                                                                "/public-seeker/cards",
-                                                                                "/public-seeker/cards/filter",
-                                                                                "/swagger-ui/**",
-                                                                                "/swagger-ui.html",
-                                                                                "/v3/api-docs/**",
-                                                                                "/doc.html")
-                                                                .permitAll()
-                                                                .anyRequest()
-                                                                .authenticated())
+.authorizeHttpRequests(
+                                auth -> auth.requestMatchers(HttpMethod.OPTIONS, "/**")
+                                                .permitAll()
+                                                .requestMatchers(
+                                                                "/health",
+                                                                "/user-auth/login",
+                                                                "/user-auth/register",
+                                                                "/user-auth/send-verification-code",
+                                                                "/user-auth/verify-code",
+                                                                "/user-auth/refresh-token",
+                                                                "/seeker/online-resume",
+                                                                "/seeker/cards",
+                                                                "/seeker/cards/filter",
+                                                                "/swagger-ui/**",
+                                                                "/swagger-ui.html",
+                                                                "/swagger-resources/**",
+                                                                "/configuration/**",
+                                                                "/configuration/security",
+                                                                "/configuration/ui",
+                                                                "/v3/api-docs/**",
+                                                                "/v3/api-docs",
+                                                                "/webjars/**",
+                                                                "/doc.html")
+                                                .permitAll()
+                                                .anyRequest()
+                                                .authenticated())
                                 .exceptionHandling(
                                                 exception -> exception
                                                                 .authenticationEntryPoint(authenticationEntryPoint));
