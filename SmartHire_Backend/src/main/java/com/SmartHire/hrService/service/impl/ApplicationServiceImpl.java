@@ -26,7 +26,8 @@ import java.util.Date;
  * 简历服务实现类
  */
 @Service("hrApplicationServiceImpl")
-public class ApplicationServiceImpl extends ServiceImpl<HrApplicationMapper, Application> implements ApplicationService {
+public class ApplicationServiceImpl extends ServiceImpl<HrApplicationMapper, Application>
+        implements ApplicationService {
 
     @Autowired
     private UserContext userContext;
@@ -46,8 +47,7 @@ public class ApplicationServiceImpl extends ServiceImpl<HrApplicationMapper, App
 
         HrInfo hrInfo = hrInfoMapper.selectOne(
                 new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<HrInfo>()
-                        .eq(HrInfo::getUserId, userId)
-        );
+                        .eq(HrInfo::getUserId, userId));
 
         if (hrInfo == null) {
             throw new BusinessException(ErrorCode.HR_NOT_EXIST);
@@ -92,8 +92,9 @@ public class ApplicationServiceImpl extends ServiceImpl<HrApplicationMapper, App
 
         Page<ApplicationListDTO> page = new Page<>(pageNum, pageSize);
         String keyword = StringUtils.hasText(queryDTO.getKeyword()) ? queryDTO.getKeyword().trim() : null;
-        
-        // 将 Byte 转换为 Integer（因为 ApplicationMapper.selectApplicationList 方法期望 Integer 类型）
+
+        // 将 Byte 转换为 Integer（因为 ApplicationMapper.selectApplicationList 方法期望 Integer
+        // 类型）
         Integer status = queryDTO.getStatus() != null ? queryDTO.getStatus().intValue() : null;
 
         return baseMapper.selectApplicationList(page, hrId, queryDTO.getJobId(), status, keyword);
@@ -132,5 +133,22 @@ public class ApplicationServiceImpl extends ServiceImpl<HrApplicationMapper, App
         // 注意：由于数据库中没有hr_comment字段，此功能暂时不可用
         // Controller层会直接返回错误，这里不需要做任何操作
     }
-}
 
+    @Override
+    @Transactional
+    public Long recommend(com.SmartHire.recruitmentService.dto.RecommendRequest request) {
+        // 这个方法应该在recruitmentservice模块中实现，而不是hrservice模块
+        // 暂时抛出异常，说明这个实现位置不正确
+        throw new UnsupportedOperationException(
+                "This method should be implemented in recruitmentService module, not hrService module");
+    }
+
+    @Override
+    @Transactional
+    public void rejectApplication(Long applicationId, String reason, Boolean sendNotification, String templateId) {
+        // 这个方法应该在recruitmentservice模块中实现，而不是hrservice模块
+        // 暂时抛出异常，说明这个实现位置不正确
+        throw new UnsupportedOperationException(
+                "This method should be implemented in recruitmentService module, not hrService module");
+    }
+}

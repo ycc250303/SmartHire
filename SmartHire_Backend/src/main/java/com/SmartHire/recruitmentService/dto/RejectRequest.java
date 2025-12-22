@@ -1,6 +1,5 @@
 package com.SmartHire.recruitmentService.dto;
 
-import jakarta.validation.constraints.NotNull;
 import java.io.Serial;
 import java.io.Serializable;
 import lombok.Data;

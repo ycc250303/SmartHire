@@ -2,7 +2,6 @@ package com.SmartHire.recruitmentService.service.impl;
 
 import com.SmartHire.common.api.SeekerApi;
 import com.SmartHire.common.api.HrApi;
-import com.SmartHire.common.api.UserAuthApi;
 import com.SmartHire.common.exception.enums.ErrorCode;
 import com.SmartHire.common.exception.exception.BusinessException;
 import com.SmartHire.recruitmentService.dto.InterviewScheduleRequest;
@@ -11,7 +10,6 @@ import com.SmartHire.recruitmentService.mapper.ApplicationMapper;
 import com.SmartHire.recruitmentService.model.Interview;
 import com.SmartHire.recruitmentService.model.Application;
 import com.SmartHire.recruitmentService.service.InterviewService;
-import com.SmartHire.recruitmentService.service.ApplicationEventProducer;
 import com.SmartHire.recruitmentService.service.InterviewEventProducer;
 import com.SmartHire.common.event.InterviewScheduledEvent;
 import com.SmartHire.common.auth.UserContext;

@@ -4,7 +4,6 @@ import jakarta.validation.constraints.*;
 import jakarta.validation.groups.Default;
 import java.util.Date;
 
-import lombok.Builder;
 import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
 
