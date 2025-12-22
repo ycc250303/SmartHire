@@ -34,7 +34,7 @@ import org.springframework.web.multipart.MultipartFile;
  */
 @Slf4j
 @RestController
-@RequestMapping("/seeker")
+@RequestMapping("/public-seeker")
 @RequireUserType(UserType.SEEKER)
 public class SeekerController {
   @Autowired
