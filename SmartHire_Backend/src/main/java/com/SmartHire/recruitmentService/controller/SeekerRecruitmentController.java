@@ -7,6 +7,18 @@ import com.SmartHire.common.entity.Result;
 import com.SmartHire.common.exception.enums.ErrorCode;
 import com.SmartHire.common.exception.exception.BusinessException;
 import com.SmartHire.hrService.dto.JobCardDTO;
+import com.SmartHire.hrService.dto.JobSearchDTO;
+import com.SmartHire.hrService.service.JobInfoService;
+import com.SmartHire.common.api.SeekerApi;
+import com.SmartHire.seekerService.dto.SeekerCardDTO;
+import com.SmartHire.seekerService.model.JobSeeker;
+import com.SmartHire.common.auth.UserContext;
+import com.SmartHire.recruitmentService.dto.InternJobItemDTO;
+import com.SmartHire.recruitmentService.dto.InternJobRecommendationsDTO;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
 import com.SmartHire.recruitmentService.dto.SubmitResumeDTO;
 import com.SmartHire.recruitmentService.service.ApplicationService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -30,7 +42,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @since 2025-11-30
  */
 @RestController
-@RequestMapping("/recruitment/seeker")
+@RequestMapping({"/recruitment/seeker", "/seeker"})
 @RequireUserType(UserType.SEEKER)
 @Validated
 public class SeekerRecruitmentController {
@@ -39,6 +51,9 @@ public class SeekerRecruitmentController {
   private ApplicationService applicationService;
 
   @Autowired private HrApi hrApi;
+  @Autowired private SeekerApi seekerApi;
+  @Autowired private JobInfoService jobInfoService;
+  @Autowired private UserContext userContext;
 
   @PostMapping("/submit-resume")
   @Operation(
@@ -59,5 +74,104 @@ public class SeekerRecruitmentController {
       throw new BusinessException(ErrorCode.JOB_NOT_EXIST);
     }
     return Result.success("获取岗位卡片成功", jobCard);
+  }
+
+  @GetMapping("/job-recommendations/intern")
+  @Operation(summary = "获取实习岗位推荐", description = "获取用户首页推荐的实习岗位列表，优先使用简历/求职者信息进行关键词匹配计算得分（向量搜索未就绪）")
+  public Result<InternJobRecommendationsDTO> getInternJobRecommendations(Long userId) {
+    // Determine target user id: prefer query param, fallback to current user from context
+    Long targetUserId = userId;
+    if (targetUserId == null) {
+      targetUserId = userContext.getCurrentUserId();
+    }
+
+    Long jobSeekerId = seekerApi.getJobSeekerIdByUserId(targetUserId);
+    if (jobSeekerId == null) {
+      throw new BusinessException(ErrorCode.SEEKER_NOT_EXIST);
+    }
+
+    // Fetch seeker basic info to build keywords
+    JobSeeker seeker = seekerApi.getJobSeekerById(jobSeekerId);
+    SeekerCardDTO seekerCard = seekerApi.getSeekerCard(targetUserId);
+
+    JobSearchDTO searchDTO = new JobSearchDTO();
+    searchDTO.setJobType(1); // 1 == internship
+    if (seeker != null && seeker.getCurrentCity() != null) {
+      searchDTO.setCity(seeker.getCurrentCity());
+    } else if (seekerCard != null && seekerCard.getCity() != null) {
+      searchDTO.setCity(seekerCard.getCity());
+    }
+    if (seeker != null && seeker.getEducation() != null) {
+      searchDTO.setEducationRequired(seeker.getEducation());
+    }
+    // derive a simple keyword from major/university/education
+    StringBuilder kw = new StringBuilder();
+    if (seekerCard != null) {
+      if (seekerCard.getMajor() != null) {
+        kw.append(seekerCard.getMajor()).append(" ");
+      }
+      if (seekerCard.getHighestEducation() != null) {
+        kw.append(seekerCard.getHighestEducation()).append(" ");
+      }
+      if (seekerCard.getUniversity() != null) {
+        kw.append(seekerCard.getUniversity()).append(" ");
+      }
+    }
+    String keyword = kw.toString().trim();
+    if (!keyword.isEmpty()) {
+      searchDTO.setKeyword(keyword);
+    }
+
+    // fetch a reasonable page of internship jobs (<=12 as API docs)
+    searchDTO.setPage(1);
+    searchDTO.setSize(12);
+
+    List<JobCardDTO> jobCards = jobInfoService.searchPublicJobs(searchDTO);
+
+    List<InternJobItemDTO> items = new ArrayList<>();
+    for (JobCardDTO jc : jobCards) {
+      InternJobItemDTO item = new InternJobItemDTO();
+      item.setJobId(jc.getJobId());
+      item.setTitle(jc.getJobTitle());
+      item.setCompanyName(jc.getCompanyName());
+      item.setCity(jc.getCity());
+      item.setAddress(jc.getAddress());
+      item.setSalary_min(jc.getSalaryMin() == null ? 0 : jc.getSalaryMin().intValue());
+      item.setSalary_max(jc.getSalaryMax() == null ? 0 : jc.getSalaryMax().intValue());
+
+      // simple keyword-based matching score (since vector DB not ready)
+      int score = 50;
+      String lowerKeyword = keyword == null ? "" : keyword.toLowerCase(Locale.ROOT);
+      String combined = (Objects.toString(jc.getJobTitle(), "") + " " + Objects.toString(jc.getCompanyName(), "") + " " + Objects.toString(jc.getCity(), "")).toLowerCase(Locale.ROOT);
+      if (!lowerKeyword.isEmpty()) {
+        if (combined.contains(lowerKeyword)) {
+          score += 30;
+        } else {
+          // partial token match
+          String[] toks = lowerKeyword.split("\\s+");
+          for (String t : toks) {
+            if (!t.isEmpty() && combined.contains(t)) {
+              score += 10;
+            }
+          }
+        }
+      }
+      // education / city bonus
+      if (seeker != null && seeker.getEducation() != null && jc.getEducationRequired() != null && seeker.getEducation().equals(jc.getEducationRequired())) {
+        score += 10;
+      }
+      if (seeker != null && seeker.getCurrentCity() != null && seeker.getCurrentCity().equalsIgnoreCase(jc.getCity())) {
+        score += 5;
+      }
+      if (score > 100) score = 100;
+      if (score < 0) score = 0;
+      item.setMatchScore(score);
+
+      items.add(item);
+    }
+
+    InternJobRecommendationsDTO resp = new InternJobRecommendationsDTO();
+    resp.setJobs(items);
+    return Result.success("获取实习岗位推荐成功", resp);
   }
 }
