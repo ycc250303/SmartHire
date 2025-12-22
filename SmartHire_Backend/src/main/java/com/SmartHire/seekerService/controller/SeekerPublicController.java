@@ -1,8 +1,6 @@
 package com.SmartHire.seekerService.controller;
 
-import com.SmartHire.common.auth.RequireUserType;
 import com.SmartHire.common.entity.Result;
-import com.SmartHire.common.auth.UserType;
 import com.SmartHire.seekerService.dto.SeekerCardDTO;
 import com.SmartHire.seekerService.service.OnlineResumeService;
 import com.SmartHire.seekerService.service.SeekerCardService;
@@ -16,13 +14,14 @@ import org.springframework.web.bind.annotation.*;
 
 /**
  * 求职者公开服务控制器（对外） 供HR或其他系统使用，用于查看求职者的公开信息
+ * 注意：此Controller的接口不需要认证，可以匿名访问
  *
  * @author SmartHire Team
  * @since 2025-11-19
  */
 @Slf4j
 @RestController
-@RequestMapping("/public/seeker")
+@RequestMapping("/seeker")
 public class SeekerPublicController {
 
   @Autowired
@@ -38,8 +37,7 @@ public class SeekerPublicController {
    * @return 在线简历聚合数据
    */
   @GetMapping("/online-resume")
-  @Operation(summary = "获取在线简历", description = "HR查看指定用户的在线简历")
-  @RequireUserType({ UserType.HR, UserType.SEEKER })
+  @Operation(summary = "获取在线简历", description = "HR查看指定用户的在线简历（无需认证）")
   public Result<?> getOnlineResume(
       @RequestParam("userId") @NotNull(message = "用户ID不能为空") @Positive(message = "用户ID必须为正整数") Long userId) {
     return Result.success("获取在线简历成功", onlineResumeService.getOnlineResumeByUserId(userId));
