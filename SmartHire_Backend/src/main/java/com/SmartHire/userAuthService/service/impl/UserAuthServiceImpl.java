@@ -152,8 +152,10 @@ public class UserAuthServiceImpl extends ServiceImpl<UserAuthMapper, User>
    */
   @Override
   public UserInfoDTO getUserInfo() {
+    log.info("getUserInfo");
     Long userId = userContext.getCurrentUserId();
     User user = userMapper.selectById(userId);
+    log.info("user: {}", user);
     if (user == null) {
       throw new BusinessException(ErrorCode.USER_ID_NOT_EXIST);
     }

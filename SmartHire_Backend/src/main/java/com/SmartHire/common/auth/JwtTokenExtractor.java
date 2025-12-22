@@ -22,8 +22,8 @@ public class JwtTokenExtractor {
    * @throws BusinessException 如果请求上下文不存在或Token为空
    */
   public String extractToken() {
-    ServletRequestAttributes attributes =
-        (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+    ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+    log.info("attributes: {}", attributes);
     if (attributes == null) {
       throw new BusinessException(ErrorCode.USER_NOT_LOGIN);
     }
@@ -44,8 +44,7 @@ public class JwtTokenExtractor {
    * @return JWT Token字符串，如果不存在则返回null
    */
   public String extractTokenNullable() {
-    ServletRequestAttributes attributes =
-        (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+    ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
     if (attributes == null) {
       return null;
     }

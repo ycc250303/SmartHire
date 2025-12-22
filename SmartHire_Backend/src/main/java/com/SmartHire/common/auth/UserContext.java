@@ -126,11 +126,13 @@ public class UserContext {
   @SuppressWarnings("unchecked")
   private Map<String, Object> getCurrentClaims() {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    log.info("authentication: {}", authentication);
     if (authentication == null) {
       throw new BusinessException(ErrorCode.USER_NOT_LOGIN);
     }
 
     Object principal = authentication.getPrincipal();
+    log.info("principal: {}", principal);
     if (principal instanceof Map<?, ?> map) {
       return (Map<String, Object>) map;
     }
@@ -146,6 +148,7 @@ public class UserContext {
    * @throws BusinessException 如果Claims格式不正确
    */
   private UserInfo parseUserInfo(Map<String, Object> claims) {
+    log.info("claims: {}", claims);
     if (claims == null || claims.isEmpty()) {
       throw new BusinessException(ErrorCode.USER_NOT_LOGIN);
     }
