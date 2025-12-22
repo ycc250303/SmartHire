@@ -37,21 +37,29 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/seeker")
 @RequireUserType(UserType.SEEKER)
 public class SeekerController {
-  @Autowired private EducationExperienceService educationExperienceService;
+  @Autowired
+  private EducationExperienceService educationExperienceService;
 
-  @Autowired private JobSeekerService jobSeekerService;
+  @Autowired
+  private JobSeekerService jobSeekerService;
 
-  @Autowired private JobSeekerExpectationService jobSeekerExpectationService;
+  @Autowired
+  private JobSeekerExpectationService jobSeekerExpectationService;
 
-  @Autowired private ProjectExperienceService projectExperienceService;
+  @Autowired
+  private ProjectExperienceService projectExperienceService;
 
-  @Autowired private ResumeService resumeService;
+  @Autowired
+  private ResumeService resumeService;
 
-  @Autowired private WorkExperienceService workExperienceService;
+  @Autowired
+  private WorkExperienceService workExperienceService;
 
-  @Autowired private SkillService skillService;
+  @Autowired
+  private SkillService skillService;
 
-  @Autowired private JobFavoriteService jobFavoriteService;
+  @Autowired
+  private JobFavoriteService jobFavoriteService;
 
   /**
    * 注册求职者
@@ -315,8 +323,7 @@ public class SeekerController {
   @PostMapping("/add-job-seeker-expectation")
   @Operation(summary = "添加求职期望", description = "添加求职期望，最多5个")
   public Result<?> addJobSeekerExpectation(
-      @Validated(JobSeekerExpectationDTO.Create.class) @RequestBody
-          JobSeekerExpectationDTO request) {
+      @Validated(JobSeekerExpectationDTO.Create.class) @RequestBody JobSeekerExpectationDTO request) {
     jobSeekerExpectationService.addJobSeekerExpectation(request);
     return Result.success("添加求职期望成功");
   }
@@ -343,8 +350,7 @@ public class SeekerController {
   @Operation(summary = "修改求职期望", description = "修改求职期望，只需要DTO中的一项不为空即可")
   public Result<?> updateJobSeekerExpectation(
       @PathVariable Long id,
-      @Validated(JobSeekerExpectationDTO.Update.class) @RequestBody
-          JobSeekerExpectationDTO request) {
+      @Validated(JobSeekerExpectationDTO.Update.class) @RequestBody JobSeekerExpectationDTO request) {
     jobSeekerExpectationService.updateJobSeekerExpectation(id, request);
     return Result.success("修改求职期望成功");
   }

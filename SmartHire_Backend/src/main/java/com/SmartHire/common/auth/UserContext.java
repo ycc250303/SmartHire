@@ -8,12 +8,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+import lombok.extern.slf4j.Slf4j;
 
 /** 用户上下文工具类 统一提供从SecurityContext中获取当前登录用户信息的方法 */
 @Component
+@Slf4j
 public class UserContext {
 
-  @Autowired private JwtUtil jwtUtil;
+  @Autowired
+  private JwtUtil jwtUtil;
 
   /**
    * 获取当前登录用户的完整信息
@@ -122,11 +125,6 @@ public class UserContext {
 
     Object principal = authentication.getPrincipal();
     if (principal instanceof Map<?, ?> map) {
-      // 检查是否是嵌套的claims结构（JWT中的claims字段）
-      Object claimsObj = map.get("claims");
-      if (claimsObj instanceof Map<?, ?>) {
-        return (Map<String, Object>) claimsObj;
-      }
       return (Map<String, Object>) map;
     }
 
@@ -160,6 +158,7 @@ public class UserContext {
       userType = ((Number) userTypeObj).intValue();
     }
 
+    log.info("解析用户信息: userId={}, username={}, userType={}", userId, username, userType);
     return new UserInfo(userId, username, userType);
   }
 }
