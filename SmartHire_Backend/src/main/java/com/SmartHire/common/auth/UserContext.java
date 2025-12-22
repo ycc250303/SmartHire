@@ -64,11 +64,18 @@ public class UserContext {
    * @throws BusinessException 如果用户未登录或用户类型不存在
    */
   public Integer getCurrentUserType() {
-    UserInfo userInfo = getCurrentUser();
-    if (userInfo.getUserType() == null) {
-      throw new BusinessException(ErrorCode.USER_ID_NOT_EXIST);
+    try {
+      UserInfo userInfo = getCurrentUser();
+      if (userInfo.getUserType() == null) {
+        log.error("用户类型为空: userId={}, username={}", userInfo.getId(), userInfo.getUsername());
+        throw new BusinessException(ErrorCode.USER_ID_NOT_EXIST);
+      }
+      log.info("成功获取用户类型: userId={}, userType={}", userInfo.getId(), userInfo.getUserType());
+      return userInfo.getUserType();
+    } catch (BusinessException e) {
+      log.error("获取用户类型失败: {}", e.getMessage());
+      throw e;
     }
-    return userInfo.getUserType();
   }
 
   /**

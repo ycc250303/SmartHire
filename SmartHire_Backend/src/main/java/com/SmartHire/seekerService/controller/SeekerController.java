@@ -35,7 +35,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Slf4j
 @RestController
 @RequestMapping("/public-seeker")
-@RequireUserType(UserType.SEEKER)
+@RequireUserType({UserType.SEEKER, UserType.HR, UserType.ADMIN}) 
 public class SeekerController {
   @Autowired
   private EducationExperienceService educationExperienceService;
