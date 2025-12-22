@@ -46,14 +46,18 @@ public class SeekerPublicController {
   }
 
   /**
-   * 获取所有求职者卡片信息
+   * 获取所有求职者卡片信息（分页）
    *
+   * @param pageNum  页码，默认为1
+   * @param pageSize 每页大小，默认为20
    * @return 求职者卡片信息列表
    */
   @GetMapping("/cards")
   @Operation(summary = "获取所有求职者卡片", description = "HR查看所有求职者的基本信息卡片")
-  public Result<List<SeekerCardDTO>> getAllSeekerCards() {
-    List<SeekerCardDTO> seekerCards = seekerCardService.getAllSeekerCards();
+  public Result<List<SeekerCardDTO>> getAllSeekerCards(
+      @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum,
+      @RequestParam(value = "pageSize", defaultValue = "20") Integer pageSize) {
+    List<SeekerCardDTO> seekerCards = seekerCardService.getAllSeekerCards(pageNum, pageSize);
     return Result.success("获取所有求职者卡片成功", seekerCards);
   }
 

@@ -20,6 +20,7 @@
 
     <!-- 求职者卡片信息映射结果 -->
     <resultMap id="SeekerCardResultMap" type="com.SmartHire.seekerService.dto.SeekerCardDTO">
+        <result column="user_id" property="userId" />
         <result column="username" property="username" />
         <result column="age" property="age" />
         <result column="highest_education" property="highestEducation" />
@@ -41,6 +42,7 @@
     <!-- 求职者卡片查询基础SQL -->
     <sql id="SeekerCard_Base_SQL">
         SELECT
+            js.user_id,
             u.username,
             TIMESTAMPDIFF(YEAR, js.birth_date, CURDATE()) AS age,
             CASE
@@ -139,6 +141,12 @@
     <!-- 获取所有求职者卡片信息 -->
     <select id="getAllSeekerCards" resultMap="SeekerCardResultMap">
         <include refid="SeekerCard_Base_SQL" />
+    </select>
+
+    <!-- 分页获取所有求职者卡片信息 -->
+    <select id="getAllSeekerCardsByPage" resultMap="SeekerCardResultMap">
+        <include refid="SeekerCard_Base_SQL" />
+        LIMIT #{pageSize} OFFSET #{offset}
     </select>
 
     <!-- 综合筛选求职者卡片信息 -->

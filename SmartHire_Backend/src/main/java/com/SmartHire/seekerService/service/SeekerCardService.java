@@ -15,11 +15,13 @@ public interface SeekerCardService {
   SeekerCardDTO getJobCard(Long userId);
 
   /**
-   * 获取所有求职者卡片信息
+   * 获取所有求职者卡片信息（分页）
    *
+   * @param pageNum 页码，从1开始
+   * @param pageSize 每页大小
    * @return 求职者卡片信息列表
    */
-   List<SeekerCardDTO> getAllSeekerCards();
+   List<SeekerCardDTO> getAllSeekerCards(Integer pageNum, Integer pageSize);
 
 
   /**
