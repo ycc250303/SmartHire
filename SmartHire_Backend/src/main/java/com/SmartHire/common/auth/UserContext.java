@@ -122,6 +122,11 @@ public class UserContext {
 
     Object principal = authentication.getPrincipal();
     if (principal instanceof Map<?, ?> map) {
+      // 检查是否是嵌套的claims结构（JWT中的claims字段）
+      Object claimsObj = map.get("claims");
+      if (claimsObj instanceof Map<?, ?>) {
+        return (Map<String, Object>) claimsObj;
+      }
       return (Map<String, Object>) map;
     }
 
