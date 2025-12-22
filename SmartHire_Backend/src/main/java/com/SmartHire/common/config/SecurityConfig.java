@@ -38,7 +38,6 @@ public class SecurityConfig {
                                                                                 "/user-auth/send-verification-code",
                                                                                 "/user-auth/verify-code",
                                                                                 "/user-auth/refresh-token",
-                                                                                "/seeker/public/**",
                                                                                 "/swagger-ui/**",
                                                                                 "/swagger-ui.html",
                                                                                 "/swagger-resources/**",
