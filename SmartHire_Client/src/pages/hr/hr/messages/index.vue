@@ -14,23 +14,30 @@
     </view>
 
     <view v-if="activeTab === 'chat'" class="chat-list">
-      <view class="chat-item" v-for="chat in conversations" :key="chat.id" @click="openChat(chat.id)">
+      <view
+        class="chat-item"
+        v-for="chat in sortedConversations"
+        :key="chat.id"
+        :class="{ pinned: chat.pinned === 1 }"
+        @click="openChat(chat)"
+        @longpress="showActionMenu(chat)"
+      >
         <view class="chat-info">
-          <view class="chat-title">{{ chat.candidate }} · {{ chat.jobTitle }}</view>
+          <view class="chat-title">{{ chat.otherUserName || t('pages.chat.conversation.title') }}</view>
           <view class="chat-preview">{{ chat.lastMessage }}</view>
         </view>
         <view class="chat-meta">
-          <text class="time">{{ formatTime(chat.timestamp) }}</text>
-          <view class="dot" v-if="chat.unread"></view>
+          <text class="time">{{ formatTime(chat.lastMessageTime) }}</text>
+          <view class="unread" v-if="chat.unreadCount > 0">
+            <text class="unread-count">{{ chat.unreadCount > 99 ? '99+' : chat.unreadCount }}</text>
+          </view>
         </view>
       </view>
     </view>
 
     <view v-else class="notice-list">
-      <view class="notice-item" v-for="item in notifications" :key="item.id" @click="handleNotification(item)">
-        <view class="notice-title">{{ item.title }}</view>
-        <view class="notice-desc">{{ item.desc }}</view>
-        <view class="notice-time">{{ formatTime(item.timestamp) }}</view>
+      <view class="notice-empty">
+        <text class="empty-text">{{ t('pages.chat.notifications.empty') }}</text>
       </view>
     </view>
     
@@ -39,37 +46,66 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { onLoad, onShow } from '@dcloudio/uni-app';
 import dayjs from 'dayjs';
-import { fetchConversations, fetchNotifications, type ConversationPreview, type NotificationItem } from '@/mock/hr';
+import {
+  getConversations,
+  getUnreadCount,
+  type Conversation,
+  pinConversation,
+  deleteConversation,
+} from '@/services/api/message';
 import CustomTabBar from '@/components/common/CustomTabBar.vue';
+import { t } from '@/locales';
 
 const activeTab = ref<'chat' | 'notice'>('chat');
-const conversations = ref<ConversationPreview[]>([]);
-const notifications = ref<NotificationItem[]>([]);
+const conversations = ref<Conversation[]>([]);
+const notifications = ref<any[]>([]);
+const loading = ref(false);
+const error = ref<string | null>(null);
 
-const loadData = async () => {
-  // TODO: GET /api/hr/messages
-  conversations.value = await fetchConversations();
-  notifications.value = await fetchNotifications();
-};
+const sortedConversations = computed(() => {
+  const pinned = conversations.value.filter((c) => c.pinned === 1);
+  const unpinned = conversations.value.filter((c) => c.pinned !== 1);
+  const byTime = (a: Conversation, b: Conversation) => {
+    const ta = a.lastMessageTime ? new Date(a.lastMessageTime).getTime() : 0;
+    const tb = b.lastMessageTime ? new Date(b.lastMessageTime).getTime() : 0;
+    return tb - ta;
+  };
+  return [...pinned.sort(byTime), ...unpinned.sort(byTime)];
+});
 
-const openChat = (id: string) => {
-  uni.navigateTo({ url: `/pages/hr/hr/messages/chat?id=${id}` });
-};
+const unreadTotal = ref(0);
 
-const handleNotification = (item: NotificationItem) => {
-  if (item.route) {
-    if (item.route.includes('/pages/hr/hr/messages/index')) {
-      uni.switchTab({ url: '/pages/hr/hr/messages/index' });
-    } else {
-      uni.navigateTo({ url: item.route });
-    }
+const loadConversations = async () => {
+  loading.value = true;
+  error.value = null;
+  try {
+    conversations.value = await getConversations();
+    unreadTotal.value = await getUnreadCount();
+  } catch (err) {
+    console.error('Failed to load conversations:', err);
+    error.value = err instanceof Error ? err.message : 'Load failed';
+  } finally {
+    loading.value = false;
   }
 };
 
-const formatTime = (time: string) => dayjs(time).format('MM/DD HH:mm');
+const openChat = (conversation: Conversation) => {
+  const applicationId = conversation.applicationId ? `&applicationId=${conversation.applicationId}` : '';
+  uni.navigateTo({
+    url: `/pages/hr/hr/messages/chat?id=${conversation.id}&userId=${conversation.otherUserId || ''}&username=${encodeURIComponent(
+      conversation.otherUserName || ''
+    )}${applicationId}`,
+  });
+};
+
+const handleNotification = () => {
+  uni.showToast({ title: t('pages.chat.notifications.empty'), icon: 'none' });
+};
+
+const formatTime = (time?: string) => (time ? dayjs(time).format('MM/DD HH:mm') : '');
 
 const syncStoredTab = () => {
   const cached = uni.getStorageSync('hr_messages_tab');
@@ -77,6 +113,56 @@ const syncStoredTab = () => {
     activeTab.value = cached === 'notice' ? 'notice' : 'chat';
     uni.removeStorageSync('hr_messages_tab');
   }
+};
+
+const togglePin = async (conversation: Conversation) => {
+  const nextPinned = conversation.pinned !== 1;
+  try {
+    await pinConversation(conversation.id, nextPinned);
+    conversation.pinned = nextPinned ? 1 : 0;
+    uni.showToast({
+      title: nextPinned ? t('pages.chat.list.pinSuccess') : t('pages.chat.list.unpinSuccess'),
+      icon: 'success',
+    });
+  } catch (err) {
+    uni.showToast({ title: t('pages.chat.list.loadError'), icon: 'none' });
+    console.error('Failed to pin conversation:', err);
+  }
+};
+
+const confirmDelete = (conversation: Conversation) => {
+  uni.showModal({
+    title: t('common.confirm'),
+    content: t('pages.chat.list.deleteConfirm'),
+    success: async (res) => {
+      if (!res.confirm) return;
+      try {
+        await deleteConversation(conversation.id);
+        conversations.value = conversations.value.filter((c) => c.id !== conversation.id);
+        uni.showToast({ title: t('pages.chat.list.deleteSuccess'), icon: 'success' });
+      } catch (err) {
+        uni.showToast({ title: t('pages.chat.list.deleteError'), icon: 'none' });
+        console.error('Failed to delete conversation:', err);
+      }
+    },
+  });
+};
+
+const showActionMenu = (conversation: Conversation) => {
+  const isPinned = conversation.pinned === 1;
+  uni.showActionSheet({
+    itemList: [
+      isPinned ? t('pages.chat.list.unpin') : t('pages.chat.list.pin'),
+      t('pages.chat.list.delete'),
+    ],
+    success: (res) => {
+      if (res.tapIndex === 0) {
+        togglePin(conversation);
+      } else if (res.tapIndex === 1) {
+        confirmDelete(conversation);
+      }
+    },
+  });
 };
 
 onLoad((options) => {
@@ -88,18 +174,20 @@ onLoad((options) => {
 onShow(() => {
   uni.hideTabBar();
   syncStoredTab();
+  loadConversations();
 });
 
 onMounted(() => {
-  loadData();
+  loadConversations();
 });
 </script>
 
 <style scoped lang="scss">
 .messages-page {
-  padding: 24rpx;
-  background: #f6f7fb;
+  padding: calc(var(--status-bar-height) + 64rpx) 24rpx 24rpx;
+  background: linear-gradient(180deg, #e5f0ff 0%, #f6f7fb 40%, #f6f7fb 100%);
   min-height: 100vh;
+  box-sizing: border-box;
 }
 
 .tab-toggle {
@@ -124,8 +212,7 @@ onMounted(() => {
   color: #fff;
 }
 
-.chat-item,
-.notice-item {
+.chat-item {
   background: #fff;
   border-radius: 24rpx;
   padding: 24rpx;
@@ -133,6 +220,10 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.chat-item.pinned {
+  background: #eaf2ff;
 }
 
 .chat-info {
@@ -161,26 +252,34 @@ onMounted(() => {
   color: #a0a9bb;
 }
 
-.dot {
-  width: 16rpx;
-  height: 16rpx;
+.unread {
+  min-width: 32rpx;
+  height: 32rpx;
+  padding: 0 10rpx;
   background: #ff4d4f;
-  border-radius: 50%;
+  border-radius: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.notice-title {
-  font-size: 30rpx;
+.unread-count {
+  color: #fff;
+  font-size: 20rpx;
   font-weight: 600;
 }
 
-.notice-desc {
-  margin-top: 8rpx;
-  color: #7a859b;
+.notice-empty {
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 48rpx 24rpx;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-.notice-time {
-  margin-top: 12rpx;
-  font-size: 22rpx;
-  color: #a0a9bb;
+.empty-text {
+  color: #7a859b;
+  font-size: 28rpx;
 }
 </style>

@@ -1,12 +1,13 @@
 ﻿<template>
   <view class="home-page">
-    <view class="top-bar">
-      <view class="welcome-block">
-        <text class="welcome-title">SmartHire+</text>
+    <view class="hero">
+      <view class="hero-top">
+        <view class="welcome-title">SmartHire+</view>
+        <view class="avatar" @click="goProfile">
+          <image :src="avatarImg" mode="aspectFill" />
+        </view>
       </view>
-      <view class="avatar" @click="goProfile">
-        <image :src="avatarImg" mode="aspectFill" />
-      </view>
+      <view class="hero-sub">欢迎回来，查看今天的待办</view>
     </view>
 
     <view class="card todo-card">
@@ -38,31 +39,25 @@
       </view>
     </view>
 
-    <view class="card insights-card">
-      <view class="section-title">智能洞察</view>
-      <view class="insight-list">
-        <view
-          class="insight-item"
-          v-for="insight in insights"
-          :key="insight.id"
-          :class="insight.severity"
-          @click="handleTodoClick(insight.route)"
-        >
-          <view class="insight-title">{{ insight.title }}</view>
-          <view class="insight-desc">{{ insight.desc }}</view>
-          <view class="insight-action" v-if="insight.actionText">{{ insight.actionText }}</view>
-        </view>
+    <view class="card recommend-card">
+      <view class="recommend-header">
+        <view class="section-title">推荐求职者</view>
+        <view class="action-link" @click="refreshSeekerCards">刷新</view>
+      </view>
+
+      <view v-if="seekerLoading" class="hint">加载中...</view>
+      <view v-else-if="seekerError" class="hint">{{ seekerError }}</view>
+      <view v-else class="seeker-list">
+        <view v-if="seekerCards.length === 0" class="hint">暂无推荐</view>
+        <SeekerRecommendCard
+          v-for="card in seekerCards"
+          :key="card.userId ?? card.id ?? card.username"
+          :seeker="card"
+          @click="openSeekerDetail"
+        />
       </view>
     </view>
 
-    <view class="card quick-card">
-      <view class="section-title">快捷操作</view>
-      <view class="quick-actions">
-        <button class="primary" @click="goCreateJob">发布新岗位</button>
-        <button class="secondary" @click="goAnalytics">查看数据分析</button>
-      </view>
-    </view>
-    
     <CustomTabBar />
   </view>
 </template>
@@ -70,32 +65,42 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
-import { fetchDashboardData, type DashboardTodoItem, type RecruitStatistic, type InsightCardItem } from '@/mock/hr';
+import { fetchDashboardData, type DashboardTodoItem, type RecruitStatistic } from '@/mock/hr';
 import avatarImg from '@/static/user-avatar.png';
 import CustomTabBar from '@/components/common/CustomTabBar.vue';
+import { getPublicSeekerCards, type PublicSeekerCard } from '@/services/api/hr';
+import SeekerRecommendCard from '@/pages/hr/hr/seeker/components/SeekerRecommendCard.vue';
 
 const todos = ref<DashboardTodoItem[]>([]);
 const stats = ref<RecruitStatistic[]>([]);
-const insights = ref<InsightCardItem[]>([]);
+
+const seekerCards = ref<PublicSeekerCard[]>([]);
+const seekerLoading = ref(false);
+const seekerError = ref('');
 
 const loadDashboard = async () => {
   // TODO: 替换为真实接口 GET /api/hr/dashboard
   const data = await fetchDashboardData();
   todos.value = data.todos;
   stats.value = data.stats;
-  insights.value = data.insights;
+};
+
+const refreshSeekerCards = async () => {
+  seekerLoading.value = true;
+  seekerError.value = '';
+  try {
+    const data = await getPublicSeekerCards();
+    seekerCards.value = Array.isArray(data) ? data : [];
+  } catch (err) {
+    console.error('Failed to load public seeker cards:', err);
+    seekerError.value = '推荐加载失败';
+  } finally {
+    seekerLoading.value = false;
+  }
 };
 
 const goProfile = () => {
   uni.navigateTo({ url: '/pages/hr/hr/profile/index' });
-};
-
-const goCreateJob = () => {
-  uni.navigateTo({ url: '/pages/hr/hr/jobs/edit?mode=create' });
-};
-
-const goAnalytics = () => {
-  uni.navigateTo({ url: '/pages/hr/hr/analytics/index' });
 };
 
 const parseQuery = (queryString?: string) => {
@@ -127,6 +132,19 @@ const handleTodoClick = (route?: string) => {
   uni.navigateTo({ url: route });
 };
 
+const openSeekerDetail = (card: PublicSeekerCard) => {
+  const userId = (card.userId ?? card.id) as number | undefined;
+  if (!userId || Number.isNaN(Number(userId))) {
+    uni.showToast({ title: '缺少用户ID', icon: 'none' });
+    return;
+  }
+  uni.navigateTo({
+    url: `/pages/hr/hr/seeker/detail?userId=${encodeURIComponent(userId)}&username=${encodeURIComponent(card.username || '')}`,
+  });
+};
+
+
+
 const trendText = (trend: RecruitStatistic['trend']) => {
   switch (trend) {
     case 'up':
@@ -140,31 +158,41 @@ const trendText = (trend: RecruitStatistic['trend']) => {
 
 onMounted(() => {
   loadDashboard();
+  refreshSeekerCards();
 });
 
 onShow(() => {
-  uni.hideTabBar();
+  uni.hideTabBar({ fail: () => {} });
+  refreshSeekerCards();
 });
 </script>
 
 <style scoped lang="scss">
 .home-page {
   min-height: 100vh;
-  padding: 32rpx;
-  background: #f6f7fb;
+  padding: 0 32rpx 32rpx;
+  background: linear-gradient(180deg, #e5f0ff 0%, #f6f7fb 40%, #f6f7fb 100%);
   box-sizing: border-box;
 }
 
-.top-bar {
+.hero {
+  padding-top: calc(var(--status-bar-height) + 64rpx);
+  padding-bottom: 32rpx;
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.hero-top {
+  display: flex;
   align-items: center;
-  margin-bottom: 32rpx;
+  justify-content: space-between;
 }
 
 .welcome-title {
-  font-size: 34rpx;
-  font-weight: 600;
+  font-size: 38rpx;
+  font-weight: 700;
+  color: #0b1c33;
 }
 
 .avatar {
@@ -181,6 +209,11 @@ onShow(() => {
 .avatar image {
   width: 100%;
   height: 100%;
+}
+
+.hero-sub {
+  font-size: 26rpx;
+  color: #2f4b76;
 }
 
 .card {
@@ -257,58 +290,25 @@ onShow(() => {
   color: #ff5f5f;
 }
 
-.insight-item {
-  padding: 24rpx;
-  border-radius: 20rpx;
-  margin-bottom: 20rpx;
-  background: #f5f6fb;
-}
-
-.insight-item.warning {
-  border: 2rpx solid #ffb347;
-}
-
-.insight-item.danger {
-  border: 2rpx solid #ff5f5f;
-}
-
-.insight-title {
-  font-size: 28rpx;
-  font-weight: 600;
-  margin-bottom: 10rpx;
-}
-
-.insight-desc {
-  font-size: 24rpx;
-  color: #6b758a;
-}
-
-.insight-action {
-  margin-top: 8rpx;
-  color: #2f7cff;
-  font-size: 24rpx;
-}
-
-.quick-actions {
+.recommend-header {
   display: flex;
-  gap: 20rpx;
+  align-items: baseline;
+  justify-content: space-between;
 }
 
-button.primary {
-  flex: 1;
-  background: #2f7cff;
-  color: #fff;
-  border: none;
-  border-radius: 20rpx;
-  height: 88rpx;
-}
-
-button.secondary {
-  flex: 1;
-  background: #e5edff;
+.action-link {
+  font-size: 24rpx;
   color: #2f7cff;
-  border: none;
-  border-radius: 20rpx;
-  height: 88rpx;
 }
+
+.hint {
+  color: #8a92a7;
+  font-size: 24rpx;
+  padding: 10rpx 0;
+}
+
+.seeker-list {
+  padding-top: 6rpx;
+}
+
 </style>

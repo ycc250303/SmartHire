@@ -206,7 +206,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { onLoad, onPullDownRefresh } from '@dcloudio/uni-app';
+import { onLoad, onShow, onPullDownRefresh } from '@dcloudio/uni-app';
 import { t } from '@/locales';
 import { useNavigationTitle } from '@/utils/useNavigationTitle';
 import type { 
@@ -244,16 +244,6 @@ const displayMeta = computed(() => {
   const info = resume.value?.seekerInfo;
   const parts: string[] = [];
   
-  if (info?.gender !== undefined && info.gender !== null) {
-    const genderMap: Record<number, string> = {
-      0: t('pages.resume.online.male'),
-      1: t('pages.resume.online.female'),
-      2: t('pages.resume.online.other'),
-    };
-    parts.push(genderMap[info.gender] || '');
-  }
-  
-  
   if (info?.birthDate) {
     const age = calculateAge(info.birthDate);
     if (age > 0) {
@@ -261,17 +251,21 @@ const displayMeta = computed(() => {
     }
   }
   
-  
-  if (info?.city) {
-    parts.push(info.city);
+  if (info?.currentCity) {
+    parts.push(info.currentCity);
   }
   
-  
   if (educationList.value.length > 0) {
-    const currentEducation = educationList.value.find(edu => edu.isCurrent === 1);
+    const currentYear = new Date().getFullYear();
+    const currentEducation = educationList.value.find(edu => {
+      if (edu.endYear) {
+        const endYear = parseInt(edu.endYear);
+        return endYear >= currentYear;
+      }
+      return false;
+    });
     if (currentEducation && currentEducation.endYear) {
       const endYear = parseInt(currentEducation.endYear);
-      const currentYear = new Date().getFullYear();
       if (endYear >= currentYear) {
         parts.push(`${endYear}${t('pages.resume.online.graduateYear')}`);
       }
@@ -300,17 +294,22 @@ const displayStudentBadge = computed(() => {
   const educations = educationList.value;
   if (educations.length === 0) return false;
   
-  const currentEducation = educations.find(edu => edu.isCurrent === 1);
+  const currentYear = new Date().getFullYear();
+  const currentEducation = educations.find(edu => {
+    if (edu.endYear) {
+      const endYear = parseInt(edu.endYear);
+      return endYear >= currentYear;
+    }
+    return false;
+  });
   if (!currentEducation) return false;
   
-  const currentYear = new Date().getFullYear();
   const endYear = parseInt(currentEducation.endYear);
   return endYear >= currentYear;
 });
 
 const displayAdvantages = computed(() => {
-  const bio = resume.value?.seekerInfo?.bio;
-  return bio || t('pages.resume.online.advantagesPlaceholder');
+  return '';
 });
 
 const fallbackInitial = computed(() => {
@@ -322,6 +321,10 @@ const fallbackInitial = computed(() => {
 });
 
 onLoad(() => {
+  fetchResume();
+});
+
+onShow(() => {
   fetchResume();
 });
 
@@ -341,7 +344,6 @@ async function fetchResume() {
     
     userInfo.value = userInfoData;
     resume.value = resumeData;
-    console.log('Resume data loaded successfully');
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
     console.error('Failed to load resume:', errorMsg);
@@ -447,7 +449,11 @@ function formatEducationPeriod(education: EducationExperience): string {
     return t('pages.resume.online.infoFallback');
   }
   
-  const endLabel = education.isCurrent 
+  const currentYear = new Date().getFullYear();
+  const endYear = education.endYear ? parseInt(education.endYear) : null;
+  const isCurrent = endYear !== null && endYear >= currentYear;
+  
+  const endLabel = isCurrent 
     ? t('pages.resume.online.presentLabel') 
     : (education.endYear || '');
   
@@ -483,8 +489,8 @@ function formatSalaryRange(expectation: JobSeekerExpectation): string {
     return t('pages.resume.online.infoFallback');
   }
   
-  const minK = (min / 10000).toFixed(1);
-  const maxK = (max / 10000).toFixed(1);
+  const minK = Math.round(min / 1000);
+  const maxK = Math.round(max / 1000);
   
   return `${minK}${t('pages.resume.online.salaryTo')}${maxK}${t('pages.resume.online.salaryUnit')}`;
 }
@@ -532,8 +538,17 @@ function getDegreeLabel(value?: number | null): string {
 }
 
 function getSkillLevelText(level?: number | null): string {
-  const displayLevel = typeof level === 'number' ? level : 0;
-  return `${t('pages.resume.online.skillLevelPrefix')}${displayLevel}`;
+  if (level === undefined || level === null) {
+    return t('pages.resume.online.infoFallback');
+  }
+  
+  const levelMap: Record<number, string> = {
+    0: '生疏',
+    1: '熟悉',
+    2: '熟练',
+  };
+  
+  return levelMap[level] || t('pages.resume.online.infoFallback');
 }
 </script>
 

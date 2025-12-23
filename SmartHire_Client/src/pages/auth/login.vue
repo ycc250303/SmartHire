@@ -42,15 +42,6 @@
           <text v-else>{{ t('auth.login.loginButton') }}</text>
         </button>
 
-        <!-- Role Selection (Simple, no CSS for debugging) -->
-        <view class="role-selection">
-          <picker mode="selector" :range="roleOptions" :value="selectedRoleIndex" @change="onRoleChange">
-            <view class="role-picker">
-              <text>选择角色: {{ selectedRole }}</text>
-            </view>
-          </picker>
-        </view>
-
         <!-- Bottom Links -->
         <view class="bottom-links">
           <view class="link-item" @click="goToHelp">
@@ -72,7 +63,7 @@ import { onLoad } from '@dcloudio/uni-app';
 import { t } from '@/locales';
 import { useNavigationTitle } from '@/utils/useNavigationTitle';
 import { login, type LoginParams, UserType } from '@/services/api/auth';
-import { setTokens } from '@/services/http';
+import { ApiError, setTokens } from '@/services/http';
 import { useUserStore } from '@/store/user';
 
 useNavigationTitle('navigation.login');
@@ -81,9 +72,6 @@ const userStore = useUserStore();
 const loading = ref(false);
 const errorMessage = ref('');
 const showPassword = ref(false);
-const selectedRole = ref<'求职者' | 'HR'>('求职者');
-const selectedRoleIndex = ref(0);
-const roleOptions = ['求职者', 'HR'];
 
 const formData = ref<LoginParams>({
   username: '',
@@ -95,11 +83,6 @@ onLoad(() => {
     title: t('auth.login.title') 
   });
 });
-
-function onRoleChange(e: any) {
-  selectedRoleIndex.value = e.detail.value;
-  selectedRole.value = roleOptions[e.detail.value] as '求职者' | 'HR';
-}
 
 function togglePassword() {
   showPassword.value = !showPassword.value;
@@ -132,6 +115,10 @@ async function handleLogin() {
       password: formData.value.password,
     });
 
+    if (!loginResponse || !loginResponse.accessToken) {
+      throw new Error('Login failed: empty response');
+    }
+
     setTokens(
       loginResponse.accessToken,
       loginResponse.refreshToken,
@@ -148,19 +135,22 @@ async function handleLogin() {
     });
 
     setTimeout(() => {
-      // Use selected role from picker to determine navigation
-      if (selectedRole.value === 'HR') {
-        uni.switchTab({
-          url: '/pages/hr/hr/home/index',
-        });
-      } else {
-        uni.switchTab({
-          url: '/pages/seeker/index/index',
-        });
-      }
+      const userType = userStore.userInfo?.userType;
+      const targetUrl =
+        userType === UserType.HR
+          ? '/pages/hr/hr/home/index'
+          : '/pages/seeker/index/index';
+
+      uni.switchTab({ url: targetUrl });
     }, 1000);
   } catch (err) {
-    errorMessage.value = err instanceof Error ? err.message : 'Login failed';
+    if (err instanceof ApiError) {
+      errorMessage.value = err.message || t('auth.login.loginFailed');
+    } else if (err instanceof Error) {
+      errorMessage.value = err.message || t('auth.login.loginFailed');
+    } else {
+      errorMessage.value = t('auth.login.loginFailed');
+    }
   } finally {
     loading.value = false;
   }
@@ -186,7 +176,7 @@ function goToHelp() {
   min-height: 100vh;
   background: linear-gradient(to bottom, #e3f2fd 0%, #ffffff 25%);
   padding: vars.$spacing-xl;
-  padding-top: 180rpx;
+  padding-top: 300rpx; // down
 }
 
 .login-container {
@@ -334,16 +324,6 @@ function goToHelp() {
   &::after {
     border: none;
   }
-}
-
-.role-selection {
-  margin-bottom: vars.$spacing-lg;
-}
-
-.role-picker {
-  padding: vars.$spacing-md;
-  background-color: vars.$bg-color;
-  border-radius: vars.$border-radius;
 }
 
 .bottom-links {

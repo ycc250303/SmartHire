@@ -24,8 +24,8 @@
           <slider
             class="skill-slider"
             :value="formData.level"
-            :min="1"
-            :max="5"
+            :min="0"
+            :max="2"
             :step="1"
             :show-value="false"
             @change="handleSliderChange"
@@ -34,11 +34,9 @@
             block-size="28"
           />
           <view class="slider-labels">
-            <text class="slider-label-text">1</text>
-            <text class="slider-label-text">2</text>
-            <text class="slider-label-text">3</text>
-            <text class="slider-label-text">4</text>
-            <text class="slider-label-text">5</text>
+            <text class="slider-label-text">生疏</text>
+            <text class="slider-label-text">熟悉</text>
+            <text class="slider-label-text">熟练</text>
           </view>
         </view>
       </view>
@@ -82,7 +80,7 @@ const skillId = ref<number>();
 
 const formData = ref<AddSkillParams>({
   skillName: '',
-  level: 3,
+  level: 1,
 });
 
 onLoad((options: any) => {
