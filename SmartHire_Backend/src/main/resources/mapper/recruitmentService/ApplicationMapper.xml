@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.SmartHire.recruitmentService.mapper.ApplicationMapper">
+
+  <!-- 获取求职者投递记录列表 -->
+  <select id="selectSeekerApplicationList" resultType="com.SmartHire.recruitmentService.dto.SeekerApplicationDTO">
+    SELECT 
+      a.id AS applicationId,
+      a.job_id AS jobId,
+      j.job_title AS jobTitle,
+      c.company_name AS companyName,
+      c.logo_url AS companyLogo,
+      a.status AS status,
+      a.created_at AS appliedAt,
+      a.conversation_id AS conversationId,
+      h.real_name AS hrName,
+      u.avatar_url AS hrAvatar
+    FROM application a
+    LEFT JOIN job_info j ON a.job_id = j.id
+    LEFT JOIN company c ON j.company_id = c.id
+    LEFT JOIN hr_info h ON j.hr_id = h.id
+    LEFT JOIN user u ON h.user_id = u.id
+    WHERE a.job_seeker_id = #{seekerId}
+    ORDER BY a.created_at DESC
+    <if test="page != null and size != null">
+      LIMIT #{size} OFFSET #{offset}
+    </if>
+  </select>
+
+</mapper>

@@ -3,6 +3,7 @@ package com.SmartHire.hrService.service.impl;
 import com.SmartHire.recruitmentService.dto.ApplicationListDTO;
 import com.SmartHire.recruitmentService.dto.ApplicationQueryDTO;
 import com.SmartHire.recruitmentService.dto.SubmitResumeDTO;
+import com.SmartHire.recruitmentService.dto.SeekerApplicationListDTO;
 import com.SmartHire.recruitmentService.service.ApplicationService;
 import com.SmartHire.hrService.mapper.HrApplicationMapper;
 import com.SmartHire.hrService.mapper.HrInfoMapper;
@@ -157,9 +158,10 @@ public class ApplicationServiceImpl extends ServiceImpl<HrApplicationMapper, App
     public boolean existsBySeekerIdAndJobId(Long seekerId, Long jobId) {
         throw new BusinessException(ErrorCode.SYSTEM_ERROR, "HR服务不支持获取职位列表功能，请使用求职者端接口");
     }
-
+    
     @Override
-    public List<Long> getJobIdListBySeekerId() {
-        throw new BusinessException(ErrorCode.SYSTEM_ERROR, "HR服务不支持获取职位列表功能，请使用求职者端接口");
+    public SeekerApplicationListDTO getSeekerApplicationList(Integer page, Integer size) {
+        throw new BusinessException(ErrorCode.SYSTEM_ERROR, "HR服务不支持获取投递记录列表功能，请使用求职者端接口");
     }
+    
 }

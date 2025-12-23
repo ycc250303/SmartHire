@@ -1,6 +1,7 @@
 package com.SmartHire.recruitmentService.mapper;
 
 import com.SmartHire.recruitmentService.dto.ApplicationListDTO;
+import com.SmartHire.recruitmentService.dto.SeekerApplicationDTO;
 import com.SmartHire.recruitmentService.model.Application;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -18,63 +19,78 @@ import org.apache.ibatis.annotations.Select;
 @Mapper
 public interface ApplicationMapper extends BaseMapper<Application> {
 
-  /**
-   * 分页查询投递列表（HR端）
-   *
-   * @param page 分页对象
-   * @param hrId HR ID
-   * @param jobId 岗位ID
-   * @param status 状态
-   * @param keyword 关键词
-   * @return 分页结果
-   */
-  Page<ApplicationListDTO> selectApplicationList(
-      Page<ApplicationListDTO> page,
-      @Param("hrId") Long hrId,
-      @Param("jobId") Long jobId,
-      @Param("status") Byte status,
-      @Param("keyword") String keyword);
+    /**
+     * 分页查询投递列表（HR端）
+     *
+     * @param page    分页对象
+     * @param hrId    HR ID
+     * @param jobId   岗位ID
+     * @param status  状态
+     * @param keyword 关键词
+     * @return 分页结果
+     */
+    Page<ApplicationListDTO> selectApplicationList(
+            Page<ApplicationListDTO> page,
+            @Param("hrId") Long hrId,
+            @Param("jobId") Long jobId,
+            @Param("status") Byte status,
+            @Param("keyword") String keyword);
 
-  /**
-   * 查询岗位下所有投递（用于匹配计算）
-   *
-   * @param hrId HR ID
-   * @param jobId 岗位ID
-   * @return 投递列表
-   */
-  List<ApplicationListDTO> selectApplicationsByJob(
-      @Param("hrId") Long hrId, @Param("jobId") Long jobId);
+    /**
+     * 查询岗位下所有投递（用于匹配计算）
+     *
+     * @param hrId  HR ID
+     * @param jobId 岗位ID
+     * @return 投递列表
+     */
+    List<ApplicationListDTO> selectApplicationsByJob(
+            @Param("hrId") Long hrId, @Param("jobId") Long jobId);
 
-  /**
-   * 查询投递详情（HR端）
-   *
-   * @param applicationId 投递ID
-   * @param hrId HR ID
-   * @return 投递详情
-   */
-  ApplicationListDTO selectApplicationDetail(
-      @Param("applicationId") Long applicationId, @Param("hrId") Long hrId);
+    /**
+     * 查询投递详情（HR端）
+     *
+     * @param applicationId 投递ID
+     * @param hrId          HR ID
+     * @return 投递详情
+     */
+    ApplicationListDTO selectApplicationDetail(
+            @Param("applicationId") Long applicationId, @Param("hrId") Long hrId);
 
-  /**
-   * 更新匹配结果
-   *
-   * @param applicationId 投递ID
-   * @param score 匹配分
-   * @param analysis 匹配分析
-   * @param updatedAt 更新时间
-   */
-  void updateMatchResult(
-      @Param("applicationId") Long applicationId,
-      @Param("score") java.math.BigDecimal score,
-      @Param("analysis") String analysis,
-      @Param("updatedAt") java.util.Date updatedAt);
+    /**
+     * 更新匹配结果
+     *
+     * @param applicationId 投递ID
+     * @param score         匹配分
+     * @param analysis      匹配分析
+     * @param updatedAt     更新时间
+     */
+    void updateMatchResult(
+            @Param("applicationId") Long applicationId,
+            @Param("score") java.math.BigDecimal score,
+            @Param("analysis") String analysis,
+            @Param("updatedAt") java.util.Date updatedAt);
 
-  /**
-   * 获取指定求职者的所有岗位ID列表
-   *
-   * @param seekerId 求职者ID
-   * @return 岗位ID列表
-   */
-  @Select("SELECT job_id FROM application WHERE job_seeker_id = #{seekerId}")
-  List<Long>getJobIdListBySeekerId(@Param("seekerId") Long seekerId);
+    /**
+     * 获取指定求职者的投递记录列表
+     *
+     * @param seekerId 求职者ID
+     * @param page     页码
+     * @param size     每页大小
+     * @param offset   偏移量
+     * @return 投递记录列表
+     */
+    List<SeekerApplicationDTO> selectSeekerApplicationList(
+            @Param("seekerId") Long seekerId,
+            @Param("page") Integer page,
+            @Param("size") Integer size,
+            @Param("offset") Integer offset);
+
+    /**
+     * 获取指定求职者的投递记录总数
+     *
+     * @param seekerId 求职者ID
+     * @return 总记录数
+     */
+    @Select("SELECT COUNT(*) FROM application WHERE job_seeker_id = #{seekerId}")
+    Long countSeekerApplicationList(@Param("seekerId") Long seekerId);
 }
