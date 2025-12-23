@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.SmartHire.recruitmentService.mapper.ApplicationExtMapper">
+
+    <!-- 根据用户ID查找相关的Application记录ID -->
+    <select id="findApplicationIdsByUserIds" resultType="java.lang.Long">
+        SELECT a.id
+        FROM application a
+        LEFT JOIN job_info j ON a.job_id = j.id
+        LEFT JOIN hr_info hr ON j.hr_id = hr.id
+        LEFT JOIN job_seeker js ON a.job_seeker_id = js.id
+        WHERE a.conversation_id IS NULL
+        AND (
+            (hr.user_id = #{user1Id} AND js.user_id = #{user2Id})
+            OR
+            (hr.user_id = #{user2Id} AND js.user_id = #{user1Id})
+        )
+        LIMIT 10
+    </select>
+
+</mapper>

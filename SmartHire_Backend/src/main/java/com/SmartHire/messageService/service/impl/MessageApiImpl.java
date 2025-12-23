@@ -8,7 +8,6 @@ import com.SmartHire.messageService.mapper.ConversationMapper;
 import com.SmartHire.messageService.model.ChatMessage;
 import com.SmartHire.messageService.model.Conversation;
 import com.SmartHire.messageService.service.ChatMessageService;
-import com.SmartHire.messageService.service.ConversationService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,9 +29,6 @@ public class MessageApiImpl implements MessageApi {
 
     @Autowired
     private ChatMessageService chatMessageService;
-    
-    @Autowired
-    private ConversationService conversationService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -60,11 +56,5 @@ public class MessageApiImpl implements MessageApi {
     @Override
     public MessageDTO sendMessage(Long senderId, SendMessageDTO dto) {
         return chatMessageService.sendMessage(senderId, dto);
-    }
-    
-    @Override
-    public Long getOrCreateConversation(Long user1Id, Long user2Id) {
-        com.SmartHire.messageService.model.Conversation conversation = conversationService.getOrCreateConversation(user1Id, user2Id);
-        return conversation.getId();
     }
 }

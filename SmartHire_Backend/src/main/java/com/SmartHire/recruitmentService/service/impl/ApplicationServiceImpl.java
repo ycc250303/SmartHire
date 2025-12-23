@@ -1,7 +1,6 @@
 package com.SmartHire.recruitmentService.service.impl;
 
 import com.SmartHire.common.api.HrApi;
-import com.SmartHire.common.api.MessageApi;
 import com.SmartHire.common.api.SeekerApi;
 import com.SmartHire.common.api.UserAuthApi;
 import com.SmartHire.common.auth.UserContext;
@@ -53,9 +52,6 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
 
     @Autowired
     private UserContext userContext;
-
-    @Autowired
-    private MessageApi messageApi;
 
     @Autowired
     private ApplicationMapper applicationMapper;
@@ -114,15 +110,11 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
             throw new BusinessException(ErrorCode.RECOMMEND_ALREADY_EXISTS);
         }
 
-        // 创建或获取会话
-        Long conversationId = messageApi.getOrCreateConversation(hrUserId, request.getSeekerUserId());
-        
         // 创建推荐记录（作为 application）
         Application application = new Application();
         application.setJobId(jobId);
         application.setJobSeekerId(seekerId);
         application.setResumeId(resumeId); // 可能为null（在线简历）
-        application.setConversationId(conversationId); // 设置会话ID
         application.setInitiator((byte) 1); // 1-HR推荐
         application.setStatus((byte) 0); // 0-已投递/已推荐
 
@@ -187,19 +179,11 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
             throw new BusinessException(ErrorCode.APPLICATION_ALREADY_EXISTS);
         }
 
-        // 获取HR用户ID用于创建会话
-        Long hrId = hrApi.getHrIdByJobId(jobId);
-        Long hrUserId = hrApi.getHrUserIdByHrId(hrId); // 获取HR的用户ID
-        
-        // 创建或获取会话
-        Long conversationId = messageApi.getOrCreateConversation(userId, hrUserId);
-        
         // 创建投递记录
         Application application = new Application();
         application.setJobId(jobId);
         application.setJobSeekerId(seekerId);
         application.setResumeId(resumeId); // 可能为null（在线简历）
-        application.setConversationId(conversationId); // 设置会话ID
         application.setInitiator((byte) 0); // 0-求职者投递
         application.setStatus((byte) 0); // 0-已投递/已推荐
 
@@ -220,7 +204,7 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
         // 发送投递/推荐岗位创建事件到消息队列，由消息服务异步处理
         // 这样可以解耦 recruitmentService 和 messageService，避免循环依赖
         Long hrId = hrApi.getHrIdByJobId(jobId);
-        Long hrUserId = hrApi.getHrUserIdByHrId(hrId); // 获取HR的用户ID
+        Long hrUserId = hrApi.getHrUserIdByHrId(hrId);
         ApplicationCreatedEvent event = new ApplicationCreatedEvent();
         event.setApplicationId(application.getId());
         event.setJobId(jobId);

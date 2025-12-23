@@ -2,17 +2,21 @@ package com.SmartHire.messageService.service.impl;
 
 import com.SmartHire.common.exception.enums.ErrorCode;
 import com.SmartHire.common.exception.exception.BusinessException;
+import com.SmartHire.common.event.ConversationCreatedEvent;
 import com.SmartHire.messageService.dto.ConversationDTO;
 import com.SmartHire.messageService.mapper.ConversationMapper;
 import com.SmartHire.messageService.model.Conversation;
+import com.SmartHire.messageService.service.ConversationEventProducer;
 import com.SmartHire.messageService.service.ConversationService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import java.util.ArrayList;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +30,9 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class ConversationServiceImpl extends ServiceImpl<ConversationMapper, Conversation>
     implements ConversationService {
+  
+  @Autowired
+  private ConversationEventProducer conversationEventProducer;
 
   /**
    * 获取或创建会话
@@ -61,6 +68,17 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationMapper, Con
       conversation.setDeletedByUser2((byte) 0);
       this.save(conversation);
       log.info("创建会话成功：{}, user1Id={}, user2Id={}", conversation, minId, maxId);
+      
+      // 发送会话创建事件，通知recruitmentService更新Application记录
+      ConversationCreatedEvent event = new ConversationCreatedEvent();
+      event.setConversationId(conversation.getId());
+      event.setUser1Id(minId);
+      event.setUser2Id(maxId);
+      event.setCreatedAt(conversation.getCreatedAt());
+      // 由于我们无法直接查询Application记录，这里设置relatedApplicationIds为空
+      // 在ConversationEventConsumer中需要通过其他方式查找相关的Application记录
+      event.setRelatedApplicationIds(new ArrayList<>());
+      conversationEventProducer.sendConversationCreatedEvent(event);
     } else {
       // 软删除场景：若双方都已删除，则“复活”会话并重置计数/置顶/通知
       if (conversation.getDeletedByUser1() == 1 && conversation.getDeletedByUser2() == 1) {
