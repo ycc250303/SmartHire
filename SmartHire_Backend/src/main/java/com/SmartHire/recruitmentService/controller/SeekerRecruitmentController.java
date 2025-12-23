@@ -10,7 +10,11 @@ import com.SmartHire.hrService.dto.JobCardDTO;
 import com.SmartHire.hrService.dto.JobSearchDTO;
 import com.SmartHire.hrService.service.JobInfoService;
 import com.SmartHire.common.api.SeekerApi;
-// seeker info not required for raw job list
+import com.SmartHire.seekerService.dto.SeekerCardDTO;
+import com.SmartHire.seekerService.model.JobSeeker;
+import java.util.Locale;
+import java.util.Objects;
+import java.util.Comparator;
 import com.SmartHire.common.auth.UserContext;
 import com.SmartHire.recruitmentService.dto.InternJobItemDTO;
 import com.SmartHire.recruitmentService.dto.InternJobRecommendationsDTO;
@@ -110,17 +114,55 @@ public class SeekerRecruitmentController {
   @GetMapping("/job-recommendations/intern")
   @Operation(summary = "获取实习岗位推荐", description = "获取用户首页推荐的实习岗位列表，优先使用简历/求职者信息进行关键词匹配计算得分（向量搜索未就绪）")
   public Result<InternJobRecommendationsDTO> getInternJobRecommendations() {
-    // Return a raw list of public internship jobs without applying seeker-side
-    // filtering/matching. This simplifies the API to always return up to 12
-    // internship jobs for the frontend to display or filter client-side.
     JobSearchDTO searchDTO = new JobSearchDTO();
-    // Do not restrict by jobType so the endpoint returns jobs of all types
-    // fetch a reasonable page of jobs (<=12 as API docs)
+    // Only fetch internship jobs for this endpoint
+    searchDTO.setJobType(1); // 1 == internship
+    // fetch a reasonable page of internship jobs (<=12 as API docs)
     searchDTO.setPage(1);
     searchDTO.setSize(12);
-    log.info("searchDTO (raw job list): {}", searchDTO);
+    log.info("searchDTO (intern job list): {}", searchDTO);
     List<JobCardDTO> jobCards = jobInfoService.searchPublicJobs(searchDTO);
     log.info("jobCards: {}", jobCards);
+
+    // Attempt to get current seeker info for personalized scoring.
+    Long targetUserId = null;
+    try {
+      targetUserId = userContext.getCurrentUserId();
+    } catch (Exception ignored) {
+      // user not logged in or no valid claims — proceed with null targetUserId
+    }
+    Long jobSeekerId = null;
+    JobSeeker seeker = null;
+    SeekerCardDTO seekerCard = null;
+    if (targetUserId != null) {
+      try {
+        jobSeekerId = seekerApi.getJobSeekerIdByUserId(targetUserId);
+      } catch (Exception ignored) {
+      }
+    }
+    if (jobSeekerId != null) {
+      try {
+        seeker = seekerApi.getJobSeekerById(jobSeekerId);
+        seekerCard = seekerApi.getSeekerCard(targetUserId);
+      } catch (Exception ignored) {
+      }
+    }
+
+    // derive a simple keyword from major/university/education (if available)
+    StringBuilder kw = new StringBuilder();
+    if (seekerCard != null) {
+      if (seekerCard.getMajor() != null) {
+        kw.append(seekerCard.getMajor()).append(" ");
+      }
+      if (seekerCard.getHighestEducation() != null) {
+        kw.append(seekerCard.getHighestEducation()).append(" ");
+      }
+      if (seekerCard.getUniversity() != null) {
+        kw.append(seekerCard.getUniversity()).append(" ");
+      }
+    }
+    String keyword = kw.toString().trim();
+
     List<InternJobItemDTO> items = new ArrayList<>();
     for (JobCardDTO jc : jobCards) {
       InternJobItemDTO item = new InternJobItemDTO();
@@ -131,10 +173,44 @@ public class SeekerRecruitmentController {
       item.setAddress(jc.getAddress());
       item.setSalary_min(jc.getSalaryMin() == null ? 0 : jc.getSalaryMin().intValue());
       item.setSalary_max(jc.getSalaryMax() == null ? 0 : jc.getSalaryMax().intValue());
-      // No server-side match scoring when returning raw job list
-      item.setMatchScore(null);
+
+      // Basic scoring: base 50, +30 exact keyword match, +10 per token partial match,
+      // +10 education match, +5 city match. Clamp to [0,100].
+      int score = 50;
+      String lowerKeyword = keyword == null ? "" : keyword.toLowerCase(Locale.ROOT);
+      String combined = (Objects.toString(jc.getJobTitle(), "") + " " + Objects.toString(jc.getCompanyName(), "") + " "
+          + Objects.toString(jc.getCity(), "")).toLowerCase(Locale.ROOT);
+      if (!lowerKeyword.isEmpty()) {
+        if (combined.contains(lowerKeyword)) {
+          score += 30;
+        } else {
+          String[] toks = lowerKeyword.split("\\s+");
+          for (String t : toks) {
+            if (!t.isEmpty() && combined.contains(t)) {
+              score += 10;
+            }
+          }
+        }
+      }
+      // education / city bonus
+      if (seeker != null && seeker.getEducation() != null && jc.getEducationRequired() != null
+          && seeker.getEducation().equals(jc.getEducationRequired())) {
+        score += 10;
+      }
+      if (seeker != null && seeker.getCurrentCity() != null && seeker.getCurrentCity().equalsIgnoreCase(jc.getCity())) {
+        score += 5;
+      }
+      if (score > 100)
+        score = 100;
+      if (score < 0)
+        score = 0;
+      item.setMatchScore(score);
+
       items.add(item);
     }
+
+    // Sort by match score descending
+    items.sort(Comparator.comparing(InternJobItemDTO::getMatchScore, Comparator.nullsLast(Comparator.naturalOrder())).reversed());
 
     InternJobRecommendationsDTO resp = new InternJobRecommendationsDTO();
     resp.setJobs(items);
