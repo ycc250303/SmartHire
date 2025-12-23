@@ -36,6 +36,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.validation.annotation.Validated;
@@ -52,6 +53,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @author SmartHire Team
  * @since 2025-11-30
  */
+@Slf4j
 @RestController
 @RequestMapping({"/recruitment/seeker", "/seeker"})
 @RequireUserType(UserType.SEEKER)
@@ -197,16 +199,14 @@ public class SeekerRecruitmentController {
 
   @GetMapping("/job-position/{jobId}")
   @Operation(summary = "获取面向求职者的岗位详情", description = "返回岗位详情（包含公司、HR、申请状态等），供求职者端展示")
-  public Result<SeekerJobPositionDTO> getJobPosition(@PathVariable Long jobId) {
-    if (jobId == null) {
-      throw new BusinessException(ErrorCode.VALIDATION_ERROR);
-    }
-
+  public Result<SeekerJobPositionDTO> getJobPosition(@PathVariable @NotNull Long jobId) {
+    log.info("Get job position info: {}", jobId);
     // 获取岗位基础 DTO（包含技能等）
     JobInfoListDTO jobDto = jobInfoService.getJobInfoById(jobId);
     if (jobDto == null) {
       throw new BusinessException(ErrorCode.JOB_NOT_EXIST);
     }
+    log.info("Job info: {}", jobDto);
 
     // 获取完整实体以便取 companyId/hrId
     JobInfo jobModel = hrApi.getJobInfoById(jobId);
@@ -219,6 +219,7 @@ public class SeekerRecruitmentController {
 
     // 获取 hr info + avatar
     HrInfo hrInfo = hrApi.getHrInfoById(jobModel.getHrId());
+    log.info("HR info: {}", hrInfo);
     User hrUser = null;
     if (hrInfo != null) {
       hrUser = userAuthApi.getUserById(hrInfo.getUserId());
@@ -291,7 +292,7 @@ public class SeekerRecruitmentController {
         ChatMessage cm =
             chatMessageMapper.selectOne(
                 new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<ChatMessage>()
-                    .eq(ChatMessage::getApplicationId, application.getId())
+                    .eq(ChatMessage::getConversationId, application.getConversationId())
                     .orderByDesc(ChatMessage::getCreatedAt)
                     .last("LIMIT 1"));
         if (cm != null) {

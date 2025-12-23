@@ -32,7 +32,7 @@ public class ApplicationListDTO implements Serializable {
   private Long resumeId;
 
   /** 会话ID */
-  private Long conservationId;
+  private Long conversationId;
 
   /** 状态：0-已投递/已推荐 1-已查看 2-待面试 3-已面试 4-已录用 5-已拒绝 6-已撤回 */
   private Byte status;

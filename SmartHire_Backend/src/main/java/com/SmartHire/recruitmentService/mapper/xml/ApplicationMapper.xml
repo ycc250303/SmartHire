@@ -8,7 +8,7 @@
         <result column="job_id" property="jobId" />
         <result column="job_seeker_id" property="jobSeekerId" />
         <result column="resume_id" property="resumeId" />
-        <result column="conversation_id" property="conservationId" />
+        <result column="conversation_id" property="conversationId" />
         <result column="initiator" property="initiator" />
         <result column="status" property="status" />
         <result column="match_score" property="matchScore" />
