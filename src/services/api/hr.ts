@@ -253,14 +253,72 @@ export interface RecommendJobPayload {
   note?: string;
 }
 
+export interface ApplicationExistsPayload {
+  jobId: number;
+  seekerUserId: number;
+}
+
+export interface ApplicationExistsResult {
+  exists: boolean;
+  applicationId?: number;
+}
+
+/**
+ * Check whether an application/recommend record already exists for this job & seeker.
+ * Backend route: GET /recruitment/public/application/exists
+ */
+export function checkApplicationExists(payload: ApplicationExistsPayload): Promise<ApplicationExistsResult> {
+  return http<unknown>({
+    url: "/api/recruitment/public/application/exists",
+    method: "GET",
+    data: payload,
+  }).then((resp) => {
+    if (typeof resp === "boolean") return { exists: resp };
+    if (typeof resp === "number") return { exists: resp > 0, applicationId: resp > 0 ? resp : undefined };
+    if (typeof resp === "string") {
+      const lowered = resp.trim().toLowerCase();
+      if (lowered === "true" || lowered === "false") return { exists: lowered === "true" };
+      const parsed = Number(resp);
+      if (Number.isFinite(parsed)) return { exists: parsed > 0, applicationId: parsed > 0 ? parsed : undefined };
+    }
+
+    const maybeExists = (resp as any)?.exists ?? (resp as any)?.data ?? (resp as any)?.result;
+    if (typeof maybeExists === "boolean") {
+      const applicationIdRaw = (resp as any)?.applicationId ?? (resp as any)?.id;
+      const parsed = Number(applicationIdRaw);
+      return {
+        exists: maybeExists,
+        applicationId: Number.isFinite(parsed) && parsed > 0 ? parsed : undefined,
+      };
+    }
+
+    const parsed = Number((resp as any)?.applicationId ?? (resp as any)?.id);
+    if (Number.isFinite(parsed) && parsed > 0) return { exists: true, applicationId: parsed };
+
+    return { exists: false };
+  });
+}
+
 /**
  * Recommend a job to a seeker (HR action)
  */
 export function recommendJob(payload: RecommendJobPayload): Promise<number> {
-  return http<number>({
+  return http<unknown>({
     url: "/api/recruitment/hr/recommend",
     method: "POST",
     data: payload,
+  }).then((resp) => {
+    if (typeof resp === "number") return resp;
+    if (typeof resp === "string") {
+      const parsed = Number(resp);
+      if (Number.isFinite(parsed) && parsed > 0) return parsed;
+    }
+
+    const maybeId = (resp as any)?.applicationId ?? (resp as any)?.id ?? (resp as any)?.data;
+    const parsed = Number(maybeId);
+    if (Number.isFinite(parsed) && parsed > 0) return parsed;
+
+    throw new Error("Invalid recommend response");
   });
 }
 

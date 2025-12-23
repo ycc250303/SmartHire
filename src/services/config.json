@@ -57,6 +57,7 @@
     "/api/recruitment/seeker/submit-resume": "prod",
     "/api/recruitment/hr/seeker-card": "prod",
     "/api/recruitment/hr/recommend": "prod",
+    "/api/recruitment/public/application/exists": "prod",
     "/api/recruitment/hr/application/*/comment": "prod",
     "/api/hr/application": "prod",
     "/api/hr/application/*": "prod",

@@ -81,11 +81,6 @@
           {{ recommending ? '推荐中...' : '推荐并发起聊天' }}
         </button>
       </view>
-
-      <view class="resume-card actions">
-        <button class="ghost" :disabled="loading" @click="openChat">发消息</button>
-        <button class="outline" :disabled="loading" @click="goMessages">消息列表</button>
-      </view>
     </scroll-view>
   </view>
 </template>
@@ -96,6 +91,7 @@ import { onLoad } from '@dcloudio/uni-app';
 import {
   getSeekerCard,
   getJobPositionList,
+  checkApplicationExists,
   recommendJob,
   type SeekerCard,
   type JobPosition,
@@ -109,6 +105,8 @@ const selectedJobIndex = ref<number | null>(null);
 const note = ref('');
 const loading = ref(false);
 const recommending = ref(false);
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const fallbackInitial = computed(() => (seeker.value?.username?.trim()?.[0] || 'H').toUpperCase());
 
@@ -179,9 +177,19 @@ const getExistingConversation = async () => {
   return conversations.find((c) => c.otherUserId === userId.value) || null;
 };
 
+const getConversationByApplicationId = async (applicationId?: number) => {
+  if (!applicationId) return null;
+  const conversations = await getConversations();
+  return conversations.find((c) => c.otherUserId === userId.value && c.applicationId === applicationId) || null;
+};
+
 const goToChat = (conversationId: number, applicationId?: number) => {
   const username = seeker.value?.username || '';
   const appQuery = applicationId ? `&applicationId=${applicationId}` : '';
+  if (applicationId) {
+    uni.setStorageSync(`hr_chat_app_by_conv_${conversationId}`, applicationId);
+    uni.setStorageSync(`hr_chat_app_by_user_${userId.value}`, applicationId);
+  }
   uni.navigateTo({
     url: `/pages/hr/hr/messages/chat?id=${conversationId}&userId=${userId.value}&username=${encodeURIComponent(username)}${appQuery}`,
   });
@@ -200,53 +208,91 @@ const doRecommend = async () => {
 
   recommending.value = true;
   try {
+    const exists = await checkApplicationExists({
+      jobId: selectedJob.value.id,
+      seekerUserId: userId.value,
+    });
+    if (exists.exists) {
+      uni.showModal({
+        title: '已存在投递/推荐记录',
+        content: '该求职者已对该岗位投递或已被推荐过，是否直接进入聊天？',
+        success: async (res) => {
+          if (!res.confirm) return;
+          try {
+            const conv =
+              (await getConversationByApplicationId(exists.applicationId)) || (await getExistingConversation());
+            if (!conv) {
+              uni.showToast({ title: '未找到会话记录', icon: 'none' });
+              return;
+            }
+            goToChat(conv.id, conv.applicationId);
+          } catch (err) {
+            console.error('Failed to open existing chat:', err);
+            uni.showToast({ title: '进入聊天失败', icon: 'none' });
+          }
+        },
+      });
+      return;
+    }
+
     const applicationId = await recommendJob({
       jobId: selectedJob.value.id,
       seekerUserId: userId.value,
       note: note.value.trim() || undefined,
     });
 
+    if (!Number.isFinite(applicationId) || applicationId <= 0) {
+      throw new Error(`Invalid applicationId: ${String(applicationId)}`);
+    }
+
     const intro =
       `你好，我向你推荐岗位：${selectedJob.value.jobTitle}` +
       (selectedJob.value.city ? `（${selectedJob.value.city}）` : '') +
       (note.value.trim() ? `。备注：${note.value.trim()}` : '。');
 
-    const sent = await sendMessage({
-      receiverId: userId.value,
-      applicationId,
-      messageType: 1,
-      content: intro,
-      fileUrl: null,
-      replyTo: null,
-    });
+    let sentConversationId: number | null = null;
+    let lastError: unknown = null;
+
+    for (let attempt = 1; attempt <= 3; attempt += 1) {
+      try {
+        const sent = await sendMessage({
+          receiverId: userId.value,
+          applicationId,
+          messageType: 1,
+          content: intro,
+          fileUrl: null,
+          replyTo: null,
+        });
+        sentConversationId = sent.conversationId;
+        break;
+      } catch (err) {
+        lastError = err;
+        const message = err instanceof Error ? err.message : String(err);
+        if (message.includes('投递记录不存在') && attempt < 3) {
+          await sleep(400 * attempt);
+          continue;
+        }
+        throw err;
+      }
+    }
+
+    if (!sentConversationId) {
+      const existing = await getExistingConversation();
+      if (existing?.id) {
+        sentConversationId = existing.id;
+      } else {
+        throw lastError instanceof Error ? lastError : new Error('Send failed');
+      }
+    }
 
     uni.showToast({ title: '推荐成功', icon: 'success' });
-    goToChat(sent.conversationId, applicationId);
+    goToChat(sentConversationId, applicationId);
   } catch (err) {
     console.error('Failed to recommend job:', err);
     uni.showToast({ title: '推荐失败', icon: 'none' });
   } finally {
     recommending.value = false;
   }
-};
-
-const openChat = async () => {
-  if (!userId.value) return;
-  try {
-    const existing = await getExistingConversation();
-    if (!existing) {
-      uni.showToast({ title: '请先推荐岗位后再发起会话', icon: 'none' });
-      return;
-    }
-    goToChat(existing.id, existing.applicationId);
-  } catch (err) {
-    console.error('Failed to open chat:', err);
-    uni.showToast({ title: '进入聊天失败', icon: 'none' });
-  }
-};
-
-const goMessages = () => {
-  uni.switchTab({ url: '/pages/hr/hr/messages/index' });
 };
 
 onLoad((options) => {
@@ -465,28 +511,4 @@ button.primary {
   box-shadow: 0 12rpx 26rpx rgba(47, 124, 255, 0.24);
 }
 
-.actions {
-  display: flex;
-  gap: vars.$spacing-sm;
-}
-
-.actions button {
-  flex: 1;
-  height: 84rpx;
-  border-radius: vars.$border-radius-sm;
-  font-size: 30rpx;
-  font-weight: 600;
-}
-
-button.ghost {
-  background: #f3f6ff;
-  color: #2f7cff;
-  border: 2rpx solid rgba(47, 124, 255, 0.18);
-}
-
-button.outline {
-  background: #fff;
-  color: vars.$text-color;
-  border: 2rpx solid rgba(18, 32, 56, 0.12);
-}
 </style>

@@ -10,25 +10,40 @@
         v-for="message in sortedMessages"
         :key="message.id"
         :id="`msg-${message.id}`"
-        class="bubble"
-        :class="message.senderId === otherUserId ? 'candidate' : 'hr'"
+        class="message-row"
+        :class="isFromOther(message) ? 'other' : 'mine'"
       >
-        <template v-if="isImageMessage(message)">
-          <image
-            v-if="message.fileUrl"
-            class="image"
-            :src="message.fileUrl"
-            mode="widthFix"
-            @click="previewImage(message.fileUrl)"
-          />
-          <text v-else class="content">{{ message.content || '[图片]' }}</text>
-        </template>
-        <text v-else class="content">{{ message.content }}</text>
-        <text class="time">{{ formatTime(message.createdAt) }}</text>
+        <image
+          v-if="isFromOther(message)"
+          class="avatar"
+          :src="otherUserAvatar || '/static/user-avatar.png'"
+          mode="aspectFill"
+        />
+        <view class="bubble" :class="bubbleClass(message)">
+          <template v-if="isImageMessage(message)">
+            <image
+              v-if="message.fileUrl"
+              class="image"
+              :src="message.fileUrl"
+              mode="widthFix"
+              @click="previewImage(message.fileUrl)"
+            />
+            <text v-else class="content">{{ message.content || '[图片]' }}</text>
+          </template>
+          <text v-else class="content">{{ message.content }}</text>
+          <text class="time">{{ formatTime(message.createdAt) }}</text>
+        </view>
+        <image
+          v-if="!isFromOther(message)"
+          class="avatar"
+          :src="currentUserAvatar || '/static/user-avatar.png'"
+          mode="aspectFill"
+        />
       </view>
     </scroll-view>
 
     <view class="chat-input">
+      <button class="media" :disabled="sending || loading" @click="doSendImage">图片</button>
       <input
         v-model="draft"
         placeholder="输入消息..."
@@ -47,7 +62,15 @@
 import { ref, computed, onMounted, nextTick } from 'vue';
 import { onLoad, onShow } from '@dcloudio/uni-app';
 import dayjs from 'dayjs';
-import { getChatHistory, sendMessage, markAsRead, type Message } from '@/services/api/message';
+import {
+  getChatHistory,
+  sendMessage,
+  sendMedia,
+  markAsRead,
+  getConversations,
+  type Message,
+} from '@/services/api/message';
+import { getCurrentUserInfo } from '@/services/api/user';
 import { t } from '@/locales';
 
 const messages = ref<Message[]>([]);
@@ -57,12 +80,29 @@ const scrollIntoView = ref('');
 const conversationId = ref<number>(0);
 const otherUserId = ref<number>(0);
 const applicationId = ref<number>(0);
+const otherUserAvatar = ref<string>('');
+const currentUserAvatar = ref<string>('');
 const loading = ref(false);
 const sending = ref(false);
 
-const sortedMessages = computed(() => messages.value);
+const sortedMessages = computed(() => {
+  const copied = [...messages.value];
+  copied.sort((a, b) => {
+    const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+    const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+    if (ta !== tb) return ta - tb;
+    return a.id - b.id;
+  });
+  return copied;
+});
 
 const isImageMessage = (message: Message) => message.messageType === 2;
+const isFromOther = (message: Message) => !!otherUserId.value && message.senderId === otherUserId.value;
+
+const bubbleClass = (message: Message) => {
+  const base = isFromOther(message) ? 'other' : 'mine';
+  return isImageMessage(message) ? `${base} image-bubble` : base;
+};
 
 const previewImage = (url: string) => {
   if (!url) return;
@@ -72,10 +112,46 @@ const previewImage = (url: string) => {
   });
 };
 
+const ensureConversationMeta = async () => {
+  if (!conversationId.value) return;
+  if (otherUserId.value && applicationId.value && otherUserAvatar.value && currentUserAvatar.value) return;
+
+  if (!applicationId.value) {
+    const cachedByConv = Number(uni.getStorageSync(`hr_chat_app_by_conv_${conversationId.value}`));
+    if (Number.isFinite(cachedByConv) && cachedByConv > 0) applicationId.value = cachedByConv;
+  }
+
+  if (!applicationId.value && otherUserId.value) {
+    const cachedByUser = Number(uni.getStorageSync(`hr_chat_app_by_user_${otherUserId.value}`));
+    if (Number.isFinite(cachedByUser) && cachedByUser > 0) applicationId.value = cachedByUser;
+  }
+
+  try {
+    if (!currentUserAvatar.value) {
+      const me = await getCurrentUserInfo();
+      currentUserAvatar.value = me?.avatarUrl || '';
+    }
+  } catch {}
+
+  try {
+    const list = await getConversations();
+    const matched = list.find((c) => c.id === conversationId.value);
+    if (!matched) return;
+    if (!otherUserId.value) otherUserId.value = matched.otherUserId;
+    if (!applicationId.value && matched.applicationId) applicationId.value = matched.applicationId;
+    if (!otherUserAvatar.value) otherUserAvatar.value = matched.otherUserAvatar || '';
+    if (!chatTitle.value || chatTitle.value === t('pages.chat.conversation.title')) {
+      chatTitle.value = matched.otherUserName || chatTitle.value;
+      uni.setNavigationBarTitle({ title: chatTitle.value });
+    }
+  } catch {}
+};
+
 const loadChat = async () => {
   if (!conversationId.value) return;
   loading.value = true;
   try {
+    await ensureConversationMeta();
     const data = await getChatHistory({
       conversationId: conversationId.value,
       page: 1,
@@ -88,6 +164,9 @@ const loadChat = async () => {
       if (candidateId) {
         otherUserId.value = candidateId;
       }
+    }
+    if (!otherUserAvatar.value && otherUserId.value) {
+      await ensureConversationMeta();
     }
     nextTick(() => {
       const lastId = messages.value[messages.value.length - 1]?.id;
@@ -108,6 +187,13 @@ const doSendMessage = async () => {
   if (!draft.value.trim() || !conversationId.value) return;
   if (!otherUserId.value) {
     uni.showToast({ title: '缺少收件人', icon: 'none' });
+    return;
+  }
+  if (!applicationId.value) {
+    await ensureConversationMeta();
+  }
+  if (!applicationId.value) {
+    uni.showToast({ title: '该会话缺少投递ID，请从“求职者详情-推荐并发起聊天”进入', icon: 'none' });
     return;
   }
   const content = draft.value.trim();
@@ -136,7 +222,7 @@ const doSendMessage = async () => {
   try {
     const sent = await sendMessage({
       receiverId: otherUserId.value,
-      applicationId: applicationId.value || 0,
+      applicationId: applicationId.value,
       messageType: 1,
       content,
       fileUrl: null,
@@ -155,6 +241,73 @@ const doSendMessage = async () => {
   }
 };
 
+const doSendImage = async () => {
+  if (!conversationId.value) return;
+  if (!otherUserId.value) {
+    uni.showToast({ title: '缺少收件人', icon: 'none' });
+    return;
+  }
+  if (!applicationId.value) {
+    await ensureConversationMeta();
+  }
+  if (!applicationId.value) {
+    uni.showToast({ title: '该会话缺少投递ID，请从“求职者详情-推荐并发起聊天”进入', icon: 'none' });
+    return;
+  }
+
+  const pick = await new Promise<{ tempFilePaths: string[] } | null>((resolve) => {
+    uni.chooseImage({
+      count: 1,
+      sizeType: ['compressed'],
+      sourceType: ['album', 'camera'],
+      success: (res) => resolve(res),
+      fail: () => resolve(null),
+    });
+  });
+  const filePath = pick?.tempFilePaths?.[0];
+  if (!filePath) return;
+
+  sending.value = true;
+  const tempId = Date.now();
+  const tempMessage: Message = {
+    id: tempId,
+    conversationId: conversationId.value,
+    senderId: 0,
+    receiverId: otherUserId.value,
+    messageType: 2,
+    content: '[图片]',
+    fileUrl: filePath,
+    replyTo: null,
+    createdAt: new Date().toISOString(),
+    isRead: 0,
+    replyContent: null,
+    replyMessageType: null,
+  };
+  messages.value = [...messages.value, tempMessage];
+  nextTick(() => {
+    scrollIntoView.value = `msg-${tempId}`;
+  });
+
+  try {
+    const sent = await sendMedia({
+      receiverId: otherUserId.value,
+      applicationId: applicationId.value,
+      messageType: 2,
+      filePath,
+    });
+    messages.value = messages.value.map((m) => (m.id === tempMessage.id ? sent : m));
+    nextTick(() => {
+      scrollIntoView.value = `msg-${sent.id}`;
+    });
+  } catch (err) {
+    console.error('Failed to send image:', err);
+    messages.value = messages.value.filter((m) => m.id !== tempMessage.id);
+    uni.showToast({ title: '图片发送失败', icon: 'none' });
+  } finally {
+    sending.value = false;
+  }
+};
+
 const formatTime = (time: string) => dayjs(time).format('MM/DD HH:mm');
 
 onLoad((options) => {
@@ -166,6 +319,17 @@ onLoad((options) => {
   }
   if (options?.applicationId) {
     applicationId.value = parseInt(options.applicationId as string, 10);
+    if (applicationId.value) {
+      uni.setStorageSync(`hr_chat_app_by_conv_${conversationId.value}`, applicationId.value);
+      if (otherUserId.value) uni.setStorageSync(`hr_chat_app_by_user_${otherUserId.value}`, applicationId.value);
+    }
+  }
+  if (options?.avatar) {
+    try {
+      otherUserAvatar.value = decodeURIComponent(options.avatar as string);
+    } catch {
+      otherUserAvatar.value = options.avatar as string;
+    }
   }
   if (options?.username) {
     try {
@@ -175,6 +339,7 @@ onLoad((options) => {
     }
   }
   uni.setNavigationBarTitle({ title: chatTitle.value || t('pages.chat.conversation.title') });
+  ensureConversationMeta();
   loadChat();
 });
 
@@ -202,13 +367,36 @@ onMounted(() => {
   padding-bottom: calc(24rpx + 120rpx + env(safe-area-inset-bottom));
 }
 
-.bubble {
-  max-width: 80%;
-  padding: 20rpx;
-  border-radius: 20rpx;
+.message-row {
+  display: flex;
+  align-items: flex-end;
   margin-bottom: 16rpx;
+  gap: 12rpx;
+}
+
+.message-row.other {
+  justify-content: flex-start;
+}
+
+.message-row.mine {
+  justify-content: flex-end;
+}
+
+.avatar {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.05);
+  flex-shrink: 0;
+}
+
+.bubble {
+  max-width: 72%;
+  padding: 18rpx 20rpx;
+  border-radius: 20rpx;
   display: flex;
   flex-direction: column;
+  gap: 8rpx;
 }
 
 .image {
@@ -218,21 +406,33 @@ onMounted(() => {
   background: rgba(0, 0, 0, 0.03);
 }
 
-.bubble.candidate {
-  align-self: flex-start;
+.bubble.other {
   background: #fff;
+  color: #111827;
 }
 
-.bubble.hr {
-  align-self: flex-end;
+.bubble.mine {
   background: #2f7cff;
   color: #fff;
 }
 
+.bubble.image-bubble {
+  padding: 0;
+  background: transparent;
+}
+
+.bubble.image-bubble .time {
+  color: #6b7280;
+}
+
+.bubble.image-bubble .content {
+  color: #111827;
+}
+
 .time {
   font-size: 22rpx;
-  margin-top: 8rpx;
   opacity: 0.7;
+  align-self: flex-end;
 }
 
 .chat-input {
@@ -242,7 +442,7 @@ onMounted(() => {
   right: 0;
   bottom: 0;
   z-index: 10;
-  padding: 16rpx 24rpx;
+  padding: 14rpx 20rpx;
   background: #fff;
   gap: 12rpx;
   align-items: center;
@@ -262,11 +462,38 @@ onMounted(() => {
   line-height: 72rpx;
 }
 
+button.media,
 button.send {
-  width: 140rpx;
+  height: 72rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  border: none;
+}
+
+button.media {
+  width: 88rpx;
+  min-width: 88rpx;
+  background: #eef2ff;
+  color: #2f7cff;
+  border-radius: 18rpx;
+  border: 1rpx solid rgba(47, 124, 255, 0.18);
+}
+
+button.send {
+  min-width: 140rpx;
+  padding: 0 28rpx;
   background: #2f7cff;
   color: #fff;
-  border-radius: 16rpx;
-  border: none;
+  border-radius: 18rpx;
+}
+
+button.media:active,
+button.send:active {
+  opacity: 0.85;
 }
 </style>

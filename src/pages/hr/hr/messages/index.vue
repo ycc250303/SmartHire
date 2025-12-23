@@ -22,6 +22,11 @@
         @click="openChat(chat)"
         @longpress="showActionMenu(chat)"
       >
+        <image
+          class="avatar"
+          :src="chat.otherUserAvatar || '/static/user-avatar.png'"
+          mode="aspectFill"
+        />
         <view class="chat-info">
           <view class="chat-title">{{ chat.otherUserName || t('pages.chat.conversation.title') }}</view>
           <view class="chat-preview">{{ chat.lastMessage }}</view>
@@ -94,10 +99,11 @@ const loadConversations = async () => {
 
 const openChat = (conversation: Conversation) => {
   const applicationId = conversation.applicationId ? `&applicationId=${conversation.applicationId}` : '';
+  const avatar = conversation.otherUserAvatar ? `&avatar=${encodeURIComponent(conversation.otherUserAvatar)}` : '';
   uni.navigateTo({
     url: `/pages/hr/hr/messages/chat?id=${conversation.id}&userId=${conversation.otherUserId || ''}&username=${encodeURIComponent(
       conversation.otherUserName || ''
-    )}${applicationId}`,
+    )}${applicationId}${avatar}`,
   });
 };
 
@@ -218,26 +224,42 @@ onMounted(() => {
   padding: 24rpx;
   margin-bottom: 20rpx;
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
+  gap: 16rpx;
 }
 
 .chat-item.pinned {
   background: #eaf2ff;
 }
 
+.avatar {
+  width: 84rpx;
+  height: 84rpx;
+  border-radius: 50%;
+  background: #f0f2f5;
+  flex-shrink: 0;
+}
+
 .chat-info {
   flex: 1;
+  min-width: 0;
 }
 
 .chat-title {
   font-size: 30rpx;
   font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .chat-preview {
   margin-top: 8rpx;
   color: #8b95a7;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .chat-meta {
@@ -245,6 +267,7 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 8rpx;
+  margin-left: auto;
 }
 
 .time {
