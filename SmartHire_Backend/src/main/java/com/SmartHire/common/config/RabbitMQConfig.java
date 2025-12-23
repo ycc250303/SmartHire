@@ -46,6 +46,10 @@ public class RabbitMQConfig {
   public static final String ROUTING_KEY_APPLICATION_REJECTED = "application.rejected";
   /** 投递被拒事件队列 */
   public static final String APPLICATION_REJECTED_QUEUE = "smarthire.application.rejected.queue";
+  /** 会话创建事件路由键 */
+  public static final String ROUTING_KEY_CONVERSATION_CREATED = "conversation.created";
+  /** 会话创建事件队列 */
+  public static final String CONVERSATION_CREATED_QUEUE = "smarthire.conversation.created.queue";
 
   /** 配置消息转换器（JSON 格式） 将 Java 对象自动序列化为 JSON，消费时自动反序列化 */
   @Bean

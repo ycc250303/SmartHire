@@ -204,7 +204,7 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
         // 发送投递/推荐岗位创建事件到消息队列，由消息服务异步处理
         // 这样可以解耦 recruitmentService 和 messageService，避免循环依赖
         Long hrId = hrApi.getHrIdByJobId(jobId);
-        Long hrUserId = hrApi.getHrUserIdByHrId(hrId); // 获取HR的用户ID
+        Long hrUserId = hrApi.getHrUserIdByHrId(hrId);
         ApplicationCreatedEvent event = new ApplicationCreatedEvent();
         event.setApplicationId(application.getId());
         event.setJobId(jobId);
