@@ -373,6 +373,7 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
 
     @Override
     public boolean existsBySeekerIdAndJobId(Long seekerUserId, Long jobId) {
+        log.info("check application exists: seekerUserId={}, jobId={}", seekerUserId, jobId);
         if (seekerUserId == null) {
             throw new BusinessException(ErrorCode.SEEKER_NOT_EXIST);
         }
@@ -380,6 +381,7 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
             throw new BusinessException(ErrorCode.JOB_NOT_EXIST);
         }
         Long seekerId = seekerApi.getJobSeekerIdByUserId(seekerUserId);
+        log.info("seekerId={}", seekerId);
         return lambdaQuery()
                 .eq(Application::getJobId, jobId)
                 .eq(Application::getJobSeekerId, seekerId)
