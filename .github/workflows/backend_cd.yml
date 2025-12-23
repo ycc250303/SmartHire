@@ -72,8 +72,11 @@ jobs:
           # 使用 workflow_run.actor
           GH_ACTOR: ${{ github.event.workflow_run.actor.login }}
         run: |
-          ssh -tt -o ServerAliveInterval=30 -o ServerAliveCountMax=10 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
-            set -e
+          ssh -tt \
+          -o ServerAliveInterval=30 \
+          -o ServerAliveCountMax=10 \
+          ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << EOF
+            set -Eeuo pipefail
             echo "=== 开始部署 ==="
             echo "镜像: ghcr.io/$REPO_OWNER/$IMAGE_NAME:$IMAGE_TAG"
             
@@ -111,11 +114,11 @@ jobs:
             
             # 测试容器内部健康检查
             echo "测试容器内部健康检查..."
-            docker exec $IMAGE_NAME curl -s http://localhost:8080/smarthire/api/health || echo "⚠️  容器内部健康检查失败"
+            docker-compose exec -T backend curl -s http://localhost:8080/smarthire/api/health
             
             # 查看日志（最后 30 行）
             echo "=== 容器日志（最后 30 行）==="
-            docker logs --tail 30 $IMAGE_NAME || echo "无法获取日志"
+            docker-compose logs --tail=30 || echo "无法获取日志"
             
             # 检查端口映射
             echo "检查端口映射..."
