@@ -19,8 +19,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import com.SmartHire.recruitmentService.dto.SeekerJobPositionDTO;
+import com.SmartHire.recruitmentService.mapper.ApplicationMapper;
+import com.SmartHire.recruitmentService.model.Application;
+import com.SmartHire.hrService.dto.JobInfoListDTO;
+import com.SmartHire.hrService.model.JobInfo;
+import com.SmartHire.hrService.model.Company;
+import com.SmartHire.hrService.model.HrInfo;
+import com.SmartHire.userAuthService.model.User;
+import com.SmartHire.messageService.mapper.ChatMessageMapper;
+import com.SmartHire.messageService.model.ChatMessage;
 import com.SmartHire.recruitmentService.dto.SubmitResumeDTO;
 import com.SmartHire.recruitmentService.service.ApplicationService;
+import com.SmartHire.common.api.UserAuthApi;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -54,6 +65,9 @@ public class SeekerRecruitmentController {
   @Autowired private SeekerApi seekerApi;
   @Autowired private JobInfoService jobInfoService;
   @Autowired private UserContext userContext;
+  @Autowired private ApplicationMapper applicationMapper;
+  @Autowired private ChatMessageMapper chatMessageMapper;
+  @Autowired private UserAuthApi userAuthApi;
 
   @PostMapping("/submit-resume")
   @Operation(
@@ -179,5 +193,118 @@ public class SeekerRecruitmentController {
     InternJobRecommendationsDTO resp = new InternJobRecommendationsDTO();
     resp.setJobs(items);
     return Result.success("获取实习岗位推荐成功", resp);
+  }
+
+  @GetMapping("/job-position/{jobId}")
+  @Operation(summary = "获取面向求职者的岗位详情", description = "返回岗位详情（包含公司、HR、申请状态等），供求职者端展示")
+  public Result<SeekerJobPositionDTO> getJobPosition(@PathVariable Long jobId) {
+    if (jobId == null) {
+      throw new BusinessException(ErrorCode.VALIDATION_ERROR);
+    }
+
+    // 获取岗位基础 DTO（包含技能等）
+    JobInfoListDTO jobDto = jobInfoService.getJobInfoById(jobId);
+    if (jobDto == null) {
+      throw new BusinessException(ErrorCode.JOB_NOT_EXIST);
+    }
+
+    // 获取完整实体以便取 companyId/hrId
+    JobInfo jobModel = hrApi.getJobInfoById(jobId);
+    if (jobModel == null) {
+      throw new BusinessException(ErrorCode.JOB_NOT_EXIST);
+    }
+
+    // 获取公司信息
+    Company company = hrApi.getCompanyById(jobModel.getCompanyId());
+
+    // 获取 hr info + avatar
+    HrInfo hrInfo = hrApi.getHrInfoById(jobModel.getHrId());
+    User hrUser = null;
+    if (hrInfo != null) {
+      hrUser = userAuthApi.getUserById(hrInfo.getUserId());
+    }
+
+    // 构建返回 DTO
+    SeekerJobPositionDTO resp = new SeekerJobPositionDTO();
+    resp.setJobId(jobModel.getId());
+    resp.setJobTitle(jobDto.getJobTitle());
+    resp.setJobCategory(jobDto.getJobCategory());
+    resp.setDepartment(jobDto.getDepartment());
+    resp.setCity(jobDto.getCity());
+    resp.setAddress(jobModel.getAddress());
+    resp.setSalaryMin(jobDto.getSalaryMin() == null ? 0 : jobDto.getSalaryMin().intValue());
+    resp.setSalaryMax(jobDto.getSalaryMax() == null ? 0 : jobDto.getSalaryMax().intValue());
+    resp.setSalaryMonths(jobDto.getSalaryMonths());
+    resp.setEducationRequired(jobDto.getEducationRequired());
+    resp.setJobType(jobDto.getJobType());
+    resp.setExperienceRequired(jobDto.getExperienceRequired());
+    resp.setDescription(jobModel.getDescription());
+    resp.setResponsibilities(jobModel.getResponsibilities());
+    resp.setRequirements(jobModel.getRequirements());
+    resp.setSkills(jobDto.getSkills());
+    resp.setViewCount(jobDto.getViewCount());
+    resp.setApplicationCount(jobDto.getApplicationCount());
+    resp.setPublishedAt(jobDto.getPublishedAt());
+
+    if (company != null) {
+      SeekerJobPositionDTO.CompanyDTO c = new SeekerJobPositionDTO.CompanyDTO();
+      c.setCompanyId(company.getId());
+      c.setCompanyName(company.getCompanyName());
+      c.setCompanyLogo(company.getLogoUrl());
+      c.setCompanyScale(company.getCompanyScale());
+      c.setFinancingStage(company.getFinancingStage());
+      c.setIndustry(company.getIndustry());
+      c.setDescription(company.getDescription());
+      c.setMainBusiness(company.getMainBusiness());
+      c.setWebsite(company.getWebsite());
+      resp.setCompany(c);
+    }
+
+    if (hrInfo != null) {
+      SeekerJobPositionDTO.HrDTO h = new SeekerJobPositionDTO.HrDTO();
+      h.setHrId(hrInfo.getId());
+      h.setRealName(hrInfo.getRealName());
+      h.setPosition(hrInfo.getPosition());
+      h.setAvatarUrl(hrUser == null ? null : hrUser.getAvatarUrl());
+      resp.setHr(h);
+    }
+
+    // 检查当前用户是否已投递（使用 JWT 当前用户）
+    Long currentUserId = userContext.getCurrentUserId();
+    Long seekerId = null;
+    if (currentUserId != null) {
+      seekerId = seekerApi.getJobSeekerIdByUserId(currentUserId);
+    }
+    SeekerJobPositionDTO.ApplicationDTO appDto = new SeekerJobPositionDTO.ApplicationDTO();
+    if (seekerId != null) {
+      Application application =
+          applicationMapper.selectOne(
+              new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Application>()
+                  .eq(Application::getJobId, jobId)
+                  .eq(Application::getJobSeekerId, seekerId));
+      if (application != null) {
+        appDto.setHasApplied(true);
+        appDto.setApplicationId(application.getId());
+        appDto.setStatus(application.getStatus() == null ? null : application.getStatus().intValue());
+        appDto.setAppliedAt(application.getCreatedAt());
+        // 尝试从 chat_message 表查找与该 application 相关的会话 ID（取最新一条消息）
+        ChatMessage cm =
+            chatMessageMapper.selectOne(
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<ChatMessage>()
+                    .eq(ChatMessage::getApplicationId, application.getId())
+                    .orderByDesc(ChatMessage::getCreatedAt)
+                    .last("LIMIT 1"));
+        if (cm != null) {
+          appDto.setConversationId(cm.getConversationId());
+        }
+      } else {
+        appDto.setHasApplied(false);
+      }
+    } else {
+      appDto.setHasApplied(false);
+    }
+    resp.setApplication(appDto);
+
+    return Result.success("查询成功", resp);
   }
 }

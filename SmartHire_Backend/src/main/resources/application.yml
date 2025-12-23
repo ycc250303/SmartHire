@@ -13,7 +13,6 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
 
-
 # MyBatis-Plus 配置（注意：必须在根节点，不能放在 spring: 下面）
 mybatis-plus:
   # Mapper XML 文件位置（支持多个路径）
@@ -45,3 +44,4 @@ server:
   port: 8080
   servlet:
     context-path: /smarthire/api
+ 
