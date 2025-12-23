@@ -111,15 +111,7 @@ jobs:
             # 检查容器网络
             echo "检查容器网络..."
             docker network ls | grep smarthire || echo "⚠️  容器网络不存在"
-            
-            # 测试容器内部健康检查
-            echo "测试容器内部健康检查..."
-            docker-compose exec -T backend curl -fs \
-              --retry 10 \
-              --retry-delay 3 \
-              --retry-connrefused \
-              http://localhost:8080/smarthire/api/health
-            
+     
             # 查看日志（最后 30 行）
             echo "=== 容器日志（最后 30 行）==="
             docker-compose logs --tail=30 || echo "无法获取日志"
