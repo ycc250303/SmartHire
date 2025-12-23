@@ -8,7 +8,7 @@
         </view>
         <view class="status-tag" :class="statusClass(job.status)">{{ statusText(job.status) }}</view>
       </view>
-      <view class="info-row">职位类别：{{ job.jobCategory || '未填写' }}</view>
+      <view class="info-row">岗位类别：{{ job.jobCategory || '未填写' }}</view>
       <view class="info-row">部门：{{ job.department || '未填写' }}</view>
       <view class="info-row">学历要求：{{ educationText(job.educationRequired) }}</view>
       <view class="info-row">工作类型：{{ jobTypeText(job.jobType) }}</view>
@@ -21,7 +21,7 @@
     </view>
 
     <view class="card" v-if="job.description">
-      <view class="section-title">职位描述</view>
+      <view class="section-title">岗位描述</view>
       <view class="text">{{ job.description }}</view>
     </view>
     <view class="card" v-if="job.responsibilities">
@@ -37,8 +37,11 @@
       <text>加载中...</text>
     </view>
   </view>
-  <view class="loading" v-else>
+  <view class="loading" v-else-if="loading">
     <text>加载中...</text>
+  </view>
+  <view class="error" v-else>
+    <text>{{ errorMessage || '未找到岗位信息' }}</text>
   </view>
 </template>
 
@@ -54,14 +57,22 @@ import {
 
 const job = ref<JobPosition | null>(null);
 const loading = ref(false);
+const errorMessage = ref('');
 const jobId = ref<number | null>(null);
 
 const loadDetail = async (id: number) => {
   loading.value = true;
+  errorMessage.value = '';
   try {
-    job.value = await getJobPositionById(id);
+    const data = await getJobPositionById(id);
+    if (!data) {
+      throw new Error('岗位不存在');
+    }
+    job.value = data;
   } catch (error) {
     console.error('Failed to load job detail:', error);
+    job.value = null;
+    errorMessage.value = '加载失败';
     uni.showToast({ title: '加载失败', icon: 'none' });
   } finally {
     loading.value = false;
@@ -105,8 +116,8 @@ const editJob = () => {
 };
 
 const statusText = (status: number) => {
-  const map: Record<number, string> = { 1: '招聘中', 2: '已暂停', 0: '已下线' };
-  return map[status] || '未知';
+  const map: Record<number, string> = { 0: '已下线', 1: '招聘中', 2: '已暂停' };
+  return map[status] ?? '未知';
 };
 
 const statusClass = (status: number) => {
@@ -116,14 +127,14 @@ const statusClass = (status: number) => {
 };
 
 const jobTypeText = (type?: number) => {
-  const map: Record<number, string> = { 0: '全职', 1: '兼职', 2: '实习' };
+  const map: Record<number, string> = { 0: '全职', 1: '实习' };
   if (type === undefined || type === null) return '未填写';
-  return map[type] || '未填写';
+  return map[type] ?? '未填写';
 };
 
 const educationText = (edu?: number) => {
   const map: Record<number, string> = {
-    0: '高中及以下',
+    0: '高中及以上',
     1: '大专',
     2: '本科',
     3: '硕士',
@@ -143,23 +154,32 @@ const salaryText = (jobInfo: JobPosition) => {
 };
 
 const skillText = (skills?: JobPosition['skills']) => {
-  if (!skills || skills.length === 0) return '未填写';
-  return skills.map((s) => s.skillName).join(' / ');
+  if (!skills || skills.length === 0) return 'Not set';
+  return skills
+    .map((skill) => (typeof skill === 'string' ? skill : skill.skillName))
+    .filter((item) => item)
+    .join(' / ');
 };
 
 onLoad((options) => {
-  jobId.value = Number(options?.jobId);
-  if (jobId.value) {
-    loadDetail(jobId.value);
-  } else {
-    uni.showToast({ title: '缺少 jobId', icon: 'none' });
+  const rawId = options?.jobId;
+  if (rawId === undefined || rawId === null || rawId === 'undefined') {
+    uni.showToast({ title: '缺少岗位ID', icon: 'none' });
+    return;
   }
+  const parsed = Number(rawId);
+  if (Number.isNaN(parsed)) {
+    uni.showToast({ title: '岗位ID无效', icon: 'none' });
+    return;
+  }
+  jobId.value = parsed;
+  loadDetail(parsed);
 });
 </script>
 
 <style scoped lang="scss">
 .job-detail {
-  padding: 24rpx;
+  padding: calc(var(--status-bar-height) + 48rpx) 24rpx 24rpx;
   background: #f6f7fb;
   min-height: 100vh;
   box-sizing: border-box;
@@ -171,6 +191,51 @@ onLoad((options) => {
   padding: 28rpx;
   margin-bottom: 24rpx;
   box-shadow: 0 10rpx 32rpx rgba(0, 34, 90, 0.08);
+}
+
+.job-actions {
+  display: flex;
+  gap: 16rpx;
+  margin-top: 22rpx;
+}
+
+.job-actions button {
+  flex: 1;
+  height: 84rpx;
+  line-height: 84rpx;
+  border-radius: 18rpx;
+  font-size: 30rpx;
+  font-weight: 600;
+  padding: 0 12rpx;
+  box-sizing: border-box;
+}
+
+.job-actions button:active {
+  transform: translateY(1rpx);
+  opacity: 0.92;
+}
+
+.job-actions button[disabled] {
+  opacity: 0.55;
+}
+
+button.ghost {
+  background: #f3f6ff;
+  color: #2f7cff;
+  border: 2rpx solid rgba(47, 124, 255, 0.18);
+}
+
+button.primary {
+  background: linear-gradient(135deg, #2f7cff 0%, #4ba3ff 100%);
+  color: #fff;
+  border: none;
+  box-shadow: 0 12rpx 26rpx rgba(47, 124, 255, 0.26);
+}
+
+button.outline {
+  background: #fff;
+  color: #ff7a00;
+  border: 2rpx solid rgba(255, 122, 0, 0.55);
 }
 
 .header {
@@ -261,6 +326,12 @@ button.outline {
 .loading {
   text-align: center;
   color: #8a92a7;
+  padding: 40rpx 0;
+}
+
+.error {
+  text-align: center;
+  color: #e64a19;
   padding: 40rpx 0;
 }
 </style>

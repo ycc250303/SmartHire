@@ -46,11 +46,10 @@ import { ref, computed } from 'vue';
 import { onLoad, onShow } from '@dcloudio/uni-app';
 import { t } from '@/locales';
 import InternshipPage from './internship.vue';
-import ParttimePage from './parttime.vue';
 import FulltimePage from './fulltime.vue';
 import CustomTabBar from '@/components/common/CustomTabBar.vue';
 
-type CategoryType = 'internship' | 'parttime' | 'fulltime';
+type CategoryType = 'internship' | 'fulltime';
 type FilterType = 'recommended' | 'nearby' | 'latest';
 
 const currentCategory = ref<CategoryType>('internship');
@@ -58,7 +57,6 @@ const currentFilter = ref<FilterType>('recommended');
 
 const categories = computed(() => [
   { value: 'internship' as CategoryType, label: t('pages.jobs.internship') },
-  { value: 'parttime' as CategoryType, label: t('pages.jobs.parttime') },
   { value: 'fulltime' as CategoryType, label: t('pages.jobs.fulltime') },
 ]);
 
@@ -72,8 +70,6 @@ const currentComponent = computed(() => {
   switch (currentCategory.value) {
     case 'internship':
       return InternshipPage;
-    case 'parttime':
-      return ParttimePage;
     case 'fulltime':
       return FulltimePage;
     default:

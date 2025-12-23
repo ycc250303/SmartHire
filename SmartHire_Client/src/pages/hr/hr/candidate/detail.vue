@@ -28,7 +28,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
-import { getSeekerCards, type SeekerCard } from '@/services/api/hr';
+import { getSeekerCard, type SeekerCard } from '@/services/api/hr';
 
 const candidate = ref<SeekerCard | null>(null);
 const loading = ref(false);
@@ -36,12 +36,12 @@ const loading = ref(false);
 const loadCandidate = async (userId?: number) => {
   loading.value = true;
   try {
-    const list = await getSeekerCards(userId ? { userId } : undefined);
-    if (Array.isArray(list) && list.length > 0) {
-      candidate.value = userId
-        ? list.find((item) => item.userId === userId) || list[0]
-        : list[0];
+    if (!userId) {
+      uni.showToast({ title: '缺少求职者ID', icon: 'none' });
+      return;
     }
+    const data = await getSeekerCard(userId);
+    candidate.value = data || null;
   } catch (error) {
     console.error('Failed to load seeker card:', error);
     uni.showToast({ title: '加载失败', icon: 'none' });

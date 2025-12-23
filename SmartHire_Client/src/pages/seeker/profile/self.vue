@@ -74,7 +74,7 @@ const userInfo = computed(() => userStore.userInfo);
 
 const userIdentity = computed(() => {
   if (!userInfo.value) return '-';
-  // UserType.Seeker = 0 -> Talent, UserType.HR = 1 -> Recruiter
+  // UserType.Seeker = 1 -> Talent, UserType.HR = 2 -> Recruiter
   return userInfo.value.userType === UserType.Seeker 
     ? t('pages.profile.talent')
     : t('pages.profile.recruiter');

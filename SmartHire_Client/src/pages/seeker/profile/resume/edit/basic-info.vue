@@ -17,25 +17,6 @@
         </view>
 
         <view class="form-item">
-          <text class="form-label">{{ t('pages.resume.edit.basicInfo.gender') }}</text>
-          <picker
-            class="form-picker"
-            mode="selector"
-            :range="genderOptions"
-            :range-key="'label'"
-            :value="genderIndex"
-            @change="handleGenderChange"
-          >
-            <view class="picker-value">
-              <text :class="formData.gender !== undefined ? 'picker-text' : 'picker-placeholder'">
-                {{ genderOptions[genderIndex]?.label || t('pages.resume.edit.basicInfo.gender') }}
-              </text>
-              <text class="picker-arrow">›</text>
-            </view>
-          </picker>
-        </view>
-
-        <view class="form-item">
           <text class="form-label">{{ t('pages.resume.edit.basicInfo.birthDate') }}</text>
           <picker
             class="form-picker"
@@ -55,23 +36,28 @@
         <view class="form-item">
           <text class="form-label">{{ t('pages.resume.edit.basicInfo.city') }}</text>
           <CityPicker
-            v-model="formData.city"
+            v-model="formData.currentCity"
             :placeholder="t('pages.resume.edit.basicInfo.cityPlaceholder')"
           />
         </view>
-      </view>
-
-      <view class="form-group">
-        <view class="form-item form-item-full">
-          <text class="form-label">{{ t('pages.resume.edit.basicInfo.bio') }}</text>
-          <textarea
-            class="form-textarea"
-            v-model="formData.bio"
-            :placeholder="t('pages.resume.edit.basicInfo.bioPlaceholder')"
-            placeholder-class="input-placeholder"
-            :maxlength="500"
-            :show-confirm-bar="false"
-          />
+        
+        <view class="form-item">
+          <text class="form-label">求职状态</text>
+          <picker
+            class="form-picker"
+            mode="selector"
+            :range="jobStatusOptions"
+            :range-key="'label'"
+            :value="jobStatusIndex"
+            @change="handleJobStatusChange"
+          >
+            <view class="picker-value">
+              <text :class="formData.jobStatus !== undefined ? 'picker-text' : 'picker-placeholder'">
+                {{ jobStatusOptions[jobStatusIndex]?.label || '求职状态' }}
+              </text>
+              <text class="picker-arrow">›</text>
+            </view>
+          </picker>
         </view>
       </view>
     </scroll-view>
@@ -92,68 +78,73 @@ import { onLoad } from '@dcloudio/uni-app';
 import { t } from '@/locales';
 import { useNavigationTitle } from '@/utils/useNavigationTitle';
 import type { SeekerInfo } from '@/services/api/seeker';
-import { getSeekerInfo, updateSeekerInfo, registerSeeker } from '@/services/api/seeker';
+import { getSeekerInfo, updateSeekerInfo } from '@/services/api/seeker';
 import CityPicker from '@/components/common/CityPicker.vue';
 
 useNavigationTitle('navigation.editBasicInfo');
 
 const loading = ref(true);
 const saving = ref(false);
-const isNewSeeker = ref(false);
 
 const formData = ref<Partial<SeekerInfo>>({
   realName: undefined,
-  gender: undefined,
   birthDate: undefined,
-  city: undefined,
-  bio: undefined,
+  currentCity: undefined,
+  jobStatus: undefined,
 });
 
-const genderOptions = [
-  { label: t('pages.resume.edit.basicInfo.genderMale'), value: 0 },
-  { label: t('pages.resume.edit.basicInfo.genderFemale'), value: 1 },
-  { label: t('pages.resume.edit.basicInfo.genderOther'), value: 2 },
+const jobStatusOptions = [
+  { label: '离校-尽快到岗', value: 0 },
+  { label: '在校-尽快到岗', value: 1 },
+  { label: '在校-考虑机会', value: 2 },
+  { label: '在校-暂不考虑', value: 3 },
 ];
 
-const genderIndex = computed(() => {
-  if (formData.value.gender === undefined || formData.value.gender === null) {
+const jobStatusIndex = computed(() => {
+  if (formData.value.jobStatus === undefined || formData.value.jobStatus === null) {
     return 0;
   }
-  return formData.value.gender;
+  return formData.value.jobStatus;
 });
 
 onLoad(() => {
   loadData();
 });
 
+function formatDateForPicker(dateString: string | undefined): string | undefined {
+  if (!dateString) return undefined;
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return undefined;
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 async function loadData() {
   loading.value = true;
   try {
     const data = await getSeekerInfo();
-    if (data && data.id) {
+    if (data) {
       formData.value = {
         realName: data.realName || undefined,
-        gender: data.gender !== undefined ? data.gender : 0,
-        birthDate: data.birthDate || undefined,
-        city: data.city || undefined,
-        bio: data.bio || undefined,
+        birthDate: formatDateForPicker(data.birthDate),
+        currentCity: data.currentCity || undefined,
+        jobStatus: data.jobStatus !== undefined ? data.jobStatus : 0,
       };
-      isNewSeeker.value = false;
     } else {
-      isNewSeeker.value = true;
-      formData.value.gender = 0;
+      formData.value.jobStatus = 0;
     }
   } catch (error) {
     console.error('Failed to load seeker info:', error);
-    isNewSeeker.value = true;
-    formData.value.gender = 0;
+    formData.value.jobStatus = 0;
   } finally {
     loading.value = false;
   }
 }
 
-function handleGenderChange(e: any) {
-  formData.value.gender = parseInt(e.detail.value);
+function handleJobStatusChange(e: any) {
+  formData.value.jobStatus = parseInt(e.detail.value);
 }
 
 function handleDateChange(e: any) {
@@ -163,7 +154,7 @@ function handleDateChange(e: any) {
 async function handleSave() {
   if (saving.value) return;
 
-  if (!formData.value.gender && formData.value.gender !== 0) {
+  if (!formData.value.realName) {
     uni.showToast({
       title: t('pages.resume.edit.common.required'),
       icon: 'none',
@@ -174,23 +165,12 @@ async function handleSave() {
   saving.value = true;
 
   try {
-    if (isNewSeeker.value) {
-      await registerSeeker({
-        realName: formData.value.realName || null,
-        gender: formData.value.gender!,
-        birthDate: formData.value.birthDate || null,
-        city: formData.value.city || null,
-        bio: formData.value.bio || null,
-      });
-    } else {
-      await updateSeekerInfo({
-        realName: formData.value.realName || null,
-        gender: formData.value.gender,
-        birthDate: formData.value.birthDate || null,
-        city: formData.value.city || null,
-        bio: formData.value.bio || null,
-      });
-    }
+    await updateSeekerInfo({
+      realName: formData.value.realName!,
+      birthDate: formData.value.birthDate || '',
+      currentCity: formData.value.currentCity || '',
+      jobStatus: formData.value.jobStatus ?? 0,
+    });
 
     uni.showToast({
       title: t('pages.resume.edit.basicInfo.saveSuccess'),

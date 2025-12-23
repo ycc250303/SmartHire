@@ -19,7 +19,7 @@
     </view>
 
     <view class="job-list">
-      <view class="job-card" v-for="job in filteredJobs" :key="job.id" @click="goJobDetail(job.id)">
+      <view class="job-card" v-for="job in filteredJobs" :key="job.id || job.jobId" @click="goJobDetail(job.id || job.jobId)">
         <view class="job-card-header">
           <view>
             <view class="job-title">{{ job.jobTitle }}</view>
@@ -97,7 +97,11 @@ const filteredJobs = computed(() => {
   });
 });
 
-const goJobDetail = (jobId: number) => {
+const goJobDetail = (jobId?: number) => {
+  if (!jobId && jobId !== 0) {
+    uni.showToast({ title: '缺少岗位ID', icon: 'none' });
+    return;
+  }
   uni.navigateTo({ url: `/pages/hr/hr/jobs/detail?jobId=${jobId}` });
 };
 
@@ -146,8 +150,8 @@ onShow(() => {
 <style scoped lang="scss">
 .jobs-page {
   min-height: 100vh;
-  padding: 24rpx;
-  background: #f6f7fb;
+  padding: calc(var(--status-bar-height) + 64rpx) 24rpx 24rpx;
+  background: linear-gradient(180deg, #e5f0ff 0%, #f6f7fb 40%, #f6f7fb 100%);
   box-sizing: border-box;
 }
 

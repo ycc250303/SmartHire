@@ -1,127 +1,78 @@
 <template>
   <view class="page">
-    <view class="candidate-header" v-if="detail">
-      <view class="candidate-info">
-        <text class="candidate-name">{{ detail.name }}·{{ detail.position }}</text>
-        <text class="candidate-meta">{{ detail.location }} · {{ detail.salary }}</text>
+    <view class="card" v-if="detail">
+      <view class="header">
+        <text class="name">{{ detail.jobSeekerName || 'Candidate' }}</text>
+        <text class="status">{{ statusText(detail.status) }}</text>
       </view>
-      <view class="overall-match">
-        <view class="match-circle">
-          <text class="match-value">{{ detail.overallMatch }}%</text>
-        </view>
-        <text class="match-label">总体匹配</text>
-      </view>
+      <view class="meta">Position: {{ detail.jobTitle || '--' }}</view>
+      <view class="meta">Match: {{ matchScoreText }}</view>
+      <view class="meta">Applied: {{ formatTime(detail.createdAt) }}</view>
     </view>
-    
-    <view class="content" v-if="detail">
-      <!-- 技术匹配 -->
-      <view class="info-card">
-        <view class="card-title">技术匹配</view>
-        <text class="card-content">{{ detail.technicalMatch.description }}</text>
-      </view>
-      
-      <!-- 经验对齐 -->
-      <view class="info-card">
-        <view class="card-title">经验对齐</view>
-        <text class="card-content">{{ detail.experienceAlignment.description }}</text>
-      </view>
-      
-      <!-- 差距提示 -->
-      <view class="info-card">
-        <view class="card-title">差距提示</view>
-        <text class="card-content">{{ detail.gapReminder.description }}</text>
-      </view>
-      
-      <!-- 技能矩阵 -->
-      <view class="skill-matrix-card">
-        <view class="card-header-row">
-          <text class="card-title">技能矩阵</text>
-          <text class="card-subtitle">关键技能对齐</text>
-        </view>
-        <view class="skill-items">
-          <view 
-            class="skill-item" 
-            v-for="skill in detail.skillMatrix" 
-            :key="skill.skillName"
-          >
-            <view class="skill-header">
-              <text class="skill-name">{{ skill.skillName }}</text>
-              <text class="skill-match">{{ skill.overallMatch }}%</text>
-            </view>
-            <view class="skill-progress">
-              <view class="progress-row">
-                <text class="progress-label">候选人</text>
-                <view class="progress-bar">
-                  <view 
-                    class="progress-fill" 
-                    :style="{ width: skill.candidateProficiency + '%' }"
-                  ></view>
-                </view>
-                <text class="progress-value">{{ skill.candidateProficiency }}%</text>
-              </view>
-              <view class="progress-row">
-                <text class="progress-label">目标</text>
-                <view class="progress-bar">
-                  <view 
-                    class="progress-fill target" 
-                    :style="{ width: skill.targetProficiency + '%' }"
-                  ></view>
-                </view>
-                <text class="progress-value">{{ skill.targetProficiency }}%</text>
-              </view>
-            </view>
-          </view>
-        </view>
-      </view>
-      
-      <!-- AI分析 -->
-      <view class="ai-analysis-card">
-        <view class="card-header-row">
-          <text class="card-title">AI 分析</text>
-          <text class="card-subtitle">生成式摘要</text>
-        </view>
-        <text class="ai-content">{{ detail.aiAnalysis.summary }}</text>
-      </view>
+
+    <view class="card" v-if="detail?.matchAnalysis">
+      <view class="section-title">Match Analysis</view>
+      <text class="analysis-text">{{ detail.matchAnalysis }}</text>
     </view>
-    
+
     <view class="loading-state" v-if="loading">
-      <text class="loading-text">加载中...</text>
+      <text class="loading-text">Loading..</text>
     </view>
   </view>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
-import { getCandidateDetail, type CandidateDetail } from '@/services/api/hr';
+import { getApplicationDetail, type ApplicationItem } from '@/services/api/hr';
 
-const detail = ref<CandidateDetail | null>(null);
+const detail = ref<ApplicationItem | null>(null);
 const loading = ref(false);
-const candidateId = ref<number | null>(null);
 
-const loadDetail = async () => {
-  if (!candidateId.value) return;
-  
+const matchScoreText = computed(() => {
+  const score = detail.value?.matchScore;
+  if (score === undefined || score === null) return '--';
+  const value = Number(score);
+  if (Number.isNaN(value)) return '--';
+  return `${Math.round(value)}%`;
+});
+
+const loadDetail = async (applicationId: number) => {
   loading.value = true;
   try {
-    const data = await getCandidateDetail(candidateId.value);
-    detail.value = data;
+    const data = await getApplicationDetail(applicationId);
+    detail.value = data || null;
   } catch (error) {
-    console.error('Failed to load candidate detail:', error);
-    uni.showToast({
-      title: '加载失败',
-      icon: 'none',
-    });
+    console.error('Failed to load application detail:', error);
+    uni.showToast({ title: 'Load failed', icon: 'none' });
   } finally {
     loading.value = false;
   }
 };
 
+const formatTime = (time?: string) => (time ? time : '--');
+
+const statusText = (status: number) => {
+  const map: Record<number, string> = {
+    0: 'Submitted',
+    1: 'Viewed',
+    2: 'Interview',
+    3: 'Interviewed',
+    4: 'Hired',
+    5: 'Rejected',
+    6: 'Withdrawn',
+  };
+  return map[status] ?? 'Unknown';
+};
+
 onLoad((options) => {
-  if (options.candidateId) {
-    candidateId.value = parseInt(options.candidateId as string, 10);
-    loadDetail();
+  const rawId = options?.candidateId;
+  const parsed = Number(rawId);
+  if (!rawId || Number.isNaN(parsed)) {
+    uni.showToast({ title: 'Missing application ID', icon: 'none' });
+    return;
   }
+  loadDetail(parsed);
 });
 </script>
 
@@ -134,190 +85,46 @@ onLoad((options) => {
   padding: vars.$spacing-md;
 }
 
-.candidate-header {
+.card {
   background-color: vars.$surface-color;
   border-radius: vars.$border-radius;
   padding: vars.$spacing-lg;
   margin-bottom: vars.$spacing-md;
+}
+
+.header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-}
-
-.candidate-info {
-  flex: 1;
-}
-
-.candidate-name {
-  font-size: 36rpx;
-  font-weight: 600;
-  color: vars.$text-color;
-  display: block;
-  margin-bottom: 8rpx;
-}
-
-.candidate-meta {
-  font-size: 24rpx;
-  color: vars.$text-muted;
-}
-
-.overall-match {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  flex-shrink: 0;
-}
-
-.match-circle {
-  width: 120rpx;
-  height: 120rpx;
-  border-radius: 50%;
-  background-color: vars.$primary-color-soft;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 8rpx;
-}
-
-.match-value {
-  font-size: 48rpx;
-  font-weight: 600;
-  color: vars.$primary-color;
-}
-
-.match-label {
-  font-size: 24rpx;
-  color: vars.$text-muted;
-}
-
-.content {
-  display: flex;
-  flex-direction: column;
-  gap: vars.$spacing-md;
-}
-
-.info-card {
-  background-color: vars.$surface-color;
-  border-radius: vars.$border-radius;
-  padding: vars.$spacing-lg;
-}
-
-.card-title {
-  font-size: 32rpx;
-  font-weight: 600;
-  color: vars.$text-color;
   margin-bottom: vars.$spacing-sm;
 }
 
-.card-content {
-  font-size: 28rpx;
-  color: vars.$text-color;
-  line-height: 1.6;
-}
-
-.card-header-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: vars.$spacing-md;
-}
-
-.card-subtitle {
-  font-size: 24rpx;
-  color: vars.$text-muted;
-}
-
-.skill-matrix-card {
-  background-color: vars.$surface-color;
-  border-radius: vars.$border-radius;
-  padding: vars.$spacing-lg;
-}
-
-.skill-items {
-  display: flex;
-  flex-direction: column;
-  gap: vars.$spacing-lg;
-}
-
-.skill-item {
-  display: flex;
-  flex-direction: column;
-  gap: vars.$spacing-sm;
-}
-
-.skill-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.skill-name {
-  font-size: 28rpx;
-  font-weight: 600;
-  color: vars.$text-color;
-}
-
-.skill-match {
+.name {
   font-size: 32rpx;
   font-weight: 600;
+  color: vars.$text-color;
+}
+
+.status {
+  font-size: 24rpx;
   color: vars.$primary-color;
 }
 
-.skill-progress {
-  display: flex;
-  flex-direction: column;
-  gap: vars.$spacing-sm;
-}
-
-.progress-row {
-  display: flex;
-  align-items: center;
-  gap: vars.$spacing-sm;
-}
-
-.progress-label {
-  font-size: 24rpx;
+.meta {
+  font-size: 26rpx;
   color: vars.$text-muted;
-  width: 100rpx;
-  flex-shrink: 0;
+  margin-top: 8rpx;
 }
 
-.progress-bar {
-  flex: 1;
-  height: 8rpx;
-  background-color: #f0f0f0;
-  border-radius: 4rpx;
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  background-color: vars.$primary-color;
-  border-radius: 4rpx;
-  transition: width 0.3s ease;
-}
-
-.progress-fill.target {
-  background-color: #90caf9;
-}
-
-.progress-value {
-  font-size: 24rpx;
-  color: vars.$primary-color;
-  font-weight: 600;
-  width: 60rpx;
-  text-align: right;
-  flex-shrink: 0;
-}
-
-.ai-analysis-card {
-  background-color: vars.$surface-color;
-  border-radius: vars.$border-radius;
-  padding: vars.$spacing-lg;
-}
-
-.ai-content {
+.section-title {
   font-size: 28rpx;
+  font-weight: 600;
+  margin-bottom: vars.$spacing-sm;
+  color: vars.$text-color;
+}
+
+.analysis-text {
+  font-size: 26rpx;
   color: vars.$text-color;
   line-height: 1.6;
 }
@@ -326,8 +133,7 @@ onLoad((options) => {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 400rpx;
-  padding: vars.$spacing-xl;
+  min-height: 200rpx;
 }
 
 .loading-text {
@@ -335,11 +141,3 @@ onLoad((options) => {
   color: vars.$text-muted;
 }
 </style>
-
-
-
-
-
-
-
-

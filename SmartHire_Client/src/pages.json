@@ -19,6 +19,23 @@
       }
     },
     {
+      "path": "pages/seeker/jobs/detail",
+      "style": {
+        "navigationBarTitleText": "岗位详情",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/seeker/jobs/applications",
+      "style": {
+        "navigationBarTitleText": "我的投递",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
       "path": "pages/seeker/chat/index",
       "style": {
         "navigationBarTitleText": "消息",
@@ -31,6 +48,15 @@
       "path": "pages/seeker/chat/conversation",
       "style": {
         "navigationBarTitleText": "聊天",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/seeker/chat/system-notifications",
+      "style": {
+        "navigationBarTitleText": "系统通知",
         "navigationBarTextStyle": "black",
         "navigationBarBackgroundColor": "#ffffff",
         "navigationStyle": "custom"
@@ -177,7 +203,15 @@
     {
       "path": "pages/hr/hr/home/index",
       "style": {
-        "navigationBarTitleText": "工作台",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/hr/hr/seeker/detail",
+      "style": {
+        "navigationBarTitleText": "求职者详情",
         "navigationBarTextStyle": "black",
         "navigationBarBackgroundColor": "#ffffff"
       }
@@ -187,7 +221,8 @@
       "style": {
         "navigationBarTitleText": "岗位管理",
         "navigationBarTextStyle": "black",
-        "navigationBarBackgroundColor": "#ffffff"
+        "navigationBarBackgroundColor": "#ffffff",
+        "navigationStyle": "custom"
       }
     },
     {
@@ -211,13 +246,30 @@
       "style": {
         "navigationBarTitleText": "消息中心",
         "navigationBarTextStyle": "black",
-        "navigationBarBackgroundColor": "#ffffff"
+        "navigationBarBackgroundColor": "#ffffff",
+        "navigationStyle": "custom"
       }
     },
     {
       "path": "pages/hr/hr/messages/chat",
       "style": {
         "navigationBarTitleText": "与候选人对话",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/hr/hr/applications/index",
+      "style": {
+        "navigationBarTitleText": "投递列表",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/hr/hr/applications/detail",
+      "style": {
+        "navigationBarTitleText": "投递详情",
         "navigationBarTextStyle": "black",
         "navigationBarBackgroundColor": "#ffffff"
       }

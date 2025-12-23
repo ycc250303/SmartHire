@@ -1,10 +1,10 @@
 <template>
   <view class="messages-component">
-    <view v-if="loading && conversations.length === 0" class="loading-container">
+    <view v-if="loading && conversations.length === 0 && systemNotificationUnreadCount === 0" class="loading-container">
       <text class="loading-text">{{ t('pages.chat.list.loading') }}</text>
     </view>
 
-    <view v-else-if="error && conversations.length === 0" class="error-container">
+    <view v-else-if="error && conversations.length === 0 && systemNotificationUnreadCount === 0" class="error-container">
       <text class="error-text">{{ t('pages.chat.list.loadError') }}</text>
       <button class="retry-button" @click="loadConversations">
         {{ t('pages.chat.list.retry') }}
@@ -19,7 +19,7 @@
       :refresher-triggered="refreshing"
       @refresherrefresh="handleRefresh"
     >
-      <view v-if="conversations.length === 0" class="empty-container">
+      <view v-if="sortedConversations.length === 0" class="empty-container">
         <text class="empty-text">{{ t('pages.chat.list.noConversations') }}</text>
       </view>
 
@@ -27,18 +27,18 @@
         v-for="conversation in sortedConversations"
         :key="conversation.id"
         class="conversation-item"
-        :class="{ pinned: conversation.isPinned === 1 }"
+        :class="{ pinned: conversation.pinned === 1, 'system-item': isSystemConversation(conversation) }"
         @click="openConversation(conversation)"
         @longpress="showActionMenu(conversation)"
       >
         <image
           class="avatar"
-          :src="conversation.avatarUrl || '/static/user-avatar.png'"
+          :src="conversation.otherUserAvatar || '/static/user-avatar.png'"
           mode="aspectFill"
         />
         <view class="conversation-info">
           <view class="conversation-header">
-            <text class="username">{{ conversation.username }}</text>
+            <text class="username">{{ conversation.otherUserName }}</text>
             <text class="time">{{ formatTime(conversation.lastMessageTime) }}</text>
           </view>
           <view class="conversation-footer">
@@ -50,24 +50,63 @@
         </view>
       </view>
     </scroll-view>
+
   </view>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { onShow, onPullDownRefresh } from '@dcloudio/uni-app';
 import { t } from '@/locales';
 import dayjs from 'dayjs';
-import { getConversations, pinConversation, deleteConversation, type Conversation } from '@/services/api/message';
+import { getConversations, pinConversation, deleteConversation, getUnreadCount, type Conversation } from '@/services/api/message';
+import { getSystemNotifications, getSystemNotificationUnreadCount, markAllNotificationsAsRead, type SystemNotification } from '@/services/api/notification';
+
+const emit = defineEmits<{
+  'update-unread': [count: number];
+}>();
 
 const conversations = ref<Conversation[]>([]);
+const systemNotification = ref<SystemNotification | null>(null);
+const systemNotificationUnreadCount = ref(0);
+const messageUnreadCount = ref(0);
 const loading = ref(false);
 const error = ref<string | null>(null);
 const refreshing = ref(false);
 
+const SYSTEM_CONVERSATION_ID = -1;
+
+const totalUnreadCount = computed(() => {
+  return messageUnreadCount.value + systemNotificationUnreadCount.value;
+});
+
+watch(totalUnreadCount, (newCount) => {
+  emit('update-unread', newCount);
+}, { immediate: true });
+
+const systemConversation = computed<Conversation | null>(() => {
+  return {
+    id: SYSTEM_CONVERSATION_ID,
+    otherUserId: 0,
+    otherUserName: t('pages.chat.systemNotifications.title'),
+    otherUserAvatar: '/static/user-avatar.png',
+    lastMessage: systemNotification.value?.title || t('pages.chat.systemNotifications.empty'),
+    lastMessageTime: systemNotification.value?.createdAt || new Date().toISOString(),
+    unreadCount: systemNotificationUnreadCount.value,
+    pinned: 0,
+    hasNotification: systemNotificationUnreadCount.value > 0 ? 1 : 0,
+  };
+});
+
 const sortedConversations = computed(() => {
-  const pinned = conversations.value.filter(c => c.isPinned === 1);
-  const unpinned = conversations.value.filter(c => c.isPinned !== 1);
+  const allConversations: Conversation[] = [];
+  
+  if (systemConversation.value) {
+    allConversations.push(systemConversation.value);
+  }
+  
+  const pinned = conversations.value.filter(c => c.pinned === 1);
+  const unpinned = conversations.value.filter(c => c.pinned !== 1);
   
   const sortByTime = (a: Conversation, b: Conversation) => {
     const timeA = a.lastMessageTime ? new Date(a.lastMessageTime).getTime() : 0;
@@ -75,8 +114,13 @@ const sortedConversations = computed(() => {
     return timeB - timeA;
   };
   
-  return [...pinned.sort(sortByTime), ...unpinned.sort(sortByTime)];
+  allConversations.push(...pinned.sort(sortByTime), ...unpinned.sort(sortByTime));
+  return allConversations;
 });
+
+function isSystemConversation(conversation: Conversation): boolean {
+  return conversation.id === SYSTEM_CONVERSATION_ID;
+}
 
 onShow(() => {
   loadConversations();
@@ -85,6 +129,10 @@ onShow(() => {
 onMounted(() => {
   loadConversations();
 });
+
+watch([messageUnreadCount, systemNotificationUnreadCount], () => {
+  emit('update-unread', totalUnreadCount.value);
+}, { immediate: true });
 
 onPullDownRefresh(() => {
   handleRefresh();
@@ -95,11 +143,24 @@ async function loadConversations() {
   error.value = null;
   
   try {
-    const data = await getConversations();
-    conversations.value = data;
+    const [conversationsData, notificationsData, unreadCount, systemUnreadCount] = await Promise.all([
+      getConversations(),
+      getSystemNotifications({ page: 1, size: 1 }).catch(() => []),
+      getUnreadCount().catch(() => 0),
+      getSystemNotificationUnreadCount().catch(() => 0)
+    ]);
+    
+    conversations.value = conversationsData;
+    messageUnreadCount.value = unreadCount;
+    systemNotificationUnreadCount.value = systemUnreadCount;
+    
+    if (notificationsData.length > 0) {
+      systemNotification.value = notificationsData[0];
+    } else {
+      systemNotification.value = null;
+    }
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Unknown error';
-    console.error('Failed to load conversations:', err);
   } finally {
     loading.value = false;
   }
@@ -134,13 +195,40 @@ function formatTime(time?: string): string {
 }
 
 function openConversation(conversation: Conversation) {
-  uni.navigateTo({
-    url: `/pages/seeker/chat/conversation?id=${conversation.id}&userId=${conversation.userId}&username=${encodeURIComponent(conversation.username)}`
-  });
+  if (isSystemConversation(conversation)) {
+    uni.navigateTo({
+      url: '/pages/seeker/chat/system-notifications',
+      fail: (err) => {
+        console.error('Failed to navigate to system notifications:', err);
+        uni.showToast({
+          title: '页面跳转失败',
+          icon: 'none'
+        });
+      }
+    });
+  } else {
+    uni.navigateTo({
+      url: `/pages/seeker/chat/conversation?id=${conversation.id}&userId=${conversation.otherUserId}&username=${encodeURIComponent(conversation.otherUserName)}`
+    });
+  }
 }
 
 function showActionMenu(conversation: Conversation) {
-  const isPinned = conversation.isPinned === 1;
+  if (isSystemConversation(conversation)) {
+    if (systemNotificationUnreadCount.value > 0) {
+      uni.showActionSheet({
+        itemList: [t('pages.chat.systemNotifications.markAllRead')],
+        success: async (res) => {
+          if (res.tapIndex === 0) {
+            await handleMarkAllSystemNotificationsRead();
+          }
+        }
+      });
+    }
+    return;
+  }
+  
+  const isPinned = conversation.pinned === 1;
   uni.showActionSheet({
     itemList: [
       isPinned ? t('pages.chat.list.unpin') : t('pages.chat.list.pin'),
@@ -148,7 +236,7 @@ function showActionMenu(conversation: Conversation) {
     ],
     success: (res) => {
       if (res.tapIndex === 0) {
-        handlePinConversation(conversation, isPinned ? 0 : 1);
+        handlePinConversation(conversation, !isPinned);
       } else if (res.tapIndex === 1) {
         handleDeleteConversation(conversation);
       }
@@ -156,12 +244,31 @@ function showActionMenu(conversation: Conversation) {
   });
 }
 
-async function handlePinConversation(conversation: Conversation, isPinned: number) {
+async function handleMarkAllSystemNotificationsRead() {
   try {
-    await pinConversation(conversation.id, isPinned);
-    conversation.isPinned = isPinned;
+    await markAllNotificationsAsRead();
+    systemNotificationUnreadCount.value = 0;
+    await loadConversations();
     uni.showToast({
-      title: isPinned === 1 ? t('pages.chat.list.pinSuccess') : t('pages.chat.list.unpinSuccess'),
+      title: t('pages.chat.systemNotifications.markAllReadSuccess'),
+      icon: 'success',
+      duration: 1500
+    });
+  } catch (err) {
+    console.error('Failed to mark all notifications as read:', err);
+    uni.showToast({
+      title: t('pages.chat.list.loadError'),
+      icon: 'none'
+    });
+  }
+}
+
+async function handlePinConversation(conversation: Conversation, pinned: boolean) {
+  try {
+    await pinConversation(conversation.id, pinned);
+    conversation.pinned = pinned ? 1 : 0;
+    uni.showToast({
+      title: pinned ? t('pages.chat.list.pinSuccess') : t('pages.chat.list.unpinSuccess'),
       icon: 'success',
       duration: 1500
     });
@@ -333,5 +440,10 @@ async function handleDeleteConversation(conversation: Conversation) {
   color: #ffffff;
   font-weight: 600;
 }
+
+.system-item {
+  background-color: vars.$pale-blue;
+}
+
 </style>
 
