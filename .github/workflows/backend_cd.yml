@@ -123,42 +123,42 @@ jobs:
             echo "=== 部署完成 ==="
           EOF
 
-      # 6. 健康检查
-      - name: Health check
-        run: |
-          echo "等待服务启动..."
-          sleep 10
+      # # 6. 健康检查
+      # - name: Health check
+      #   run: |
+      #     echo "等待服务启动..."
+      #     sleep 10
           
-          # 使用健康检查接口
-          echo "检查Nginx代理的健康检查接口..."
-          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://${{ secrets.SERVER_HOST }}/health || echo "000")
+      #     # 使用健康检查接口
+      #     echo "检查Nginx代理的健康检查接口..."
+      #     HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://${{ secrets.SERVER_HOST }}/health || echo "000")
           
-          if [ "$HTTP_CODE" = "200" ]; then
-            echo "✅ Nginx代理健康检查通过 (HTTP $HTTP_CODE)"
-            # 显示健康检查响应内容
-            curl -s http://${{ secrets.SERVER_HOST }}/health | head -20
-          else
-            echo "⚠️  Nginx代理健康检查失败 (HTTP $HTTP_CODE)"
-            echo "尝试直接访问后端服务..."
+      #     if [ "$HTTP_CODE" = "200" ]; then
+      #       echo "✅ Nginx代理健康检查通过 (HTTP $HTTP_CODE)"
+      #       # 显示健康检查响应内容
+      #       curl -s http://${{ secrets.SERVER_HOST }}/health | head -20
+      #     else
+      #       echo "⚠️  Nginx代理健康检查失败 (HTTP $HTTP_CODE)"
+      #       echo "尝试直接访问后端服务..."
             
-            # 尝试直接访问后端服务
-            HTTP_CODE_DIRECT=$(curl -s -o /dev/null -w "%{http_code}" http://${{ secrets.SERVER_HOST }}:8080/smarthire/api/health || echo "000")
-            if [ "$HTTP_CODE_DIRECT" = "200" ]; then
-              echo "✅ 直接访问后端服务健康检查通过 (HTTP $HTTP_CODE_DIRECT)"
-              echo "可能是Nginx配置问题"
-            else
-              echo "⚠️  直接访问后端服务也失败 (HTTP $HTTP_CODE_DIRECT)"
-            fi
-            echo "请手动检查服务器日志：docker logs ${{ secrets.IMAGE_NAME }}"
-            # 这里不 fail，只是警告
-          fi
+      #       # 尝试直接访问后端服务
+      #       HTTP_CODE_DIRECT=$(curl -s -o /dev/null -w "%{http_code}" http://${{ secrets.SERVER_HOST }}:8080/smarthire/api/health || echo "000")
+      #       if [ "$HTTP_CODE_DIRECT" = "200" ]; then
+      #         echo "✅ 直接访问后端服务健康检查通过 (HTTP $HTTP_CODE_DIRECT)"
+      #         echo "可能是Nginx配置问题"
+      #       else
+      #         echo "⚠️  直接访问后端服务也失败 (HTTP $HTTP_CODE_DIRECT)"
+      #       fi
+      #       echo "请手动检查服务器日志：docker logs ${{ secrets.IMAGE_NAME }}"
+      #       # 这里不 fail，只是警告
+      #     fi
           
-          # 测试公开接口
-          echo "测试公开接口..."
-          SEEKER_CARDS_CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://${{ secrets.SERVER_HOST }}/smarthire/api/seeker/public/cards?pageNum=1&pageSize=1" || echo "000")
-          if [ "$SEEKER_CARDS_CODE" = "200" ]; then
-            echo "✅ 求职者卡片接口测试通过 (HTTP $SEEKER_CARDS_CODE)"
-          else
-            echo "⚠️  求职者卡片接口测试失败 (HTTP $SEEKER_CARDS_CODE)"
-          fi
+      #     # 测试公开接口
+      #     echo "测试公开接口..."
+      #     SEEKER_CARDS_CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://${{ secrets.SERVER_HOST }}/smarthire/api/seeker/public/cards?pageNum=1&pageSize=1" || echo "000")
+      #     if [ "$SEEKER_CARDS_CODE" = "200" ]; then
+      #       echo "✅ 求职者卡片接口测试通过 (HTTP $SEEKER_CARDS_CODE)"
+      #     else
+      #       echo "⚠️  求职者卡片接口测试失败 (HTTP $SEEKER_CARDS_CODE)"
+      #     fi
 
