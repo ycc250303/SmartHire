@@ -26,6 +26,7 @@ public class PublicRecruitmentController {
     public Result<Boolean> checkApplicationExists(
             @RequestParam @NotNull(message = "求职者ID不能为空") Long seekerId,
             @RequestParam @NotNull(message = "岗位ID不能为空") Long jobId) {
+        
         boolean exists = applicationService.existsBySeekerIdAndJobId(seekerId, jobId);
         return Result.success("查询成功", exists);
     }
