@@ -210,7 +210,7 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationMapper, Con
   private ConversationDTO convertToConversationDTO(Conversation conversation, Long currentUserId) {
     ConversationDTO dto = new ConversationDTO();
     dto.setId(conversation.getId());
-    
+
     // 确定对方用户ID
     Long otherUserId = conversation.getUser1Id().equals(currentUserId)
         ? conversation.getUser2Id()

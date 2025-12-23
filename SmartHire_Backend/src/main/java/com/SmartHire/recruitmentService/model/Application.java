@@ -34,7 +34,7 @@ public class Application implements Serializable {
   private Long resumeId;
 
   /** 会话ID */
-  private Long conservationId;
+  private Long conversationId;
 
   /** 发起方：0-求职者投递 1-HR推荐 */
   private Byte initiator;
