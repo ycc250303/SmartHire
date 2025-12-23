@@ -45,6 +45,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -101,6 +102,8 @@ public class SeekerRecruitmentController {
   public Result<List<Long>> getJobIdListBySeekerId() {
     return Result.success("获取投递过的列表成功", applicationService.getJobIdListBySeekerId());
   }
+
+
 
   @GetMapping("/job-recommendations/intern")
   @Operation(summary = "获取实习岗位推荐", description = "获取用户首页推荐的实习岗位列表，优先使用简历/求职者信息进行关键词匹配计算得分（向量搜索未就绪）")
