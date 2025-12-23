@@ -61,12 +61,6 @@ public class ChatMessageServiceImpl extends ServiceImpl<ChatMessageMapper, ChatM
       throw new BusinessException(ErrorCode.USER_ID_NOT_EXIST);
     }
 
-    // 检查applicationId对应的投递记录是否存在（事件驱动的消息可以跳过此验证）
-    if (!skipApplicationValidation && dto.getApplicationId() != null 
-        && !applicationApi.existsApplication(dto.getApplicationId())) {
-      throw new BusinessException(ErrorCode.APPLICATION_NOT_EXIST);
-    }
-
     // 验证用户类型：求职者只能和HR发消息，HR只能和求职者发消息
     validateUserTypeForMessage(senderId, dto.getReceiverId());
 
@@ -156,7 +150,6 @@ public class ChatMessageServiceImpl extends ServiceImpl<ChatMessageMapper, ChatM
   private static ChatMessage getChatMessage(
       Long senderId, SendMessageDTO dto, Conversation conversation) {
     ChatMessage message = new ChatMessage();
-    message.setApplicationId(dto.getApplicationId());
     message.setSenderId(senderId);
     message.setReceiverId(dto.getReceiverId());
     message.setConversationId(conversation.getId());

@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 public class ConversationDTO {
-  private Long id;
+  private Long id; // 会话ID
   private Long otherUserId; // 对方用户ID
   private String otherUserName; // 对方用户名（需要 JOIN 查询）
   private String otherUserAvatar; // 对方用户头像

@@ -25,8 +25,8 @@ public class ChatMessage implements Serializable {
   @TableId(value = "id", type = IdType.AUTO)
   private Long id;
 
-  /** 投递/推荐记录ID */
-  private Long applicationId;
+  /** 会话ID */
+  private Long conversationId;
 
   /** 发送者用户ID */
   private Long senderId;
@@ -57,7 +57,4 @@ public class ChatMessage implements Serializable {
 
   /** 发送时间 */
   private Date createdAt;
-
-  /** 会话ID */
-  private Long conversationId;
 }

@@ -26,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class ConversationServiceImpl extends ServiceImpl<ConversationMapper, Conversation>
     implements ConversationService {
+
   /**
    * 获取或创建会话
    *
@@ -121,12 +122,11 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationMapper, Con
     // 查询条件：user1_id 或 user2_id 等于当前用户，且未被当前用户删除
     LambdaQueryWrapper<Conversation> wrapper = new LambdaQueryWrapper<>();
     wrapper.and(
-        w ->
-            w.eq(Conversation::getUser1Id, userId)
-                .eq(Conversation::getDeletedByUser1, (byte) 0)
-                .or()
-                .eq(Conversation::getUser2Id, userId)
-                .eq(Conversation::getDeletedByUser2, (byte) 0));
+        w -> w.eq(Conversation::getUser1Id, userId)
+            .eq(Conversation::getDeletedByUser1, (byte) 0)
+            .or()
+            .eq(Conversation::getUser2Id, userId)
+            .eq(Conversation::getDeletedByUser2, (byte) 0));
 
     // 先按最后消息时间降序查询
     wrapper.orderByDesc(Conversation::getLastMessageTime);
@@ -139,10 +139,9 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationMapper, Con
         .sorted(
             (dto1, dto2) -> {
               // 先按置顶状态排序（置顶的在前，1 > 0）
-              int pinnedCompare =
-                  Byte.compare(
-                      dto2.getPinned() != null ? dto2.getPinned() : 0,
-                      dto1.getPinned() != null ? dto1.getPinned() : 0);
+              int pinnedCompare = Byte.compare(
+                  dto2.getPinned() != null ? dto2.getPinned() : 0,
+                  dto1.getPinned() != null ? dto1.getPinned() : 0);
               if (pinnedCompare != 0) {
                 return pinnedCompare;
               }
@@ -211,12 +210,11 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationMapper, Con
   private ConversationDTO convertToConversationDTO(Conversation conversation, Long currentUserId) {
     ConversationDTO dto = new ConversationDTO();
     dto.setId(conversation.getId());
-
+    
     // 确定对方用户ID
-    Long otherUserId =
-        conversation.getUser1Id().equals(currentUserId)
-            ? conversation.getUser2Id()
-            : conversation.getUser1Id();
+    Long otherUserId = conversation.getUser1Id().equals(currentUserId)
+        ? conversation.getUser2Id()
+        : conversation.getUser1Id();
     dto.setOtherUserId(otherUserId);
 
     // 获取未读消息数和置顶状态
@@ -234,16 +232,13 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationMapper, Con
     dto.setLastMessageTime(conversation.getLastMessageTime());
 
     // 获取对方用户名和用户头像
-    String otherUserName =
-        this.getBaseMapper().getOtherUserName(conversation.getId(), currentUserId);
-    String otherUserAvatar =
-        this.getBaseMapper().getOtherUserAvatar(conversation.getId(), currentUserId);
+    String otherUserName = this.getBaseMapper().getOtherUserName(conversation.getId(), currentUserId);
+    String otherUserAvatar = this.getBaseMapper().getOtherUserAvatar(conversation.getId(), currentUserId);
     dto.setOtherUserName(otherUserName);
     dto.setOtherUserAvatar(otherUserAvatar);
 
     // 对方公司信息（若对方为HR，否则可能为null）
-    Long otherCompanyId =
-        this.getBaseMapper().getOtherCompanyId(conversation.getId(), currentUserId);
+    Long otherCompanyId = this.getBaseMapper().getOtherCompanyId(conversation.getId(), currentUserId);
     dto.setOtherCompanyId(otherCompanyId);
     if (otherCompanyId != null) {
       dto.setOtherCompanyName(

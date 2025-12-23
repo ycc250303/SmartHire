@@ -10,7 +10,8 @@ import lombok.Data;
 @Data
 public class ApplicationListDTO implements Serializable {
 
-  @Serial private static final long serialVersionUID = 1L;
+  @Serial
+  private static final long serialVersionUID = 1L;
 
   /** 投递ID */
   private Long id;
@@ -29,6 +30,9 @@ public class ApplicationListDTO implements Serializable {
 
   /** 简历ID */
   private Long resumeId;
+
+  /** 会话ID */
+  private Long conservationId;
 
   /** 状态：0-已投递/已推荐 1-已查看 2-待面试 3-已面试 4-已录用 5-已拒绝 6-已撤回 */
   private Byte status;
