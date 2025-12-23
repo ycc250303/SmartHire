@@ -35,6 +35,10 @@
         <text class="resume-label">{{ t('pages.profile.attachmentResume') }}</text>
         <text class="arrow">›</text>
       </view>
+      <view class="resume-item" @click="goToApplications">
+        <text class="resume-label">{{ t('pages.profile.applications') }}</text>
+        <text class="arrow">›</text>
+      </view>
     </view>
     
     <CustomTabBar />
@@ -102,6 +106,12 @@ function goToOnlineResume() {
 function goToAttachmentResume() {
   uni.navigateTo({
     url: '/pages/seeker/profile/resume/attachment-resume'
+  });
+}
+
+function goToApplications() {
+  uni.navigateTo({
+    url: '/pages/seeker/jobs/applications'
   });
 }
 </script>

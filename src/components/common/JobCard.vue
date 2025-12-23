@@ -1,5 +1,5 @@
 <template>
-  <view class="job-card">
+  <view class="job-card" @click="handleCardClick">
     <view class="card-header">
       <view class="job-title">{{ job.title }}</view>
       <view class="match-score">
@@ -52,6 +52,12 @@ function getDegreeText(degree: Degree): string {
   };
   return degreeMap[degree] || '';
 }
+
+function handleCardClick() {
+  uni.navigateTo({
+    url: `/pages/seeker/jobs/detail?jobId=${props.job.jobId}`
+  });
+}
 </script>
 
 <style lang="scss" scoped>
@@ -62,6 +68,7 @@ function getDegreeText(degree: Degree): string {
   border-radius: vars.$border-radius;
   padding: vars.$spacing-lg;
   margin-bottom: vars.$spacing-md;
+  cursor: pointer;
 }
 
 .card-header {

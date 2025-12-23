@@ -1,24 +1,15 @@
 <template>
   <view class="chat-page">
     <view class="header-container">
-      <view class="category-section">
-        <view class="category-list">
-          <view 
-            v-for="category in categories" 
-            :key="category.value"
-            class="category-item"
-            :class="{ active: currentCategory === category.value }"
-            @click="handleCategoryChange(category.value)"
-          >
-            <text class="category-text">{{ category.label }}</text>
-            <view v-if="currentCategory === category.value" class="category-indicator"></view>
-          </view>
+      <view class="header-title-section">
+        <text class="page-title">{{ t('navigation.chat') }}</text>
+        <view v-if="totalUnreadCount > 0" class="title-unread-badge">
+          <text class="title-unread-count">{{ totalUnreadCount > 99 ? '99+' : totalUnreadCount }}</text>
         </view>
       </view>
     </view>
-
     <view class="content-section">
-      <component :is="currentComponent" />
+      <MessagesComponent @update-unread="handleUnreadUpdate" />
     </view>
     
     <CustomTabBar />
@@ -26,36 +17,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import { onLoad, onShow } from '@dcloudio/uni-app';
 import { t } from '@/locales';
 import CustomTabBar from '@/components/common/CustomTabBar.vue';
 import MessagesComponent from './messages.vue';
-import NotificationsComponent from './notifications.vue';
 
-type CategoryType = 'messages' | 'notifications';
+const totalUnreadCount = ref(0);
 
-const currentCategory = ref<CategoryType>('messages');
-
-const categories = computed(() => [
-  { value: 'messages' as CategoryType, label: t('pages.chat.messages') },
-  { value: 'notifications' as CategoryType, label: t('pages.chat.notifications.title') },
-]);
-
-const currentComponent = computed(() => {
-  switch (currentCategory.value) {
-    case 'messages':
-      return MessagesComponent;
-    case 'notifications':
-      return NotificationsComponent;
-    default:
-      return MessagesComponent;
-  }
-});
-
-const handleCategoryChange = (category: CategoryType) => {
-  currentCategory.value = category;
-};
+function handleUnreadUpdate(count: number) {
+  totalUnreadCount.value = count;
+}
 
 onLoad(() => {
   uni.setNavigationBarTitle({
@@ -84,48 +56,38 @@ onShow(() => {
   top: 0;
   z-index: 1000;
   padding-top: calc(var(--status-bar-height) + vars.$spacing-lg);
+  padding-bottom: vars.$spacing-md;
+  padding-left: vars.$spacing-xl;
+  padding-right: vars.$spacing-xl;
 }
 
-.category-section {
+.header-title-section {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  padding: vars.$spacing-lg vars.$spacing-xl;
-  margin-bottom: vars.$spacing-md;
-  background: transparent;
+  gap: vars.$spacing-sm;
 }
 
-.category-list {
-  display: flex;
-  gap: vars.$spacing-xl;
-  flex: 1;
-}
-
-.category-item {
-  position: relative;
-  cursor: pointer;
-  padding-bottom: vars.$spacing-xs;
-}
-
-.category-text {
+.page-title {
   font-size: 40rpx;
   font-weight: 700;
-  color: vars.$text-muted;
-  transition: all 0.3s;
-}
-
-.category-item.active .category-text {
   color: vars.$text-color;
 }
 
-.category-indicator {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 6rpx;
-  background-color: vars.$primary-color;
-  border-radius: vars.$border-radius;
+.title-unread-badge {
+  min-width: 32rpx;
+  height: 32rpx;
+  background-color: #ff4d4f;
+  border-radius: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 10rpx;
+}
+
+.title-unread-count {
+  font-size: 20rpx;
+  color: #ffffff;
+  font-weight: 600;
 }
 
 .content-section {
