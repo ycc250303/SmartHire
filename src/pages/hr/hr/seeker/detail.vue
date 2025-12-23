@@ -174,36 +174,9 @@ const loadData = async () => {
   }
 };
 
-const ensureConversationId = async (initialMessage?: string, applicationId?: number) => {
+const getExistingConversation = async () => {
   const conversations = await getConversations();
-  const existing = conversations.find((c) => c.otherUserId === userId.value);
-  if (existing) {
-    if (initialMessage?.trim()) {
-      await sendMessage({
-        receiverId: userId.value,
-        applicationId: applicationId || 0,
-        messageType: 1,
-        content: initialMessage.trim(),
-        fileUrl: null,
-        replyTo: null,
-      });
-    }
-    return existing.id;
-  }
-
-  if (!initialMessage?.trim()) {
-    initialMessage = '你好，我是HR，方便沟通一下吗？';
-  }
-
-  const sent = await sendMessage({
-    receiverId: userId.value,
-    applicationId: applicationId || 0,
-    messageType: 1,
-    content: initialMessage.trim(),
-    fileUrl: null,
-    replyTo: null,
-  });
-  return sent.conversationId;
+  return conversations.find((c) => c.otherUserId === userId.value) || null;
 };
 
 const goToChat = (conversationId: number, applicationId?: number) => {
@@ -227,7 +200,7 @@ const doRecommend = async () => {
 
   recommending.value = true;
   try {
-    const result = await recommendJob({
+    const applicationId = await recommendJob({
       jobId: selectedJob.value.id,
       seekerUserId: userId.value,
       note: note.value.trim() || undefined,
@@ -238,12 +211,17 @@ const doRecommend = async () => {
       (selectedJob.value.city ? `（${selectedJob.value.city}）` : '') +
       (note.value.trim() ? `。备注：${note.value.trim()}` : '。');
 
-    const conversationId =
-      result?.conversationId ||
-      (await ensureConversationId(intro, result?.applicationId || 0));
+    const sent = await sendMessage({
+      receiverId: userId.value,
+      applicationId,
+      messageType: 1,
+      content: intro,
+      fileUrl: null,
+      replyTo: null,
+    });
 
     uni.showToast({ title: '推荐成功', icon: 'success' });
-    goToChat(conversationId, result?.applicationId);
+    goToChat(sent.conversationId, applicationId);
   } catch (err) {
     console.error('Failed to recommend job:', err);
     uni.showToast({ title: '推荐失败', icon: 'none' });
@@ -255,8 +233,12 @@ const doRecommend = async () => {
 const openChat = async () => {
   if (!userId.value) return;
   try {
-    const conversationId = await ensureConversationId();
-    goToChat(conversationId);
+    const existing = await getExistingConversation();
+    if (!existing) {
+      uni.showToast({ title: '请先推荐岗位后再发起会话', icon: 'none' });
+      return;
+    }
+    goToChat(existing.id, existing.applicationId);
   } catch (err) {
     console.error('Failed to open chat:', err);
     uni.showToast({ title: '进入聊天失败', icon: 'none' });

@@ -17,7 +17,6 @@
     "/api/seeker/update-seeker-info": "prod",
     "/api/seeker/cards": "prod",
     "/api/seeker/cards/filter": "prod",
-    "/api/seeker/public/cards": "prod",
     "/api/seeker/delete-seeker": "prod",
     "/api/seeker/favorite-job/*": "prod",
     "/api/seeker/favorite-jobs": "prod",

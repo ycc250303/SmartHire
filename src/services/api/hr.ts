@@ -233,13 +233,16 @@ export type PublicSeekerCard = SeekerCard & {
 };
 
 /**
- * Get all public seeker cards (for HR recommendations)
- * @returns List of seeker cards
+ * Get all seeker cards (for HR recommendations)
+ * Backend route: GET /seeker/cards
  */
 export function getPublicSeekerCards(): Promise<PublicSeekerCard[]> {
-  return http<PublicSeekerCard[]>({
-    url: "/api/seeker/public/cards",
+  return http<PublicSeekerCard[] | { records?: PublicSeekerCard[] }>({
+    url: "/api/seeker/cards",
     method: "GET",
+  }).then((resp) => {
+    if (Array.isArray(resp)) return resp;
+    return resp?.records ?? [];
   });
 }
 
@@ -250,17 +253,11 @@ export interface RecommendJobPayload {
   note?: string;
 }
 
-export interface RecommendJobResult {
-  applicationId?: number;
-  conversationId?: number;
-  message?: string;
-}
-
 /**
  * Recommend a job to a seeker (HR action)
  */
-export function recommendJob(payload: RecommendJobPayload): Promise<RecommendJobResult | null> {
-  return http<RecommendJobResult | null>({
+export function recommendJob(payload: RecommendJobPayload): Promise<number> {
+  return http<number>({
     url: "/api/recruitment/hr/recommend",
     method: "POST",
     data: payload,
