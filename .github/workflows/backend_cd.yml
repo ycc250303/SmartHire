@@ -72,7 +72,7 @@ jobs:
           # 使用 workflow_run.actor
           GH_ACTOR: ${{ github.event.workflow_run.actor.login }}
         run: |
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << EOF
+          ssh -tt -o ServerAliveInterval=30 -o ServerAliveCountMax=10 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
             set -e
             echo "=== 开始部署 ==="
             echo "镜像: ghcr.io/$REPO_OWNER/$IMAGE_NAME:$IMAGE_TAG"
