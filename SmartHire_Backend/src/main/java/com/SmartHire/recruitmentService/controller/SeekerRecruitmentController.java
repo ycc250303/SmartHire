@@ -28,6 +28,7 @@ import com.SmartHire.userAuthService.model.User;
 import com.SmartHire.messageService.mapper.ChatMessageMapper;
 import com.SmartHire.messageService.model.ChatMessage;
 import com.SmartHire.recruitmentService.dto.SubmitResumeDTO;
+import com.SmartHire.recruitmentService.dto.SeekerApplicationListDTO;
 import com.SmartHire.recruitmentService.service.ApplicationService;
 import com.SmartHire.common.api.UserAuthApi;
 import io.swagger.v3.oas.annotations.Operation;
@@ -97,8 +98,11 @@ public class SeekerRecruitmentController {
 
   @GetMapping("/job-list")
   @Operation(summary = "获取投递过的列表", description = "获取投递过的职位列表")
-  public Result<List<Long>> getJobIdListBySeekerId() {
-    return Result.success("获取投递过的列表成功", applicationService.getJobIdListBySeekerId());
+  public Result<SeekerApplicationListDTO> getSeekerApplicationList(
+      @RequestParam(value = "page", required = false) Integer page,
+      @RequestParam(value = "size", required = false) Integer size) {
+    SeekerApplicationListDTO result = applicationService.getSeekerApplicationList(page, size);
+    return Result.success("获取投递过的列表成功", result);
   }
 
 

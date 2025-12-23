@@ -11,6 +11,8 @@ import com.SmartHire.recruitmentService.dto.ApplicationListDTO;
 import com.SmartHire.recruitmentService.dto.ApplicationQueryDTO;
 import com.SmartHire.recruitmentService.dto.SubmitResumeDTO;
 import com.SmartHire.recruitmentService.dto.RecommendRequest;
+import com.SmartHire.recruitmentService.dto.SeekerApplicationListDTO;
+import com.SmartHire.recruitmentService.dto.SeekerApplicationDTO;
 import com.SmartHire.recruitmentService.service.ApplicationEventProducer;
 import com.SmartHire.recruitmentService.mapper.ApplicationMapper;
 import com.SmartHire.recruitmentService.model.Application;
@@ -105,7 +107,7 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
                 .eq(Application::getJobSeekerId, seekerId)
                 .count();
         if (existingCount > 0) {
-            throw new BusinessException(ErrorCode.APPLICATION_ALREADY_EXISTS);
+            throw new BusinessException(ErrorCode.RECOMMEND_ALREADY_EXISTS);
         }
 
         // 创建推荐记录（作为 application）
@@ -337,10 +339,36 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
     }
 
     @Override
-    public List<Long> getJobIdListBySeekerId(){
+    public SeekerApplicationListDTO getSeekerApplicationList(Integer page, Integer size) {
+        // 设置默认值
+        if (page == null || page < 1) {
+            page = 1;
+        }
+        if (size == null || size < 1) {
+            size = 20;
+        }
+
         Long userId = userContext.getCurrentUserId();
         Long seekerId = seekerApi.getJobSeekerIdByUserId(userId);
-        return applicationMapper.getJobIdListBySeekerId(seekerId);
+
+        // 计算偏移量
+        int offset = (page - 1) * size;
+
+        // 查询投递记录列表
+        List<SeekerApplicationDTO> applicationList = applicationMapper.selectSeekerApplicationList(
+                seekerId, page, size, offset);
+
+        // 查询总记录数
+        Long total = applicationMapper.countSeekerApplicationList(seekerId);
+
+        // 构建返回结果
+        SeekerApplicationListDTO result = new SeekerApplicationListDTO();
+        result.setTotal(total);
+        result.setPage(page);
+        result.setSize(size);
+        result.setList(applicationList);
+
+        return result;
     }
 
     @Override

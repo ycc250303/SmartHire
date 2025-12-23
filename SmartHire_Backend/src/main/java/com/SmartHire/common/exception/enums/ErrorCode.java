@@ -73,6 +73,7 @@ public enum ErrorCode {
   APPLICATION_JOB_NOT_EXIST(1302, "职位不存在"),
   APPLICATION_NOT_EXIST(1303, "投递记录不存在"),
   APPLICATION_NOT_BELONG_TO_HR(1304, "投递记录不属于当前HR"),
+      RECOMMEND_ALREADY_EXISTS(1305, "您已推荐过该职位，请勿重复推荐"),
 
   // 会话/聊天相关错误码 (1400-1499)
   CONVERSATION_NOT_EXIST(1401, "沟通记录不存在"),

@@ -1,12 +1,9 @@
 package com.SmartHire.recruitmentService.service;
 
-import com.SmartHire.recruitmentService.dto.ApplicationListDTO;
-import com.SmartHire.recruitmentService.dto.ApplicationQueryDTO;
-import com.SmartHire.recruitmentService.dto.SubmitResumeDTO;
+import com.SmartHire.recruitmentService.dto.*;
 import com.SmartHire.recruitmentService.model.Application;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.SmartHire.recruitmentService.dto.RecommendRequest;
 
 import java.util.List;
 
@@ -67,7 +64,14 @@ public interface ApplicationService extends IService<Application> {
    */
   Long recommend(RecommendRequest request);
 
-  List<Long> getJobIdListBySeekerId();
+  /**
+   * 获取求职者投递记录列表
+   *
+   * @param page 页码
+   * @param size 每页大小
+   * @return 投递记录列表
+   */
+  SeekerApplicationListDTO getSeekerApplicationList(Integer page, Integer size);
   /**
    * 检查是否存在投递记录
    *
