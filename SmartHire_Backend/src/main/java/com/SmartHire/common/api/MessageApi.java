@@ -23,4 +23,13 @@ public interface MessageApi {
      * @return 发送结果
      */
     MessageDTO sendMessage(Long senderId, SendMessageDTO dto);
+
+    /**
+     * 获取或创建会话
+     *
+     * @param user1Id 用户1ID
+     * @param user2Id 用户2ID
+     * @return 会话ID
+     */
+    Long getOrCreateConversation(Long user1Id, Long user2Id);
 }
