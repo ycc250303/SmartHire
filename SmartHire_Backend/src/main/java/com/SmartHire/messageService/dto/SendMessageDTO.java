@@ -11,10 +11,6 @@ public class SendMessageDTO {
   @NotNull(message = "接收者ID不能为空")
   private Long receiverId;
 
-  /** 投递记录ID */
-  @NotNull(message = "投递记录ID不能为空")
-  private Long applicationId;
-
   /** 消息类型：1-文本 2-图片 3-文件 4-语音 5-视频 */
   @NotNull(message = "消息类型不能为空")
   private Integer messageType;

@@ -147,7 +147,7 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void submitResume(SubmitResumeDTO request) {
+    public Long submitResume(SubmitResumeDTO request) {
         // 参数校验
         if (request == null || request.getJobId() == null) {
             throw new BusinessException(ErrorCode.VALIDATION_ERROR);
@@ -215,6 +215,7 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
 
         applicationEventProducer.publishApplicationCreated(event);
         log.info("投递/推荐岗位创建事件已发布: applicationId={}, jobId={}, seekerId={}", application.getId(), jobId, seekerId);
+        return application.getId();
     }
 
     /**

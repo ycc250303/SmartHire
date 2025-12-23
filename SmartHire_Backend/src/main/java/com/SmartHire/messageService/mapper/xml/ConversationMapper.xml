@@ -25,4 +25,64 @@
         id, user1_id, user2_id, last_message, last_message_time, unread_count_user1, unread_count_user2, pinned_by_user1, pinned_by_user2, has_notification_user1, has_notification_user2, created_at, deleted_by_user1, deleted_by_user2
     </sql>
 
+    <!-- 获取对方用户名 -->
+    <select id="getOtherUserName" resultType="java.lang.String">
+        SELECT u.username
+        FROM user u
+        JOIN conversation c ON (u.id = c.user1_id OR u.id = c.user2_id)
+        WHERE c.id = #{conversationId}
+        AND u.id &lt;&gt; #{currentUserId}
+        LIMIT 1
+    </select>
+
+    <!-- 获取对方用户头像 -->
+    <select id="getOtherUserAvatar" resultType="java.lang.String">
+        SELECT u.avatar_url
+        FROM user u
+        JOIN conversation c ON (u.id = c.user1_id OR u.id = c.user2_id)
+        WHERE c.id = #{conversationId}
+        AND u.id &lt;&gt; #{currentUserId}
+        LIMIT 1
+    </select>
+
+    <!-- 获取对方公司ID -->
+    <select id="getOtherCompanyId" resultType="java.lang.Long">
+        SELECT h.company_id
+        FROM hr_info h
+        JOIN conversation c ON (h.user_id = c.user1_id OR h.user_id = c.user2_id)
+        WHERE c.id = #{conversationId}
+        AND h.user_id &lt;&gt; #{currentUserId}
+        LIMIT 1
+    </select>
+
+    <!-- 获取对方公司名称 -->
+    <select id="getOtherCompanyName" resultType="java.lang.String">
+        SELECT co.company_name
+        FROM company co
+        JOIN hr_info h ON co.id = h.company_id
+        JOIN conversation c ON (h.user_id = c.user1_id OR h.user_id = c.user2_id)
+        WHERE c.id = #{conversationId}
+        AND h.user_id &lt;&gt; #{currentUserId}
+        LIMIT 1
+    </select>
+
+    <!-- 获取对方公司Logo -->
+    <select id="getOtherCompanyLogo" resultType="java.lang.String">
+        SELECT co.logo_url
+        FROM company co
+        JOIN hr_info h ON co.id = h.company_id
+        JOIN conversation c ON (h.user_id = c.user1_id OR h.user_id = c.user2_id)
+        WHERE c.id = #{conversationId}
+        AND h.user_id &lt;&gt; #{currentUserId}
+        LIMIT 1
+    </select>
+
+    <!-- 获取投递记录ID -->
+    <select id="getApplicationIdByConversationId" resultType="java.lang.Long">
+        SELECT a.id
+        FROM application a
+        WHERE a.conversation_id = #{conversationId}
+        LIMIT 1
+    </select>
+
 </mapper>

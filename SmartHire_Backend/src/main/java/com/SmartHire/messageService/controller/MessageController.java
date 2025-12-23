@@ -11,6 +11,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
 import java.util.List;
+
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -26,11 +29,14 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequestMapping("/message")
 public class MessageController {
-  @Autowired private ChatMessageService chatMessageService;
+  @Autowired
+  private ChatMessageService chatMessageService;
 
-  @Autowired private ConversationService conversationService;
+  @Autowired
+  private ConversationService conversationService;
 
-  @Autowired private UserContext userContext;
+  @Autowired
+  private UserContext userContext;
 
   /** 获取会话列表 */
   @GetMapping("/get-conversations")
@@ -51,14 +57,14 @@ public class MessageController {
   /** 发送媒体消息（图片、文件、语音、视频） */
   @PostMapping(value = "/send-media", consumes = "multipart/form-data")
   public Result<MessageDTO> sendMessageMedia(
-      @RequestParam("payload") String payloadJson,
+      @RequestParam("dto") String dtoJson,
       @RequestPart(value = "file", required = false) MultipartFile file) {
 
-    // 手动解析JSON
+    // 解析JSON
     SendMessageDTO dto;
     try {
       ObjectMapper objectMapper = new ObjectMapper();
-      dto = objectMapper.readValue(payloadJson, SendMessageDTO.class);
+      dto = objectMapper.readValue(dtoJson, SendMessageDTO.class);
     } catch (JsonProcessingException e) {
       log.error("JSON解析失败: {}", e.getMessage());
       return Result.error(1, "参数格式错误");
@@ -78,12 +84,11 @@ public class MessageController {
   /** 获取聊天记录 */
   @GetMapping("/get-chat-history")
   public Result<List<MessageDTO>> getChatHistory(
-      @RequestParam Long conversationId,
+      @RequestParam @NotNull @Min(value = 1, message = "会话ID不能小于1") Long conversationId,
       @RequestParam(defaultValue = "1") Integer page,
       @RequestParam(defaultValue = "20") Integer size) {
     Long userId = userContext.getCurrentUserId();
-    List<MessageDTO> messages =
-        chatMessageService.getChatHistory(conversationId, userId, page, size);
+    List<MessageDTO> messages = chatMessageService.getChatHistory(conversationId, userId, page, size);
     return Result.success("获取聊天记录成功", messages);
   }
 

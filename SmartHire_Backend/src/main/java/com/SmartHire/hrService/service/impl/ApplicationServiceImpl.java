@@ -80,7 +80,7 @@ public class ApplicationServiceImpl extends ServiceImpl<HrApplicationMapper, App
 
     @Override
     @Transactional
-    public void submitResume(SubmitResumeDTO request) {
+    public Long submitResume(SubmitResumeDTO request) {
         // HR服务中不支持投递简历功能，此方法应由求职者端调用
         throw new BusinessException(ErrorCode.SYSTEM_ERROR, "HR服务不支持投递简历功能，请使用求职者端接口");
     }

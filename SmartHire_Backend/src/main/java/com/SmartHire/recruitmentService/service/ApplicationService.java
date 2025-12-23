@@ -23,7 +23,7 @@ public interface ApplicationService extends IService<Application> {
    *
    * @param request 投递简历请求
    */
-  void submitResume(SubmitResumeDTO request);
+  Long submitResume(SubmitResumeDTO request);
 
   /**
    * 查询当前HR的投递列表（HR端）

@@ -33,6 +33,9 @@ public class Application implements Serializable {
   /** 简历ID（附件简历ID） 如果为null，表示投递的是在线简历；如果不为null，表示投递的是指定的附件简历 推荐时可为空 */
   private Long resumeId;
 
+  /** 会话ID */
+  private Long conservationId;
+
   /** 发起方：0-求职者投递 1-HR推荐 */
   private Byte initiator;
 

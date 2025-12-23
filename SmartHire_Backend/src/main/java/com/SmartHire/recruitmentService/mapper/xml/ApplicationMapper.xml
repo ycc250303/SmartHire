@@ -8,6 +8,7 @@
         <result column="job_id" property="jobId" />
         <result column="job_seeker_id" property="jobSeekerId" />
         <result column="resume_id" property="resumeId" />
+        <result column="conversation_id" property="conservationId" />
         <result column="initiator" property="initiator" />
         <result column="status" property="status" />
         <result column="match_score" property="matchScore" />
@@ -18,7 +19,7 @@
 
     <!-- 通用查询结果列 -->
     <sql id="Base_Column_List">
-        id, job_id, job_seeker_id, resume_id, initiator, status, match_score, match_analysis, created_at, updated_at
+        id, job_id, job_seeker_id, resume_id, conversation_id, initiator, status, match_score, match_analysis, created_at, updated_at
     </sql>
 
     <!-- 投递列表查询（HR端） -->
@@ -30,6 +31,7 @@
             a.job_seeker_id,
             js.real_name AS job_seeker_name,
             a.resume_id,
+            a.conversation_id,
             a.status,
             a.match_score,
             a.match_analysis,
@@ -63,6 +65,7 @@
             a.job_seeker_id,
             js.real_name AS job_seeker_name,
             a.resume_id,
+            a.conversation_id,
             a.status,
             a.match_score,
             a.match_analysis,
@@ -85,6 +88,7 @@
             a.job_seeker_id,
             js.real_name AS job_seeker_name,
             a.resume_id,
+            a.conversation_id,
             a.status,
             a.match_score,
             a.match_analysis,

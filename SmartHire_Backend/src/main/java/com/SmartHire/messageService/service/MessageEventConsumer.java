@@ -93,7 +93,6 @@ public class MessageEventConsumer {
       SendMessageDTO sendMessageDTO = new SendMessageDTO();
       // 使用hrUserId而不是hrId，因为receiverId需要的是user表的id
       sendMessageDTO.setReceiverId(event.getHrUserId());
-      sendMessageDTO.setApplicationId(event.getApplicationId());
       sendMessageDTO.setMessageType(1); // 文本消息
       sendMessageDTO.setContent(
           event.getMessageContent() != null
@@ -144,7 +143,6 @@ public class MessageEventConsumer {
       // 构建发送消息DTO，由 HR 作为 sender 发送给求职者
       SendMessageDTO sendMessageDTO = new SendMessageDTO();
       sendMessageDTO.setReceiverId(event.getSeekerUserId());
-      sendMessageDTO.setApplicationId(event.getApplicationId());
       sendMessageDTO.setMessageType(1); // 文本消息
 
       // 构建通知内容
@@ -195,7 +193,6 @@ public class MessageEventConsumer {
 
       SendMessageDTO sendMessageDTO = new SendMessageDTO();
       sendMessageDTO.setReceiverId(event.getSeekerUserId());
-      sendMessageDTO.setApplicationId(event.getApplicationId());
       sendMessageDTO.setMessageType(1); // 文本消息
 
       StringBuilder content = new StringBuilder();
@@ -241,7 +238,6 @@ public class MessageEventConsumer {
 
       SendMessageDTO sendMessageDTO = new SendMessageDTO();
       sendMessageDTO.setReceiverId(event.getSeekerUserId());
-      sendMessageDTO.setApplicationId(event.getApplicationId());
       sendMessageDTO.setMessageType(1);
 
       String content = "很抱歉，您的本次应聘未通过。";
