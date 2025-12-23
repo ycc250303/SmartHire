@@ -45,6 +45,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -55,7 +56,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @Slf4j
 @RestController
-@RequestMapping({"/recruitment/seeker", "/seeker"})
+@RequestMapping({ "/recruitment/seeker", "/seeker" })
 @RequireUserType(UserType.SEEKER)
 @Validated
 public class SeekerRecruitmentController {
@@ -63,28 +64,32 @@ public class SeekerRecruitmentController {
   @Qualifier("applicationServiceImpl")
   private ApplicationService applicationService;
 
-  @Autowired private HrApi hrApi;
-  @Autowired private SeekerApi seekerApi;
-  @Autowired private JobInfoService jobInfoService;
-  @Autowired private UserContext userContext;
-  @Autowired private ApplicationMapper applicationMapper;
-  @Autowired private ChatMessageMapper chatMessageMapper;
-  @Autowired private UserAuthApi userAuthApi;
+  @Autowired
+  private HrApi hrApi;
+  @Autowired
+  private SeekerApi seekerApi;
+  @Autowired
+  private JobInfoService jobInfoService;
+  @Autowired
+  private UserContext userContext;
+  @Autowired
+  private ApplicationMapper applicationMapper;
+  @Autowired
+  private ChatMessageMapper chatMessageMapper;
+  @Autowired
+  private UserAuthApi userAuthApi;
 
   @PostMapping("/submit-resume")
-  @Operation(
-      summary = "求职者投递简历",
-      description = "求职者投递简历到指定职位。如果提供resumeId则投递附件简历，如果不提供resumeId则投递在线简历")
+  @Operation(summary = "求职者投递简历", description = "求职者投递简历到指定职位。如果提供resumeId则投递附件简历，如果不提供resumeId则投递在线简历")
   public Result<?> submitResume(@Valid @RequestBody SubmitResumeDTO request) {
     Long applicationId = applicationService.submitResume(request);
-    return Result.success("投递简历成功",applicationId);
+    return Result.success("投递简历成功", applicationId);
   }
 
   @GetMapping("/job-card/{jobId}")
   @Operation(summary = "获取岗位卡片", description = "根据岗位ID获取岗位卡片信息（包含岗位、公司、HR信息）")
   public Result<JobCardDTO> getJobCard(
-      @PathVariable @NotNull(message = "岗位ID不能为空") @Min(value = 1, message = "岗位ID必须为正整数")
-          Long jobId) {
+      @PathVariable @NotNull(message = "岗位ID不能为空") @Min(value = 1, message = "岗位ID必须为正整数") Long jobId) {
     JobCardDTO jobCard = hrApi.getJobCardByJobId(jobId);
     if (jobCard == null) {
       throw new BusinessException(ErrorCode.JOB_NOT_EXIST);
@@ -94,18 +99,18 @@ public class SeekerRecruitmentController {
 
   @GetMapping("/job-list")
   @Operation(summary = "获取投递过的列表", description = "获取投递过的职位列表")
-  public Result<List<Long>> getJobIdListBySeekerId(){
-      return Result.success("获取投递过的列表成功", applicationService.getJobIdListBySeekerId());
+  public Result<List<Long>> getJobIdListBySeekerId() {
+    return Result.success("获取投递过的列表成功", applicationService.getJobIdListBySeekerId());
   }
+
+
 
   @GetMapping("/job-recommendations/intern")
   @Operation(summary = "获取实习岗位推荐", description = "获取用户首页推荐的实习岗位列表，优先使用简历/求职者信息进行关键词匹配计算得分（向量搜索未就绪）")
-  public Result<InternJobRecommendationsDTO> getInternJobRecommendations(Long userId) {
-    // Determine target user id: prefer query param, fallback to current user from context
-    Long targetUserId = userId;
-    if (targetUserId == null) {
-      targetUserId = userContext.getCurrentUserId();
-    }
+  public Result<InternJobRecommendationsDTO> getInternJobRecommendations() {
+    // Determine target user id: prefer query param, fallback to current user from
+    // context
+    Long targetUserId = userContext.getCurrentUserId();
 
     Long jobSeekerId = seekerApi.getJobSeekerIdByUserId(targetUserId);
     if (jobSeekerId == null) {
@@ -147,9 +152,9 @@ public class SeekerRecruitmentController {
     // fetch a reasonable page of internship jobs (<=12 as API docs)
     searchDTO.setPage(1);
     searchDTO.setSize(12);
-
+    log.info("searchDTO: {}", searchDTO);
     List<JobCardDTO> jobCards = jobInfoService.searchPublicJobs(searchDTO);
-
+    log.info("jobCards: {}", jobCards);
     List<InternJobItemDTO> items = new ArrayList<>();
     for (JobCardDTO jc : jobCards) {
       InternJobItemDTO item = new InternJobItemDTO();
@@ -164,7 +169,8 @@ public class SeekerRecruitmentController {
       // simple keyword-based matching score (since vector DB not ready)
       int score = 50;
       String lowerKeyword = keyword == null ? "" : keyword.toLowerCase(Locale.ROOT);
-      String combined = (Objects.toString(jc.getJobTitle(), "") + " " + Objects.toString(jc.getCompanyName(), "") + " " + Objects.toString(jc.getCity(), "")).toLowerCase(Locale.ROOT);
+      String combined = (Objects.toString(jc.getJobTitle(), "") + " " + Objects.toString(jc.getCompanyName(), "") + " "
+          + Objects.toString(jc.getCity(), "")).toLowerCase(Locale.ROOT);
       if (!lowerKeyword.isEmpty()) {
         if (combined.contains(lowerKeyword)) {
           score += 30;
@@ -179,14 +185,17 @@ public class SeekerRecruitmentController {
         }
       }
       // education / city bonus
-      if (seeker != null && seeker.getEducation() != null && jc.getEducationRequired() != null && seeker.getEducation().equals(jc.getEducationRequired())) {
+      if (seeker != null && seeker.getEducation() != null && jc.getEducationRequired() != null
+          && seeker.getEducation().equals(jc.getEducationRequired())) {
         score += 10;
       }
       if (seeker != null && seeker.getCurrentCity() != null && seeker.getCurrentCity().equalsIgnoreCase(jc.getCity())) {
         score += 5;
       }
-      if (score > 100) score = 100;
-      if (score < 0) score = 0;
+      if (score > 100)
+        score = 100;
+      if (score < 0)
+        score = 0;
       item.setMatchScore(score);
 
       items.add(item);
@@ -278,23 +287,21 @@ public class SeekerRecruitmentController {
     }
     SeekerJobPositionDTO.ApplicationDTO appDto = new SeekerJobPositionDTO.ApplicationDTO();
     if (seekerId != null) {
-      Application application =
-          applicationMapper.selectOne(
-              new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Application>()
-                  .eq(Application::getJobId, jobId)
-                  .eq(Application::getJobSeekerId, seekerId));
+      Application application = applicationMapper.selectOne(
+          new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Application>()
+              .eq(Application::getJobId, jobId)
+              .eq(Application::getJobSeekerId, seekerId));
       if (application != null) {
         appDto.setHasApplied(true);
         appDto.setApplicationId(application.getId());
         appDto.setStatus(application.getStatus() == null ? null : application.getStatus().intValue());
         appDto.setAppliedAt(application.getCreatedAt());
         // 尝试从 chat_message 表查找与该 application 相关的会话 ID（取最新一条消息）
-        ChatMessage cm =
-            chatMessageMapper.selectOne(
-                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<ChatMessage>()
-                    .eq(ChatMessage::getConversationId, application.getConversationId())
-                    .orderByDesc(ChatMessage::getCreatedAt)
-                    .last("LIMIT 1"));
+        ChatMessage cm = chatMessageMapper.selectOne(
+            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<ChatMessage>()
+                .eq(ChatMessage::getConversationId, application.getConversationId())
+                .orderByDesc(ChatMessage::getCreatedAt)
+                .last("LIMIT 1"));
         if (cm != null) {
           appDto.setConversationId(cm.getConversationId());
         }

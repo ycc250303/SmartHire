@@ -35,6 +35,10 @@
         <text class="resume-label">{{ t('pages.profile.attachmentResume') }}</text>
         <text class="arrow">›</text>
       </view>
+      <view class="resume-item" @click="goToApplications">
+        <text class="resume-label">{{ t('pages.profile.applications') }}</text>
+        <text class="arrow">›</text>
+      </view>
     </view>
     
     <CustomTabBar />
@@ -55,7 +59,7 @@ const userInfo = computed(() => userStore.userInfo);
 
 const userIdentity = computed(() => {
   if (!userInfo.value) return '';
-  // UserType.Seeker = 0 -> Talent, UserType.HR = 1 -> Recruiter
+  // UserType.Seeker = 1 -> Talent, UserType.HR = 2 -> Recruiter
   return userInfo.value.userType === UserType.Seeker 
     ? t('pages.profile.talent')
     : t('pages.profile.recruiter');
@@ -102,6 +106,12 @@ function goToOnlineResume() {
 function goToAttachmentResume() {
   uni.navigateTo({
     url: '/pages/seeker/profile/resume/attachment-resume'
+  });
+}
+
+function goToApplications() {
+  uni.navigateTo({
+    url: '/pages/seeker/jobs/applications'
   });
 }
 </script>

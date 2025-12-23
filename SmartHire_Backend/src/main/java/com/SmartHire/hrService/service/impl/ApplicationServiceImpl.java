@@ -154,6 +154,11 @@ public class ApplicationServiceImpl extends ServiceImpl<HrApplicationMapper, App
     }
 
     @Override
+    public boolean existsBySeekerIdAndJobId(Long seekerId, Long jobId) {
+        throw new BusinessException(ErrorCode.SYSTEM_ERROR, "HR服务不支持获取职位列表功能，请使用求职者端接口");
+    }
+
+    @Override
     public List<Long> getJobIdListBySeekerId() {
         throw new BusinessException(ErrorCode.SYSTEM_ERROR, "HR服务不支持获取职位列表功能，请使用求职者端接口");
     }

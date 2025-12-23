@@ -28,7 +28,7 @@ export interface InternJobRecommendationsResponse {
 
 /**
  * Get intern job recommendations
- * @param userId 
+ * @returns Intern job recommendations response
  */
 export function getInternJobRecommendations(userId?: number | null): Promise<InternJobRecommendationsResponse> {
   const params: Record<string, any> = {};
@@ -38,10 +38,15 @@ export function getInternJobRecommendations(userId?: number | null): Promise<Int
     params.userId = userId;
   }
   
+  const url = '/api/seeker/job-recommendations/intern';
+  console.log('[Params]', url, params);
   return http<InternJobRecommendationsResponse>({
-    url: '/api/seeker/job-recommendations/intern',
+    url,
     method: 'GET',
     data: params,
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
   });
 }
 

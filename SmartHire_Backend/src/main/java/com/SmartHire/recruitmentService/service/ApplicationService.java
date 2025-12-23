@@ -68,4 +68,12 @@ public interface ApplicationService extends IService<Application> {
   Long recommend(RecommendRequest request);
 
   List<Long> getJobIdListBySeekerId();
+  /**
+   * 检查是否存在投递记录
+   *
+   * @param seekerId 求职者ID
+   * @param jobId    岗位ID
+   * @return 是否存在
+   */
+  boolean existsBySeekerIdAndJobId(Long seekerId, Long jobId);
 }
