@@ -12,13 +12,15 @@ import com.SmartHire.hrService.service.JobInfoService;
 import com.SmartHire.common.api.SeekerApi;
 import com.SmartHire.seekerService.dto.SeekerCardDTO;
 import com.SmartHire.seekerService.model.JobSeeker;
+import java.util.Locale;
+import java.util.Objects;
+import java.util.Comparator;
 import com.SmartHire.common.auth.UserContext;
 import com.SmartHire.recruitmentService.dto.InternJobItemDTO;
 import com.SmartHire.recruitmentService.dto.InternJobRecommendationsDTO;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
+// removed unused imports for recommendation simplification
 import com.SmartHire.recruitmentService.dto.SeekerJobPositionDTO;
 import com.SmartHire.recruitmentService.mapper.ApplicationMapper;
 import com.SmartHire.recruitmentService.model.Application;
@@ -112,30 +114,41 @@ public class SeekerRecruitmentController {
   @GetMapping("/job-recommendations/intern")
   @Operation(summary = "获取实习岗位推荐", description = "获取用户首页推荐的实习岗位列表，优先使用简历/求职者信息进行关键词匹配计算得分（向量搜索未就绪）")
   public Result<InternJobRecommendationsDTO> getInternJobRecommendations() {
-    // Determine target user id: prefer query param, fallback to current user from
-    // context
-    Long targetUserId = userContext.getCurrentUserId();
-
-    Long jobSeekerId = seekerApi.getJobSeekerIdByUserId(targetUserId);
-    if (jobSeekerId == null) {
-      throw new BusinessException(ErrorCode.SEEKER_NOT_EXIST);
-    }
-
-    // Fetch seeker basic info to build keywords
-    JobSeeker seeker = seekerApi.getJobSeekerById(jobSeekerId);
-    SeekerCardDTO seekerCard = seekerApi.getSeekerCard(targetUserId);
-
     JobSearchDTO searchDTO = new JobSearchDTO();
+    // Only fetch internship jobs for this endpoint
     searchDTO.setJobType(1); // 1 == internship
-    if (seeker != null && seeker.getCurrentCity() != null) {
-      searchDTO.setCity(seeker.getCurrentCity());
-    } else if (seekerCard != null && seekerCard.getCity() != null) {
-      searchDTO.setCity(seekerCard.getCity());
+    // fetch a reasonable page of internship jobs (<=12 as API docs)
+    searchDTO.setPage(1);
+    searchDTO.setSize(12);
+    log.info("searchDTO (intern job list): {}", searchDTO);
+    List<JobCardDTO> jobCards = jobInfoService.searchPublicJobs(searchDTO);
+    log.info("jobCards: {}", jobCards);
+
+    // Attempt to get current seeker info for personalized scoring.
+    Long targetUserId = null;
+    try {
+      targetUserId = userContext.getCurrentUserId();
+    } catch (Exception ignored) {
+      // user not logged in or no valid claims — proceed with null targetUserId
     }
-    if (seeker != null && seeker.getEducation() != null) {
-      searchDTO.setEducationRequired(seeker.getEducation());
+    Long jobSeekerId = null;
+    JobSeeker seeker = null;
+    SeekerCardDTO seekerCard = null;
+    if (targetUserId != null) {
+      try {
+        jobSeekerId = seekerApi.getJobSeekerIdByUserId(targetUserId);
+      } catch (Exception ignored) {
+      }
     }
-    // derive a simple keyword from major/university/education
+    if (jobSeekerId != null) {
+      try {
+        seeker = seekerApi.getJobSeekerById(jobSeekerId);
+        seekerCard = seekerApi.getSeekerCard(targetUserId);
+      } catch (Exception ignored) {
+      }
+    }
+
+    // derive a simple keyword from major/university/education (if available)
     StringBuilder kw = new StringBuilder();
     if (seekerCard != null) {
       if (seekerCard.getMajor() != null) {
@@ -149,16 +162,7 @@ public class SeekerRecruitmentController {
       }
     }
     String keyword = kw.toString().trim();
-    if (!keyword.isEmpty()) {
-      searchDTO.setKeyword(keyword);
-    }
 
-    // fetch a reasonable page of internship jobs (<=12 as API docs)
-    searchDTO.setPage(1);
-    searchDTO.setSize(12);
-    log.info("searchDTO: {}", searchDTO);
-    List<JobCardDTO> jobCards = jobInfoService.searchPublicJobs(searchDTO);
-    log.info("jobCards: {}", jobCards);
     List<InternJobItemDTO> items = new ArrayList<>();
     for (JobCardDTO jc : jobCards) {
       InternJobItemDTO item = new InternJobItemDTO();
@@ -170,7 +174,8 @@ public class SeekerRecruitmentController {
       item.setSalary_min(jc.getSalaryMin() == null ? 0 : jc.getSalaryMin().intValue());
       item.setSalary_max(jc.getSalaryMax() == null ? 0 : jc.getSalaryMax().intValue());
 
-      // simple keyword-based matching score (since vector DB not ready)
+      // Basic scoring: base 50, +30 exact keyword match, +10 per token partial match,
+      // +10 education match, +5 city match. Clamp to [0,100].
       int score = 50;
       String lowerKeyword = keyword == null ? "" : keyword.toLowerCase(Locale.ROOT);
       String combined = (Objects.toString(jc.getJobTitle(), "") + " " + Objects.toString(jc.getCompanyName(), "") + " "
@@ -179,7 +184,6 @@ public class SeekerRecruitmentController {
         if (combined.contains(lowerKeyword)) {
           score += 30;
         } else {
-          // partial token match
           String[] toks = lowerKeyword.split("\\s+");
           for (String t : toks) {
             if (!t.isEmpty() && combined.contains(t)) {
@@ -205,9 +209,12 @@ public class SeekerRecruitmentController {
       items.add(item);
     }
 
+    // Sort by match score descending
+    items.sort(Comparator.comparing(InternJobItemDTO::getMatchScore, Comparator.nullsLast(Comparator.naturalOrder())).reversed());
+
     InternJobRecommendationsDTO resp = new InternJobRecommendationsDTO();
     resp.setJobs(items);
-    return Result.success("获取实习岗位推荐成功", resp);
+    return Result.success("获取岗位列表成功", resp);
   }
 
   @GetMapping("/job-position/{jobId}")
