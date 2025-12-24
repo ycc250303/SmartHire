@@ -37,6 +37,7 @@
         <id column="user_id" property="userId" />
         <result column="username" property="username" />
         <result column="email" property="email" />
+        <result column="phone" property="phone" />
         <result column="user_type" property="userType" />
         <result column="status" property="status" />
         <result column="avatar_url" property="avatarUrl" />
@@ -52,6 +53,7 @@
             u.id as user_id,
             u.username,
             u.email,
+            u.phone,
             CASE
                 WHEN u.user_type = 1 THEN 'jobseeker'
                 WHEN u.user_type = 2 THEN 'hr'
@@ -97,6 +99,7 @@
             u.id as user_id,
             u.username,
             u.email,
+            u.phone,
             CASE
                 WHEN u.user_type = 1 THEN 'jobseeker'
                 WHEN u.user_type = 2 THEN 'hr'

@@ -11,6 +11,7 @@ public class UserManagementDTO {
   private Long userId;
   private String username;
   private String email;
+  private String phone; // 手机号
   private String userType; // "hr", "job_seeker", "admin"
   private Integer status; // 0-禁用, 1-启用
   private String avatarUrl;
@@ -28,6 +29,7 @@ public class UserManagementDTO {
       Long userId,
       String username,
       String email,
+      String phone,
       String userType,
       Integer status,
       String avatarUrl,
@@ -36,6 +38,7 @@ public class UserManagementDTO {
     this.userId = userId;
     this.username = username;
     this.email = email;
+    this.phone = phone;
     this.userType = userType;
     this.status = status;
     this.avatarUrl = avatarUrl;
@@ -47,6 +50,7 @@ public class UserManagementDTO {
       Long userId,
       String username,
       String email,
+      String phone,
       String userType,
       Integer status,
       String avatarUrl,
@@ -57,6 +61,7 @@ public class UserManagementDTO {
     this.userId = userId;
     this.username = username;
     this.email = email;
+    this.phone = phone;
     this.userType = userType;
     this.status = status;
     this.avatarUrl = avatarUrl;
@@ -89,6 +94,14 @@ public class UserManagementDTO {
 
   public void setEmail(String email) {
     this.email = email;
+  }
+
+  public String getPhone() {
+    return phone;
+  }
+
+  public void setPhone(String phone) {
+    this.phone = phone;
   }
 
   public String getUserType() {
