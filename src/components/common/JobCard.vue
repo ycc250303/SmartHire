@@ -2,7 +2,7 @@
   <view class="job-card" @click="handleCardClick">
     <view class="card-header">
       <view class="job-title">{{ job.title }}</view>
-      <view class="match-score">
+      <view class="match-score" v-if="job.matchScore !== null && job.matchScore !== undefined">
         <text class="score-value">{{ job.matchScore }}%</text>
         <text class="score-label">{{ t('pages.jobs.matchScore') }}</text>
       </view>
@@ -10,15 +10,15 @@
     
     <view class="job-meta">
       <text class="meta-text">
-        {{ job.companyName }} · {{ job.city }} · 
-        <text class="salary-text">{{ formatSalary(job.salary_min, job.salary_max) }}</text>
+        {{ job.companyName || 'Unknown Company' }} · {{ job.city || 'Unknown City' }} · 
       </text>
+      <view class="tag tag-salary">{{ formatSalary(job.salary_min, job.salary_max) }}</view>
     </view>
     
     <view class="job-tags">
-      <view class="tag tag-degree">{{ getDegreeText(job.degrees) }}</view>
-      <view class="tag tag-duration">{{ formatDuration(job.work_months_min) }}</view>
-      <view class="tag tag-skill" v-for="skill in job.skills" :key="skill">{{ skill }}</view>
+      <view class="tag tag-degree" v-if="job.degrees !== null && job.degrees !== undefined">{{ getDegreeText(job.degrees) }}</view>
+      <view class="tag tag-duration" v-if="job.work_months_min !== null && job.work_months_min !== undefined">{{ formatDuration(job.work_months_min) }}</view>
+      <view class="tag tag-skill" v-for="skill in (job.skills || [])" :key="skill">{{ skill }}</view>
     </view>
   </view>
 </template>
@@ -35,7 +35,9 @@ interface Props {
 const props = defineProps<Props>();
 
 function formatSalary(min: number, max: number): string {
-  return `${min}-${max}K`;
+  const minK = Math.round(min / 1000);
+  const maxK = Math.round(max / 1000);
+  return `${minK}-${maxK}K`;
 }
 
 function formatDuration(months: number): string {
@@ -107,6 +109,10 @@ function handleCardClick() {
 }
 
 .job-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: vars.$spacing-xs;
   margin-bottom: vars.$spacing-md;
 }
 
@@ -114,11 +120,6 @@ function handleCardClick() {
   font-size: 24rpx;
   color: vars.$text-muted;
   line-height: 1.5;
-}
-
-.salary-text {
-  font-weight: 600;
-  color: vars.$text-color;
 }
 
 .job-tags {
@@ -131,6 +132,11 @@ function handleCardClick() {
   padding: 8rpx 16rpx;
   border-radius: vars.$border-radius-sm;
   font-size: 24rpx;
+}
+
+.tag-salary {
+  background-color: #fff3e0;
+  color: #f57c00;
 }
 
 .tag-degree {

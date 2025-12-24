@@ -279,9 +279,8 @@ function chooseFileForApp() {
 // #endif
 
 function navigateToUpload(filePath: string, fileName: string) {
-  const defaultName = fileName.replace(/\.pdf$/i, '');
   uni.navigateTo({
-    url: `/pages/seeker/profile/resume/edit/upload-resume?filePath=${encodeURIComponent(filePath)}&defaultName=${encodeURIComponent(defaultName)}`,
+    url: `/pages/seeker/profile/resume/edit/upload-resume?filePath=${encodeURIComponent(filePath)}&defaultName=${encodeURIComponent(fileName)}`,
   });
 }
 

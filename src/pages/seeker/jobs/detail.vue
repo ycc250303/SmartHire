@@ -162,9 +162,11 @@ async function loadJobDetail() {
 function formatSalary(): string {
   if (!job.value) return '';
   if (job.value.salaryMin && job.value.salaryMax) {
+    const minK = Math.round(job.value.salaryMin / 1000);
+    const maxK = Math.round(job.value.salaryMax / 1000);
     const months = job.value.salaryMonths || 12;
     const unit = months === 12 ? 'k' : `${months}薪`;
-    return `${job.value.salaryMin}-${job.value.salaryMax}${unit}`;
+    return `${minK}-${maxK}${unit}`;
   }
   return t('pages.jobs.jobDetail.salaryNegotiable');
 }
@@ -230,8 +232,43 @@ async function handleApply() {
   if (!jobId.value || applying.value) return;
 
   if (canContactHr()) {
+    const jobData = job.value;
+    if (!jobData || !jobData.application) return;
+    
+    const queryParams: string[] = [];
+    queryParams.push(`id=${jobData.application.conversationId}`);
+    
+    if (jobData.application.applicationId) {
+      queryParams.push(`applicationId=${jobData.application.applicationId}`);
+    }
+    if (jobData.hr?.hrId) {
+      queryParams.push(`userId=${jobData.hr.hrId}`);
+    }
+    if (jobData.hr?.realName) {
+      queryParams.push(`username=${encodeURIComponent(jobData.hr.realName)}`);
+    }
+    if (jobData.jobTitle) {
+      queryParams.push(`jobTitle=${encodeURIComponent(jobData.jobTitle)}`);
+    }
+    if (jobData.city) {
+      queryParams.push(`city=${encodeURIComponent(jobData.city)}`);
+    }
+    if (jobData.company?.companyName) {
+      queryParams.push(`companyName=${encodeURIComponent(jobData.company.companyName)}`);
+    }
+    if (jobData.salaryMin && jobData.salaryMax) {
+      const minK = Math.round(jobData.salaryMin / 1000);
+      const maxK = Math.round(jobData.salaryMax / 1000);
+      queryParams.push(`salary=${encodeURIComponent(`${minK}-${maxK}K`)}`);
+    }
+    if (jobData.jobType !== undefined) {
+      queryParams.push(`jobType=${jobData.jobType}`);
+    }
+    
+    const url = `/pages/seeker/chat/conversation?${queryParams.join('&')}`;
+    console.log('Navigating to conversation:', url);
     uni.navigateTo({
-      url: `/pages/seeker/chat/conversation?id=${job.value!.application!.conversationId}`
+      url: url
     });
     return;
   }
@@ -276,8 +313,41 @@ async function handleApply() {
     });
 
     setTimeout(() => {
+      const jobData = job.value;
+      if (!jobData) return;
+      
+      const queryParams: string[] = [];
+      queryParams.push(`id=${result.conversationId}`);
+      queryParams.push(`applicationId=${result.applicationId}`);
+      
+      if (jobData.hr?.hrId) {
+        queryParams.push(`userId=${jobData.hr.hrId}`);
+      }
+      if (jobData.hr?.realName) {
+        queryParams.push(`username=${encodeURIComponent(jobData.hr.realName)}`);
+      }
+      if (jobData.jobTitle) {
+        queryParams.push(`jobTitle=${encodeURIComponent(jobData.jobTitle)}`);
+      }
+      if (jobData.city) {
+        queryParams.push(`city=${encodeURIComponent(jobData.city)}`);
+      }
+      if (jobData.company?.companyName) {
+        queryParams.push(`companyName=${encodeURIComponent(jobData.company.companyName)}`);
+      }
+      if (jobData.salaryMin && jobData.salaryMax) {
+        const minK = Math.round(jobData.salaryMin / 1000);
+        const maxK = Math.round(jobData.salaryMax / 1000);
+        queryParams.push(`salary=${encodeURIComponent(`${minK}-${maxK}K`)}`);
+      }
+      if (jobData.jobType !== undefined) {
+        queryParams.push(`jobType=${jobData.jobType}`);
+      }
+      
+      const url = `/pages/seeker/chat/conversation?${queryParams.join('&')}`;
+      console.log('Navigating to conversation:', url);
       uni.navigateTo({
-        url: `/pages/seeker/chat/conversation?id=${result.conversationId}`
+        url: url
       });
     }, 1500);
 

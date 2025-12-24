@@ -9,6 +9,20 @@
       </view>
     </view>
 
+    <view v-if="jobInfo" class="job-info-card">
+      <view class="job-info-content">
+        <text class="job-title-text">{{ jobInfo.jobTitle }}</text>
+        <view class="job-meta-info">
+          <text class="job-meta-item" v-if="jobInfo.salary">{{ jobInfo.salary }}</text>
+          <text class="job-meta-separator" v-if="jobInfo.salary && jobInfo.city">·</text>
+          <text class="job-meta-item" v-if="jobInfo.city">{{ jobInfo.city }}</text>
+          <text class="job-meta-separator" v-if="jobInfo.city && jobInfo.jobTypeText">·</text>
+          <text class="job-meta-item" v-if="jobInfo.jobTypeText">{{ jobInfo.jobTypeText }}</text>
+        </view>
+        <text class="company-name-text" v-if="jobInfo.companyName">{{ jobInfo.companyName }}</text>
+      </view>
+    </view>
+
     <view v-if="loading && messages.length === 0" class="loading-container" :style="messageListStyle">
       <text class="loading-text">{{ t('pages.chat.conversation.loading') }}</text>
     </view>
@@ -101,7 +115,7 @@
         <view
           class="send-button"
           :class="{ disabled: !canSend || sending }"
-          @touchend.prevent="handleSendClick"
+          @click="handleSendClick"
         >
           <text v-if="sending" class="send-button-text">{{ t('pages.chat.conversation.sending') }}</text>
           <text v-else class="send-button-text">{{ t('pages.chat.conversation.send') }}</text>
@@ -116,7 +130,7 @@ import { ref, computed, onMounted, nextTick, watch } from 'vue';
 import { onLoad, onShow } from '@dcloudio/uni-app';
 import { t } from '@/locales';
 import dayjs from 'dayjs';
-import { getChatHistory, sendMessage, markAsRead, type Message } from '@/services/api/message';
+import { getChatHistory, sendMessage, markAsRead, getConversations, type Message } from '@/services/api/message';
 import { useUserStore } from '@/store/user';
 
 const userStore = useUserStore();
@@ -137,6 +151,16 @@ const pageSize = 20;
 const replyingTo = ref<Message | null>(null);
 const applicationId = ref<number>(0);
 
+interface JobInfo {
+  jobTitle: string;
+  salary?: string;
+  city?: string;
+  jobTypeText?: string;
+  companyName?: string;
+}
+
+const jobInfo = ref<JobInfo | null>(null);
+
 const keyboardHeight = ref(0);
 const headerHeight = ref(88);
 const inputHeight = ref(60);
@@ -148,10 +172,13 @@ const inputContainerStyle = computed(() => ({
   bottom: `${keyboardHeight.value}px`
 }));
 
-const messageListStyle = computed(() => ({
-  top: `${headerHeight.value}px`,
-  bottom: `${inputHeight.value + keyboardHeight.value + safeAreaBottom.value}px`
-}));
+const messageListStyle = computed(() => {
+  const jobCardHeight = jobInfo.value ? 120 : 0;
+  return {
+    top: `${headerHeight.value + jobCardHeight}px`,
+    bottom: `${inputHeight.value + keyboardHeight.value + safeAreaBottom.value}px`
+  };
+});
 
 interface MessageWithDate extends Omit<Message, 'id'> {
   id: number | string;
@@ -204,6 +231,8 @@ const displayUsername = computed(() => {
 });
 
 onLoad((options: any) => {
+  console.log('Conversation onLoad options:', options);
+  
   if (options?.id) {
     conversationId.value = parseInt(options.id);
   }
@@ -219,6 +248,24 @@ onLoad((options: any) => {
   }
   if (options?.applicationId) {
     applicationId.value = parseInt(options.applicationId);
+  }
+  
+  if (options?.jobTitle) {
+    try {
+      const jobType = options.jobType ? parseInt(options.jobType) : undefined;
+      const jobTypeText = jobType === 0 ? t('pages.jobs.fulltime') : jobType === 1 ? t('pages.jobs.internship') : jobType === 2 ? t('pages.jobs.parttime') : undefined;
+      
+      jobInfo.value = {
+        jobTitle: decodeURIComponent(options.jobTitle),
+        salary: options.salary ? decodeURIComponent(options.salary) : undefined,
+        city: options.city ? decodeURIComponent(options.city) : undefined,
+        jobTypeText: jobTypeText,
+        companyName: options.companyName ? decodeURIComponent(options.companyName) : undefined,
+      };
+      console.log('Job info set:', jobInfo.value);
+    } catch (e) {
+      console.error('Failed to parse job info:', e);
+    }
   }
   
   uni.setNavigationBarTitle({
@@ -326,10 +373,46 @@ async function loadMoreMessages() {
 }
 
 async function handleSend() {
-  if (!canSend.value || !conversationId.value) return;
+  console.log('handleSend called', { canSend: canSend.value, conversationId: conversationId.value, otherUserId: otherUserId.value, applicationId: applicationId.value });
+  
+  if (!canSend.value || !conversationId.value) {
+    console.log('Early return: canSend or conversationId check failed');
+    return;
+  }
+  
+  if (!otherUserId.value) {
+    console.log('No otherUserId, trying to get from conversation');
+    try {
+      const conversations = await getConversations();
+      const currentConversation = conversations.find(c => c.id === conversationId.value);
+      if (currentConversation) {
+        otherUserId.value = currentConversation.otherUserId;
+        if (currentConversation.applicationId) {
+          applicationId.value = currentConversation.applicationId;
+        }
+        console.log('Got otherUserId from conversation:', otherUserId.value);
+      } else {
+        uni.showToast({
+          title: t('pages.chat.conversation.sendError'),
+          icon: 'none'
+        });
+        return;
+      }
+    } catch (err) {
+      console.error('Failed to get conversations:', err);
+      uni.showToast({
+        title: t('pages.chat.conversation.sendError'),
+        icon: 'none'
+      });
+      return;
+    }
+  }
   
   const content = inputText.value.trim();
-  if (!content) return;
+  if (!content) {
+    console.log('No content to send');
+    return;
+  }
   
   sending.value = true;
   const tempMessage: Message = {
@@ -420,9 +503,16 @@ function onInputBlur() {
 }
 
 function handleSendClick() {
-  if (!canSend.value || sending.value) return;
+  console.log('handleSendClick called', { canSend: canSend.value, sending: sending.value, otherUserId: otherUserId.value, conversationId: conversationId.value });
+  if (!canSend.value || sending.value) {
+    console.log('Cannot send:', { canSend: canSend.value, sending: sending.value });
+    return;
+  }
+  if (!conversationId.value) {
+    console.log('No conversationId');
+    return;
+  }
   handleSend();
-  inputFocused.value = true;
 }
 
 function cancelReply() {
@@ -561,6 +651,57 @@ function handleBack() {
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 100%;
+}
+
+.job-info-card {
+  position: fixed;
+  top: calc(var(--status-bar-height) + 88rpx);
+  left: 0;
+  right: 0;
+  background-color: vars.$surface-color;
+  border-bottom: 1rpx solid vars.$bg-color;
+  z-index: 99;
+  padding: vars.$spacing-md vars.$spacing-lg;
+  box-sizing: border-box;
+}
+
+.job-info-content {
+  display: flex;
+  flex-direction: column;
+  gap: vars.$spacing-xs;
+}
+
+.job-title-text {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: vars.$text-color;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.job-meta-info {
+  display: flex;
+  align-items: center;
+  gap: vars.$spacing-xs;
+  font-size: 24rpx;
+  color: vars.$text-muted;
+}
+
+.job-meta-item {
+  color: vars.$text-muted;
+}
+
+.job-meta-separator {
+  color: vars.$text-muted;
+}
+
+.company-name-text {
+  font-size: 24rpx;
+  color: vars.$text-muted;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .loading-container,

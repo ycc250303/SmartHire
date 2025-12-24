@@ -14,8 +14,6 @@ export interface Resume {
 
 export interface UploadResumeParams {
   filePath: string;
-  resumeName: string;
-  privacyLevel: number;
   fileName?: string;
 }
 
@@ -52,8 +50,6 @@ export function uploadResume(params: UploadResumeParams): Promise<Resume> {
           const formData = new FormData();
           const fileName = params.fileName || 'resume.pdf';
           formData.append('resumeFile', blob, fileName);
-          formData.append('resumeName', params.resumeName);
-          formData.append('privacyLevel', params.privacyLevel.toString());
           
           const xhr = new XMLHttpRequest();
           xhr.open('POST', fullUrl, true);
@@ -100,10 +96,7 @@ export function uploadResume(params: UploadResumeParams): Promise<Resume> {
         url: fullUrl,
         filePath: params.filePath,
         name: 'resumeFile',
-        formData: {
-          resumeName: params.resumeName,
-          privacyLevel: params.privacyLevel.toString(),
-        },
+        formData: {},
         header: {
           'Authorization': token ? `Bearer ${token}` : '',
         },
@@ -145,10 +138,7 @@ export function uploadResume(params: UploadResumeParams): Promise<Resume> {
       url: fullUrl,
       filePath: params.filePath,
       name: 'resumeFile',
-      formData: {
-        resumeName: params.resumeName,
-        privacyLevel: params.privacyLevel.toString(),
-      },
+      formData: {},
       header: {
         'Authorization': token ? `Bearer ${token}` : '',
       },

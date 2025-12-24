@@ -22,7 +22,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue';
 import { t } from '@/locales';
-import { getInternJobRecommendations, type InternJobItem } from '@/services/api/recommendations';
+import { getInternJobRecommendationsWithSupplement, type InternJobItem } from '@/services/api/recommendations';
 import JobCard from '@/components/common/JobCard.vue';
 
 type FilterType = 'recommended' | 'nearby' | 'latest';
@@ -41,10 +41,8 @@ const loadJobs = async () => {
   loading.value = true;
   error.value = null;
   try {
-    const response = await getInternJobRecommendations();
+    const response = await getInternJobRecommendationsWithSupplement();
     jobs.value = response.jobs;
-    // Filter logic will be implemented when API is ready
-    // For now, we just load all jobs
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Unknown error';
   } finally {

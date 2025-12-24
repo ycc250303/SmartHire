@@ -33,7 +33,7 @@
       >
         <image
           class="avatar"
-          :src="conversation.otherUserAvatar || '/static/user-avatar.png'"
+          :src="getAvatarUrl(conversation.otherUserAvatar)"
           mode="aspectFill"
         />
         <view class="conversation-info">
@@ -61,10 +61,13 @@ import { t } from '@/locales';
 import dayjs from 'dayjs';
 import { getConversations, pinConversation, deleteConversation, getUnreadCount, type Conversation } from '@/services/api/message';
 import { getSystemNotifications, getSystemNotificationUnreadCount, markAllNotificationsAsRead, type SystemNotification } from '@/services/api/notification';
+import { useImageUrl } from '@/utils/useImageUrl';
 
 const emit = defineEmits<{
   'update-unread': [count: number];
 }>();
+
+const { processImageUrl } = useImageUrl();
 
 const conversations = ref<Conversation[]>([]);
 const systemNotification = ref<SystemNotification | null>(null);
@@ -89,7 +92,7 @@ const systemConversation = computed<Conversation | null>(() => {
     id: SYSTEM_CONVERSATION_ID,
     otherUserId: 0,
     otherUserName: t('pages.chat.systemNotifications.title'),
-    otherUserAvatar: '/static/user-avatar.png',
+    otherUserAvatar: '',
     lastMessage: systemNotification.value?.title || t('pages.chat.systemNotifications.empty'),
     lastMessageTime: systemNotification.value?.createdAt || new Date().toISOString(),
     unreadCount: systemNotificationUnreadCount.value,
@@ -120,6 +123,10 @@ const sortedConversations = computed(() => {
 
 function isSystemConversation(conversation: Conversation): boolean {
   return conversation.id === SYSTEM_CONVERSATION_ID;
+}
+
+function getAvatarUrl(avatarUrl: string | null | undefined): string {
+  return processImageUrl(avatarUrl);
 }
 
 onShow(() => {
