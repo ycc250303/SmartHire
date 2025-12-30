@@ -59,7 +59,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @Slf4j
 @RestController
-@RequestMapping({ "/recruitment/seeker", "/seeker" })
+@RequestMapping("/recruitment/seeker")
 @RequireUserType(UserType.SEEKER)
 @Validated
 public class SeekerRecruitmentController {

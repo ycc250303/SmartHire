@@ -36,34 +36,20 @@ import org.springframework.util.StringUtils;
 public class JobInfoServiceImpl extends ServiceImpl<JobInfoMapper, JobInfo>
     implements JobInfoService {
 
-  @Autowired private HrInfoMapper hrInfoMapper;
+  @Autowired
+  private HrInfoMapper hrInfoMapper;
 
-  @Autowired private CompanyMapper companyMapper;
+  @Autowired
+  private CompanyMapper companyMapper;
 
-  @Autowired private JobSkillRequirementMapper jobSkillRequirementMapper;
+  @Autowired
+  private JobSkillRequirementMapper jobSkillRequirementMapper;
 
-  @Autowired private UserContext userContext;
+  @Autowired
+  private UserContext userContext;
 
-  @Autowired private JobAuditMapper jobAuditMapper;
-
-  /** 获取当前登录HR的ID（hr_info表的id）
-   * 注意：用户身份验证已由AOP在Controller层统一处理，此处无需再次验证
-   */
-  private Long getCurrentHrId() {
-    Long userId = userContext.getCurrentUserId();
-
-    // 通过user_id查询hr_info表获取hr_id（hr_info.id）
-    HrInfo hrInfo =
-        hrInfoMapper.selectOne(
-            new LambdaQueryWrapper<HrInfo>()
-                .eq(HrInfo::getUserId, userId));
-
-    if (hrInfo == null) {
-      throw new BusinessException(ErrorCode.HR_NOT_EXIST);
-    }
-
-    return hrInfo.getId(); // 返回hr_info表的id，这就是job_info表的hr_id
-  }
+  @Autowired
+  private JobAuditMapper jobAuditMapper;
 
   /** 验证岗位是否属于当前HR */
   private void validateJobOwnership(Long jobId) {
@@ -72,7 +58,7 @@ public class JobInfoServiceImpl extends ServiceImpl<JobInfoMapper, JobInfo>
       throw new BusinessException(ErrorCode.JOB_NOT_EXIST);
     }
 
-    Long currentHrId = getCurrentHrId();
+    Long currentHrId = userContext.getCurrentHrId();
     if (!jobInfo.getHrId().equals(currentHrId)) {
       throw new BusinessException(ErrorCode.JOB_NOT_BELONG_TO_HR);
     }
@@ -81,7 +67,7 @@ public class JobInfoServiceImpl extends ServiceImpl<JobInfoMapper, JobInfo>
   @Override
   @Transactional
   public Long createJobInfo(JobInfoCreateDTO createDTO) {
-    Long currentHrId = getCurrentHrId();
+    Long currentHrId = userContext.getCurrentHrId();
 
     // 验证全职类型字段
     if (createDTO.getJobType() != null
@@ -137,19 +123,18 @@ public class JobInfoServiceImpl extends ServiceImpl<JobInfoMapper, JobInfo>
 
     // 保存技能要求
     if (createDTO.getSkills() != null && !createDTO.getSkills().isEmpty()) {
-      List<JobSkillRequirement> skillRequirements =
-          createDTO.getSkills().stream()
-              .map(
-                  skill -> {
-                    JobSkillRequirement requirement = new JobSkillRequirement();
-                    requirement.setJobId(jobInfo.getId());
-                    requirement.setSkillName(skill.getSkillName());
-                    requirement.setIsRequired(
-                        skill.getIsRequired() != null ? skill.getIsRequired() : 1);
-                    requirement.setCreatedAt(now);
-                    return requirement;
-                  })
-              .collect(Collectors.toList());
+      List<JobSkillRequirement> skillRequirements = createDTO.getSkills().stream()
+          .map(
+              skill -> {
+                JobSkillRequirement requirement = new JobSkillRequirement();
+                requirement.setJobId(jobInfo.getId());
+                requirement.setSkillName(skill.getSkillName());
+                requirement.setIsRequired(
+                    skill.getIsRequired() != null ? skill.getIsRequired() : 1);
+                requirement.setCreatedAt(now);
+                return requirement;
+              })
+          .collect(Collectors.toList());
 
       for (JobSkillRequirement requirement : skillRequirements) {
         jobSkillRequirementMapper.insert(requirement);
@@ -167,14 +152,12 @@ public class JobInfoServiceImpl extends ServiceImpl<JobInfoMapper, JobInfo>
     JobInfo jobInfo = getById(jobId);
 
     // 验证全职类型字段
-    Integer newJobType =
-        updateDTO.getJobType() != null ? updateDTO.getJobType() : jobInfo.getJobType();
+    Integer newJobType = updateDTO.getJobType() != null ? updateDTO.getJobType() : jobInfo.getJobType();
     if (newJobType != null && newJobType == 0) {
       // 如果更新为全职类型或当前就是全职类型，需要验证经验要求字段
-      Integer experienceRequired =
-          updateDTO.getExperienceRequired() != null
-              ? updateDTO.getExperienceRequired()
-              : jobInfo.getExperienceRequired();
+      Integer experienceRequired = updateDTO.getExperienceRequired() != null
+          ? updateDTO.getExperienceRequired()
+          : jobInfo.getExperienceRequired();
 
       if (experienceRequired == null) {
         throw new BusinessException(ErrorCode.EXPERIENCE_REQUIRED_FOR_FULL_TIME);
@@ -184,14 +167,12 @@ public class JobInfoServiceImpl extends ServiceImpl<JobInfoMapper, JobInfo>
     // 验证实习类型字段
     if (newJobType != null && newJobType == 1) {
       // 如果更新为实习类型或当前就是实习类型，需要验证实习字段
-      Integer internshipDaysPerWeek =
-          updateDTO.getInternshipDaysPerWeek() != null
-              ? updateDTO.getInternshipDaysPerWeek()
-              : jobInfo.getInternshipDaysPerWeek();
-      Integer internshipDurationMonths =
-          updateDTO.getInternshipDurationMonths() != null
-              ? updateDTO.getInternshipDurationMonths()
-              : jobInfo.getInternshipDurationMonths();
+      Integer internshipDaysPerWeek = updateDTO.getInternshipDaysPerWeek() != null
+          ? updateDTO.getInternshipDaysPerWeek()
+          : jobInfo.getInternshipDaysPerWeek();
+      Integer internshipDurationMonths = updateDTO.getInternshipDurationMonths() != null
+          ? updateDTO.getInternshipDurationMonths()
+          : jobInfo.getInternshipDurationMonths();
 
       if (internshipDaysPerWeek == null) {
         throw new BusinessException(ErrorCode.INTERNSHIP_DAYS_PER_WEEK_REQUIRED);
@@ -270,20 +251,18 @@ public class JobInfoServiceImpl extends ServiceImpl<JobInfoMapper, JobInfo>
 
   @Override
   public List<JobInfoListDTO> getJobInfoList(Integer status) {
-    Long currentHrId = getCurrentHrId();
+    Long currentHrId = userContext.getCurrentHrId();
 
     // 构建查询条件
     List<JobInfo> jobInfos;
     if (status != null) {
-      jobInfos =
-          lambdaQuery()
-              .eq(JobInfo::getHrId, currentHrId)
-              .eq(JobInfo::getStatus, status)
-              .orderByDesc(JobInfo::getCreatedAt)
-              .list();
+      jobInfos = lambdaQuery()
+          .eq(JobInfo::getHrId, currentHrId)
+          .eq(JobInfo::getStatus, status)
+          .orderByDesc(JobInfo::getCreatedAt)
+          .list();
     } else {
-      jobInfos =
-          lambdaQuery().eq(JobInfo::getHrId, currentHrId).orderByDesc(JobInfo::getCreatedAt).list();
+      jobInfos = lambdaQuery().eq(JobInfo::getHrId, currentHrId).orderByDesc(JobInfo::getCreatedAt).list();
     }
 
     // 转换为DTO并填充技能要求
@@ -373,7 +352,7 @@ public class JobInfoServiceImpl extends ServiceImpl<JobInfoMapper, JobInfo>
 
     // 检查岗位状态，允许草稿、需修改、已拒绝状态重新提交审核
     String currentStatus = jobInfo.getAuditStatus();
-    if (currentStatus != null 
+    if (currentStatus != null
         && !currentStatus.equals(AuditStatus.DRAFT.getCode())
         && !currentStatus.equals(AuditStatus.MODIFIED.getCode())
         && !currentStatus.equals(AuditStatus.REJECTED.getCode())) {
@@ -381,7 +360,7 @@ public class JobInfoServiceImpl extends ServiceImpl<JobInfoMapper, JobInfo>
     }
 
     // 获取HR信息
-    Long currentHrId = getCurrentHrId();
+    Long currentHrId = userContext.getCurrentHrId();
     HrInfo hrInfo = hrInfoMapper.selectById(currentHrId);
     if (hrInfo == null) {
       throw new BusinessException(ErrorCode.HR_NOT_EXIST);
@@ -404,9 +383,9 @@ public class JobInfoServiceImpl extends ServiceImpl<JobInfoMapper, JobInfo>
     // 创建或更新审核记录
     LambdaQueryWrapper<JobAuditRecord> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(JobAuditRecord::getJobId, jobId);
-    
+
     JobAuditRecord auditRecord = jobAuditMapper.selectOne(wrapper);
-    
+
     if (auditRecord == null) {
       // 创建新的审核记录
       auditRecord = new JobAuditRecord();

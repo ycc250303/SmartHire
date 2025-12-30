@@ -36,9 +36,6 @@ public class MatchingServiceImpl implements MatchingService {
   private UserContext userContext;
 
   @Autowired
-  private HrInfoMapper hrInfoMapper;
-
-  @Autowired
   private JobInfoMapper jobInfoMapper;
 
   @Autowired
@@ -50,23 +47,6 @@ public class MatchingServiceImpl implements MatchingService {
   @Autowired
   private HrApplicationMapper hrApplicationMapper;
 
-  /**
-   * 获取当前登录HR的ID（hr_info表ID）
-   * 注意：用户身份验证已由AOP在Controller层统一处理，此处无需再次验证
-   */
-  private Long getCurrentHrId() {
-    Long userId = userContext.getCurrentUserId();
-
-    HrInfo hrInfo = hrInfoMapper.selectOne(
-        new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<HrInfo>()
-            .eq(HrInfo::getUserId, userId));
-
-    if (hrInfo == null) {
-      throw new BusinessException(ErrorCode.HR_NOT_EXIST);
-    }
-
-    return hrInfo.getId();
-  }
 
   /** 校验岗位归属 */
   private JobInfo validateJobOwnership(Long jobId, Long hrId) {
@@ -83,7 +63,7 @@ public class MatchingServiceImpl implements MatchingService {
   @Override
   @Transactional
   public List<ApplicationListDTO> matchApplicationsForJob(Long jobId) {
-    Long hrId = getCurrentHrId();
+    Long hrId = userContext.getCurrentHrId();
     validateJobOwnership(jobId, hrId);
 
     List<String> requiredSkills = jobSkillRequirementMapper.selectSkillNamesByJobId(jobId);
