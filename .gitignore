@@ -38,3 +38,13 @@ build/
 .env.development.local
 .env.test.local
 .env.production.local
+
+
+frontend-web/.env
+frontend-web/.env.development
+frontend-web/.env.production
+/frontend-web/node_modules
+
+
+/.vscode
+/.claude
