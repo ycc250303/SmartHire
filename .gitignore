@@ -48,3 +48,6 @@ frontend-web/.env.production
 
 /.vscode
 /.claude
+/.idea
+/node_modules
+/.idea

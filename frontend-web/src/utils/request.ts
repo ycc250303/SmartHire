@@ -10,17 +10,19 @@ export interface ApiResponse<T = any> {
 
 // ==================== 服务配置 ====================
 // 注意：后端实际上是单体应用，所有服务都在8080端口
+const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/smarthire/api'
+
 const SERVICE_CONFIGS = {
   main: {
-    baseURL: 'http://localhost:8080/smarthire/api',
+    baseURL,
     timeout: 10000
   },
   auth: {
-    baseURL: 'http://localhost:8080/smarthire/api',
+    baseURL,
     timeout: 10000
   },
   admin: {
-    baseURL: 'http://localhost:8080/smarthire/api',
+    baseURL,
     timeout: 10000
   }
 }
