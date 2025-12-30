@@ -50,3 +50,4 @@ frontend-web/.env.production
 /.claude
 /.idea
 /node_modules
+/.idea
