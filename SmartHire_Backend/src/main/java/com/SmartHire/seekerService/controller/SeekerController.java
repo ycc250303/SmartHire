@@ -4,7 +4,7 @@ import com.SmartHire.common.auth.RequireUserType;
 import com.SmartHire.common.entity.Result;
 import com.SmartHire.common.auth.UserType;
 import com.SmartHire.seekerService.dto.JobFavoriteDTO;
-import com.SmartHire.seekerService.dto.SeekerCardDTO;
+import com.SmartHire.common.dto.seekerDto.SeekerCardDTO;
 import com.SmartHire.seekerService.dto.SeekerDTO;
 import com.SmartHire.seekerService.dto.SeekerInfoDTO;
 import com.SmartHire.seekerService.dto.seekerTableDto.EducationExperienceDTO;
@@ -422,7 +422,7 @@ public class SeekerController {
    * @return 在线简历聚合数据
    */
   @GetMapping("/online-resume")
-  @RequireUserType({ UserType.HR, UserType.SEEKER})
+  @RequireUserType({ UserType.HR, UserType.SEEKER })
   @Operation(summary = "获取在线简历", description = "HR查看指定用户的在线简历")
   public Result<?> getOnlineResume(
       @RequestParam("userId") @NotNull(message = "用户ID不能为空") @Positive(message = "用户ID必须为正整数") Long userId) {
@@ -437,7 +437,7 @@ public class SeekerController {
    * @return 求职者卡片信息列表
    */
   @GetMapping("/cards")
-  @RequireUserType({ UserType.HR, UserType.SEEKER})
+  @RequireUserType({ UserType.HR, UserType.SEEKER })
   @Operation(summary = "获取所有求职者卡片", description = "HR查看所有求职者的基本信息卡片")
   public Result<List<SeekerCardDTO>> getAllSeekerCards(
       @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum,
@@ -460,7 +460,7 @@ public class SeekerController {
    * @return 求职者卡片信息列表
    */
   @GetMapping("/cards/filter")
-  @RequireUserType({ UserType.HR, UserType.SEEKER})
+  @RequireUserType({ UserType.HR, UserType.SEEKER })
   @Operation(summary = "综合筛选求职者卡片", description = "根据多个条件综合筛选求职者的基本信息卡片")
   public Result<List<SeekerCardDTO>> getSeekersByMultipleConditions(
       @RequestParam(value = "city", required = false) String city,

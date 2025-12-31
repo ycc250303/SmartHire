@@ -27,7 +27,7 @@ public interface UserAuthApi {
   /**
    * 验证用户类型
    *
-   * @param userId 用户ID
+   * @param userId   用户ID
    * @param userType 用户类型（1-求职者，2-HR）
    * @return 是否符合类型
    */
@@ -36,10 +36,10 @@ public interface UserAuthApi {
   /**
    * 分页查询用户管理列表
    *
-   * @param page 分页参数
+   * @param page     分页参数
    * @param userType 用户类型筛选
-   * @param status 状态筛选
-   * @param keyword 关键词搜索
+   * @param status   状态筛选
+   * @param keyword  关键词搜索
    * @return 用户管理DTO列表
    */
   Page<UserManagementDTO> getUserManagementList(
@@ -60,7 +60,7 @@ public interface UserAuthApi {
    * 批量更新用户状态
    *
    * @param userIds 用户ID列表
-   * @param status 目标状态
+   * @param status  目标状态
    * @return 影响行数
    */
   int batchUpdateUserStatus(List<Long> userIds, Byte status);
@@ -69,7 +69,7 @@ public interface UserAuthApi {
    * 根据用户类型和状态统计用户数量
    *
    * @param userType 用户类型
-   * @param status 状态
+   * @param status   状态
    * @return 用户数量
    */
   int countUsersByTypeAndStatus(String userType, String status);

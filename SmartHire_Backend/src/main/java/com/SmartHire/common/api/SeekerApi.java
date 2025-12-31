@@ -1,8 +1,8 @@
 package com.SmartHire.common.api;
 
-import com.SmartHire.seekerService.dto.SeekerCardDTO;
-import com.SmartHire.seekerService.model.JobSeeker;
-import com.SmartHire.seekerService.model.Resume;
+import com.SmartHire.common.dto.seekerDto.ResumeCommonDTO;
+import com.SmartHire.common.dto.seekerDto.SeekerCardDTO;
+import com.SmartHire.common.dto.seekerDto.SeekerCommonDTO;
 
 /** 求职者服务API接口 用于模块间通信，避免直接访问数据库 */
 public interface SeekerApi {
@@ -21,7 +21,7 @@ public interface SeekerApi {
    * @param jobSeekerId 求职者ID
    * @return 求职者信息
    */
-  JobSeeker getJobSeekerById(Long jobSeekerId);
+  SeekerCommonDTO getJobSeekerById(Long jobSeekerId);
 
   /**
    * 根据简历ID获取简历信息
@@ -29,7 +29,7 @@ public interface SeekerApi {
    * @param resumeId 简历ID
    * @return 简历信息
    */
-  Resume getResumeById(Long resumeId);
+  ResumeCommonDTO getResumeById(Long resumeId);
 
   /**
    * 验证简历是否属于指定求职者

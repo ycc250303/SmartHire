@@ -19,7 +19,7 @@
     </resultMap>
 
     <!-- 求职者卡片信息映射结果 -->
-    <resultMap id="SeekerCardResultMap" type="com.SmartHire.seekerService.dto.SeekerCardDTO">
+    <resultMap id="SeekerCardResultMap" type="com.SmartHire.common.dto.seekerDto.SeekerCardDTO">
         <result column="user_id" property="userId" />
         <result column="username" property="username" />
         <result column="age" property="age" />

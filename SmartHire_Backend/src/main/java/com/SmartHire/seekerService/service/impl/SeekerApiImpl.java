@@ -1,15 +1,18 @@
 package com.SmartHire.seekerService.service.impl;
 
 import com.SmartHire.common.api.SeekerApi;
+import com.SmartHire.common.dto.seekerDto.ResumeCommonDTO;
+import com.SmartHire.common.dto.seekerDto.SeekerCardDTO;
+import com.SmartHire.common.dto.seekerDto.SeekerCommonDTO;
 import com.SmartHire.common.exception.enums.ErrorCode;
 import com.SmartHire.common.exception.exception.BusinessException;
-import com.SmartHire.seekerService.dto.SeekerCardDTO;
 import com.SmartHire.seekerService.mapper.JobSeekerMapper;
 import com.SmartHire.seekerService.mapper.ResumeMapper;
 import com.SmartHire.seekerService.model.JobSeeker;
 import com.SmartHire.seekerService.model.Resume;
 import com.SmartHire.seekerService.service.SeekerCardService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -40,7 +43,7 @@ public class SeekerApiImpl implements SeekerApi {
   }
 
   @Override
-  public JobSeeker getJobSeekerById(Long jobSeekerId) {
+  public SeekerCommonDTO getJobSeekerById(Long jobSeekerId) {
     if (jobSeekerId == null) {
       throw new BusinessException(ErrorCode.VALIDATION_ERROR);
     }
@@ -48,11 +51,13 @@ public class SeekerApiImpl implements SeekerApi {
     if (jobSeeker == null) {
       throw new BusinessException(ErrorCode.SEEKER_NOT_EXIST);
     }
-    return jobSeeker;
+    SeekerCommonDTO dto = new SeekerCommonDTO();
+    BeanUtils.copyProperties(jobSeeker, dto);
+    return dto;
   }
 
   @Override
-  public Resume getResumeById(Long resumeId) {
+  public ResumeCommonDTO getResumeById(Long resumeId) {
     if (resumeId == null) {
       throw new BusinessException(ErrorCode.VALIDATION_ERROR);
     }
@@ -60,7 +65,9 @@ public class SeekerApiImpl implements SeekerApi {
     if (resume == null) {
       throw new BusinessException(ErrorCode.RESUME_NOT_EXIST);
     }
-    return resume;
+    ResumeCommonDTO dto = new ResumeCommonDTO();
+    BeanUtils.copyProperties(resume, dto);
+    return dto;
   }
 
   @Override
@@ -91,7 +98,6 @@ public class SeekerApiImpl implements SeekerApi {
     try {
       return seekerCardService.getJobCard(userId);
     } catch (BusinessException e) {
-      // 其他业务异常（如 SEEKER_NOT_EXIST）返回null，让调用方处理
       return null;
     }
   }
