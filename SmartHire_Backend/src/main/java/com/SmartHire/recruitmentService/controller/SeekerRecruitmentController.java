@@ -10,8 +10,8 @@ import com.SmartHire.hrService.dto.JobCardDTO;
 import com.SmartHire.hrService.dto.JobSearchDTO;
 import com.SmartHire.hrService.service.JobInfoService;
 import com.SmartHire.common.api.SeekerApi;
-import com.SmartHire.seekerService.dto.SeekerCardDTO;
-import com.SmartHire.seekerService.model.JobSeeker;
+import com.SmartHire.common.dto.seekerDto.SeekerCardDTO;
+import com.SmartHire.common.dto.seekerDto.SeekerCommonDTO;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Comparator;
@@ -109,8 +109,6 @@ public class SeekerRecruitmentController {
     return Result.success("获取投递过的列表成功", result);
   }
 
-
-
   @GetMapping("/job-recommendations/intern")
   @Operation(summary = "获取实习岗位推荐", description = "获取用户首页推荐的实习岗位列表，优先使用简历/求职者信息进行关键词匹配计算得分（向量搜索未就绪）")
   public Result<InternJobRecommendationsDTO> getInternJobRecommendations() {
@@ -132,7 +130,7 @@ public class SeekerRecruitmentController {
       // user not logged in or no valid claims — proceed with null targetUserId
     }
     Long jobSeekerId = null;
-    JobSeeker seeker = null;
+    SeekerCommonDTO seeker = null;
     SeekerCardDTO seekerCard = null;
     if (targetUserId != null) {
       try {
@@ -210,7 +208,8 @@ public class SeekerRecruitmentController {
     }
 
     // Sort by match score descending
-    items.sort(Comparator.comparing(InternJobItemDTO::getMatchScore, Comparator.nullsLast(Comparator.naturalOrder())).reversed());
+    items.sort(Comparator.comparing(InternJobItemDTO::getMatchScore, Comparator.nullsLast(Comparator.naturalOrder()))
+        .reversed());
 
     InternJobRecommendationsDTO resp = new InternJobRecommendationsDTO();
     resp.setJobs(items);

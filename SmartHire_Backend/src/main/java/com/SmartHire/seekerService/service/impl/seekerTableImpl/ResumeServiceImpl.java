@@ -69,7 +69,7 @@ public class ResumeServiceImpl extends AbstractSeekerOwnedService<ResumeMapper, 
         .orderByDesc(Resume::getUpdatedAt)
         .list()
         .stream()
-        .map(this::toDto)
+        .map(this::resumeToDto)
         .collect(Collectors.toList());
   }
 
@@ -79,7 +79,7 @@ public class ResumeServiceImpl extends AbstractSeekerOwnedService<ResumeMapper, 
    * @param resume 简历
    * @return ResumeDTO
    */
-  private ResumeDTO toDto(Resume resume) {
+  private ResumeDTO resumeToDto(Resume resume) {
     ResumeDTO dto = new ResumeDTO();
     dto.setId(resume.getId());
     dto.setResumeName(resume.getResumeName());

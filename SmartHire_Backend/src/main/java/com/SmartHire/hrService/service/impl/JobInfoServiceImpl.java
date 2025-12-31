@@ -40,6 +40,9 @@ public class JobInfoServiceImpl extends ServiceImpl<JobInfoMapper, JobInfo>
   private HrInfoMapper hrInfoMapper;
 
   @Autowired
+  private JobInfoMapper jobInfoMapper;
+
+  @Autowired
   private CompanyMapper companyMapper;
 
   @Autowired
@@ -326,7 +329,7 @@ public class JobInfoServiceImpl extends ServiceImpl<JobInfoMapper, JobInfo>
     int size = searchDTO.getSize() == null ? 20 : searchDTO.getSize();
     int offset = (page - 1) * size;
 
-    return baseMapper.searchPublicJobCards(
+    return jobInfoMapper.searchPublicJobCards(
         searchDTO.getCity(),
         searchDTO.getJobType(),
         searchDTO.getEducationRequired(),

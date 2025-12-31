@@ -8,7 +8,7 @@ import com.SmartHire.recruitmentService.dto.ApplicationListDTO;
 import com.SmartHire.recruitmentService.dto.ApplicationQueryDTO;
 import com.SmartHire.recruitmentService.dto.ApplicationStatusUpdateDTO;
 import com.SmartHire.recruitmentService.service.ApplicationService;
-import com.SmartHire.seekerService.dto.SeekerCardDTO;
+import com.SmartHire.common.dto.seekerDto.SeekerCardDTO;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
@@ -32,9 +32,11 @@ public class HrRecruitmentController {
   @Qualifier("applicationServiceImpl")
   private ApplicationService applicationService;
 
-  @Autowired private com.SmartHire.recruitmentService.service.InterviewService interviewService;
+  @Autowired
+  private com.SmartHire.recruitmentService.service.InterviewService interviewService;
 
-  @Autowired private SeekerApi seekerApi;
+  @Autowired
+  private SeekerApi seekerApi;
 
   /** 投递列表查询 */
   @GetMapping("/application")
@@ -66,8 +68,7 @@ public class HrRecruitmentController {
   @GetMapping("/seeker-card")
   @Operation(summary = "获取求职者卡片", description = "根据用户ID获取求职者卡片信息（包含用户名、年龄、学历、专业等）")
   public Result<SeekerCardDTO> getSeekerCard(
-      @RequestParam("userId") @NotNull(message = "用户ID不能为空") @Min(value = 1, message = "用户ID必须为正整数")
-          Long userId) {
+      @RequestParam("userId") @NotNull(message = "用户ID不能为空") @Min(value = 1, message = "用户ID必须为正整数") Long userId) {
     // SeekerApi.getSeekerCard() 会抛出 USER_NOT_SEEKER 异常，或返回 null（表示求职者不存在）
     SeekerCardDTO seekerCard = seekerApi.getSeekerCard(userId);
     if (seekerCard == null) {
@@ -89,7 +90,8 @@ public class HrRecruitmentController {
     return Result.success("推荐成功", applicationId);
   }
 
-  @Autowired private com.SmartHire.recruitmentService.service.OfferService offerService;
+  @Autowired
+  private com.SmartHire.recruitmentService.service.OfferService offerService;
 
   /**
    * HR 发 Offer（最小可行：发送即置为已录用）
@@ -112,7 +114,8 @@ public class HrRecruitmentController {
   @PostMapping("/interviews")
   @RequireUserType(UserType.HR)
   @Operation(summary = "HR 安排面试", description = "HR 为指定投递安排面试并通知候选人")
-  public Result<?> scheduleInterview(@Valid @RequestBody com.SmartHire.recruitmentService.dto.InterviewScheduleRequest req) {
+  public Result<?> scheduleInterview(
+      @Valid @RequestBody com.SmartHire.recruitmentService.dto.InterviewScheduleRequest req) {
     Long interviewId = interviewService.scheduleInterview(req);
     return Result.success("面试安排成功", interviewId);
   }
@@ -121,14 +124,15 @@ public class HrRecruitmentController {
    * HR 拒绝候选人（单条）
    *
    * @param applicationId 投递ID
-   * @param req 拒绝请求体
+   * @param req           拒绝请求体
    */
   @PatchMapping("/applications/{applicationId}/reject")
   @RequireUserType(UserType.HR)
   @Operation(summary = "HR 拒绝候选人", description = "HR 对指定投递执行拒绝操作（记录原因并通知候选人）")
   public Result<?> rejectApplication(
       @PathVariable Long applicationId, @Valid @RequestBody com.SmartHire.recruitmentService.dto.RejectRequest req) {
-    applicationService.rejectApplication(applicationId, req.getReason(), req.getSendNotification(), req.getTemplateId());
+    applicationService.rejectApplication(applicationId, req.getReason(), req.getSendNotification(),
+        req.getTemplateId());
     return Result.success("拒绝成功", applicationId);
   }
 }

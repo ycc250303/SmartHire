@@ -1,6 +1,6 @@
 package com.SmartHire.seekerService.mapper;
 
-import com.SmartHire.seekerService.dto.SeekerCardDTO;
+import com.SmartHire.common.dto.seekerDto.SeekerCardDTO;
 import com.SmartHire.seekerService.model.JobSeeker;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import java.util.List;
@@ -70,11 +70,12 @@ public interface JobSeekerMapper extends BaseMapper<JobSeeker> {
         /**
          * 分页获取所有求职者卡片信息
          *
-         * @param offset 偏移量
+         * @param offset   偏移量
          * @param pageSize 每页大小
          * @return 求职者卡片信息列表
          */
-        List<SeekerCardDTO> getAllSeekerCardsByPage(@Param("offset") Integer offset, @Param("pageSize") Integer pageSize);
+        List<SeekerCardDTO> getAllSeekerCardsByPage(@Param("offset") Integer offset,
+                        @Param("pageSize") Integer pageSize);
 
         /**
          * 综合筛选求职者卡片信息

@@ -3,7 +3,7 @@ package com.SmartHire.seekerService.service.impl;
 import com.SmartHire.common.api.UserAuthApi;
 import com.SmartHire.common.exception.enums.ErrorCode;
 import com.SmartHire.common.exception.exception.BusinessException;
-import com.SmartHire.seekerService.dto.SeekerCardDTO;
+import com.SmartHire.common.dto.seekerDto.SeekerCardDTO;
 import com.SmartHire.seekerService.mapper.EducationExperienceMapper;
 import com.SmartHire.seekerService.mapper.JobSeekerMapper;
 import com.SmartHire.seekerService.model.EducationExperience;
@@ -118,12 +118,11 @@ public class SeekerCardServiceImpl implements SeekerCardService {
   }
 
   @Override
-  public  List<SeekerCardDTO> getAllSeekerCards(Integer pageNum, Integer pageSize) {
+  public List<SeekerCardDTO> getAllSeekerCards(Integer pageNum, Integer pageSize) {
     // 计算偏移量
     Integer offset = (pageNum - 1) * pageSize;
     return jobSeekerMapper.getAllSeekerCardsByPage(offset, pageSize);
   }
-
 
   @Override
   public List<SeekerCardDTO> getSeekersByMultipleConditions(

@@ -1,6 +1,6 @@
 package com.SmartHire.seekerService.service;
 
-import com.SmartHire.seekerService.dto.SeekerCardDTO;
+import com.SmartHire.common.dto.seekerDto.SeekerCardDTO;
 
 import java.util.List;
 
@@ -17,12 +17,11 @@ public interface SeekerCardService {
   /**
    * 获取所有求职者卡片信息（分页）
    *
-   * @param pageNum 页码，从1开始
+   * @param pageNum  页码，从1开始
    * @param pageSize 每页大小
    * @return 求职者卡片信息列表
    */
-   List<SeekerCardDTO> getAllSeekerCards(Integer pageNum, Integer pageSize);
-
+  List<SeekerCardDTO> getAllSeekerCards(Integer pageNum, Integer pageSize);
 
   /**
    * 综合筛选求职者卡片信息
