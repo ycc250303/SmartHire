@@ -83,5 +83,31 @@
         </if>
     </select>
 
+    <select id="selectJobCardById" resultMap="JobCardResultMap">
+        SELECT
+            j.id AS job_id,
+            j.job_title,
+            j.salary_min,
+            j.salary_max,
+            j.city,
+            j.address,
+            j.job_type,
+            j.education_required,
+            j.internship_days_per_week,
+            j.internship_duration_months,
+            j.experience_required,
+            j.salary_months,
+            c.company_name,
+            c.company_scale,
+            c.financing_stage,
+            h.real_name AS hr_name,
+            u.avatar_url AS hr_avatar_url
+        FROM job_info j
+        JOIN company c ON j.company_id = c.id
+        JOIN hr_info h ON j.hr_id = h.id
+        JOIN user u ON h.user_id = u.id
+        WHERE j.id = #{jobId}
+    </select>
+
 </mapper>
 

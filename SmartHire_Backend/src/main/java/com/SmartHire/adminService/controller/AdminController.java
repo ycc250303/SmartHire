@@ -1,7 +1,7 @@
 package com.SmartHire.adminService.controller;
 
 import com.SmartHire.adminService.dto.UserBanDTO;
-import com.SmartHire.adminService.dto.UserManagementDTO;
+import com.SmartHire.common.dto.userDto.UserManagementDTO;
 import com.SmartHire.adminService.dto.UserStatusUpdateDTO;
 import com.SmartHire.adminService.model.BanRecord;
 import com.SmartHire.adminService.service.BanRecordService;

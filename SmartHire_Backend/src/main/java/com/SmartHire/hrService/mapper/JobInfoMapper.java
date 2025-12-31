@@ -15,14 +15,14 @@ public interface JobInfoMapper extends BaseMapper<JobInfo> {
   /**
    * 求职者端岗位筛选
    *
-   * @param city 城市
-   * @param jobType 职位类型
+   * @param city              城市
+   * @param jobType           职位类型
    * @param educationRequired 学历要求
-   * @param minSalary 最低薪资
-   * @param maxSalary 最高薪资
-   * @param keyword 关键字
-   * @param skills 技能列表
-   * @param companyId 公司ID
+   * @param minSalary         最低薪资
+   * @param maxSalary         最高薪资
+   * @param keyword           关键字
+   * @param skills            技能列表
+   * @param companyId         公司ID
    * @return 岗位卡片列表
    */
   List<JobCardDTO> searchPublicJobCards(
@@ -36,4 +36,12 @@ public interface JobInfoMapper extends BaseMapper<JobInfo> {
       @Param("companyId") Long companyId,
       @Param("offset") Integer offset,
       @Param("limit") Integer limit);
+
+  /**
+   * 根据岗位ID获取岗位卡片信息
+   *
+   * @param jobId 岗位ID
+   * @return 岗位卡片信息
+   */
+  JobCardDTO selectJobCardById(@Param("jobId") Long jobId);
 }

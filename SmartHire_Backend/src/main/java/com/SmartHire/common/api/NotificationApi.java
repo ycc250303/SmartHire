@@ -1,6 +1,6 @@
 package com.SmartHire.common.api;
 
-import com.SmartHire.messageService.dto.SystemNotificationDTO;
+import com.SmartHire.common.dto.messageDto.SystemNotificationCommonDTO;
 
 import java.util.List;
 
@@ -17,11 +17,11 @@ public interface NotificationApi {
      * 获取用户的系统通知列表
      *
      * @param userId 用户ID
-     * @param page 页码
-     * @param size 每页大小
+     * @param page   页码
+     * @param size   每页大小
      * @return 系统通知列表
      */
-    List<SystemNotificationDTO> getUserNotifications(Long userId, Integer page, Integer size);
+    List<SystemNotificationCommonDTO> getUserNotifications(Long userId, Integer page, Integer size);
 
     /**
      * 获取用户未读通知数量
@@ -35,7 +35,7 @@ public interface NotificationApi {
      * 标记通知为已读
      *
      * @param notificationId 通知ID
-     * @param userId 用户ID
+     * @param userId         用户ID
      * @return 是否成功
      */
     boolean markNotificationAsRead(Long notificationId, Long userId);
@@ -52,7 +52,7 @@ public interface NotificationApi {
      * 删除通知
      *
      * @param notificationId 通知ID
-     * @param userId 用户ID
+     * @param userId         用户ID
      * @return 是否成功
      */
     boolean deleteNotification(Long notificationId, Long userId);

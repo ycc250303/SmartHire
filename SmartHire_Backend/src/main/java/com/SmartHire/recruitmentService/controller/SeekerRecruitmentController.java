@@ -28,7 +28,7 @@ import com.SmartHire.hrService.dto.JobInfoListDTO;
 import com.SmartHire.hrService.model.JobInfo;
 import com.SmartHire.hrService.model.Company;
 import com.SmartHire.hrService.model.HrInfo;
-import com.SmartHire.userAuthService.model.User;
+import com.SmartHire.common.dto.userDto.UserCommonDTO;
 import com.SmartHire.messageService.mapper.ChatMessageMapper;
 import com.SmartHire.messageService.model.ChatMessage;
 import com.SmartHire.recruitmentService.dto.SubmitResumeDTO;
@@ -239,7 +239,7 @@ public class SeekerRecruitmentController {
     // 获取 hr info + avatar
     HrInfo hrInfo = hrApi.getHrInfoById(jobModel.getHrId());
     log.info("HR info: {}", hrInfo);
-    User hrUser = null;
+    UserCommonDTO hrUser = null;
     if (hrInfo != null) {
       hrUser = userAuthApi.getUserById(hrInfo.getUserId());
     }

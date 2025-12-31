@@ -1,7 +1,6 @@
 package com.SmartHire.hrService.service.impl;
 
 import com.SmartHire.common.api.HrApi;
-import com.SmartHire.common.api.UserAuthApi;
 import com.SmartHire.hrService.dto.JobCardDTO;
 import com.SmartHire.hrService.mapper.CompanyMapper;
 import com.SmartHire.hrService.mapper.HrInfoMapper;
@@ -9,7 +8,6 @@ import com.SmartHire.hrService.mapper.JobInfoMapper;
 import com.SmartHire.hrService.model.Company;
 import com.SmartHire.hrService.model.HrInfo;
 import com.SmartHire.hrService.model.JobInfo;
-import com.SmartHire.userAuthService.model.User;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,16 +25,14 @@ public class HrApiImpl implements HrApi {
   @Autowired
   private CompanyMapper companyMapper;
 
-  @Autowired
-  private UserAuthApi userAuthApi;
-
   @Override
   public Long getHrIdByUserId(Long userId) {
     if (userId == null) {
       return null;
     }
-    HrInfo hrInfo = hrInfoMapper.selectOne(new LambdaQueryWrapper<HrInfo>().eq(HrInfo::getUserId, userId));
-    return hrInfo == null ? null : hrInfo.getId();
+    HrInfo hrInfo = hrInfoMapper.selectOne(
+        new LambdaQueryWrapper<HrInfo>().eq(HrInfo::getUserId, userId));
+    return hrInfo != null ? hrInfo.getId() : null;
   }
 
   @Override
@@ -54,7 +50,7 @@ public class HrApiImpl implements HrApi {
       return null;
     }
     JobInfo jobInfo = jobInfoMapper.selectById(jobId);
-    return jobInfo == null ? null : jobInfo.getHrId();
+    return jobInfo != null ? jobInfo.getHrId() : null;
   }
 
   @Override
@@ -62,67 +58,16 @@ public class HrApiImpl implements HrApi {
     if (jobId == null) {
       return null;
     }
-
-    // 1. 查询岗位信息
-    JobInfo jobInfo = jobInfoMapper.selectById(jobId);
-    if (jobInfo == null) {
-      return null;
-    }
-
-    // 2. 查询公司信息
-    Company company = companyMapper.selectById(jobInfo.getCompanyId());
-    if (company == null) {
-      return null;
-    }
-
-    // 3. 查询HR信息
-    HrInfo hrInfo = hrInfoMapper.selectById(jobInfo.getHrId());
-    if (hrInfo == null) {
-      return null;
-    }
-
-    // 4. 查询用户信息（获取头像）
-    User user = userAuthApi.getUserById(hrInfo.getUserId());
-
-    // 5. 构建JobCard DTO
-    JobCardDTO jobCard = new JobCardDTO();
-    jobCard.setJobId(jobInfo.getId());
-    jobCard.setJobTitle(jobInfo.getJobTitle());
-    jobCard.setSalaryMin(jobInfo.getSalaryMin());
-    jobCard.setSalaryMax(jobInfo.getSalaryMax());
-    jobCard.setAddress(jobInfo.getAddress());
-    jobCard.setCompanyName(company.getCompanyName());
-    jobCard.setCompanyScale(company.getCompanyScale());
-    jobCard.setFinancingStage(company.getFinancingStage());
-    jobCard.setHrName(hrInfo.getRealName());
-    jobCard.setHrAvatarUrl(user.getAvatarUrl());
-    jobCard.setEducationRequired(jobInfo.getEducationRequired());
-
-    return jobCard;
+    return jobInfoMapper.selectJobCardById(jobId);
   }
 
   @Override
-  public HrInfo getHrInfoById(Long hrId) {
+  public Long getHrUserIdByHrId(Long hrId) {
     if (hrId == null) {
       return null;
     }
-    return hrInfoMapper.selectById(hrId);
-  }
-
-  @Override
-  public JobInfo getJobInfoById(Long jobId) {
-    if (jobId == null) {
-      return null;
-    }
-    return jobInfoMapper.selectById(jobId);
-  }
-
-  @Override
-  public Company getCompanyById(Long companyId) {
-    if (companyId == null) {
-      return null;
-    }
-    return companyMapper.selectById(companyId);
+    HrInfo hrInfo = hrInfoMapper.selectById(hrId);
+    return hrInfo != null ? hrInfo.getUserId() : null;
   }
 
   @Override
@@ -134,11 +79,26 @@ public class HrApiImpl implements HrApi {
   }
 
   @Override
-  public Long getHrUserIdByHrId(Long hrId) {
+  public JobInfo getJobInfoById(Long jobId) {
+    if (jobId == null) {
+      return null;
+    }
+    return jobInfoMapper.selectById(jobId);
+  }
+
+  @Override
+  public HrInfo getHrInfoById(Long hrId) {
     if (hrId == null) {
       return null;
     }
-    HrInfo hrInfo = hrInfoMapper.selectById(hrId);
-    return hrInfo == null ? null : hrInfo.getUserId();
+    return hrInfoMapper.selectById(hrId);
+  }
+
+  @Override
+  public Company getCompanyById(Long companyId) {
+    if (companyId == null) {
+      return null;
+    }
+    return companyMapper.selectById(companyId);
   }
 }

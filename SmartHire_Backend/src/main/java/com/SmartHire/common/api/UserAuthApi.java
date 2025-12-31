@@ -1,7 +1,7 @@
 package com.SmartHire.common.api;
 
-import com.SmartHire.userAuthService.model.User;
-import com.SmartHire.adminService.dto.UserManagementDTO;
+import com.SmartHire.common.dto.userDto.UserCommonDTO;
+import com.SmartHire.common.dto.userDto.UserManagementDTO;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import java.util.List;
 
@@ -14,7 +14,7 @@ public interface UserAuthApi {
    * @param userId 用户ID
    * @return 用户信息
    */
-  User getUserById(Long userId);
+  UserCommonDTO getUserById(Long userId);
 
   /**
    * 根据用户ID验证用户是否存在
@@ -80,5 +80,5 @@ public interface UserAuthApi {
    * @param user 用户信息
    * @return 是否更新成功
    */
-  boolean updateUser(User user);
+  boolean updateUser(UserCommonDTO user);
 }

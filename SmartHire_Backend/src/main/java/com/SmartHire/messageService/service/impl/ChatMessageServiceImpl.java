@@ -1,6 +1,5 @@
 package com.SmartHire.messageService.service.impl;
 
-import com.SmartHire.common.api.ApplicationApi;
 import com.SmartHire.common.api.UserAuthApi;
 import com.SmartHire.common.auth.UserType;
 import com.SmartHire.common.exception.enums.ErrorCode;
@@ -48,9 +47,6 @@ public class ChatMessageServiceImpl extends ServiceImpl<ChatMessageMapper, ChatM
 
   @Autowired
   private AliOssUtil aliOssUtil;
-
-  @Autowired
-  private ApplicationApi applicationApi;
 
   @Override
   @Transactional(rollbackFor = Exception.class)

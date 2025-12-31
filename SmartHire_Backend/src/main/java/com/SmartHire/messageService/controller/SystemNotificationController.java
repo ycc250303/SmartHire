@@ -3,7 +3,7 @@ package com.SmartHire.messageService.controller;
 import com.SmartHire.common.api.NotificationApi;
 import com.SmartHire.common.auth.UserContext;
 import com.SmartHire.common.entity.Result;
-import com.SmartHire.messageService.dto.SystemNotificationDTO;
+import com.SmartHire.common.dto.messageDto.SystemNotificationCommonDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -32,14 +32,14 @@ public class SystemNotificationController {
      * 获取系统消息列表
      */
     @GetMapping("/list")
-    public Result<List<SystemNotificationDTO>> getNotificationList(
+    public Result<List<SystemNotificationCommonDTO>> getNotificationList(
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "20") Integer size) {
 
         Long userId = userContext.getCurrentUserId();
         log.info("用户 {} 获取系统消息列表，页码: {}, 每页大小: {}", userId, page, size);
 
-        List<SystemNotificationDTO> notifications = notificationApi.getUserNotifications(userId, page, size);
+        List<SystemNotificationCommonDTO> notifications = notificationApi.getUserNotifications(userId, page, size);
 
         // 设置通知类型名称
         notifications.forEach(this::setTypeName);
@@ -110,21 +110,21 @@ public class SystemNotificationController {
     /**
      * 设置通知类型名称
      */
-    private void setTypeName(SystemNotificationDTO notification) {
+    private void setTypeName(SystemNotificationCommonDTO notification) {
         switch (notification.getType()) {
-            case SystemNotificationDTO.Type.SYSTEM_MESSAGE:
+            case SystemNotificationCommonDTO.Type.SYSTEM_MESSAGE:
                 notification.setTypeName("系统消息");
                 break;
-            case SystemNotificationDTO.Type.REPORT_RESULT:
+            case SystemNotificationCommonDTO.Type.REPORT_RESULT:
                 notification.setTypeName("举报处理");
                 break;
-            case SystemNotificationDTO.Type.USER_BAN:
+            case SystemNotificationCommonDTO.Type.USER_BAN:
                 notification.setTypeName("封禁通知");
                 break;
-            case SystemNotificationDTO.Type.JOB_OFFLINE:
+            case SystemNotificationCommonDTO.Type.JOB_OFFLINE:
                 notification.setTypeName("职位下线");
                 break;
-            case SystemNotificationDTO.Type.USER_WARNING:
+            case SystemNotificationCommonDTO.Type.USER_WARNING:
                 notification.setTypeName("警告通知");
                 break;
             default:

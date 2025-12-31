@@ -6,7 +6,7 @@ import com.SmartHire.adminService.mapper.BanRecordMapper;
 import com.SmartHire.adminService.model.BanRecord;
 import com.SmartHire.adminService.service.BanRecordService;
 import com.SmartHire.common.api.UserAuthApi;
-import com.SmartHire.userAuthService.model.User;
+import com.SmartHire.common.dto.userDto.UserCommonDTO;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import java.util.Date;
 import java.util.HashMap;
@@ -38,7 +38,7 @@ public class BanRecordServiceImpl extends ServiceImpl<BanRecordMapper, BanRecord
         log.info("开始封禁用户，用户ID: {}, 操作管理员: {}", userId, userBanDTO.getAdminUsername());
 
         // 1. 验证用户是否存在
-        User user = userAuthApi.getUserById(userId);
+        UserCommonDTO user = userAuthApi.getUserById(userId);
         if (user == null) {
             throw AdminServiceException.userNotFound(userId);
         }
@@ -99,7 +99,7 @@ public class BanRecordServiceImpl extends ServiceImpl<BanRecordMapper, BanRecord
     try {
       // 1. 检查用户是否存在
       log.info("步骤1: 检查用户是否存在, userId={}", userId);
-      User user = userAuthApi.getUserById(userId);
+      UserCommonDTO user = userAuthApi.getUserById(userId);
       if (user == null) {
         log.error("用户不存在: userId={}", userId);
         throw AdminServiceException.userNotFound(userId);
@@ -174,7 +174,7 @@ public class BanRecordServiceImpl extends ServiceImpl<BanRecordMapper, BanRecord
         banRecordMapper.updateById(ban);
 
         // 恢复用户状态
-        User user = userAuthApi.getUserById(ban.getUserId());
+        UserCommonDTO user = userAuthApi.getUserById(ban.getUserId());
         if (user != null) {
           user.setStatus(1); // 1-正常
           userAuthApi.updateUser(user);
