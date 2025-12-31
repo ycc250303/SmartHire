@@ -1,7 +1,7 @@
 package com.SmartHire.common.api;
 
-import com.SmartHire.messageService.dto.MessageDTO;
-import com.SmartHire.messageService.dto.SendMessageDTO;
+import com.SmartHire.common.dto.messageDto.MessageCommonDTO;
+import com.SmartHire.common.dto.messageDto.SendMessageCommonDTO;
 
 /**
  * 消息服务API接口 用于模块间通信，避免直接访问数据库
@@ -22,5 +22,13 @@ public interface MessageApi {
      * @param dto      发送消息参数
      * @return 发送结果
      */
-    MessageDTO sendMessage(Long senderId, SendMessageDTO dto);
+    MessageCommonDTO sendMessage(Long senderId, SendMessageCommonDTO dto);
+
+    /**
+     * 检查会话是否包含有效消息
+     * 
+     * @param conversationId 会话ID
+     * @return 如果会话存在且有消息则返回true
+     */
+    boolean hasMessages(Long conversationId);
 }

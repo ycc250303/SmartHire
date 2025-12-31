@@ -3,7 +3,7 @@ package com.SmartHire.adminService.service.impl;
 import com.SmartHire.adminService.mapper.NotificationMapper;
 import com.SmartHire.adminService.model.Notification;
 import com.SmartHire.common.api.NotificationApi;
-import com.SmartHire.messageService.dto.SystemNotificationDTO;
+import com.SmartHire.common.dto.messageDto.SystemNotificationCommonDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +27,7 @@ public class NotificationApiImpl implements NotificationApi {
     private NotificationMapper notificationMapper;
 
     @Override
-    public List<SystemNotificationDTO> getUserNotifications(Long userId, Integer page, Integer size) {
+    public List<SystemNotificationCommonDTO> getUserNotifications(Long userId, Integer page, Integer size) {
         log.info("获取用户 {} 的系统通知列表，页码: {}, 每页大小: {}", userId, page, size);
 
         // 计算偏移量
@@ -37,10 +37,11 @@ public class NotificationApiImpl implements NotificationApi {
         List<Notification> notifications = notificationMapper.selectByUserId(userId, offset, size);
 
         // 转换为DTO
-        List<SystemNotificationDTO> result = new ArrayList<>();
+        List<SystemNotificationCommonDTO> result = new ArrayList<>();
         for (Notification notification : notifications) {
-            SystemNotificationDTO dto = new SystemNotificationDTO();
+            SystemNotificationCommonDTO dto = new SystemNotificationCommonDTO();
             BeanUtils.copyProperties(notification, dto);
+            // 补充字段转换（如有必要）
             result.add(dto);
         }
 

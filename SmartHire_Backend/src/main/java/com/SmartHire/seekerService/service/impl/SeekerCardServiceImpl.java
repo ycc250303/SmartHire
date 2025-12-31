@@ -1,15 +1,15 @@
 package com.SmartHire.seekerService.service.impl;
 
 import com.SmartHire.common.api.UserAuthApi;
+import com.SmartHire.common.dto.userDto.UserCommonDTO;
+import com.SmartHire.common.dto.seekerDto.SeekerCardDTO;
 import com.SmartHire.common.exception.enums.ErrorCode;
 import com.SmartHire.common.exception.exception.BusinessException;
-import com.SmartHire.common.dto.seekerDto.SeekerCardDTO;
 import com.SmartHire.seekerService.mapper.EducationExperienceMapper;
 import com.SmartHire.seekerService.mapper.JobSeekerMapper;
 import com.SmartHire.seekerService.model.EducationExperience;
 import com.SmartHire.seekerService.model.JobSeeker;
 import com.SmartHire.seekerService.service.SeekerCardService;
-import com.SmartHire.userAuthService.model.User;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -49,7 +49,7 @@ public class SeekerCardServiceImpl implements SeekerCardService {
     }
 
     try {
-      User user = userAuthApi.getUserById(userId);
+      UserCommonDTO user = userAuthApi.getUserById(userId);
 
       JobSeeker jobSeeker = jobSeekerMapper.selectOne(
           new LambdaQueryWrapper<JobSeeker>().eq(JobSeeker::getUserId, userId));

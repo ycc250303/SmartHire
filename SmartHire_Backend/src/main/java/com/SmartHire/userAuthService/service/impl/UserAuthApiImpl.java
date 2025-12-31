@@ -1,13 +1,15 @@
 package com.SmartHire.userAuthService.service.impl;
 
 import com.SmartHire.common.api.UserAuthApi;
+import com.SmartHire.common.dto.userDto.UserCommonDTO;
+import com.SmartHire.common.dto.userDto.UserManagementDTO;
 import com.SmartHire.common.exception.enums.ErrorCode;
 import com.SmartHire.common.exception.exception.BusinessException;
 import com.SmartHire.userAuthService.mapper.UserAuthMapper;
 import com.SmartHire.userAuthService.model.User;
-import com.SmartHire.adminService.dto.UserManagementDTO;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import java.util.List;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,7 +17,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class UserAuthApiImpl implements UserAuthApi {
 
-  @Autowired private UserAuthMapper userAuthMapper;
+  @Autowired
+  private UserAuthMapper userAuthMapper;
 
   /**
    * 根据用户ID获取用户信息
@@ -24,7 +27,7 @@ public class UserAuthApiImpl implements UserAuthApi {
    * @return 用户信息
    */
   @Override
-  public User getUserById(Long userId) {
+  public UserCommonDTO getUserById(Long userId) {
     if (userId == null) {
       throw new BusinessException(ErrorCode.VALIDATION_ERROR);
     }
@@ -32,7 +35,9 @@ public class UserAuthApiImpl implements UserAuthApi {
     if (user == null) {
       throw new BusinessException(ErrorCode.USER_ID_NOT_EXIST);
     }
-    return user;
+    UserCommonDTO dto = new UserCommonDTO();
+    BeanUtils.copyProperties(user, dto);
+    return dto;
   }
 
   @Override
@@ -58,6 +63,7 @@ public class UserAuthApiImpl implements UserAuthApi {
       String userType,
       String status,
       String keyword) {
+    // 调用 Mapper 进行分页查询，结果会自动映射到 UserManagementDTO
     return userAuthMapper.selectUserManagementList(page, userType, status, keyword);
   }
 
@@ -83,10 +89,12 @@ public class UserAuthApiImpl implements UserAuthApi {
   }
 
   @Override
-  public boolean updateUser(User user) {
-    if (user == null || user.getId() == null) {
+  public boolean updateUser(UserCommonDTO userDto) {
+    if (userDto == null || userDto.getId() == null) {
       return false;
     }
+    User user = new User();
+    BeanUtils.copyProperties(userDto, user);
     return userAuthMapper.updateById(user) > 0;
   }
 }

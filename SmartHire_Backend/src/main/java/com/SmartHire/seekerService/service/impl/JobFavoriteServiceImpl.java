@@ -3,7 +3,7 @@ package com.SmartHire.seekerService.service.impl;
 import com.SmartHire.common.api.HrApi;
 import com.SmartHire.common.exception.enums.ErrorCode;
 import com.SmartHire.common.exception.exception.BusinessException;
-import com.SmartHire.hrService.dto.JobCardDTO;
+import com.SmartHire.common.dto.hrDto.JobCardDTO;
 import com.SmartHire.seekerService.dto.JobFavoriteDTO;
 import com.SmartHire.seekerService.mapper.JobFavoriteMapper;
 import com.SmartHire.seekerService.model.JobFavorite;

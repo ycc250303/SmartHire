@@ -23,15 +23,20 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class OfferServiceImpl implements OfferService {
 
-  @Autowired private ApplicationMapper applicationMapper;
+  @Autowired
+  private ApplicationMapper applicationMapper;
 
-  @Autowired private SeekerApi seekerApi;
+  @Autowired
+  private SeekerApi seekerApi;
 
-  @Autowired private HrApi hrApi;
+  @Autowired
+  private HrApi hrApi;
 
-  @Autowired private UserContext userContext;
+  @Autowired
+  private UserContext userContext;
 
-  @Autowired private OfferEventProducer offerEventProducer;
+  @Autowired
+  private OfferEventProducer offerEventProducer;
 
   @Override
   @Transactional(rollbackFor = Exception.class)
@@ -53,8 +58,7 @@ public class OfferServiceImpl implements OfferService {
     if (currentHrId == null) {
       throw new BusinessException(ErrorCode.HR_NOT_EXIST);
     }
-    Long jobHrId = hrApi.getHrIdByJobId(application.getJobId());
-    if (jobHrId == null || !jobHrId.equals(currentHrId)) {
+    if (!hrApi.isHrAuthorizedForJob(currentHrId, application.getJobId())) {
       throw new BusinessException(ErrorCode.APPLICATION_NOT_BELONG_TO_HR);
     }
 
@@ -86,5 +90,3 @@ public class OfferServiceImpl implements OfferService {
     return applicationId;
   }
 }
-
-

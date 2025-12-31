@@ -33,7 +33,7 @@
     </insert>
 
     <!-- 用户管理DTO映射结果 -->
-    <resultMap id="UserManagementDTOMap" type="com.SmartHire.adminService.dto.UserManagementDTO">
+    <resultMap id="UserManagementDTOMap" type="com.SmartHire.common.dto.userDto.UserManagementDTO">
         <id column="user_id" property="userId" />
         <result column="username" property="username" />
         <result column="email" property="email" />

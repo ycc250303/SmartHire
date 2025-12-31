@@ -16,6 +16,8 @@ public interface HrInfoService extends IService<HrInfo> {
    */
   HrInfoDTO getHrInfo();
 
+  Long getCurrentHrId();
+
   /**
    * 注册HR信息（原 HEAD 功能）
    *

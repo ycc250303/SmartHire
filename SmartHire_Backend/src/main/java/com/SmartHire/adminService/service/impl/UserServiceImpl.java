@@ -1,12 +1,12 @@
 package com.SmartHire.adminService.service.impl;
 
-import com.SmartHire.adminService.dto.UserManagementDTO;
+import com.SmartHire.common.dto.userDto.UserManagementDTO;
+import com.SmartHire.common.dto.userDto.UserCommonDTO;
 import com.SmartHire.adminService.dto.UserStatusUpdateDTO;
 import com.SmartHire.common.exception.exception.AdminServiceException;
 import com.SmartHire.adminService.service.BanRecordService;
 import com.SmartHire.adminService.service.UserService;
 import com.SmartHire.common.api.UserAuthApi;
-import com.SmartHire.userAuthService.model.User;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import java.util.HashMap;
 import java.util.List;
@@ -46,13 +46,13 @@ public class UserServiceImpl implements UserService {
         userStatusUpdateDTO.getAdminUsername());
 
     // 1. 检查用户是否存在
-    User user = userAuthApi.getUserById(userStatusUpdateDTO.getUserId());
+    UserCommonDTO user = userAuthApi.getUserById(userStatusUpdateDTO.getUserId());
     if (user == null) {
       throw AdminServiceException.userNotFound(userStatusUpdateDTO.getUserId());
     }
 
     // 2. 验证用户类型（不能修改管理员状态）
-    if (user.getUserType() == 3) {
+    if (user.getUserType() != null && user.getUserType() == 3) {
       throw AdminServiceException.cannotModifyAdminStatus();
     }
 
@@ -61,7 +61,7 @@ public class UserServiceImpl implements UserService {
     Integer targetStatus = userStatusUpdateDTO.getTargetStatus();
 
     // 如果是从正常状态改为禁用状态，需要检查是否已有封禁记录
-    boolean isFromActiveToBanned = currentStatus == 1 && userStatusUpdateDTO.getTargetStatus() == 0;
+    boolean isFromActiveToBanned = currentStatus != null && currentStatus == 1 && userStatusUpdateDTO.getTargetStatus() == 0;
     if (isFromActiveToBanned && !banRecordService.isUserBanned(userStatusUpdateDTO.getUserId())) {
       throw AdminServiceException.operationFailed("封禁用户请使用专门的封禁接口");
     }
@@ -92,10 +92,10 @@ public class UserServiceImpl implements UserService {
 
     // 检查是否被封禁
     boolean isBanned = banRecordService.isUserBanned(userId);
-    if (isBanned && userInfo.getStatus() == 1) {
+    if (isBanned && userInfo.getStatus() != null && userInfo.getStatus() == 1) {
       // 如果用户状态是正常但实际被封禁，更新状态
       userInfo.setStatus(0);
-      User user = new User();
+      UserCommonDTO user = new UserCommonDTO();
       user.setId(userId);
       user.setStatus(0);
       userAuthApi.updateUser(user);
@@ -117,11 +117,11 @@ public class UserServiceImpl implements UserService {
 
     // 验证所有用户是否存在且非管理员
     for (Long userId : userIds) {
-      User user = userAuthApi.getUserById(userId);
+      UserCommonDTO user = userAuthApi.getUserById(userId);
       if (user == null) {
         throw AdminServiceException.userNotFound(userId);
       }
-      if (user.getUserType() == 3) {
+      if (user.getUserType() != null && user.getUserType() == 3) {
         throw AdminServiceException.cannotModifyAdminStatus();
       }
     }

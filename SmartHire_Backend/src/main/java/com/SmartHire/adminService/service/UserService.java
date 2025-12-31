@@ -1,6 +1,6 @@
 package com.SmartHire.adminService.service;
 
-import com.SmartHire.adminService.dto.UserManagementDTO;
+import com.SmartHire.common.dto.userDto.UserManagementDTO;
 import com.SmartHire.adminService.dto.UserStatusUpdateDTO;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import java.util.List;

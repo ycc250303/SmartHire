@@ -2,7 +2,7 @@ package com.SmartHire.recruitmentService.service.impl;
 
 import com.SmartHire.common.api.ApplicationApi;
 import com.SmartHire.recruitmentService.model.Application;
-import com.SmartHire.recruitmentService.service.ApplicationService;
+import com.SmartHire.recruitmentService.service.SeekerApplicationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -12,16 +12,15 @@ import org.springframework.stereotype.Service;
 public class ApplicationApiImpl implements ApplicationApi {
 
   @Autowired
-  @Qualifier("applicationServiceImpl")
-  private ApplicationService applicationService;
+  private SeekerApplicationService seekerApplicationService;
 
   @Override
   public Application getApplicationById(Long applicationId) {
-    return applicationService.getById(applicationId);
+    return seekerApplicationService.getById(applicationId);
   }
 
   @Override
   public boolean existsApplication(Long applicationId) {
-    return applicationService.getById(applicationId) != null;
+    return seekerApplicationService.getById(applicationId) != null;
   }
 }

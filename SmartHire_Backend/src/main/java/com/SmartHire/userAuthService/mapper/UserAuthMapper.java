@@ -1,7 +1,7 @@
 package com.SmartHire.userAuthService.mapper;
 
 import com.SmartHire.userAuthService.model.User;
-import com.SmartHire.adminService.dto.UserManagementDTO;
+import com.SmartHire.common.dto.userDto.UserManagementDTO;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import java.util.List;
