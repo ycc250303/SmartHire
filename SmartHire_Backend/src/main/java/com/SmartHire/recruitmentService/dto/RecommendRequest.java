@@ -24,9 +24,6 @@ public class RecommendRequest implements Serializable {
   @NotNull(message = "seekerUserId 不能为空")
   private Long seekerUserId;
 
-  /** 附件简历ID（可选） */
-  private Long resumeId;
-
   /** 推荐备注（可选） */
   private String note;
 }

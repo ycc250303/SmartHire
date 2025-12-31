@@ -65,7 +65,6 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
         }
 
         Long jobId = request.getJobId();
-        Long resumeId = request.getResumeId();
 
         // 获取当前HR用户ID
         Long hrUserId = userContext.getCurrentUserId();
@@ -80,11 +79,6 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
         Long seekerId = seekerApi.getJobSeekerIdByUserId(request.getSeekerUserId());
         if (seekerId == null) {
             throw new BusinessException(ErrorCode.SEEKER_NOT_EXIST);
-        }
-
-        // 如果提供了简历ID，则校验附件简历是否存在且属于目标求职者
-        if (resumeId != null && !seekerApi.validateResumeOwnership(resumeId, seekerId)) {
-            throw new BusinessException(ErrorCode.RESUME_NOT_BELONG_TO_USER);
         }
 
         // 校验岗位是否存在并且属于当前 HR（或 HR 有权限推荐此岗位）
@@ -109,7 +103,6 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
         Application application = new Application();
         application.setJobId(jobId);
         application.setJobSeekerId(seekerId);
-        application.setResumeId(resumeId); // 可能为null（在线简历）
         application.setInitiator((byte) 1); // 1-HR推荐
         application.setStatus((byte) 0); // 0-已投递/已推荐
 
@@ -119,7 +112,7 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
 
         boolean saved = this.save(application);
         if (!saved) {
-            log.error("保存推荐记录失败, jobId={}, seekerId={}, resumeId={}", jobId, seekerId, resumeId);
+            log.error("保存推荐记录失败, jobId={}, seekerId={}, resumeId={}", jobId, seekerId);
             throw new BusinessException(ErrorCode.SYSTEM_ERROR);
         }
 
@@ -178,7 +171,6 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
         Application application = new Application();
         application.setJobId(jobId);
         application.setJobSeekerId(seekerId);
-        application.setResumeId(resumeId); // 可能为null（在线简历）
         application.setInitiator((byte) 0); // 0-求职者投递
         application.setStatus((byte) 0); // 0-已投递/已推荐
 
@@ -245,14 +237,14 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
         Page<ApplicationListDTO> page = new Page<>(pageNum, pageSize);
         String keyword = StringUtils.hasText(queryDTO.getKeyword()) ? queryDTO.getKeyword().trim() : null;
 
-        return baseMapper.selectApplicationList(
+        return applicationMapper.selectApplicationList(
                 page, hrId, queryDTO.getJobId(), queryDTO.getStatus(), keyword);
     }
 
     @Override
     public ApplicationListDTO getApplicationDetail(Long applicationId) {
         Long hrId = userContext.getCurrentHrId();
-        ApplicationListDTO detail = baseMapper.selectApplicationDetail(applicationId, hrId);
+        ApplicationListDTO detail = applicationMapper.selectApplicationDetail(applicationId, hrId);
         if (detail == null) {
             throw new BusinessException(ErrorCode.APPLICATION_NOT_EXIST);
         }

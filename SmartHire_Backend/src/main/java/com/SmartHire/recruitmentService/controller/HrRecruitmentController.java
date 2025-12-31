@@ -126,7 +126,7 @@ public class HrRecruitmentController {
    * @param applicationId 投递ID
    * @param req           拒绝请求体
    */
-  @PatchMapping("/applications/{applicationId}/reject")
+  @PatchMapping("/application/{applicationId}/reject")
   @RequireUserType(UserType.HR)
   @Operation(summary = "HR 拒绝候选人", description = "HR 对指定投递执行拒绝操作（记录原因并通知候选人）")
   public Result<?> rejectApplication(

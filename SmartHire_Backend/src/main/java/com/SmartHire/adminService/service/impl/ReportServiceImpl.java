@@ -44,39 +44,41 @@ public class ReportServiceImpl extends ServiceImpl<ReportMapper, Report> impleme
     @Autowired
     private HrApi hrApi;
 
+    @Autowired
+    private ReportMapper reportMapper;
+
     @Override
     public Page<ReportDetailDTO> getReportList(ReportQueryDTO queryDTO) {
         // 优先使用current，如果没有则使用page
         Integer pageNum = queryDTO.getCurrent() != null ? queryDTO.getCurrent() : queryDTO.getPage();
         Page<ReportDetailDTO> page = new Page<>(pageNum, queryDTO.getSize());
 
-        Page<ReportDetailDTO> result = baseMapper.selectReportListWithDetails(
+        Page<ReportDetailDTO> result = reportMapper.selectReportListWithDetails(
                 page,
                 queryDTO.getTargetType(),
                 queryDTO.getReportType(),
                 queryDTO.getStatus(),
-                queryDTO.getKeyword()
-        );
+                queryDTO.getKeyword());
 
         return result;
     }
 
     @Override
     public ReportDetailDTO getReportDetail(Long id) {
-        ReportDetailDTO detail = baseMapper.selectReportDetailById(id);
+        ReportDetailDTO detail = reportMapper.selectReportDetailById(id);
         if (detail == null) {
             return null;
         }
 
         // 如果是举报用户，查询用户详细信息
         if (detail.getTargetType() != null && detail.getTargetType().equals(Report.TargetType.USER)) {
-            ReportDetailDTO.UserInfoDTO targetUser = baseMapper.selectTargetUserById(detail.getTargetId());
+            ReportDetailDTO.UserInfoDTO targetUser = reportMapper.selectTargetUserById(detail.getTargetId());
             detail.setTargetUser(targetUser);
         }
 
         // 如果是举报职位，查询职位详细信息
         if (detail.getTargetType() != null && detail.getTargetType().equals(Report.TargetType.JOB)) {
-            ReportDetailDTO.JobInfoDTO targetJob = baseMapper.selectTargetJobById(detail.getTargetId());
+            ReportDetailDTO.JobInfoDTO targetJob = reportMapper.selectTargetJobById(detail.getTargetId());
             detail.setTargetJob(targetJob);
         }
 
@@ -103,9 +105,8 @@ public class ReportServiceImpl extends ServiceImpl<ReportMapper, Report> impleme
         String auditorName = userContext.getCurrentUsername();
 
         // 更新举报处理状态
-        int updateCount = baseMapper.updateReportHandle(
-                id, handlerId, handleDTO.getHandleResult(), handleDTO.getHandleReason()
-        );
+        int updateCount = reportMapper.updateReportHandle(
+                id, handlerId, handleDTO.getHandleResult(), handleDTO.getHandleReason());
 
         if (updateCount <= 0) {
             throw new RuntimeException("更新举报状态失败");
@@ -132,11 +133,10 @@ public class ReportServiceImpl extends ServiceImpl<ReportMapper, Report> impleme
 
                     // 发送封禁通知给被举报用户
                     notificationService.sendUserBanNotification(
-                        report.getTargetId(),
-                        handleDTO.getBanInfo().getBanType(),
-                        handleDTO.getBanInfo().getBanDays(),
-                        handleDTO.getHandleReason()
-                    );
+                            report.getTargetId(),
+                            handleDTO.getBanInfo().getBanType(),
+                            handleDTO.getBanInfo().getBanDays(),
+                            handleDTO.getHandleReason());
 
                 } catch (Exception e) {
                     throw new RuntimeException("封禁用户失败：" + e.getMessage());
@@ -152,11 +152,10 @@ public class ReportServiceImpl extends ServiceImpl<ReportMapper, Report> impleme
                 try {
                     // 集成职位下线服务
                     jobAuditService.forceOfflineJob(
-                        report.getTargetId(),
-                        handleDTO.getHandleReason(),
-                        handlerId,
-                        auditorName
-                    );
+                            report.getTargetId(),
+                            handleDTO.getHandleReason(),
+                            handlerId,
+                            auditorName);
 
                     // 发送职位下线通知给HR
                     if (detail.getTargetJob() != null) {
@@ -164,10 +163,9 @@ public class ReportServiceImpl extends ServiceImpl<ReportMapper, Report> impleme
                         Long hrUserId = getHrUserIdByJobId(detail.getTargetJob().getHrId());
                         if (hrUserId != null) {
                             notificationService.sendJobOfflineNotification(
-                                hrUserId,
-                                detail.getTargetJob().getJobTitle(),
-                                handleDTO.getHandleReason()
-                            );
+                                    hrUserId,
+                                    detail.getTargetJob().getJobTitle(),
+                                    handleDTO.getHandleReason());
                         }
                     }
 
@@ -184,20 +182,18 @@ public class ReportServiceImpl extends ServiceImpl<ReportMapper, Report> impleme
                         targetType = detail.getTargetUser().getUserType() == 2 ? "HR账号" : "求职者账号";
                     }
                     notificationService.sendUserWarningNotification(
-                        report.getTargetId(),
-                        targetType,
-                        handleDTO.getHandleReason()
-                    );
+                            report.getTargetId(),
+                            targetType,
+                            handleDTO.getHandleReason());
                 } else if (report.getTargetType().equals(Report.TargetType.JOB) && detail.getTargetJob() != null) {
                     // 警告HR（针对职位）
                     // 需要获取HR的user_id，而不是hr_info_id
                     Long hrUserId = getHrUserIdByJobId(detail.getTargetJob().getHrId());
                     if (hrUserId != null) {
                         notificationService.sendUserWarningNotification(
-                            hrUserId,
-                            "职位内容",
-                            handleDTO.getHandleReason()
-                        );
+                                hrUserId,
+                                "职位内容",
+                                handleDTO.getHandleReason());
                     }
                 }
                 break;
@@ -214,34 +210,31 @@ public class ReportServiceImpl extends ServiceImpl<ReportMapper, Report> impleme
 
         // 发送通知给举报方
         notificationService.sendReportResultToReporter(
-            id,
-            report.getReporterId(),
-            targetTitle,
-            resultLabel,
-            handleDTO.getHandleReason()
-        );
+                id,
+                report.getReporterId(),
+                targetTitle,
+                resultLabel,
+                handleDTO.getHandleReason());
 
         // 发送通知给被举报方（除了无需处理的情况）
         if (handleDTO.getHandleResult() != Report.HandleResult.NO_ACTION) {
             if (report.getTargetType().equals(Report.TargetType.USER)) {
                 notificationService.sendReportResultToTarget(
-                    id,
-                    report.getTargetId(),
-                    targetTypeLabel,
-                    resultLabel,
-                    handleDTO.getHandleReason()
-                );
+                        id,
+                        report.getTargetId(),
+                        targetTypeLabel,
+                        resultLabel,
+                        handleDTO.getHandleReason());
             } else if (report.getTargetType().equals(Report.TargetType.JOB) && detail.getTargetJob() != null) {
                 // 需要获取HR的user_id，而不是hr_info_id
                 Long hrUserId = getHrUserIdByJobId(detail.getTargetJob().getHrId());
                 if (hrUserId != null) {
                     notificationService.sendReportResultToTarget(
-                        id,
-                        hrUserId,
-                        targetTypeLabel,
-                        resultLabel,
-                        handleDTO.getHandleReason()
-                    );
+                            id,
+                            hrUserId,
+                            targetTypeLabel,
+                            resultLabel,
+                            handleDTO.getHandleReason());
                 }
             }
         }
@@ -251,7 +244,7 @@ public class ReportServiceImpl extends ServiceImpl<ReportMapper, Report> impleme
 
     @Override
     public Map<String, Object> getReportStats() {
-        return baseMapper.getReportStats();
+        return reportMapper.getReportStats();
     }
 
     @Override
@@ -265,6 +258,7 @@ public class ReportServiceImpl extends ServiceImpl<ReportMapper, Report> impleme
 
     /**
      * 根据hr_info_id获取对应的user_id
+     * 
      * @param hrInfoId hr_info表的主键ID
      * @return 对应的用户ID
      */

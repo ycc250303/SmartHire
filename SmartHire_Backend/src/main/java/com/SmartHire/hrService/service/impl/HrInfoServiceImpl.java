@@ -29,7 +29,11 @@ public class HrInfoServiceImpl extends ServiceImpl<HrInfoMapper, HrInfo> impleme
 
   @Autowired private CompanyMapper companyMapper;
 
-  @Autowired private HrAuditMapper hrAuditMapper;
+  @Autowired
+  private HrAuditMapper hrAuditMapper;
+  
+  @Autowired
+  private HrInfoMapper hrInfoMapper;
 
   /** 获取当前登录用户ID
    * 注意：用户身份验证已由AOP在Controller层统一处理，此处无需再次验证
@@ -44,7 +48,7 @@ public class HrInfoServiceImpl extends ServiceImpl<HrInfoMapper, HrInfo> impleme
     Long userId = getCurrentUserId();
 
     // 查询HR信息（包含公司名称）
-    HrInfoDTO hrInfoDTO = baseMapper.selectHrInfoWithCompanyByUserId(userId);
+    HrInfoDTO hrInfoDTO = hrInfoMapper.selectHrInfoWithCompanyByUserId(userId);
     if (hrInfoDTO == null) {
       throw new BusinessException(ErrorCode.HR_NOT_EXIST);
     }
