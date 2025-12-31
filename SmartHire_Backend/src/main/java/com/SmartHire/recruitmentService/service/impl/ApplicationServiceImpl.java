@@ -2,7 +2,6 @@ package com.SmartHire.recruitmentService.service.impl;
 
 import com.SmartHire.common.api.HrApi;
 import com.SmartHire.common.api.SeekerApi;
-import com.SmartHire.common.api.UserAuthApi;
 import com.SmartHire.common.auth.UserContext;
 import com.SmartHire.common.exception.enums.ErrorCode;
 import com.SmartHire.common.exception.exception.BusinessException;
@@ -17,7 +16,6 @@ import com.SmartHire.recruitmentService.service.ApplicationEventProducer;
 import com.SmartHire.recruitmentService.mapper.ApplicationMapper;
 import com.SmartHire.recruitmentService.model.Application;
 import com.SmartHire.recruitmentService.service.ApplicationService;
-import com.SmartHire.userAuthService.model.User;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 
@@ -46,9 +44,6 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
 
     @Autowired
     private HrApi hrApi;
-
-    @Autowired
-    private UserAuthApi userAuthApi;
 
     @Autowired
     private UserContext userContext;
@@ -221,24 +216,6 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
     }
 
     /**
-     * 获取当前登录HR的ID（hr_info表的id）
-     */
-    private Long getCurrentHrId() {
-        Long userId = userContext.getCurrentUserId();
-        User user = userAuthApi.getUserById(userId);
-        if (user.getUserType() != 2) {
-            throw new BusinessException(ErrorCode.USER_NOT_HR);
-        }
-
-        Long hrId = hrApi.getHrIdByUserId(userId);
-        if (hrId == null) {
-            throw new BusinessException(ErrorCode.HR_NOT_EXIST);
-        }
-
-        return hrId;
-    }
-
-    /**
      * 校验投递是否属于当前HR
      */
     private Application validateApplicationOwnership(Long applicationId, Long hrId) {
@@ -261,7 +238,7 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
 
     @Override
     public Page<ApplicationListDTO> getApplicationList(ApplicationQueryDTO queryDTO) {
-        Long hrId = getCurrentHrId();
+        Long hrId = userContext.getCurrentHrId();
         int pageNum = queryDTO.getPageNum() == null ? 1 : queryDTO.getPageNum();
         int pageSize = queryDTO.getPageSize() == null ? 10 : queryDTO.getPageSize();
 
@@ -274,7 +251,7 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
 
     @Override
     public ApplicationListDTO getApplicationDetail(Long applicationId) {
-        Long hrId = getCurrentHrId();
+        Long hrId = userContext.getCurrentHrId();
         ApplicationListDTO detail = baseMapper.selectApplicationDetail(applicationId, hrId);
         if (detail == null) {
             throw new BusinessException(ErrorCode.APPLICATION_NOT_EXIST);
@@ -289,7 +266,7 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
             throw new BusinessException(ErrorCode.VALIDATION_ERROR);
         }
 
-        Long hrId = getCurrentHrId();
+        Long hrId = userContext.getCurrentHrId();
         Application application = validateApplicationOwnership(applicationId, hrId);
 
         Date now = new Date();
@@ -302,7 +279,7 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void rejectApplication(Long applicationId, String reason, Boolean sendNotification, String templateId) {
-        Long hrId = getCurrentHrId();
+        Long hrId = userContext.getCurrentHrId();
         Application application = validateApplicationOwnership(applicationId, hrId);
 
         // 如果已被拒绝，直接返回（幂等）

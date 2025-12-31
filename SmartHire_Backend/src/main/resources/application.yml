@@ -38,6 +38,8 @@ mybatis-plus:
 logging:
   level:
     com.SmartHire.shared.interceptors: DEBUG
+    org.springframework.security: WARN
+    org.apache.catalina: WARN
 
 # 服务器配置
 server:

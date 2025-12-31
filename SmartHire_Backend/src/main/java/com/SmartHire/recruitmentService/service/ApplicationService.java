@@ -5,8 +5,6 @@ import com.SmartHire.recruitmentService.model.Application;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 
-import java.util.List;
-
 /**
  * 投递/推荐记录表 服务类
  *

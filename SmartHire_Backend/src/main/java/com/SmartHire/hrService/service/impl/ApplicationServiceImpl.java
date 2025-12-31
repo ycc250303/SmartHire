@@ -22,8 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.Date;
-import java.util.List;
-
 /**
  * 简历服务实现类
  */
@@ -33,30 +31,9 @@ public class ApplicationServiceImpl extends ServiceImpl<HrApplicationMapper, App
 
     @Autowired
     private UserContext userContext;
-
-    @Autowired
-    private HrInfoMapper hrInfoMapper;
-
+    
     @Autowired
     private JobInfoMapper jobInfoMapper;
-
-    /**
-     * 获取当前登录HR的ID（hr_info表的id）
-     * 注意：用户身份验证已由AOP在Controller层统一处理，此处无需再次验证
-     */
-    private Long getCurrentHrId() {
-        Long userId = userContext.getCurrentUserId();
-
-        HrInfo hrInfo = hrInfoMapper.selectOne(
-                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<HrInfo>()
-                        .eq(HrInfo::getUserId, userId));
-
-        if (hrInfo == null) {
-            throw new BusinessException(ErrorCode.HR_NOT_EXIST);
-        }
-
-        return hrInfo.getId();
-    }
 
     /**
      * 校验投递是否属于当前HR
@@ -88,7 +65,7 @@ public class ApplicationServiceImpl extends ServiceImpl<HrApplicationMapper, App
 
     @Override
     public Page<ApplicationListDTO> getApplicationList(ApplicationQueryDTO queryDTO) {
-        Long hrId = getCurrentHrId();
+        Long hrId = userContext.getCurrentHrId();
         int pageNum = queryDTO.getPageNum() == null ? 1 : queryDTO.getPageNum();
         int pageSize = queryDTO.getPageSize() == null ? 10 : queryDTO.getPageSize();
 
@@ -104,7 +81,7 @@ public class ApplicationServiceImpl extends ServiceImpl<HrApplicationMapper, App
 
     @Override
     public ApplicationListDTO getApplicationDetail(Long applicationId) {
-        Long hrId = getCurrentHrId();
+        Long hrId = userContext.getCurrentHrId();
         ApplicationListDTO detail = baseMapper.selectApplicationDetail(applicationId, hrId);
         if (detail == null) {
             throw new BusinessException(ErrorCode.APPLICATION_NOT_EXIST);
@@ -119,7 +96,7 @@ public class ApplicationServiceImpl extends ServiceImpl<HrApplicationMapper, App
             throw new BusinessException(ErrorCode.VALIDATION_ERROR);
         }
 
-        Long hrId = getCurrentHrId();
+        Long hrId = userContext.getCurrentHrId();
         Application application = validateApplicationOwnership(applicationId, hrId);
 
         Date now = new Date();
