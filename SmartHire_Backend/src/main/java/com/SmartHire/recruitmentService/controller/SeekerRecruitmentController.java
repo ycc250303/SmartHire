@@ -6,9 +6,10 @@ import com.SmartHire.common.auth.UserType;
 import com.SmartHire.common.entity.Result;
 import com.SmartHire.common.exception.enums.ErrorCode;
 import com.SmartHire.common.exception.exception.BusinessException;
-import com.SmartHire.hrService.dto.JobCardDTO;
-import com.SmartHire.hrService.dto.JobSearchDTO;
-import com.SmartHire.hrService.service.JobInfoService;
+import com.SmartHire.common.dto.hrDto.JobCardDTO;
+import com.SmartHire.common.dto.hrDto.JobFullDetailDTO;
+import com.SmartHire.common.dto.hrDto.JobInfoDTO;
+import com.SmartHire.common.dto.hrDto.JobSearchDTO;
 import com.SmartHire.common.api.SeekerApi;
 import com.SmartHire.common.dto.seekerDto.SeekerCardDTO;
 import com.SmartHire.common.dto.seekerDto.SeekerCommonDTO;
@@ -24,16 +25,14 @@ import java.util.List;
 import com.SmartHire.recruitmentService.dto.SeekerJobPositionDTO;
 import com.SmartHire.recruitmentService.mapper.ApplicationMapper;
 import com.SmartHire.recruitmentService.model.Application;
-import com.SmartHire.hrService.dto.JobInfoListDTO;
-import com.SmartHire.hrService.model.JobInfo;
-import com.SmartHire.hrService.model.Company;
-import com.SmartHire.hrService.model.HrInfo;
+import com.SmartHire.common.dto.hrDto.CompanyDTO;
+import com.SmartHire.common.dto.hrDto.HrInfoDTO;
 import com.SmartHire.common.dto.userDto.UserCommonDTO;
 import com.SmartHire.messageService.mapper.ChatMessageMapper;
 import com.SmartHire.messageService.model.ChatMessage;
 import com.SmartHire.recruitmentService.dto.SubmitResumeDTO;
 import com.SmartHire.recruitmentService.dto.SeekerApplicationListDTO;
-import com.SmartHire.recruitmentService.service.ApplicationService;
+import com.SmartHire.recruitmentService.service.SeekerApplicationService;
 import com.SmartHire.common.api.UserAuthApi;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
@@ -41,7 +40,6 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -64,15 +62,12 @@ import org.springframework.web.bind.annotation.RestController;
 @Validated
 public class SeekerRecruitmentController {
   @Autowired
-  @Qualifier("applicationServiceImpl")
-  private ApplicationService applicationService;
+  private SeekerApplicationService seekerApplicationService;
 
   @Autowired
   private HrApi hrApi;
   @Autowired
   private SeekerApi seekerApi;
-  @Autowired
-  private JobInfoService jobInfoService;
   @Autowired
   private UserContext userContext;
   @Autowired
@@ -85,7 +80,7 @@ public class SeekerRecruitmentController {
   @PostMapping("/submit-resume")
   @Operation(summary = "求职者投递简历", description = "求职者投递简历到指定职位。如果提供resumeId则投递附件简历，如果不提供resumeId则投递在线简历")
   public Result<?> submitResume(@Valid @RequestBody SubmitResumeDTO request) {
-    Long applicationId = applicationService.submitResume(request);
+    Long applicationId = seekerApplicationService.submitResume(request);
     return Result.success("投递简历成功", applicationId);
   }
 
@@ -105,7 +100,7 @@ public class SeekerRecruitmentController {
   public Result<SeekerApplicationListDTO> getSeekerApplicationList(
       @RequestParam(value = "page", required = false) Integer page,
       @RequestParam(value = "size", required = false) Integer size) {
-    SeekerApplicationListDTO result = applicationService.getSeekerApplicationList(page, size);
+    SeekerApplicationListDTO result = seekerApplicationService.getSeekerApplicationList(page, size);
     return Result.success("获取投递过的列表成功", result);
   }
 
@@ -119,7 +114,7 @@ public class SeekerRecruitmentController {
     searchDTO.setPage(1);
     searchDTO.setSize(12);
     log.info("searchDTO (intern job list): {}", searchDTO);
-    List<JobCardDTO> jobCards = jobInfoService.searchPublicJobs(searchDTO);
+    List<JobCardDTO> jobCards = hrApi.searchPublicJobs(searchDTO);
     log.info("jobCards: {}", jobCards);
 
     // Attempt to get current seeker info for personalized scoring.
@@ -220,51 +215,48 @@ public class SeekerRecruitmentController {
   @Operation(summary = "获取面向求职者的岗位详情", description = "返回岗位详情（包含公司、HR、申请状态等），供求职者端展示")
   public Result<SeekerJobPositionDTO> getJobPosition(@PathVariable @NotNull Long jobId) {
     log.info("Get job position info: {}", jobId);
-    // 获取岗位基础 DTO（包含技能等）
-    JobInfoListDTO jobDto = jobInfoService.getJobInfoById(jobId);
-    if (jobDto == null) {
-      throw new BusinessException(ErrorCode.JOB_NOT_EXIST);
-    }
-    log.info("Job info: {}", jobDto);
 
-    // 获取完整实体以便取 companyId/hrId
-    JobInfo jobModel = hrApi.getJobInfoById(jobId);
-    if (jobModel == null) {
+    // 调用语义化 API 获取完整详情
+    JobFullDetailDTO fullDetail = hrApi.getJobFullDetail(jobId);
+    if (fullDetail == null) {
       throw new BusinessException(ErrorCode.JOB_NOT_EXIST);
     }
 
-    // 获取公司信息
-    Company company = hrApi.getCompanyById(jobModel.getCompanyId());
+    JobInfoDTO jobModel = fullDetail.getJobInfo();
+    CompanyDTO company = fullDetail.getCompany();
+    HrInfoDTO hrInfo = fullDetail.getHrInfo();
 
-    // 获取 hr info + avatar
-    HrInfo hrInfo = hrApi.getHrInfoById(jobModel.getHrId());
-    log.info("HR info: {}", hrInfo);
+    // 获取 hr 头像 (这是 recruitmentService 关心的外部关联)
     UserCommonDTO hrUser = null;
     if (hrInfo != null) {
       hrUser = userAuthApi.getUserById(hrInfo.getUserId());
     }
 
+    // 获取岗位基础 DTO（包含技能等，由 recruitmentService 内部服务补充）
+    JobInfoDTO jobDto = hrApi.getJobInfoWithSkills(jobId);
+
     // 构建返回 DTO
     SeekerJobPositionDTO resp = new SeekerJobPositionDTO();
     resp.setJobId(jobModel.getId());
-    resp.setJobTitle(jobDto.getJobTitle());
-    resp.setJobCategory(jobDto.getJobCategory());
-    resp.setDepartment(jobDto.getDepartment());
-    resp.setCity(jobDto.getCity());
+    resp.setJobTitle(jobModel.getJobTitle());
+    resp.setJobCategory(jobModel.getJobCategory());
+    resp.setDepartment(jobModel.getDepartment());
+    resp.setCity(jobModel.getCity());
     resp.setAddress(jobModel.getAddress());
-    resp.setSalaryMin(jobDto.getSalaryMin() == null ? 0 : jobDto.getSalaryMin().intValue());
-    resp.setSalaryMax(jobDto.getSalaryMax() == null ? 0 : jobDto.getSalaryMax().intValue());
-    resp.setSalaryMonths(jobDto.getSalaryMonths());
-    resp.setEducationRequired(jobDto.getEducationRequired());
-    resp.setJobType(jobDto.getJobType());
-    resp.setExperienceRequired(jobDto.getExperienceRequired());
+    resp.setSalaryMin(jobModel.getSalaryMin() == null ? 0 : jobModel.getSalaryMin().intValue());
+    resp.setSalaryMax(jobModel.getSalaryMax() == null ? 0 : jobModel.getSalaryMax().intValue());
+    resp.setSalaryMonths(jobModel.getSalaryMonths());
+    resp.setEducationRequired(jobModel.getEducationRequired());
+    resp.setJobType(jobModel.getJobType());
+    resp.setExperienceRequired(jobModel.getExperienceRequired());
     resp.setDescription(jobModel.getDescription());
     resp.setResponsibilities(jobModel.getResponsibilities());
     resp.setRequirements(jobModel.getRequirements());
-    resp.setSkills(jobDto.getSkills());
-    resp.setViewCount(jobDto.getViewCount());
-    resp.setApplicationCount(jobDto.getApplicationCount());
-    resp.setPublishedAt(jobDto.getPublishedAt());
+    // 优先使用内部服务的技能列表
+    resp.setSkills(jobDto != null ? jobDto.getSkills() : null);
+    resp.setViewCount(jobModel.getViewCount());
+    resp.setApplicationCount(jobModel.getApplicationCount());
+    resp.setPublishedAt(jobModel.getPublishedAt());
 
     if (company != null) {
       SeekerJobPositionDTO.CompanyDTO c = new SeekerJobPositionDTO.CompanyDTO();

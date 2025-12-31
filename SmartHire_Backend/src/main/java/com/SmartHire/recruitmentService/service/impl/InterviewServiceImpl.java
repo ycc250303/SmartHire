@@ -31,17 +31,20 @@ import org.springframework.transaction.annotation.Transactional;
 public class InterviewServiceImpl extends ServiceImpl<InterviewMapper, Interview>
     implements InterviewService {
 
-  @Autowired private InterviewMapper interviewMapper;
+  @Autowired
+  private ApplicationMapper applicationMapper;
 
-  @Autowired private ApplicationMapper applicationMapper;
+  @Autowired
+  private SeekerApi seekerApi;
 
-  @Autowired private SeekerApi seekerApi;
+  @Autowired
+  private HrApi hrApi;
 
-  @Autowired private HrApi hrApi;
+  @Autowired
+  private UserContext userContext;
 
-  @Autowired private UserContext userContext;
-
-  @Autowired private InterviewEventProducer interviewEventProducer;
+  @Autowired
+  private InterviewEventProducer interviewEventProducer;
 
   @Override
   @Transactional(rollbackFor = Exception.class)
@@ -64,8 +67,7 @@ public class InterviewServiceImpl extends ServiceImpl<InterviewMapper, Interview
     if (currentHrId == null) {
       throw new BusinessException(ErrorCode.HR_NOT_EXIST);
     }
-    Long jobHrId = hrApi.getHrIdByJobId(application.getJobId());
-    if (jobHrId == null || !jobHrId.equals(currentHrId)) {
+    if (!hrApi.isHrAuthorizedForJob(currentHrId, application.getJobId())) {
       throw new BusinessException(ErrorCode.PERMISSION_DENIED);
     }
 
@@ -120,5 +122,3 @@ public class InterviewServiceImpl extends ServiceImpl<InterviewMapper, Interview
     return interview.getId();
   }
 }
-
-

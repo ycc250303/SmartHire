@@ -6,8 +6,8 @@ import com.SmartHire.common.exception.exception.BusinessException;
 import com.SmartHire.hrService.dto.JobInfoCreateDTO;
 import com.SmartHire.hrService.dto.JobInfoListDTO;
 import com.SmartHire.hrService.dto.JobInfoUpdateDTO;
-import com.SmartHire.hrService.dto.JobCardDTO;
-import com.SmartHire.hrService.dto.JobSearchDTO;
+import com.SmartHire.common.dto.hrDto.JobCardDTO;
+import com.SmartHire.common.dto.hrDto.JobSearchDTO;
 import com.SmartHire.hrService.mapper.CompanyMapper;
 import com.SmartHire.hrService.mapper.HrInfoMapper;
 import com.SmartHire.hrService.mapper.JobInfoMapper;
@@ -16,6 +16,7 @@ import com.SmartHire.hrService.model.Company;
 import com.SmartHire.hrService.model.HrInfo;
 import com.SmartHire.hrService.model.JobInfo;
 import com.SmartHire.hrService.model.JobSkillRequirement;
+import com.SmartHire.hrService.service.HrInfoService;
 import com.SmartHire.hrService.service.JobInfoService;
 import com.SmartHire.adminService.mapper.JobAuditMapper;
 import com.SmartHire.adminService.model.JobAuditRecord;
@@ -54,6 +55,9 @@ public class JobInfoServiceImpl extends ServiceImpl<JobInfoMapper, JobInfo>
   @Autowired
   private JobAuditMapper jobAuditMapper;
 
+  @Autowired
+  private HrInfoService hrInfoService;
+
   /** 验证岗位是否属于当前HR */
   private void validateJobOwnership(Long jobId) {
     JobInfo jobInfo = getById(jobId);
@@ -61,7 +65,7 @@ public class JobInfoServiceImpl extends ServiceImpl<JobInfoMapper, JobInfo>
       throw new BusinessException(ErrorCode.JOB_NOT_EXIST);
     }
 
-    Long currentHrId = userContext.getCurrentHrId();
+    Long currentHrId = hrInfoService.getCurrentHrId();
     if (!jobInfo.getHrId().equals(currentHrId)) {
       throw new BusinessException(ErrorCode.JOB_NOT_BELONG_TO_HR);
     }
@@ -70,9 +74,9 @@ public class JobInfoServiceImpl extends ServiceImpl<JobInfoMapper, JobInfo>
   @Override
   @Transactional
   public Long createJobInfo(JobInfoCreateDTO createDTO) {
-    Long currentHrId = userContext.getCurrentHrId();
+      Long currentHrId = userContext.getCurrentUserId();
 
-    // 验证全职类型字段
+      // 验证全职类型字段
     if (createDTO.getJobType() != null
         && createDTO.getJobType() == 0
         && createDTO.getExperienceRequired() == null) {
@@ -137,7 +141,7 @@ public class JobInfoServiceImpl extends ServiceImpl<JobInfoMapper, JobInfo>
                 requirement.setCreatedAt(now);
                 return requirement;
               })
-          .collect(Collectors.toList());
+          .toList();
 
       for (JobSkillRequirement requirement : skillRequirements) {
         jobSkillRequirementMapper.insert(requirement);
@@ -254,7 +258,7 @@ public class JobInfoServiceImpl extends ServiceImpl<JobInfoMapper, JobInfo>
 
   @Override
   public List<JobInfoListDTO> getJobInfoList(Integer status) {
-    Long currentHrId = userContext.getCurrentHrId();
+    Long currentHrId = hrInfoService.getCurrentHrId();
 
     // 构建查询条件
     List<JobInfo> jobInfos;
@@ -363,7 +367,7 @@ public class JobInfoServiceImpl extends ServiceImpl<JobInfoMapper, JobInfo>
     }
 
     // 获取HR信息
-    Long currentHrId = userContext.getCurrentHrId();
+    Long currentHrId = hrInfoService.getCurrentHrId();
     HrInfo hrInfo = hrInfoMapper.selectById(currentHrId);
     if (hrInfo == null) {
       throw new BusinessException(ErrorCode.HR_NOT_EXIST);
@@ -390,7 +394,7 @@ public class JobInfoServiceImpl extends ServiceImpl<JobInfoMapper, JobInfo>
     JobAuditRecord auditRecord = jobAuditMapper.selectOne(wrapper);
 
     if (auditRecord == null) {
-      // 创建新的审核记录
+      // 创建新审核记录
       auditRecord = new JobAuditRecord();
       auditRecord.setJobId(jobId);
       auditRecord.setJobTitle(jobInfo.getJobTitle());

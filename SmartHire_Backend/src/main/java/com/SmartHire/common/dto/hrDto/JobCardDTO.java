@@ -1,4 +1,4 @@
-package com.SmartHire.hrService.dto;
+package com.SmartHire.common.dto.hrDto;
 
 import java.io.Serial;
 import java.io.Serializable;

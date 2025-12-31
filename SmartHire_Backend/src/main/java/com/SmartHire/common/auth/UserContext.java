@@ -20,8 +20,6 @@ public class UserContext {
   @Autowired
   private JwtUtil jwtUtil;
 
-  @Autowired
-  private HrApi hrApi;
 
   /**
    * 获取当前登录用户的完整信息
@@ -82,34 +80,6 @@ public class UserContext {
       throw e;
     }
   }
-
-  /**
-   * 获取当前登录HR的ID（hr_info表的id）
-   *
-   * @return HR ID，如果用户不是HR或HR不存在返回null
-   */
-  public Long getCurrentHrId() {
-    Long userId = getCurrentUserId();
-    Long hrId = hrApi.getHrIdByUserId(userId);
-    if (hrId == null) {
-      throw new BusinessException(ErrorCode.HR_NOT_EXIST);
-    }
-    return hrId;
-  }
-
-  // /**
-  //  * 获取当前登录求职者的ID（job_seeker表的id）
-  //  *
-  //  * @return 求职者ID，如果用户不是求职者或求职者不存在返回null
-  //  */
-  // public Long getCurrentSeekerId() {
-  //   Long userId = getCurrentUserId();
-  //   Long seekerId = seekerApi.getJobSeekerIdByUserId(userId);
-  //   if (seekerId == null) {
-  //     throw new BusinessException(ErrorCode.SEEKER_NOT_EXIST);
-  //   }
-  //   return seekerId;
-  // }
 
   /**
    * 检查当前用户是否为求职者

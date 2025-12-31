@@ -1,8 +1,8 @@
 package com.SmartHire.hrService.controller;
 
 import com.SmartHire.common.entity.Result;
-import com.SmartHire.hrService.dto.JobCardDTO;
-import com.SmartHire.hrService.dto.JobSearchDTO;
+import com.SmartHire.common.dto.hrDto.JobCardDTO;
+import com.SmartHire.common.dto.hrDto.JobSearchDTO;
 import com.SmartHire.hrService.service.JobInfoService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;

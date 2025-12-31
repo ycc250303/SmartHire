@@ -1,6 +1,6 @@
 package com.SmartHire.hrService.service.impl;
 
-import com.SmartHire.common.auth.UserContext;
+import com.SmartHire.common.api.HrApi;
 import com.SmartHire.common.exception.enums.ErrorCode;
 import com.SmartHire.common.exception.exception.BusinessException;
 import com.SmartHire.hrService.mapper.HrApplicationMapper;
@@ -29,10 +29,6 @@ import org.springframework.util.StringUtils;
 /** 匹配服务实现类 */
 @Service
 public class MatchingServiceImpl implements MatchingService {
-
-  @Autowired
-  private UserContext userContext;
-
   @Autowired
   private JobInfoMapper jobInfoMapper;
 
@@ -45,9 +41,11 @@ public class MatchingServiceImpl implements MatchingService {
   @Autowired
   private HrApplicationMapper hrApplicationMapper;
 
+  @Autowired
+  private HrApi hrApi;
 
   /** 校验岗位归属 */
-  private JobInfo validateJobOwnership(Long jobId, Long hrId) {
+  private void validateJobOwnership(Long jobId, Long hrId) {
     JobInfo jobInfo = jobInfoMapper.selectById(jobId);
     if (jobInfo == null) {
       throw new BusinessException(ErrorCode.JOB_NOT_EXIST);
@@ -55,13 +53,12 @@ public class MatchingServiceImpl implements MatchingService {
     if (!jobInfo.getHrId().equals(hrId)) {
       throw new BusinessException(ErrorCode.JOB_NOT_BELONG_TO_HR);
     }
-    return jobInfo;
   }
 
   @Override
   @Transactional
   public List<ApplicationListDTO> matchApplicationsForJob(Long jobId) {
-    Long hrId = userContext.getCurrentHrId();
+    Long hrId = hrApi.getCurrentHrId();
     validateJobOwnership(jobId, hrId);
 
     List<String> requiredSkills = jobSkillRequirementMapper.selectSkillNamesByJobId(jobId);

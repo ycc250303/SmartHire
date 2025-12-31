@@ -9,7 +9,7 @@ import com.SmartHire.adminService.service.ReportService;
 import com.SmartHire.adminService.service.BanRecordService;
 import com.SmartHire.adminService.service.JobAuditService;
 import com.SmartHire.adminService.service.NotificationService;
-import com.SmartHire.hrService.model.HrInfo;
+import com.SmartHire.common.dto.hrDto.HrInfoDTO;
 import com.SmartHire.adminService.dto.ReportDetailDTO;
 import com.SmartHire.adminService.dto.ReportQueryDTO;
 import com.SmartHire.adminService.dto.ReportHandleDTO;
@@ -265,7 +265,7 @@ public class ReportServiceImpl extends ServiceImpl<ReportMapper, Report> impleme
     private Long getHrUserIdByJobId(Long hrInfoId) {
         try {
             // 通过API查询hr_info获取user_id
-            HrInfo hrInfo = hrApi.getHrInfoById(hrInfoId);
+            HrInfoDTO hrInfo = hrApi.getHrInfoById(hrInfoId);
             return hrInfo != null ? hrInfo.getUserId() : null;
         } catch (Exception e) {
             log.error("获取HR用户ID失败，hrInfoId: {}", hrInfoId, e);

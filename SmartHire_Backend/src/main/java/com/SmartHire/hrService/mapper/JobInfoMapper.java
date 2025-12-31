@@ -1,6 +1,6 @@
 package com.SmartHire.hrService.mapper;
 
-import com.SmartHire.hrService.dto.JobCardDTO;
+import com.SmartHire.common.dto.hrDto.JobCardDTO;
 import com.SmartHire.hrService.model.JobInfo;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import java.math.BigDecimal;

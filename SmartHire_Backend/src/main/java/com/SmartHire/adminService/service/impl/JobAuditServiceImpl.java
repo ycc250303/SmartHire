@@ -9,9 +9,9 @@ import com.SmartHire.adminService.model.JobAuditRecord;
 import com.SmartHire.adminService.service.JobAuditService;
 import com.SmartHire.common.api.HrApi;
 import com.SmartHire.common.api.UserAuthApi;
-import com.SmartHire.hrService.model.Company;
-import com.SmartHire.hrService.model.HrInfo;
-import com.SmartHire.hrService.model.JobInfo;
+import com.SmartHire.common.dto.hrDto.CompanyDTO;
+import com.SmartHire.common.dto.hrDto.HrInfoDTO;
+import com.SmartHire.common.dto.hrDto.JobInfoDTO;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -39,7 +39,7 @@ public class JobAuditServiceImpl extends ServiceImpl<JobAuditMapper, JobAuditRec
 
   @Override
   public Page<JobAuditListDTO> getAuditList(Page<JobAuditListDTO> page,
-                                            JobAuditQueryDTO queryDTO) {
+      JobAuditQueryDTO queryDTO) {
     // 系统管理员只查看已通过公司审核的岗位（company_audit_status = 'approved'）
     // 查询时使用 system_audit_status 作为状态筛选
     return jobAuditMapper.selectSystemAuditList(page, queryDTO.getStatus(), queryDTO.getKeyword());
@@ -134,84 +134,84 @@ public class JobAuditServiceImpl extends ServiceImpl<JobAuditMapper, JobAuditRec
     return jobAuditMapper.countBySystemStatus(status);
   }
 
-    @Override
-    public JobAuditRecord getAuditDetail(Long jobId) {
-        LambdaQueryWrapper<JobAuditRecord> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(JobAuditRecord::getJobId, jobId);
-        wrapper.orderByDesc(JobAuditRecord::getId); // 按ID降序，获取最新记录
-        wrapper.last("LIMIT 1"); // 限制只返回一条记录
-        return getOne(wrapper);
+  @Override
+  public JobAuditRecord getAuditDetail(Long jobId) {
+    LambdaQueryWrapper<JobAuditRecord> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(JobAuditRecord::getJobId, jobId);
+    wrapper.orderByDesc(JobAuditRecord::getId); // 按ID降序，获取最新记录
+    wrapper.last("LIMIT 1"); // 限制只返回一条记录
+    return getOne(wrapper);
+  }
+
+  @Override
+  @Transactional(rollbackFor = Exception.class)
+  public void forceOfflineJob(Long jobId, String offlineReason, Long auditorId, String auditorName) {
+    log.info("开始强制下线职位，职位ID: {}, 审核员: {}, 下线原因: {}", jobId, auditorName, offlineReason);
+
+    // 验证职位存在且为已通过系统审核状态
+    JobAuditRecord auditRecord = validateJobForOffline(jobId);
+
+    Date now = new Date();
+
+    // 更新审核记录：设置状态为rejected，使用reject_reason记录下线原因
+    auditRecord.setSystemAuditStatus("rejected"); // 设置为rejected状态
+    auditRecord.setSystemAuditorId(auditorId);
+    auditRecord.setSystemAuditorName(auditorName);
+    auditRecord.setSystemAuditedAt(now);
+    // 更新兼容字段
+    auditRecord.setStatus("rejected"); // 兼容字段
+    auditRecord.setRejectReason("强制下线：" + offlineReason); // 记录下线原因
+    auditRecord.setAuditorId(auditorId);
+    auditRecord.setAuditorName(auditorName);
+    auditRecord.setAuditedAt(now);
+    updateById(auditRecord);
+
+    // 更新JobInfo表：设置职位为下线状态，审核状态为rejected
+    JobInfoDTO jobInfo = new JobInfoDTO();
+    jobInfo.setId(jobId);
+    jobInfo.setStatus(0); // 0-已下线
+    jobInfo.setAuditStatus("rejected"); // 设置审核状态为rejected
+    jobInfo.setAuditedAt(now);
+    jobInfo.setUpdatedAt(now);
+    hrApi.updateJobInfo(jobInfo);
+
+    log.info("职位强制下线完成，职位ID: {}", jobId);
+  }
+
+  /**
+   * 验证职位是否可以强制下线
+   * 系统管理员只能下线同时通过公司审核和系统审核的职位
+   *
+   * @param jobId 职位ID
+   * @return 审核记录
+   */
+  private JobAuditRecord validateJobForOffline(Long jobId) {
+    // 1. 验证职位及其关联数据的存在性
+    validateJobExistence(jobId);
+
+    JobAuditRecord auditRecord = getAuditDetail(jobId);
+    if (auditRecord == null) {
+      throw AdminServiceException.jobNotFound(jobId);
     }
 
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void forceOfflineJob(Long jobId, String offlineReason, Long auditorId, String auditorName) {
-        log.info("开始强制下线职位，职位ID: {}, 审核员: {}, 下线原因: {}", jobId, auditorName, offlineReason);
-
-        // 验证职位存在且为已通过系统审核状态
-        JobAuditRecord auditRecord = validateJobForOffline(jobId);
-
-        Date now = new Date();
-
-        // 更新审核记录：设置状态为rejected，使用reject_reason记录下线原因
-        auditRecord.setSystemAuditStatus("rejected"); // 设置为rejected状态
-        auditRecord.setSystemAuditorId(auditorId);
-        auditRecord.setSystemAuditorName(auditorName);
-        auditRecord.setSystemAuditedAt(now);
-        // 更新兼容字段
-        auditRecord.setStatus("rejected"); // 兼容字段
-        auditRecord.setRejectReason("强制下线：" + offlineReason); // 记录下线原因
-        auditRecord.setAuditorId(auditorId);
-        auditRecord.setAuditorName(auditorName);
-        auditRecord.setAuditedAt(now);
-        updateById(auditRecord);
-
-        // 更新JobInfo表：设置职位为下线状态，审核状态为rejected
-        JobInfo jobInfo = new JobInfo();
-        jobInfo.setId(jobId);
-        jobInfo.setStatus(0); // 0-已下线
-        jobInfo.setAuditStatus("rejected"); // 设置审核状态为rejected
-        jobInfo.setAuditedAt(now);
-        jobInfo.setUpdatedAt(now);
-        hrApi.updateJobInfo(jobInfo);
-
-        log.info("职位强制下线完成，职位ID: {}", jobId);
+    // 验证必须已通过公司审核
+    if (!AuditStatus.APPROVED.getCode().equals(auditRecord.getCompanyAuditStatus())) {
+      throw AdminServiceException.operationFailed("该岗位尚未通过公司审核，无法进行下线操作");
     }
 
-    /**
-     * 验证职位是否可以强制下线
-     * 系统管理员只能下线同时通过公司审核和系统审核的职位
-     *
-     * @param jobId 职位ID
-     * @return 审核记录
-     */
-    private JobAuditRecord validateJobForOffline(Long jobId) {
-        // 1. 验证职位及其关联数据的存在性
-        validateJobExistence(jobId);
-
-        JobAuditRecord auditRecord = getAuditDetail(jobId);
-        if (auditRecord == null) {
-            throw AdminServiceException.jobNotFound(jobId);
-        }
-
-        // 验证必须已通过公司审核
-        if (!AuditStatus.APPROVED.getCode().equals(auditRecord.getCompanyAuditStatus())) {
-            throw AdminServiceException.operationFailed("该岗位尚未通过公司审核，无法进行下线操作");
-        }
-
-        // 验证必须已通过系统管理员审核且未被强制下线
-        String systemAuditStatus = auditRecord.getSystemAuditStatus();
-        if (systemAuditStatus == null || !AuditStatus.APPROVED.getCode().equals(systemAuditStatus)) {
-            throw AdminServiceException.operationFailed("只有已通过系统管理员审核的职位才能强制下线");
-        }
-
-        return auditRecord;
+    // 验证必须已通过系统管理员审核且未被强制下线
+    String systemAuditStatus = auditRecord.getSystemAuditStatus();
+    if (systemAuditStatus == null || !AuditStatus.APPROVED.getCode().equals(systemAuditStatus)) {
+      throw AdminServiceException.operationFailed("只有已通过系统管理员审核的职位才能强制下线");
     }
+
+    return auditRecord;
+  }
 
   /**
    * 验证职位状态（兼容旧方法）
    *
-   * @param jobId 职位ID
+   * @param jobId          职位ID
    * @param expectedStatus 期望状态
    * @return 审核记录
    */
@@ -232,7 +232,7 @@ public class JobAuditServiceImpl extends ServiceImpl<JobAuditMapper, JobAuditRec
   /**
    * 验证系统审核职位状态（必须已通过公司审核，且系统审核状态为待审核）
    *
-   * @param jobId 职位ID
+   * @param jobId                职位ID
    * @param expectedSystemStatus 期望的系统审核状态
    * @return 审核记录
    */
@@ -265,14 +265,14 @@ public class JobAuditServiceImpl extends ServiceImpl<JobAuditMapper, JobAuditRec
    */
   private void validateJobExistence(Long jobId) {
     // 验证职位是否存在
-    JobInfo jobInfo = hrApi.getJobInfoById(jobId);
+    JobInfoDTO jobInfo = hrApi.getJobInfoById(jobId);
     if (jobInfo == null) {
       throw AdminServiceException.jobNotFound(jobId);
     }
 
     // 验证HR是否存在
     if (jobInfo.getHrId() != null) {
-      HrInfo hrInfo = hrApi.getHrInfoById(jobInfo.getHrId());
+      HrInfoDTO hrInfo = hrApi.getHrInfoById(jobInfo.getHrId());
       if (hrInfo == null) {
         throw AdminServiceException.operationFailed("职位关联的HR不存在，HR ID: " + jobInfo.getHrId());
       }
@@ -291,7 +291,7 @@ public class JobAuditServiceImpl extends ServiceImpl<JobAuditMapper, JobAuditRec
 
     // 验证公司是否存在
     if (jobInfo.getCompanyId() != null) {
-      Company company = hrApi.getCompanyById(jobInfo.getCompanyId());
+      CompanyDTO company = hrApi.getCompanyById(jobInfo.getCompanyId());
       if (company == null) {
         throw AdminServiceException.operationFailed("职位关联的公司不存在，公司 ID: " + jobInfo.getCompanyId());
       }
@@ -301,11 +301,11 @@ public class JobAuditServiceImpl extends ServiceImpl<JobAuditMapper, JobAuditRec
   /**
    * 更新职位审核状态
    *
-   * @param jobId 职位ID
+   * @param jobId       职位ID
    * @param auditStatus 审核状态
    */
   private void updateJobInfoAuditStatus(Long jobId, AuditStatus auditStatus) {
-    JobInfo jobInfo = new JobInfo();
+    JobInfoDTO jobInfo = new JobInfoDTO();
     jobInfo.setId(jobId);
     jobInfo.setAuditStatus(auditStatus.getCode());
     jobInfo.setAuditedAt(new Date());
