@@ -16,6 +16,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 /**
  * 消息服务API实现类 用于模块间通信
@@ -61,21 +62,30 @@ public class MessageApiImpl implements MessageApi {
         if (dto == null) {
             return null;
         }
-        
+
         // 转换 Common DTO 到内部 DTO
         SendMessageDTO internalDto = new SendMessageDTO();
         BeanUtils.copyProperties(dto, internalDto);
-        
+
         // 调用内部服务
         MessageDTO result = chatMessageService.sendMessage(senderId, internalDto);
-        
+
         if (result == null) {
             return null;
         }
-        
+
         // 转换结果到 Common DTO
         MessageCommonDTO commonDto = new MessageCommonDTO();
         BeanUtils.copyProperties(result, commonDto);
         return commonDto;
+    }
+
+    @Override
+    public boolean hasMessages(Long conversationId) {
+        if (!StringUtils.hasText(String.valueOf(conversationId)))
+            return false;
+        return chatMessageMapper.selectCount(
+                new LambdaQueryWrapper<ChatMessage>()
+                        .eq(ChatMessage::getConversationId, conversationId)) > 0;
     }
 }

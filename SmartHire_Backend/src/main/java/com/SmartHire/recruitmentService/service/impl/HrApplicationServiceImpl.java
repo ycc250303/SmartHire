@@ -3,6 +3,7 @@ package com.SmartHire.recruitmentService.service.impl;
 import com.SmartHire.common.api.HrApi;
 import com.SmartHire.common.api.SeekerApi;
 import com.SmartHire.common.auth.UserContext;
+import com.SmartHire.common.dto.seekerDto.SeekerCardDTO;
 import com.SmartHire.common.event.ApplicationCreatedEvent;
 import com.SmartHire.common.event.ApplicationRejectedEvent;
 import com.SmartHire.common.exception.enums.ErrorCode;
@@ -54,6 +55,7 @@ public class HrApplicationServiceImpl extends ServiceImpl<ApplicationMapper, App
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long recommend(RecommendRequest request) {
+        // ... (existing code same)
         if (request == null || request.getJobId() == null || request.getSeekerUserId() == null) {
             throw new BusinessException(ErrorCode.VALIDATION_ERROR);
         }
@@ -61,10 +63,12 @@ public class HrApplicationServiceImpl extends ServiceImpl<ApplicationMapper, App
         Long jobId = request.getJobId();
         Long hrUserId = userContext.getCurrentUserId();
         Long hrId = hrApi.getHrIdByUserId(hrUserId);
-        if (hrId == null) throw new BusinessException(ErrorCode.HR_NOT_EXIST);
+        if (hrId == null)
+            throw new BusinessException(ErrorCode.HR_NOT_EXIST);
 
         Long seekerId = seekerApi.getJobSeekerIdByUserId(request.getSeekerUserId());
-        if (seekerId == null) throw new BusinessException(ErrorCode.SEEKER_NOT_EXIST);
+        if (seekerId == null)
+            throw new BusinessException(ErrorCode.SEEKER_NOT_EXIST);
 
         if (!hrApi.isHrAuthorizedForJob(hrId, jobId)) {
             throw new BusinessException(ErrorCode.PERMISSION_DENIED);
@@ -124,14 +128,16 @@ public class HrApplicationServiceImpl extends ServiceImpl<ApplicationMapper, App
     public ApplicationListDTO getApplicationDetail(Long applicationId) {
         Long hrId = hrApi.getCurrentHrId();
         ApplicationListDTO detail = applicationMapper.selectApplicationDetail(applicationId, hrId);
-        if (detail == null) throw new BusinessException(ErrorCode.APPLICATION_NOT_EXIST);
+        if (detail == null)
+            throw new BusinessException(ErrorCode.APPLICATION_NOT_EXIST);
         return detail;
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updateApplicationStatus(Long applicationId, Byte status) {
-        if (status == null || status < 0 || status > 6) throw new BusinessException(ErrorCode.VALIDATION_ERROR);
+        if (status == null || status < 0 || status > 6)
+            throw new BusinessException(ErrorCode.VALIDATION_ERROR);
         Long hrId = hrApi.getCurrentHrId();
         Application application = validateApplicationOwnership(applicationId, hrId);
         application.setStatus(status);
@@ -145,7 +151,8 @@ public class HrApplicationServiceImpl extends ServiceImpl<ApplicationMapper, App
         Long hrId = hrApi.getCurrentHrId();
         Application application = validateApplicationOwnership(applicationId, hrId);
 
-        if (application.getStatus() != null && application.getStatus() == 5) return;
+        if (application.getStatus() != null && application.getStatus() == 5)
+            return;
 
         Date now = new Date();
         application.setStatus((byte) 5);
@@ -169,13 +176,22 @@ public class HrApplicationServiceImpl extends ServiceImpl<ApplicationMapper, App
         applicationRejectedEventProducer.publishApplicationRejected(event);
     }
 
+    @Override
+    public SeekerCardDTO getSeekerCard(Long userId) {
+        SeekerCardDTO seekerCard = seekerApi.getSeekerCard(userId);
+        if (seekerCard == null) {
+            throw new BusinessException(ErrorCode.SEEKER_NOT_EXIST);
+        }
+        return seekerCard;
+    }
+
     private Application validateApplicationOwnership(Long applicationId, Long hrId) {
         Application application = getById(applicationId);
-        if (application == null) throw new BusinessException(ErrorCode.APPLICATION_NOT_EXIST);
+        if (application == null)
+            throw new BusinessException(ErrorCode.APPLICATION_NOT_EXIST);
         if (!hrApi.isHrAuthorizedForJob(hrId, application.getJobId())) {
             throw new BusinessException(ErrorCode.APPLICATION_NOT_BELONG_TO_HR);
         }
         return application;
     }
 }
-

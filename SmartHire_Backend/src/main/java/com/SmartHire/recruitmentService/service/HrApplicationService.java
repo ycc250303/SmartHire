@@ -4,6 +4,7 @@ import com.SmartHire.recruitmentService.dto.ApplicationListDTO;
 import com.SmartHire.recruitmentService.dto.ApplicationQueryDTO;
 import com.SmartHire.recruitmentService.dto.RecommendRequest;
 import com.SmartHire.recruitmentService.model.Application;
+import com.SmartHire.common.dto.seekerDto.SeekerCardDTO;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 
@@ -53,5 +54,12 @@ public interface HrApplicationService extends IService<Application> {
      * @param templateId       通知模板ID
      */
     void rejectApplication(Long applicationId, String reason, Boolean sendNotification, String templateId);
-}
 
+    /**
+     * 获取求职者卡片信息
+     *
+     * @param userId 用户ID
+     * @return 求职者卡片DTO
+     */
+    SeekerCardDTO getSeekerCard(Long userId);
+}

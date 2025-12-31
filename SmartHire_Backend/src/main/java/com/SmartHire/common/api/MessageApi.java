@@ -23,4 +23,12 @@ public interface MessageApi {
      * @return 发送结果
      */
     MessageCommonDTO sendMessage(Long senderId, SendMessageCommonDTO dto);
+
+    /**
+     * 检查会话是否包含有效消息
+     * 
+     * @param conversationId 会话ID
+     * @return 如果会话存在且有消息则返回true
+     */
+    boolean hasMessages(Long conversationId);
 }

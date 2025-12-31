@@ -1,6 +1,9 @@
 package com.SmartHire.recruitmentService.service;
 
+import com.SmartHire.common.dto.hrDto.JobCardDTO;
+import com.SmartHire.recruitmentService.dto.InternJobRecommendationsDTO;
 import com.SmartHire.recruitmentService.dto.SeekerApplicationListDTO;
+import com.SmartHire.recruitmentService.dto.SeekerJobPositionDTO;
 import com.SmartHire.recruitmentService.dto.SubmitResumeDTO;
 import com.SmartHire.recruitmentService.model.Application;
 import com.baomidou.mybatisplus.extension.service.IService;
@@ -35,5 +38,27 @@ public interface SeekerApplicationService extends IService<Application> {
      * @return 是否已投递
      */
     boolean existsBySeekerIdAndJobId(Long seekerUserId, Long jobId);
-}
 
+    /**
+     * 获取岗位卡片信息
+     *
+     * @param jobId 岗位ID
+     * @return 岗位卡片
+     */
+    JobCardDTO getJobCard(Long jobId);
+
+    /**
+     * 获取实习岗位推荐
+     *
+     * @return 实习岗位推荐DTO
+     */
+    InternJobRecommendationsDTO getInternJobRecommendations();
+
+    /**
+     * 获取面向求职者的岗位详情
+     *
+     * @param jobId 岗位ID
+     * @return 岗位详情DTO
+     */
+    SeekerJobPositionDTO getJobPosition(Long jobId);
+}
