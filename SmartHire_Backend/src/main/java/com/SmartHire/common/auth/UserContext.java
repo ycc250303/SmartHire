@@ -1,7 +1,6 @@
 package com.SmartHire.common.auth;
 
-import com.SmartHire.common.api.HrApi;
-import com.SmartHire.common.api.SeekerApi;
+
 import com.SmartHire.common.exception.enums.ErrorCode;
 import com.SmartHire.common.exception.exception.BusinessException;
 import com.SmartHire.common.utils.JwtUtil;
