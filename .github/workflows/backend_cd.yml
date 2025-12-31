@@ -14,22 +14,20 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     steps:
-      # 1. 检查 CI 工作流状态
+      # 1️⃣ 检查 CI 状态
       - name: Check CI workflow status
         run: |
           if [ "${{ github.event.workflow_run.conclusion }}" != "success" ]; then
-            echo "❌ CI 工作流未成功完成，状态为: ${{ github.event.workflow_run.conclusion }}"
-            echo "🚫 部署已取消，请先修复 CI 失败问题"
+            echo "❌ CI 未成功完成，终止部署"
             exit 1
-          else
-            echo "✅ CI 工作流成功完成，开始部署流程"
           fi
+          echo "✅ CI 成功，开始部署"
 
-      # 2. 获取版本号（从 pom.xml）
+      # 2️⃣ 拉代码（用于读取 pom.xml）
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # 需要获取所有 tag 信息
+          fetch-depth: 0
 
       - name: Install xmllint
         run: sudo apt-get update && sudo apt-get install -y libxml2-utils
@@ -38,127 +36,88 @@ jobs:
         id: get_version
         shell: bash
         run: |
-          # 从 pom.xml 获取最新版本
           VERSION=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='version']/text()" SmartHire_Backend/pom.xml)
           CLEAN_VERSION="${VERSION/-SNAPSHOT/}"
           TAG="v$CLEAN_VERSION"
-          echo "VERSION=$CLEAN_VERSION" >> $GITHUB_OUTPUT
-          echo "Using version from pom.xml: $TAG"
-          
-          # 设置最终的 IMAGE_TAG
+
           echo "IMAGE_TAG=$TAG" >> $GITHUB_OUTPUT
           echo "IMAGE_NAME=${{ secrets.IMAGE_NAME }}" >> $GITHUB_OUTPUT
-          echo "Final image tag: $TAG"
-          echo "Deploying image: ghcr.io/${{ github.repository_owner }}/${{ secrets.IMAGE_NAME }}:$TAG"
 
-      # 3. 配置 SSH
-      - name: Setup SSH
+          echo "📦 Deploy image: ghcr.io/${{ github.repository_owner }}/${{ secrets.IMAGE_NAME }}:$TAG"
+
+      # 3️⃣ SSH 配置
+      - name: Setup SSH Agent
         uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
 
-      # 4. 添加服务器到 known_hosts（避免首次连接确认）
       - name: Add server to known_hosts
         run: |
           ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
 
-      # 5. 部署到服务器
+      # 4️⃣ 正式部署
       - name: Deploy to server
         env:
           SMARTHIRE_TOKEN: ${{ secrets.SMARTHIRE_TOKEN }}
           IMAGE_NAME: ${{ secrets.IMAGE_NAME }}
-          IMAGE_TAG: ${{ steps.get_version.outputs.IMAGE_TAG || 'latest' }}
+          IMAGE_TAG: ${{ steps.get_version.outputs.IMAGE_TAG }}
           REPO_OWNER: ${{ github.repository_owner }}
-          # 使用 workflow_run.actor
           GH_ACTOR: ${{ github.event.workflow_run.actor.login }}
         run: |
           ssh -T \
-          -o ServerAliveInterval=30 \
-          -o ServerAliveCountMax=10 \
-          ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << EOF
-            set -Eeuo pipefail
-            echo "=== 开始部署 ==="
-            echo "镜像: ghcr.io/$REPO_OWNER/$IMAGE_NAME:$IMAGE_TAG"
-            
-            # 进入项目目录
-            cd /opt/smarthire/backend
-            
-            # 登录 GitHub Container Registry（在服务器上）
-            echo "$SMARTHIRE_TOKEN" | docker login ghcr.io -u $GH_ACTOR --password-stdin
-            
-            # 拉取最新镜像
-            echo "拉取 Docker 镜像..."
-            docker pull ghcr.io/$REPO_OWNER/$IMAGE_NAME:$IMAGE_TAG
-            
-            # 停止旧容器
-            echo "停止旧容器..."
-            docker-compose down || true
-            
-            # 更新镜像标签为 latest（docker-compose.yml 里用的是 smarthire-backend:latest）
-            docker tag ghcr.io/$REPO_OWNER/$IMAGE_NAME:$IMAGE_TAG $IMAGE_NAME:latest
-            
-            # 启动新容器
-            echo "启动新容器..."
-            docker-compose up -d
-            
-            # 等待容器启动
-            sleep 10
-            
-            # 检查容器状态
-            echo "检查容器状态..."
-            docker ps | grep $IMAGE_NAME || echo "⚠️  容器未运行"
-            
-            # 检查容器网络
-            echo "检查容器网络..."
-            docker network ls | grep smarthire || echo "⚠️  容器网络不存在"
-     
-            # 查看日志（最后 30 行）
-            echo "=== 容器日志（最后 30 行）==="
-            docker-compose logs --tail=30 || echo "无法获取日志"
-            
-            # 检查端口映射
-            echo "检查端口映射..."
-            docker port $IMAGE_NAME || echo "⚠️  无法获取端口映射"
-            
-            echo "=== 部署完成 ==="
+            -o ServerAliveInterval=30 \
+            -o ServerAliveCountMax=10 \
+            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
+          
+          set -Eeuo pipefail
+
+          echo "======================================"
+          echo "🚀 SmartHire Backend 开始部署"
+          echo "📦 镜像: ghcr.io/$REPO_OWNER/$IMAGE_NAME:$IMAGE_TAG"
+          echo "======================================"
+
+          echo "📂 进入项目目录"
+          cd /opt/smarthire/backend
+
+          echo "🔐 登录 GHCR"
+          echo "$SMARTHIRE_TOKEN" | docker login ghcr.io -u "$GH_ACTOR" --password-stdin
+
+          echo "🧹 清理无用 Docker 资源（防止 fs layer 卡死）"
+          docker system prune -f || true
+
+          echo "⬇️ 拉取 Docker 镜像（带超时 & 明确日志）"
+          export DOCKER_CLI_HINTS=false
+          timeout 600 docker pull --progress=plain ghcr.io/$REPO_OWNER/$IMAGE_NAME:$IMAGE_TAG \
+            || (
+              echo "⚠️ 首次拉取超时，重试一次…" &&
+              docker system prune -f &&
+              docker pull --progress=plain ghcr.io/$REPO_OWNER/$IMAGE_NAME:$IMAGE_TAG
+            )
+
+          echo "🛑 停止旧容器"
+          docker-compose down || true
+
+          echo "🏷️ 更新 latest 标签"
+          docker tag ghcr.io/$REPO_OWNER/$IMAGE_NAME:$IMAGE_TAG $IMAGE_NAME:latest
+
+          echo "▶️ 启动新容器"
+          docker-compose up -d
+
+          echo "⏳ 等待容器启动"
+          sleep 10
+
+          echo "🔍 检查容器状态"
+          docker ps | grep "$IMAGE_NAME" || (echo "❌ 容器未运行" && exit 1)
+
+          echo "🌐 检查 Docker 网络"
+          docker network ls | grep smarthire || echo "⚠️ 网络不存在"
+
+          echo "📜 容器日志（最近 30 行）"
+          docker-compose logs --tail=30 || true
+
+          echo "🔌 端口映射"
+          docker port "$IMAGE_NAME" || true
+
+          echo "✅ SmartHire Backend 部署完成"
+          echo "======================================"
           EOF
-
-      # # 6. 健康检查
-      # - name: Health check
-      #   run: |
-      #     echo "等待服务启动..."
-      #     sleep 10
-          
-      #     # 使用健康检查接口
-      #     echo "检查Nginx代理的健康检查接口..."
-      #     HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://${{ secrets.SERVER_HOST }}/health || echo "000")
-          
-      #     if [ "$HTTP_CODE" = "200" ]; then
-      #       echo "✅ Nginx代理健康检查通过 (HTTP $HTTP_CODE)"
-      #       # 显示健康检查响应内容
-      #       curl -s http://${{ secrets.SERVER_HOST }}/health | head -20
-      #     else
-      #       echo "⚠️  Nginx代理健康检查失败 (HTTP $HTTP_CODE)"
-      #       echo "尝试直接访问后端服务..."
-            
-      #       # 尝试直接访问后端服务
-      #       HTTP_CODE_DIRECT=$(curl -s -o /dev/null -w "%{http_code}" http://${{ secrets.SERVER_HOST }}:8080/smarthire/api/health || echo "000")
-      #       if [ "$HTTP_CODE_DIRECT" = "200" ]; then
-      #         echo "✅ 直接访问后端服务健康检查通过 (HTTP $HTTP_CODE_DIRECT)"
-      #         echo "可能是Nginx配置问题"
-      #       else
-      #         echo "⚠️  直接访问后端服务也失败 (HTTP $HTTP_CODE_DIRECT)"
-      #       fi
-      #       echo "请手动检查服务器日志：docker logs ${{ secrets.IMAGE_NAME }}"
-      #       # 这里不 fail，只是警告
-      #     fi
-          
-      #     # 测试公开接口
-      #     echo "测试公开接口..."
-      #     SEEKER_CARDS_CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://${{ secrets.SERVER_HOST }}/smarthire/api/seeker/public/cards?pageNum=1&pageSize=1" || echo "000")
-      #     if [ "$SEEKER_CARDS_CODE" = "200" ]; then
-      #       echo "✅ 求职者卡片接口测试通过 (HTTP $SEEKER_CARDS_CODE)"
-      #     else
-      #       echo "⚠️  求职者卡片接口测试失败 (HTTP $SEEKER_CARDS_CODE)"
-      #     fi
-
