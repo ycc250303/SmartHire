@@ -67,57 +67,22 @@ jobs:
           ssh -T \
             -o ServerAliveInterval=30 \
             -o ServerAliveCountMax=10 \
-            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
-          
+            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << EOF
+
           set -Eeuo pipefail
 
-          echo "======================================"
           echo "🚀 SmartHire Backend 开始部署"
           echo "📦 镜像: ghcr.io/$REPO_OWNER/$IMAGE_NAME:$IMAGE_TAG"
-          echo "======================================"
 
-          echo "📂 进入项目目录"
           cd /opt/smarthire/backend
 
-          echo "🔐 登录 GHCR"
           echo "$SMARTHIRE_TOKEN" | docker login ghcr.io -u "$GH_ACTOR" --password-stdin
 
-          echo "🧹 清理无用 Docker 资源（防止 fs layer 卡死）"
-          docker system prune -f || true
+          docker pull --progress=plain ghcr.io/$REPO_OWNER/$IMAGE_NAME:$IMAGE_TAG
 
-          echo "⬇️ 拉取 Docker 镜像（带超时 & 明确日志）"
-          export DOCKER_CLI_HINTS=false
-          timeout 600 docker pull --progress=plain ghcr.io/$REPO_OWNER/$IMAGE_NAME:$IMAGE_TAG \
-            || (
-              echo "⚠️ 首次拉取超时，重试一次…" &&
-              docker system prune -f &&
-              docker pull --progress=plain ghcr.io/$REPO_OWNER/$IMAGE_NAME:$IMAGE_TAG
-            )
-
-          echo "🛑 停止旧容器"
           docker-compose down || true
-
-          echo "🏷️ 更新 latest 标签"
           docker tag ghcr.io/$REPO_OWNER/$IMAGE_NAME:$IMAGE_TAG $IMAGE_NAME:latest
-
-          echo "▶️ 启动新容器"
           docker-compose up -d
 
-          echo "⏳ 等待容器启动"
-          sleep 10
-
-          echo "🔍 检查容器状态"
-          docker ps | grep "$IMAGE_NAME" || (echo "❌ 容器未运行" && exit 1)
-
-          echo "🌐 检查 Docker 网络"
-          docker network ls | grep smarthire || echo "⚠️ 网络不存在"
-
-          echo "📜 容器日志（最近 30 行）"
-          docker-compose logs --tail=30 || true
-
-          echo "🔌 端口映射"
-          docker port "$IMAGE_NAME" || true
-
-          echo "✅ SmartHire Backend 部署完成"
-          echo "======================================"
+          echo "✅ 部署完成"
           EOF
