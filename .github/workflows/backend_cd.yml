@@ -72,7 +72,7 @@ jobs:
           # 使用 workflow_run.actor
           GH_ACTOR: ${{ github.event.workflow_run.actor.login }}
         run: |
-          ssh -tt \
+          ssh -T \
           -o ServerAliveInterval=30 \
           -o ServerAliveCountMax=10 \
           ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << EOF
