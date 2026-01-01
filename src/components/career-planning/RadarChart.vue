@@ -1,294 +1,166 @@
 <template>
-  <view class="radar-container">
-    <view class="radar-wrapper" :style="{ width: size + 'rpx', height: size + 'rpx' }">
-      <canvas 
-        :canvas-id="canvasId"
-        :id="canvasId"
-        class="radar-canvas"
-        :style="{ width: size + 'rpx', height: size + 'rpx' }"
-      ></canvas>
-    </view>
-    <view class="radar-labels">
+  <view class="radar-box" :style="{ width: size + 'rpx', height: size + 'rpx' }">
+    <!-- Chart Background (Grid & Data) -->
+    <view 
+      class="radar-chart"
+      :style="{ backgroundImage: `url('${chartSvgUrl}')` }"
+    ></view>
+    
+    <!-- Labels Layer (HTML Elements for better text control) -->
+    <view class="labels-layer">
       <view
         v-for="(label, index) in labels"
-        :key="'label-' + index"
-        class="radar-label-item"
-        :style="getLabelStyle(index)"
+        :key="index"
+        class="label-item"
+        :style="getLabelPos(index)"
       >
-        <text class="radar-label-text">{{ label }}</text>
+        <text class="label-text">{{ label }}</text>
       </view>
     </view>
   </view>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, watch, nextTick } from 'vue';
+import { computed } from 'vue';
 
-interface Props {
+const props = withDefaults(defineProps<{
   data: number[];
   labels: string[];
   max?: number;
   size?: number;
   color?: string;
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  max: 1,
-  size: 400,
-  color: '#4ba3ff',
+}>(), {
+  max: 100,
+  size: 300,
+  color: '#4ba3ff'
 });
 
-const canvasId = 'radar-canvas-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
-const center = computed(() => props.size / 2);
-const radius = computed(() => props.size / 2 - 80);
-const numPoints = computed(() => props.labels.length);
+// Calculate SVG Path Data
+const chartSvgUrl = computed(() => {
+  const size = 100;
+  const cx = size / 2;
+  const cy = size / 2;
+  const radius = 35;
+  const count = props.labels.length || 3;
+  
+  // Helper to calculate points
+  const getPoint = (idx: number, r: number) => {
+    const angle = (idx * 2 * Math.PI) / count - Math.PI / 2;
+    return {
+      x: cx + Math.cos(angle) * r,
+      y: cy + Math.sin(angle) * r
+    };
+  };
 
-function getAngle(index: number): number {
-  return (index * 2 * Math.PI) / numPoints.value - Math.PI / 2;
-}
+  // 1. Generate Grid (5 levels)
+  let gridPaths = '';
+  for (let level = 1; level <= 5; level++) {
+    const r = (radius / 5) * level;
+    let path = '';
+    for (let i = 0; i < count; i++) {
+      const p = getPoint(i, r);
+      path += `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(2)} ${p.y.toFixed(2)} `;
+    }
+    path += 'Z';
+    gridPaths += `<path d="${path}" fill="none" stroke="#e8e8e8" stroke-width="0.5" />`;
+  }
 
-function getPointPosition(index: number, value: number) {
-  const normalizedValue = Math.min(Math.max(value / props.max, 0), 1);
-  const angle = getAngle(index);
-  const r = radius.value * normalizedValue;
-  const x = center.value + Math.cos(angle) * r;
-  const y = center.value + Math.sin(angle) * r;
-  return { x, y };
-}
+  // 2. Generate Axes
+  let axesPaths = '';
+  for (let i = 0; i < count; i++) {
+    const p = getPoint(i, radius);
+    axesPaths += `<line x1="${cx}" y1="${cy}" x2="${p.x.toFixed(2)}" y2="${p.y.toFixed(2)}" stroke="#d0d0d0" stroke-width="0.5" />`;
+  }
 
-function drawRadarChart() {
-  nextTick(() => {
-    // #ifdef H5
-    setTimeout(() => {
-      const canvas = document.getElementById(canvasId) as HTMLCanvasElement;
-      if (!canvas) {
-        console.warn('Canvas not found:', canvasId);
-        return;
-      }
+  // 3. Generate Data Polygon
+  let dataPath = '';
+  let dataPoints = '';
+  if (props.data && props.data.length) {
+    for (let i = 0; i < count; i++) {
+      let val = props.data[i] || 0;
       
-      const ctx = canvas.getContext('2d');
-      if (!ctx) {
-        console.warn('Canvas context not available');
-        return;
-      }
+      const rawRatio = Math.min(Math.max(val / props.max, 0), 1);
+      const minRatio = 0.2;
+      const ratio = minRatio + rawRatio * (1 - minRatio);
       
-      const dpr = window.devicePixelRatio || 1;
-      const cssWidth = props.size;
-      const cssHeight = props.size;
+      const r = radius * ratio;
+      const p = getPoint(i, r);
+      dataPath += `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(2)} ${p.y.toFixed(2)} `;
       
-      canvas.width = cssWidth * dpr;
-      canvas.height = cssHeight * dpr;
-      canvas.style.width = cssWidth + 'px';
-      canvas.style.height = cssHeight + 'px';
-      ctx.scale(dpr, dpr);
-      
-      ctx.clearRect(0, 0, cssWidth, cssHeight);
-      
-      const centerX = center.value;
-      const centerY = center.value;
-      const rad = radius.value;
-      
-      for (let level = 1; level <= 5; level++) {
-        const r = (rad / 5) * level;
-        ctx.beginPath();
-        for (let i = 0; i < numPoints.value; i++) {
-          const angle = getAngle(i);
-          const x = centerX + Math.cos(angle) * r;
-          const y = centerY + Math.sin(angle) * r;
-          if (i === 0) {
-            ctx.moveTo(x, y);
-          } else {
-            ctx.lineTo(x, y);
-          }
-        }
-        ctx.closePath();
-        ctx.strokeStyle = '#f0f0f0';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-      }
-      
-      for (let i = 0; i < numPoints.value; i++) {
-        const angle = getAngle(i);
-        const x = centerX + Math.cos(angle) * rad;
-        const y = centerY + Math.sin(angle) * rad;
-        
-        ctx.beginPath();
-        ctx.moveTo(centerX, centerY);
-        ctx.lineTo(x, y);
-        ctx.strokeStyle = '#e0e0e0';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-      }
-      
-      if (props.data && props.data.length > 0) {
-        ctx.beginPath();
-        for (let i = 0; i < props.data.length; i++) {
-          const { x, y } = getPointPosition(i, props.data[i]);
-          if (i === 0) {
-            ctx.moveTo(x, y);
-          } else {
-            ctx.lineTo(x, y);
-          }
-        }
-        ctx.closePath();
-        ctx.fillStyle = 'rgba(75, 163, 255, 0.3)';
-        ctx.fill();
-        ctx.strokeStyle = props.color;
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        
-        for (let i = 0; i < props.data.length; i++) {
-          const { x, y } = getPointPosition(i, props.data[i]);
-          ctx.beginPath();
-          ctx.arc(x, y, 6, 0, Math.PI * 2);
-          ctx.fillStyle = props.color;
-          ctx.fill();
-          ctx.strokeStyle = '#ffffff';
-          ctx.lineWidth = 2;
-          ctx.stroke();
-        }
-      }
-    }, 100);
-    // #endif
-    
-    // #ifndef H5
-    setTimeout(() => {
-      const ctx = uni.createCanvasContext(canvasId);
-      
-      const cssWidth = props.size;
-      const cssHeight = props.size;
-      
-      ctx.clearRect(0, 0, cssWidth, cssHeight);
-      
-      const centerX = center.value;
-      const centerY = center.value;
-      const rad = radius.value;
-      
-      for (let level = 1; level <= 5; level++) {
-        const r = (rad / 5) * level;
-        ctx.beginPath();
-        for (let i = 0; i < numPoints.value; i++) {
-          const angle = getAngle(i);
-          const x = centerX + Math.cos(angle) * r;
-          const y = centerY + Math.sin(angle) * r;
-          if (i === 0) {
-            ctx.moveTo(x, y);
-          } else {
-            ctx.lineTo(x, y);
-          }
-        }
-        ctx.closePath();
-        ctx.setStrokeStyle('#f0f0f0');
-        ctx.setLineWidth(2);
-        ctx.stroke();
-      }
-      
-      for (let i = 0; i < numPoints.value; i++) {
-        const angle = getAngle(i);
-        const x = centerX + Math.cos(angle) * rad;
-        const y = centerY + Math.sin(angle) * rad;
-        
-        ctx.beginPath();
-        ctx.moveTo(centerX, centerY);
-        ctx.lineTo(x, y);
-        ctx.setStrokeStyle('#e0e0e0');
-        ctx.setLineWidth(1);
-        ctx.stroke();
-      }
-      
-      if (props.data && props.data.length > 0) {
-        ctx.beginPath();
-        for (let i = 0; i < props.data.length; i++) {
-          const { x, y } = getPointPosition(i, props.data[i]);
-          if (i === 0) {
-            ctx.moveTo(x, y);
-          } else {
-            ctx.lineTo(x, y);
-          }
-        }
-        ctx.closePath();
-        ctx.setFillStyle('rgba(75, 163, 255, 0.3)');
-        ctx.fill();
-        ctx.setStrokeStyle(props.color);
-        ctx.setLineWidth(2);
-        ctx.stroke();
-        
-        for (let i = 0; i < props.data.length; i++) {
-          const { x, y } = getPointPosition(i, props.data[i]);
-          ctx.beginPath();
-          ctx.arc(x, y, 6, 0, Math.PI * 2);
-          ctx.setFillStyle(props.color);
-          ctx.fill();
-          ctx.setStrokeStyle('#ffffff');
-          ctx.setLineWidth(2);
-          ctx.stroke();
-        }
-      }
-      
-      ctx.draw();
-    }, 100);
-    // #endif
-  });
-}
+      dataPoints += `<circle cx="${p.x.toFixed(2)}" cy="${p.y.toFixed(2)}" r="1.5" fill="${props.color}" stroke="#fff" stroke-width="0.5" />`;
+    }
+    dataPath += 'Z';
+  }
 
-function getLabelStyle(index: number) {
-  const angle = getAngle(index);
-  const labelRadius = radius.value + 60;
-  const x = Math.cos(angle) * labelRadius;
-  const y = Math.sin(angle) * labelRadius;
+  const svgString = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}">
+      ${gridPaths}
+      ${axesPaths}
+      <path d="${dataPath}" fill="rgba(75, 163, 255, 0.2)" stroke="${props.color}" stroke-width="1" />
+      ${dataPoints}
+    </svg>
+  `.replace(/\s+/g, ' ').trim();
+
+  const encoded = encodeURIComponent(svgString)
+    .replace(/'/g, '%27')
+    .replace(/"/g, '%22');
+
+  return `data:image/svg+xml;charset=utf-8,${encoded}`;
+});
+
+function getLabelPos(index: number) {
+  const count = props.labels.length || 3;
+  const angle = (index * 2 * Math.PI) / count - Math.PI / 2;
+  const r = 45; 
+  
+  const x = 50 + Math.cos(angle) * r;
+  const y = 50 + Math.sin(angle) * r;
   
   return {
-    position: 'absolute',
-    left: `calc(50% + ${x}rpx)`,
-    top: `calc(50% + ${y}rpx)`,
-    transform: 'translate(-50%, -50%)',
+    left: x + '%',
+    top: y + '%',
+    transform: 'translate(-50%, -50%)'
   };
 }
-
-watch(() => [props.data, props.labels, props.size], () => {
-  drawRadarChart();
-}, { deep: true });
-
-onMounted(() => {
-  drawRadarChart();
-});
 </script>
 
 <style lang="scss" scoped>
-.radar-container {
+.radar-box {
   position: relative;
+  margin: 0 auto;
+}
+
+.radar-chart {
+  width: 100%;
+  height: 100%;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
+.labels-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.label-item {
+  position: absolute;
+  white-space: nowrap; 
+  width: auto;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
-  min-height: 400rpx;
 }
 
-.radar-wrapper {
-  position: relative;
-}
-
-.radar-canvas {
-  display: block;
-}
-
-.radar-labels {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
-  pointer-events: none;
-}
-
-.radar-label-item {
-  pointer-events: none;
-}
-
-.radar-label-text {
+.label-text {
   font-size: 24rpx;
   color: #666;
-  white-space: nowrap;
   text-align: center;
+  text-shadow: 0 1px 2px rgba(255,255,255,0.9);
+  white-space: nowrap;
 }
 </style>

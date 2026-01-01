@@ -1,10 +1,10 @@
 <template>
   <view class="gauge-container">
-    <view class="gauge-wrapper">
+    <view class="gauge-wrapper" :style="wrapperStyle">
       <view class="gauge-circle" :style="circleStyle">
         <view class="gauge-fill" :style="fillStyle"></view>
         <view class="gauge-center">
-          <text class="gauge-value">{{ value }}</text>
+          <text class="gauge-value" :style="valueStyle">{{ animatedValue }}</text>
           <text class="gauge-unit">{{ unit }}</text>
         </view>
       </view>
@@ -14,7 +14,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref, watch, onMounted, onUnmounted } from 'vue';
 
 interface Props {
   value: number;
@@ -22,12 +22,14 @@ interface Props {
   unit?: string;
   label?: string;
   color?: string;
+  size?: number;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   max: 100,
   unit: '%',
   color: '#4ba3ff',
+  size: 180,
 });
 
 const percentage = computed(() => {
@@ -45,6 +47,67 @@ const fillStyle = computed(() => {
     background: '#ffffff',
   };
 });
+
+const wrapperStyle = computed(() => {
+  return {
+    width: props.size + 'rpx',
+    height: props.size + 'rpx',
+  };
+});
+
+const valueStyle = computed(() => {
+  return {
+    fontSize: Math.round(props.size * 0.22) + 'rpx',
+  };
+});
+
+const animatedValue = ref(0);
+let animationTimer: number | null = null;
+
+function animateValue(target: number) {
+  if (animationTimer !== null) {
+    clearInterval(animationTimer);
+    animationTimer = null;
+  }
+  
+  const duration = 800;
+  const steps = 60;
+  const stepDuration = duration / steps;
+  const startValue = animatedValue.value;
+  const diff = target - startValue;
+  let currentStep = 0;
+
+  animationTimer = setInterval(() => {
+    currentStep++;
+    if (currentStep >= steps) {
+      animatedValue.value = target;
+      if (animationTimer !== null) {
+        clearInterval(animationTimer);
+        animationTimer = null;
+      }
+    } else {
+      const progress = currentStep / steps;
+      const easeProgress = 1 - Math.pow(1 - progress, 3);
+      animatedValue.value = Math.round(startValue + diff * easeProgress);
+    }
+  }, stepDuration) as unknown as number;
+}
+
+watch(() => props.value, (newValue) => {
+  animateValue(newValue);
+}, { immediate: true });
+
+onMounted(() => {
+  animatedValue.value = 0;
+  animateValue(props.value);
+});
+
+onUnmounted(() => {
+  if (animationTimer !== null) {
+    clearInterval(animationTimer);
+    animationTimer = null;
+  }
+});
 </script>
 
 <style lang="scss" scoped>
@@ -59,8 +122,6 @@ const fillStyle = computed(() => {
 
 .gauge-wrapper {
   position: relative;
-  width: 240rpx;
-  height: 240rpx;
 }
 
 .gauge-circle {
@@ -92,21 +153,20 @@ const fillStyle = computed(() => {
 }
 
 .gauge-value {
-  font-size: 56rpx;
   font-weight: 700;
   color: vars.$text-color;
   line-height: 1;
 }
 
 .gauge-unit {
-  font-size: 24rpx;
+  font-size: 20rpx;
   color: vars.$text-muted;
-  margin-top: 8rpx;
+  margin-top: 4rpx;
 }
 
 .gauge-label {
-  font-size: 28rpx;
+  font-size: 24rpx;
   color: vars.$text-muted;
-  margin-top: vars.$spacing-md;
+  margin-top: vars.$spacing-sm;
 }
 </style>

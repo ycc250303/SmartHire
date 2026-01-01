@@ -214,8 +214,9 @@ function openConversation(conversation: Conversation) {
       }
     });
   } else {
+    const avatarParam = conversation.otherUserAvatar ? `&avatar=${encodeURIComponent(conversation.otherUserAvatar)}` : '';
     uni.navigateTo({
-      url: `/pages/seeker/chat/conversation?id=${conversation.id}&userId=${conversation.otherUserId}&username=${encodeURIComponent(conversation.otherUserName)}`
+      url: `/pages/seeker/chat/conversation?id=${conversation.id}&userId=${conversation.otherUserId}&username=${encodeURIComponent(conversation.otherUserName)}${avatarParam}`
     });
   }
 }

@@ -1,0 +1,292 @@
+{
+  "Docker": {
+    "brief": {
+      "required": "容器化技术是现代后端开发的基础，是岗位硬性要求",
+      "optional": "掌握容器化可以提升应用部署效率和一致性"
+    },
+    "importance": {
+      "required": "该职位明确要求Docker技能。容器化是现代微服务架构的基础，能够保证开发、测试、生产环境的一致性，是后端工程师的必备技能。",
+      "optional": "虽非必需，但Docker能显著提升你在团队中的竞争力。掌握容器化技术可以让你更好地理解现代应用的部署流程。"
+    },
+    "estimatedTime": "2-3周",
+    "learningTips": [
+      "先理解容器与虚拟机的区别，掌握Docker的核心概念",
+      "学习Dockerfile编写，能够构建自己的镜像",
+      "掌握常用命令：run、build、push、pull、exec等",
+      "实践项目：将一个Web应用容器化部署"
+    ]
+  },
+  "Kubernetes": {
+    "brief": {
+      "required": "K8s是容器编排的事实标准，大型项目必备",
+      "optional": "学会K8s能够管理复杂的微服务架构"
+    },
+    "importance": {
+      "required": "K8s是容器编排的行业标准，该岗位需要管理大规模容器集群。掌握K8s能让你胜任复杂的云原生架构设计和运维工作。",
+      "optional": "K8s是云原生技术栈的核心，学习它能让你了解大规模系统的管理方式，提升在云计算领域的竞争力。"
+    },
+    "estimatedTime": "4-6周",
+    "learningTips": [
+      "先学好Docker基础，理解容器化概念",
+      "学习K8s核心对象：Pod、Service、Deployment、ConfigMap",
+      "搭建本地K8s环境（minikube或kind）",
+      "实践部署一个微服务应用到K8s集群"
+    ]
+  },
+  "Redis": {
+    "brief": {
+      "required": "缓存和消息队列的首选方案，高并发必备",
+      "optional": "掌握Redis可以显著提升系统性能"
+    },
+    "importance": {
+      "required": "该职位需要处理高并发场景，Redis作为缓存和消息队列是必备技能。掌握Redis能够解决性能瓶颈，支撑千万级用户访问。",
+      "optional": "Redis是提升系统性能的利器，学习它能让你掌握缓存设计、会话管理等关键技术，在面试中也是加分项。"
+    },
+    "estimatedTime": "2-3周",
+    "learningTips": [
+      "学习Redis五大数据类型及应用场景",
+      "掌握缓存设计模式：缓存穿透、雪崩、击穿的解决方案",
+      "理解Redis持久化机制（RDB、AOF）",
+      "实践：给现有项目加入Redis缓存层"
+    ]
+  },
+  "MySQL": {
+    "brief": {
+      "required": "关系型数据库基础，几乎所有后端项目都会用到",
+      "optional": "深入掌握MySQL能提升数据库设计和优化能力"
+    },
+    "importance": {
+      "required": "几乎所有后端项目都需要数据库，该岗位明确要求MySQL经验。深入掌握MySQL包括索引优化、查询优化、事务处理等核心知识。",
+      "optional": "即使岗位没有强制要求，MySQL也是后端开发的基础技能。掌握它能让你更好地理解数据存储和查询优化。"
+    },
+    "estimatedTime": "4-6周（深入掌握需要更长时间）",
+    "learningTips": [
+      "掌握SQL基础：增删改查、连接查询、子查询",
+      "学习索引原理和优化技巧",
+      "理解事务隔离级别和MVCC机制",
+      "实践：设计数据库表结构并优化慢查询"
+    ]
+  },
+  "Git": {
+    "brief": {
+      "required": "代码版本控制工具，团队协作必备技能",
+      "optional": "熟练使用Git能提升团队协作效率"
+    },
+    "importance": {
+      "required": "任何团队开发都需要版本控制，Git是行业标准。掌握Git能让你更好地参与团队协作，管理代码版本。",
+      "optional": "Git是开发者的基本工具，学习它能让你更好地参与开源项目，提升代码管理能力。"
+    },
+    "estimatedTime": "1-2周",
+    "learningTips": [
+      "学习基本命令：clone、add、commit、push、pull",
+      "理解分支管理：创建、合并、解决冲突",
+      "掌握常用工作流：Git Flow或GitHub Flow",
+      "实践：参与开源项目或团队协作开发"
+    ]
+  },
+  "Linux": {
+    "brief": {
+      "required": "服务器操作系统，运维和部署的基础",
+      "optional": "掌握Linux命令能够更好地管理服务器"
+    },
+    "importance": {
+      "required": "服务器都运行在Linux上，该岗位需要你具备Linux运维能力。熟练使用Shell命令、理解系统原理是后端工程师的基本功。",
+      "optional": "掌握Linux能让你更好地理解服务器环境，在调试、部署时更加得心应手，也是向运维方向发展的基础。"
+    },
+    "estimatedTime": "3-4周",
+    "learningTips": [
+      "学习常用命令：文件操作、文本处理、进程管理",
+      "掌握Shell脚本编写基础",
+      "理解文件权限、用户管理、网络配置",
+      "实践：在Linux服务器上部署应用"
+    ]
+  },
+  "Python": {
+    "brief": {
+      "required": "通用编程语言，后端开发的主流选择之一",
+      "optional": "学习Python可以拓展技术栈和应用场景"
+    },
+    "importance": {
+      "required": "Python是该岗位的主要开发语言，需要熟练掌握语法、常用库和框架。Python简洁高效，广泛应用于Web开发、数据处理、AI等领域。",
+      "optional": "Python是最受欢迎的编程语言之一，学习它能让你快速开发原型，参与更多类型的项目。"
+    },
+    "estimatedTime": "6-8周（零基础）",
+    "learningTips": [
+      "掌握Python基础语法和数据结构",
+      "学习面向对象编程和常用设计模式",
+      "熟悉常用库：requests、pandas、numpy等",
+      "实践：开发一个Web应用或数据分析项目"
+    ]
+  },
+  "Java": {
+    "brief": {
+      "required": "企业级开发的主流语言，就业面广",
+      "optional": "掌握Java可以增加大厂就业机会"
+    },
+    "importance": {
+      "required": "Java是企业级开发的首选语言，该岗位需要深入掌握Java及其生态系统。Java应用广泛，从后端服务到Android开发都有涉及。",
+      "optional": "Java是最成熟的企业级开发语言，学习它能让你掌握面向对象编程的精髓，增加就业竞争力。"
+    },
+    "estimatedTime": "8-12周（零基础）",
+    "learningTips": [
+      "掌握Java核心语法和面向对象编程",
+      "学习Java集合框架和并发编程",
+      "理解JVM原理和性能优化",
+      "实践：开发一个Spring Boot应用"
+    ]
+  },
+  "Go": {
+    "brief": {
+      "required": "云原生时代的首选语言，性能优异",
+      "optional": "学习Go可以参与云原生项目开发"
+    },
+    "importance": {
+      "required": "Go是云原生开发的首选语言，该岗位需要使用Go开发高性能服务。Go语言简洁高效，适合构建微服务和云原生应用。",
+      "optional": "Go是近年来增长最快的编程语言之一，学习它能让你参与云原生、微服务等前沿项目。"
+    },
+    "estimatedTime": "4-6周（有编程基础）",
+    "learningTips": [
+      "掌握Go语法特点和并发模型（goroutine、channel）",
+      "学习标准库的使用，特别是net/http包",
+      "理解Go的内存管理和性能优化",
+      "实践：开发一个RESTful API服务"
+    ]
+  },
+  "TypeScript": {
+    "brief": {
+      "required": "JavaScript的超集，前端大型项目标配",
+      "optional": "掌握TS可以提升代码质量和维护性"
+    },
+    "importance": {
+      "required": "该项目采用TypeScript开发，类型系统能够在编译期发现bug，提升代码质量。这是大型前端项目的标准配置。",
+      "optional": "TypeScript是JavaScript的超集，学习它能让你编写更健壮的代码，在团队协作中减少错误。"
+    },
+    "estimatedTime": "2-3周（有JS基础）",
+    "learningTips": [
+      "学习TypeScript基础类型系统",
+      "掌握接口、泛型、装饰器等高级特性",
+      "理解类型推导和类型保护",
+      "实践：将一个JavaScript项目迁移到TypeScript"
+    ]
+  },
+  "React": {
+    "brief": {
+      "required": "最流行的前端框架之一，大厂常用",
+      "optional": "学习React可以开发复杂的前端应用"
+    },
+    "importance": {
+      "required": "该公司前端技术栈基于React，需要你熟练掌握组件化开发、状态管理、Hooks等核心概念。",
+      "optional": "React是最流行的前端框架之一，学习它能让你开发复杂的交互界面，也是进入大厂的敲门砖。"
+    },
+    "estimatedTime": "4-6周",
+    "learningTips": [
+      "学习JSX语法和组件化思想",
+      "掌握Hooks：useState、useEffect、useContext等",
+      "理解虚拟DOM和Diff算法原理",
+      "实践：开发一个Todo应用或仿制知名网站"
+    ]
+  },
+  "Vue": {
+    "brief": {
+      "required": "国内最流行的前端框架，生态完善",
+      "optional": "掌握Vue可以快速构建现代化Web应用"
+    },
+    "importance": {
+      "required": "该项目使用Vue开发，需要熟练掌握Vue3的组合式API、响应式系统和生态工具。",
+      "optional": "Vue是国内最流行的前端框架，学习它能让你快速构建现代化Web应用，就业机会多。"
+    },
+    "estimatedTime": "3-4周",
+    "learningTips": [
+      "学习Vue3组合式API（Composition API）",
+      "掌握响应式原理和生命周期",
+      "学习Vue Router和Pinia状态管理",
+      "实践：开发一个后台管理系统"
+    ]
+  },
+  "Spring": {
+    "brief": {
+      "required": "Java生态最重要的框架，企业开发标配",
+      "optional": "学习Spring可以掌握企业级开发规范"
+    },
+    "importance": {
+      "required": "Spring是Java企业开发的事实标准，该岗位需要深入掌握Spring Boot、Spring Cloud等框架。",
+      "optional": "Spring是Java生态最重要的框架，学习它能让你掌握企业级开发的最佳实践。"
+    },
+    "estimatedTime": "6-8周",
+    "learningTips": [
+      "学习Spring核心概念：IOC、AOP、Bean生命周期",
+      "掌握Spring Boot快速开发",
+      "学习Spring MVC和RESTful API设计",
+      "实践：开发一个企业级Web应用"
+    ]
+  },
+  "CI/CD": {
+    "brief": {
+      "required": "自动化部署流程，DevOps核心技能",
+      "optional": "掌握CI/CD可以提升开发效率和代码质量"
+    },
+    "importance": {
+      "required": "该岗位需要负责构建CI/CD流水线，实现自动化测试和部署。这是DevOps工程师的核心能力。",
+      "optional": "CI/CD是现代软件开发的标准实践，学习它能让你理解自动化部署的价值，提升团队效率。"
+    },
+    "estimatedTime": "2-3周",
+    "learningTips": [
+      "学习CI/CD的基本概念和工作流程",
+      "掌握主流工具：Jenkins、GitLab CI、GitHub Actions",
+      "理解自动化测试和部署策略",
+      "实践：为项目搭建完整的CI/CD流水线"
+    ]
+  },
+  "MongoDB": {
+    "brief": {
+      "required": "NoSQL数据库，非结构化数据存储首选",
+      "optional": "学习MongoDB可以应对复杂数据结构场景"
+    },
+    "importance": {
+      "required": "该项目需要存储非结构化数据，MongoDB是首选方案。掌握NoSQL数据库能让你应对更灵活的数据需求。",
+      "optional": "MongoDB是最流行的NoSQL数据库，学习它能让你理解文档型数据库的优势，拓展数据库技能。"
+    },
+    "estimatedTime": "2-3周",
+    "learningTips": [
+      "学习MongoDB的文档模型和查询语法",
+      "掌握索引优化和聚合管道",
+      "理解MongoDB的复制和分片机制",
+      "实践：将关系型数据迁移到MongoDB"
+    ]
+  },
+  "Shell脚本": {
+    "brief": {
+      "required": "Linux自动化脚本，运维必备",
+      "optional": "掌握Shell可以提升自动化能力"
+    },
+    "importance": {
+      "required": "该岗位需要编写自动化运维脚本，Shell是Linux环境下的首选工具。",
+      "optional": "Shell脚本是Linux系统管理的利器，学习它能让你自动化重复任务，提升工作效率。"
+    },
+    "estimatedTime": "2-3周",
+    "learningTips": [
+      "学习Shell基础语法和常用命令",
+      "掌握条件判断、循环、函数的使用",
+      "学习文本处理工具：grep、sed、awk",
+      "实践：编写自动化部署或备份脚本"
+    ]
+  },
+  "系统运维": {
+    "brief": {
+      "required": "服务器管理和监控，保障系统稳定运行",
+      "optional": "掌握运维技能可以全栈化发展"
+    },
+    "importance": {
+      "required": "该岗位需要负责服务器管理、监控告警、故障排查等运维工作，是保障系统稳定运行的关键。",
+      "optional": "运维技能能让你全面了解系统架构，在开发时更注重可维护性和稳定性。"
+    },
+    "estimatedTime": "4-6周",
+    "learningTips": [
+      "学习服务器配置和性能调优",
+      "掌握监控工具：Prometheus、Grafana等",
+      "学习日志分析和故障排查方法",
+      "实践：搭建完整的监控告警系统"
+    ]
+  }
+}
+

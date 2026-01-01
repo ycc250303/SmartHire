@@ -1,7 +1,17 @@
 <template>
-  <view class="markdown-content">
-    <rich-text :nodes="htmlContent"></rich-text>
+  <!-- #ifdef H5 -->
+  <view class="streaming-markdown-content">
+    <rich-text :nodes="htmlContent" class="markdown-html"></rich-text>
+    <text v-if="isStreaming" class="streaming-cursor">|</text>
   </view>
+  <!-- #endif -->
+  
+  <!-- #ifndef H5 -->
+  <view class="streaming-markdown-content">
+    <rich-text :nodes="htmlContent" class="markdown-html"></rich-text>
+    <text v-if="isStreaming" class="streaming-cursor">|</text>
+  </view>
+  <!-- #endif -->
 </template>
 
 <script setup lang="ts">
@@ -9,9 +19,12 @@ import { computed } from 'vue';
 
 interface Props {
   content: string;
+  isStreaming?: boolean;
 }
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+  isStreaming: false,
+});
 
 function markdownToHtml(markdown: string): string {
   if (!markdown) return '';
@@ -40,7 +53,6 @@ function markdownToHtml(markdown: string): string {
   
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    if (!line) continue;
     const trimmedLine = line.trim();
     
     if (!trimmedLine) {
@@ -130,7 +142,7 @@ function escapeHtml(text: string): string {
     '"': '&quot;',
     "'": '&#039;',
   };
-  return text.replace(/[&<>"']/g, (m) => map[m] || m);
+  return text.replace(/[&<>"']/g, (m) => map[m]);
 }
 
 const htmlContent = computed(() => {
@@ -147,11 +159,42 @@ const htmlContent = computed(() => {
 <style lang="scss" scoped>
 @use "@/styles/variables.scss" as vars;
 
-.markdown-content {
-  font-size: 28rpx;
-  color: vars.$text-color;
-  line-height: 1.8;
+.streaming-markdown-content {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.markdown-html {
+  flex: 1;
   word-wrap: break-word;
+}
+
+.markdown-text {
+  flex: 1;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.8;
+}
+
+.streaming-cursor {
+  display: inline-block;
+  font-weight: bold;
+  color: vars.$primary-color;
+  animation: blink 1s infinite;
+  margin-left: 4rpx;
+  flex-shrink: 0;
+}
+
+@keyframes blink {
+  0%, 50% {
+    opacity: 1;
+  }
+  51%, 100% {
+    opacity: 0;
+  }
 }
 
 :deep(h1) {
@@ -164,27 +207,27 @@ const htmlContent = computed(() => {
 }
 
 :deep(h2) {
-  font-size: 32rpx;
+  font-size: 28rpx;
   font-weight: 600;
-  margin: 28rpx 0 12rpx;
+  margin: 24rpx 0 12rpx;
   color: vars.$text-color;
   display: block;
   line-height: 1.4;
 }
 
 :deep(h3) {
-  font-size: 30rpx;
+  font-size: 26rpx;
   font-weight: 600;
-  margin: 24rpx 0 10rpx;
+  margin: 20rpx 0 10rpx;
   color: vars.$text-color;
   display: block;
   line-height: 1.4;
 }
 
 :deep(h4) {
-  font-size: 28rpx;
+  font-size: 24rpx;
   font-weight: 600;
-  margin: 20rpx 0 8rpx;
+  margin: 16rpx 0 8rpx;
   color: vars.$text-color;
   display: block;
   line-height: 1.4;
@@ -193,7 +236,9 @@ const htmlContent = computed(() => {
 :deep(p) {
   margin: 16rpx 0;
   display: block;
-  line-height: 1.8;
+  line-height: 1.6;
+  font-size: 24rpx;
+  color: vars.$text-color;
 }
 
 :deep(strong) {
@@ -215,7 +260,9 @@ const htmlContent = computed(() => {
 :deep(li) {
   margin: 8rpx 0;
   display: list-item;
-  line-height: 1.8;
+  line-height: 1.6;
+  font-size: 24rpx;
+  color: vars.$text-color;
 }
 
 :deep(ul li) {
@@ -231,7 +278,7 @@ const htmlContent = computed(() => {
   padding: 4rpx 8rpx;
   border-radius: 4rpx;
   font-family: 'Courier New', monospace;
-  font-size: 26rpx;
+  font-size: 22rpx;
   display: inline;
   color: #e83e8c;
 }

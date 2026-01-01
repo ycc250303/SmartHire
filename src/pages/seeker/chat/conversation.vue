@@ -64,6 +64,12 @@
           :class="{ 'message-sent': isSentByMe(message), 'message-received': !isSentByMe(message) }"
           @longpress="handleMessageLongPress(message)"
         >
+          <image
+            v-if="!isSentByMe(message)"
+            class="message-avatar"
+            :src="getAvatarUrl(otherUserAvatar)"
+            mode="aspectFill"
+          />
           <view class="message-bubble">
             <view v-if="message.replyTo && message.replyContent" class="reply-preview">
               <view class="reply-line"></view>
@@ -83,6 +89,12 @@
               <text v-else-if="isSentByMe(message)" class="read-indicator unread">✓</text>
             </view>
           </view>
+          <image
+            v-if="isSentByMe(message)"
+            class="message-avatar"
+            :src="getAvatarUrl(currentUserAvatar)"
+            mode="aspectFill"
+          />
         </view>
       </view>
       
@@ -132,12 +144,17 @@ import { t } from '@/locales';
 import dayjs from 'dayjs';
 import { getChatHistory, sendMessage, markAsRead, getConversations, type Message } from '@/services/api/message';
 import { useUserStore } from '@/store/user';
+import { useImageUrl } from '@/utils/useImageUrl';
+import { getCurrentUserInfo } from '@/services/api/user';
 
 const userStore = useUserStore();
+const { processImageUrl } = useImageUrl();
 
 const conversationId = ref<number>(0);
 const otherUserId = ref<number>(0);
 const otherUsername = ref<string>('');
+const otherUserAvatar = ref<string>('');
+const currentUserAvatar = ref<string>('');
 const messages = ref<Message[]>([]);
 const loading = ref(false);
 const loadingMore = ref(false);
@@ -246,6 +263,13 @@ onLoad((options: any) => {
       otherUsername.value = options.username;
     }
   }
+  if (options?.avatar && options.avatar !== 'undefined') {
+    try {
+      otherUserAvatar.value = decodeURIComponent(options.avatar);
+    } catch (e) {
+      otherUserAvatar.value = options.avatar;
+    }
+  }
   if (options?.applicationId) {
     applicationId.value = parseInt(options.applicationId);
   }
@@ -285,7 +309,39 @@ onMounted(() => {
   if (conversationId.value) {
     loadMessages();
   }
+  ensureAvatarInfo();
 });
+
+async function ensureAvatarInfo() {
+  if (!currentUserAvatar.value) {
+    try {
+      if (userStore.userInfo?.avatarUrl) {
+        currentUserAvatar.value = userStore.userInfo.avatarUrl;
+      } else {
+        const userInfo = await getCurrentUserInfo();
+        currentUserAvatar.value = userInfo?.avatarUrl || '';
+      }
+    } catch (err) {
+      console.error('Failed to load current user avatar:', err);
+    }
+  }
+
+  if (!otherUserAvatar.value && conversationId.value) {
+    try {
+      const conversations = await getConversations();
+      const currentConversation = conversations.find(c => c.id === conversationId.value);
+      if (currentConversation) {
+        otherUserAvatar.value = currentConversation.otherUserAvatar || '';
+      }
+    } catch (err) {
+      console.error('Failed to load other user avatar:', err);
+    }
+  }
+}
+
+function getAvatarUrl(avatarUrl: string | null | undefined): string {
+  return processImageUrl(avatarUrl);
+}
 
 function initLayout() {
   const sysInfo = uni.getSystemInfoSync();
@@ -330,6 +386,8 @@ async function loadMessages() {
     });
     
     messages.value = data.reverse();
+    
+    await ensureAvatarInfo();
     
     nextTick(() => {
       scrollToBottom(false);
@@ -791,7 +849,9 @@ function handleBack() {
 
 .message-item {
   display: flex;
+  align-items: flex-end;
   margin-bottom: vars.$spacing-md;
+  gap: vars.$spacing-sm;
   
   &.message-sent {
     justify-content: flex-end;
@@ -800,6 +860,14 @@ function handleBack() {
   &.message-received {
     justify-content: flex-start;
   }
+}
+
+.message-avatar {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  background-color: vars.$bg-color;
+  flex-shrink: 0;
 }
 
 .message-bubble {
