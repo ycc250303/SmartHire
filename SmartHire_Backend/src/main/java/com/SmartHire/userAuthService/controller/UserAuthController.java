@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
- * 用户基础表
+ * 用户认证服务用户认证控制器
  *
  * @author SmartHire Team
  * @since 2025-11-15

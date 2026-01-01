@@ -11,8 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * 系统消息控制器
- * 提供给求职者和HR使用的系统消息展示接口
+ * 消息服务系统通知控制器
  *
  * @author SmartHire Team
  * @since 2025-12-22

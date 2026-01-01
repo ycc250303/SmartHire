@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
- * 沟通消息服务统一控制器
+ * 消息服务即时消息控制器
  *
  * @author SmartHire Team
  * @since 2025-11-30

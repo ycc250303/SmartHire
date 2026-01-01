@@ -16,7 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-/** 岗位管理控制器 */
+/** HR服务岗位信息管理控制器 */
 @RestController
 @RequestMapping("/hr/job-position")
 @Validated

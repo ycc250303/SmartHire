@@ -23,7 +23,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * 管理员服务统一控制器
+ * 管理员服务系统管理控制器
  *
  * @author SmartHire Team
  * @since 2025-12-02

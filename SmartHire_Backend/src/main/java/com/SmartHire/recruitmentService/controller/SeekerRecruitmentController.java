@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * 投递岗位控制器
+ * 招聘服务求职者端招聘控制器
  *
  * @author SmartHire Team
  * @since 2025-11-30

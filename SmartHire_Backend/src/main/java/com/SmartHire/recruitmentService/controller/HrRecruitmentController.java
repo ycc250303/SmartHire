@@ -23,7 +23,7 @@ import com.SmartHire.common.auth.RequireUserType;
 import com.SmartHire.common.auth.UserType;
 
 /**
- * 简历管理控制器（HR端）
+ * 招聘服务HR端招聘控制器
  */
 @RestController
 @RequestMapping("/recruitment/hr")

@@ -13,7 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-/** HR信息管理控制器 */
+/** HR服务HR信息控制器 */
 @RestController
 @RequestMapping("/hr/info")
 @Validated

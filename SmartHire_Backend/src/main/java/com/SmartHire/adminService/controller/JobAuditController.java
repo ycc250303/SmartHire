@@ -17,7 +17,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * 职位审核控制器 参考用户封禁功能的实现方式
+ * 管理员服务岗位审核控制器
  *
  * @author SmartHire Team
  * @since 2025-12-09
