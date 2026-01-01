@@ -12,9 +12,6 @@
           <text class="suggestion-title">{{ suggestion.title }}</text>
           <text class="suggestion-description">{{ suggestion.description }}</text>
         </view>
-        <view class="suggestion-action" @click="handleAction(index)">
-          <text class="action-text">{{ actionText }}</text>
-        </view>
       </view>
     </view>
   </view>
@@ -32,21 +29,11 @@ interface ImmediateSuggestion {
 interface Props {
   immediateSuggestions: ImmediateSuggestion[];
   title?: string;
-  actionText?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   title: () => t('pages.jobs.careerPlanningPage.immediateSuggestions'),
-  actionText: () => t('pages.jobs.careerPlanningPage.startAction'),
 });
-
-const emit = defineEmits<{
-  (e: 'action', index: number): void;
-}>();
-
-function handleAction(index: number) {
-  emit('action', index);
-}
 </script>
 
 <style lang="scss" scoped>
@@ -111,23 +98,5 @@ function handleAction(index: number) {
   display: block;
 }
 
-.suggestion-action {
-  flex-shrink: 0;
-  padding: 8rpx 20rpx;
-  border-radius: 999rpx;
-  border: 2rpx solid #007AFF;
-  background: transparent;
-}
-
-.action-text {
-  font-size: 24rpx;
-  color: #007AFF;
-  font-weight: 500;
-}
-
-.suggestion-action:active {
-  opacity: 0.6;
-  transform: scale(0.95);
-}
 </style>
 

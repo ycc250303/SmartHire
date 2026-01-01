@@ -3,7 +3,7 @@
     <text class="section-title">{{ title }}</text>
     <view class="tech-stack-list">
       <view 
-        v-for="(stack, index) in technologyStacks" 
+        v-for="(stack, index) in normalizedStacks" 
         :key="index"
         class="tech-stack-item"
       >
@@ -14,7 +14,7 @@
           ></view>
           <text class="category-name">{{ stack.category }}</text>
         </view>
-        <view class="skills-tags">
+        <view class="skills-tags" v-if="stack.skills && stack.skills.length > 0">
           <view 
             v-for="(skill, skillIndex) in stack.skills" 
             :key="skillIndex"
@@ -29,11 +29,12 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import { t } from '@/locales';
 
 interface TechnologyStack {
   category: string;
-  skills: string[];
+  skills: string[] | string;
 }
 
 interface Props {
@@ -50,6 +51,29 @@ const categoryColors = ['#4ba3ff', '#8E44AD', '#34C759', '#FF9500'];
 function getCategoryColor(index: number): string {
   return categoryColors[index % categoryColors.length];
 }
+
+// 处理 skills 数据，确保是数组格式
+function normalizeSkills(skills: string[] | string): string[] {
+  if (Array.isArray(skills)) {
+    return skills.filter(skill => skill && skill.trim().length > 0);
+  }
+  if (typeof skills === 'string') {
+    // 如果是字符串，尝试按逗号、分号或空格分割
+    return skills
+      .split(/[,，;；\s]+/)
+      .map(s => s.trim())
+      .filter(s => s.length > 0);
+  }
+  return [];
+}
+
+// 计算处理后的技术栈数据
+const normalizedStacks = computed(() => {
+  return props.technologyStacks.map(stack => ({
+    ...stack,
+    skills: normalizeSkills(stack.skills),
+  }));
+});
 </script>
 
 <style lang="scss" scoped>

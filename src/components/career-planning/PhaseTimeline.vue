@@ -3,7 +3,7 @@
     <text class="section-title">{{ title }}</text>
     <view class="timeline-container">
       <view 
-        v-for="(phase, index) in phaseRoadmap" 
+        v-for="(phase, index) in normalizedPhaseRoadmap" 
         :key="phase.phase"
         class="timeline-item"
         :style="{ animationDelay: index * 100 + 'ms' }"
@@ -12,7 +12,7 @@
           <view class="timeline-dot"></view>
           <view 
             class="timeline-line" 
-            v-if="index < phaseRoadmap.length - 1"
+            v-if="index < normalizedPhaseRoadmap.length - 1"
           ></view>
         </view>
         <view class="phase-card">
@@ -46,7 +46,7 @@ interface PhaseRoadmapItem {
   title: string;
   description: string;
   duration_days: number;
-  skills: string[];
+  skills: string[] | string;
   based_on_gap: string;
 }
 
@@ -61,6 +61,29 @@ const props = withDefaults(defineProps<Props>(), {
 
 const phaseLabel = computed(() => t('pages.jobs.careerPlanningPage.phase'));
 const daysText = computed(() => t('pages.jobs.careerPlanningPage.days'));
+
+// 处理 skills 数据，确保是数组格式
+function normalizeSkills(skills: string[] | string): string[] {
+  if (Array.isArray(skills)) {
+    return skills.filter(skill => skill && skill.trim().length > 0);
+  }
+  if (typeof skills === 'string') {
+    // 如果是字符串，尝试按逗号、分号或空格分割
+    return skills
+      .split(/[,，;；\s]+/)
+      .map(s => s.trim())
+      .filter(s => s.length > 0);
+  }
+  return [];
+}
+
+// 计算处理后的阶段路线数据
+const normalizedPhaseRoadmap = computed(() => {
+  return props.phaseRoadmap.map(phase => ({
+    ...phase,
+    skills: normalizeSkills(phase.skills),
+  }));
+});
 </script>
 
 <style lang="scss" scoped>
