@@ -67,12 +67,12 @@ function matchApiPath(apiPath: string, pattern: string): boolean {
   return false;
 }
 
-function getEnvironmentForApi(apiPath: string): 'dev' | 'prod' | null {
+function getEnvironmentForApi(apiPath: string): 'dev' | 'dev-py' | 'prod' | null {
   const mappings = apiConfig.apiMappings;
   
   for (const [pattern, env] of Object.entries(mappings)) {
     if (matchApiPath(apiPath, pattern)) {
-      return env as 'dev' | 'prod';
+      return env as 'dev' | 'dev-py' | 'prod';
     }
   }
   
@@ -85,6 +85,8 @@ export function getApiBaseUrl(apiPath: string): string {
   let baseUrl = "";
   if (env === 'dev') {
     baseUrl = import.meta.env.VITE_API_BASE_URL_DEV || import.meta.env.VITE_API_BASE_URL || "";
+  } else if (env === 'dev-py') {
+    baseUrl = import.meta.env.VITE_API_BASE_URL_PY || import.meta.env.VITE_API_BASE_URL || "";
   } else if (env === 'prod') {
     baseUrl = import.meta.env.VITE_API_BASE_URL_PROD || import.meta.env.VITE_API_BASE_URL || "";
   } else {

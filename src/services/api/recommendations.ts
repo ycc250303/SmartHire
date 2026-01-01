@@ -1,4 +1,4 @@
-import { http } from '../http';
+import { http, getApiPathFromUrl, getApiBaseUrl, getToken } from '../http';
 import { getJobDetail, type JobDetail } from './recruitment';
 
 export enum Degree {
@@ -113,10 +113,6 @@ async function supplementJobItem(job: InternJobItem): Promise<InternJobItem> {
   }
 }
 
-/**
- * Get intern job recommendations with field supplementation
- * @returns Intern job recommendations response with supplemented fields
- */
 export async function getInternJobRecommendationsWithSupplement(userId?: number | null): Promise<InternJobRecommendationsResponse> {
   const response = await getInternJobRecommendations(userId);
   const supplementedJobs = await Promise.all(
@@ -127,10 +123,6 @@ export async function getInternJobRecommendationsWithSupplement(userId?: number 
   };
 }
 
-/**
- * Get intern job recommendations
- * @returns Intern job recommendations response
- */
 export function getInternJobRecommendations(userId?: number | null): Promise<InternJobRecommendationsResponse> {
   const params: Record<string, any> = {};
   
@@ -150,3 +142,430 @@ export function getInternJobRecommendations(userId?: number | null): Promise<Int
   });
 }
 
+export interface CareerPlanningAnalysisResponse {
+  match_analysis: {
+    overall_score: number;
+    skill_match: number;
+    education_match: number;
+    experience_qualified: boolean;
+  };
+  gap_analysis: {
+    skills: {
+      required_missing: string[];
+      optional_missing: string[];
+      matched: Array<{
+        name: string;
+        your_level: number;
+        is_required: boolean;
+      }>;
+      match_rate: number;
+    };
+    experience: {
+      your_years: number;
+      required_text: string;
+      is_qualified: boolean;
+      gap_years: number;
+    };
+    education: {
+      your_text: string;
+      required_text: string;
+      is_qualified: boolean;
+    };
+  };
+}
+
+export interface SSESteamCallbacks {
+  onStart?: (message: string) => void;
+  onChunk?: (content: string) => void;
+  onDone?: () => void;
+  onError?: (error: Error) => void;
+}
+
+export function getCareerPlanningAnalysis(jobId: number, forceRefresh?: boolean): Promise<CareerPlanningAnalysisResponse> {
+  let url = `/api/ai/career-planning/${jobId}/analysis`;
+  if (forceRefresh) {
+    url += '?force_refresh=true';
+  }
+  console.log('[Params]', url, { jobId, forceRefresh });
+  return http<CareerPlanningAnalysisResponse>({
+    url,
+    method: 'POST',
+    timeout: 10000,
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
+  }).catch(error => {
+    console.warn('[Error]', url, error);
+    throw error;
+  });
+}
+
+export function getCareerPlanningLearningPlanStream(
+  jobId: number,
+  callbacks: SSESteamCallbacks
+): () => void {
+  const url = `/api/ai/career-planning/${jobId}/learning-plan`;
+  
+  let cancelled = false;
+  let abortController: AbortController | null = null;
+  
+  const cancel = () => {
+    cancelled = true;
+    if (abortController) {
+      abortController.abort();
+    }
+  };
+  
+  const execute = async () => {
+    console.log('[Params]', url, { jobId });
+    // #ifdef H5
+    try {
+      const apiPath = getApiPathFromUrl(url);
+      const baseUrl = getApiBaseUrl(apiPath);
+      const token = getToken();
+      
+      const headers: Record<string, string> = {
+        'Accept': 'text/event-stream',
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
+      let normalizedBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+      let normalizedPath = url.startsWith('/') ? url : `/${url}`;
+      
+      if (normalizedBaseUrl.endsWith('/api') && normalizedPath.startsWith('/api')) {
+        normalizedPath = normalizedPath.replace(/^\/api/, '');
+      }
+      
+      const fullUrl = normalizedBaseUrl ? `${normalizedBaseUrl}${normalizedPath}` : normalizedPath;
+      
+      abortController = new AbortController();
+      
+      const response = await fetch(fullUrl, {
+        method: 'GET',
+        headers,
+        signal: abortController.signal,
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error('No response body reader available');
+      }
+      
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let fullContent = '';
+      
+      while (true) {
+        if (cancelled) break;
+        
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        buffer += decoder.decode(value, { stream: true });
+        
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+        
+        for (const line of lines) {
+          if (!line.trim() || line.startsWith(':')) continue;
+          
+          if (line.startsWith('data: ')) {
+            const dataStr = line.slice(6).trim();
+            
+            if (!dataStr || dataStr === '[DONE]') {
+              if (callbacks.onDone) {
+                callbacks.onDone();
+                console.log('[Response]', url, { fullContent });
+                return;
+              }
+              continue;
+            }
+            
+            try {
+              const data = JSON.parse(dataStr);
+              console.log('[SSE] Parsed data:', data);
+              
+              if (data.type === 'start' && callbacks.onStart) {
+                console.log('[SSE] Start event:', data.message);
+                callbacks.onStart(data.message || '');
+              } else if (data.type === 'chunk' && callbacks.onChunk && data.content) {
+                fullContent += data.content;
+                console.log('[SSE] Chunk received, length:', data.content.length, 'total:', fullContent.length);
+                callbacks.onChunk(data.content);
+              } else if (data.type === 'done' && callbacks.onDone) {
+                console.log('[SSE] Done event, total length:', fullContent.length);
+                callbacks.onDone();
+                console.log('[Response]', url, { fullContent });
+                return;
+              } else if (data.type === 'error') {
+                throw new Error(data.message || 'Unknown error');
+              }
+            } catch (e) {
+              if (e instanceof Error) {
+                if (e.message === 'Unexpected end of JSON input') {
+                  continue;
+                }
+                if (e.message !== 'Unknown error') {
+                  console.warn('Failed to parse SSE data:', dataStr, e);
+                }
+                if (callbacks.onError) {
+                  callbacks.onError(e);
+                  return;
+                }
+              }
+            }
+          }
+        }
+      }
+      
+      if (callbacks.onDone) {
+        callbacks.onDone();
+        console.log('[Response]', url, { fullContent });
+      }
+    } catch (error) {
+      if (cancelled) return;
+      if (error instanceof Error && error.name === 'AbortError') {
+        return;
+      }
+      console.warn('[Error]', url, error);
+      if (callbacks.onError) {
+        callbacks.onError(error instanceof Error ? error : new Error(String(error)));
+      }
+    }
+    // #endif
+    
+    // #ifndef H5
+    uni.request({
+      url: getApiBaseUrl(getApiPathFromUrl(url)) + url,
+      method: 'GET',
+      header: {
+        'Authorization': `Bearer ${getToken()}`,
+      },
+      success: (res: any) => {
+        if (res.statusCode === 200 && res.data) {
+          if (callbacks.onStart) {
+            callbacks.onStart('');
+          }
+          
+          if (res.data.raw_text && callbacks.onChunk) {
+            callbacks.onChunk(res.data.raw_text);
+          }
+          
+          if (callbacks.onDone) {
+            callbacks.onDone();
+          }
+          console.log('[Response]', url, res.data);
+        } else {
+          const error = new Error(`Request failed with status ${res.statusCode}`);
+          if (callbacks.onError) {
+            callbacks.onError(error);
+          }
+          console.warn('[Error]', url, error);
+        }
+      },
+      fail: (err: any) => {
+        const error = new Error(err.errMsg || 'Request failed');
+        if (callbacks.onError) {
+          callbacks.onError(error);
+        }
+        console.warn('[Error]', url, error);
+      },
+    });
+    // #endif
+  };
+  
+  execute();
+  
+  return cancel;
+}
+
+export function getCareerPlanningInterviewPrepStream(
+  jobId: number,
+  callbacks: SSESteamCallbacks
+): () => void {
+  const url = `/api/ai/career-planning/${jobId}/interview-prep`;
+  
+  let cancelled = false;
+  let abortController: AbortController | null = null;
+  
+  const cancel = () => {
+    cancelled = true;
+    if (abortController) {
+      abortController.abort();
+    }
+  };
+  
+  const execute = async () => {
+    console.log('[Params]', url, { jobId });
+    // #ifdef H5
+    try {
+      const apiPath = getApiPathFromUrl(url);
+      const baseUrl = getApiBaseUrl(apiPath);
+      const token = getToken();
+      
+      const headers: Record<string, string> = {
+        'Accept': 'text/event-stream',
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
+      let normalizedBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+      let normalizedPath = url.startsWith('/') ? url : `/${url}`;
+      
+      if (normalizedBaseUrl.endsWith('/api') && normalizedPath.startsWith('/api')) {
+        normalizedPath = normalizedPath.replace(/^\/api/, '');
+      }
+      
+      const fullUrl = normalizedBaseUrl ? `${normalizedBaseUrl}${normalizedPath}` : normalizedPath;
+      
+      abortController = new AbortController();
+      
+      const response = await fetch(fullUrl, {
+        method: 'GET',
+        headers,
+        signal: abortController.signal,
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error('No response body reader available');
+      }
+      
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let fullContent = '';
+      
+      while (true) {
+        if (cancelled) break;
+        
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        buffer += decoder.decode(value, { stream: true });
+        
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+        
+        for (const line of lines) {
+          if (!line.trim() || line.startsWith(':')) continue;
+          
+          if (line.startsWith('data: ')) {
+            const dataStr = line.slice(6).trim();
+            
+            if (!dataStr || dataStr === '[DONE]') {
+              if (callbacks.onDone) {
+                callbacks.onDone();
+                console.log('[Response]', url, { fullContent });
+                return;
+              }
+              continue;
+            }
+            
+            try {
+              const data = JSON.parse(dataStr);
+              console.log('[SSE] Parsed data:', data);
+              
+              if (data.type === 'start' && callbacks.onStart) {
+                console.log('[SSE] Start event:', data.message);
+                callbacks.onStart(data.message || '');
+              } else if (data.type === 'chunk' && callbacks.onChunk && data.content) {
+                fullContent += data.content;
+                console.log('[SSE] Chunk received, length:', data.content.length, 'total:', fullContent.length);
+                callbacks.onChunk(data.content);
+              } else if (data.type === 'done' && callbacks.onDone) {
+                console.log('[SSE] Done event, total length:', fullContent.length);
+                callbacks.onDone();
+                console.log('[Response]', url, { fullContent });
+                return;
+              } else if (data.type === 'error') {
+                throw new Error(data.message || 'Unknown error');
+              }
+            } catch (e) {
+              if (e instanceof Error) {
+                if (e.message === 'Unexpected end of JSON input') {
+                  continue;
+                }
+                if (e.message !== 'Unknown error') {
+                  console.warn('Failed to parse SSE data:', dataStr, e);
+                }
+                if (callbacks.onError) {
+                  callbacks.onError(e);
+                  return;
+                }
+              }
+            }
+          }
+        }
+      }
+      
+      if (callbacks.onDone) {
+        callbacks.onDone();
+        console.log('[Response]', url, { fullContent });
+      }
+    } catch (error) {
+      if (cancelled) return;
+      if (error instanceof Error && error.name === 'AbortError') {
+        return;
+      }
+      console.warn('[Error]', url, error);
+      if (callbacks.onError) {
+        callbacks.onError(error instanceof Error ? error : new Error(String(error)));
+      }
+    }
+    // #endif
+    
+    // #ifndef H5
+    uni.request({
+      url: getApiBaseUrl(getApiPathFromUrl(url)) + url,
+      method: 'GET',
+      header: {
+        'Authorization': `Bearer ${getToken()}`,
+      },
+      success: (res: any) => {
+        if (res.statusCode === 200 && res.data) {
+          if (callbacks.onStart) {
+            callbacks.onStart('');
+          }
+          
+          if (res.data.raw_text && callbacks.onChunk) {
+            callbacks.onChunk(res.data.raw_text);
+          }
+          
+          if (callbacks.onDone) {
+            callbacks.onDone();
+          }
+          console.log('[Response]', url, res.data);
+        } else {
+          const error = new Error(`Request failed with status ${res.statusCode}`);
+          if (callbacks.onError) {
+            callbacks.onError(error);
+          }
+          console.warn('[Error]', url, error);
+        }
+      },
+      fail: (err: any) => {
+        const error = new Error(err.errMsg || 'Request failed');
+        if (callbacks.onError) {
+          callbacks.onError(error);
+        }
+        console.warn('[Error]', url, error);
+      },
+    });
+    // #endif
+  };
+  
+  execute();
+  
+  return cancel;
+}

@@ -16,6 +16,9 @@
         <view class="nav-back-button" @click="handleBack">
           <text class="back-icon">‹</text>
         </view>
+        <view class="nav-favorite-button" @click="toggleFavorite" v-if="!loading">
+          <text class="favorite-icon" :class="{ 'favorited': isFavorite }">{{ isFavorite ? '♥' : '♡' }}</text>
+        </view>
         <view class="job-title-section">
           <text class="job-title">{{ job.jobTitle }}</text>
           <view class="job-meta-row">
@@ -98,6 +101,11 @@
         </view>
       </view>
 
+      <view class="career-planning-section" v-if="job">
+        <text class="section-title">{{ t('pages.jobs.jobDetail.careerPlanning') }}</text>
+        <CareerPlanningCard :jobId="job.jobId" />
+      </view>
+
     </scroll-view>
 
     <view v-if="job && !loading && !error" class="bottom-actions">
@@ -123,12 +131,16 @@ import { onLoad } from '@dcloudio/uni-app';
 import { t } from '@/locales';
 import { getJobDetail, submitResume, type JobDetail } from '@/services/api/recruitment';
 import { getResumes, type Resume } from '@/services/api/resume';
+import { favoriteJob, unfavoriteJob, getFavoriteJobs } from '@/services/api/seeker';
+import CareerPlanningCard from '@/components/common/CareerPlanningCard.vue';
 
 const job = ref<JobDetail | null>(null);
 const loading = ref(false);
 const error = ref<string | null>(null);
 const applying = ref(false);
 const jobId = ref<number | null>(null);
+const isFavorite = ref(false);
+const favoriting = ref(false);
 
 onLoad((options: any) => {
   if (options?.jobId) {
@@ -151,11 +163,71 @@ async function loadJobDetail() {
 
   try {
     job.value = await getJobDetail(jobId.value);
+    await checkFavoriteStatus();
   } catch (err) {
     error.value = err instanceof Error ? err.message : t('pages.jobs.jobDetail.loadError');
     console.error('Failed to load job detail:', err);
   } finally {
     loading.value = false;
+  }
+}
+
+async function checkFavoriteStatus() {
+  if (!jobId.value) return;
+  
+  try {
+    const favorites = await getFavoriteJobs();
+    isFavorite.value = favorites.some(fav => fav.jobId === jobId.value);
+  } catch (err) {
+    console.error('Failed to check favorite status:', err);
+  }
+}
+
+async function toggleFavorite() {
+  if (!jobId.value || favoriting.value) return;
+
+  const previousState = isFavorite.value;
+  isFavorite.value = !isFavorite.value;
+  favoriting.value = true;
+
+  try {
+    if (previousState) {
+      await unfavoriteJob(jobId.value);
+      uni.showToast({
+        title: t('pages.jobs.favorites.unfavoriteSuccess'),
+        icon: 'success',
+      });
+    } else {
+      await favoriteJob(jobId.value);
+      uni.showToast({
+        title: t('pages.jobs.favorites.favoriteSuccess'),
+        icon: 'success',
+      });
+    }
+  } catch (err) {
+    isFavorite.value = previousState;
+    const errorMessage = err instanceof Error ? err.message : '';
+    if (previousState) {
+      uni.showToast({
+        title: t('pages.jobs.favorites.unfavoriteError'),
+        icon: 'none',
+      });
+    } else {
+      if (errorMessage.includes('已收藏') || errorMessage.includes('already')) {
+        isFavorite.value = true;
+        uni.showToast({
+          title: t('pages.jobs.favorites.favoriteSuccess'),
+          icon: 'success',
+        });
+      } else {
+        uni.showToast({
+          title: t('pages.jobs.favorites.favoriteError'),
+          icon: 'none',
+        });
+      }
+    }
+  } finally {
+    favoriting.value = false;
   }
 }
 
@@ -279,7 +351,7 @@ async function handleApply() {
     const resumes = await getResumes();
     let resumeId: number;
 
-    if (resumes.length > 0) {
+    if (resumes.length > 0 && resumes[0]) {
       resumeId = resumes[0].id;
     } else {
       uni.showModal({
@@ -430,20 +502,30 @@ async function handleApply() {
   position: relative;
 }
 
-.nav-back-button {
+.nav-back-button,
+.nav-favorite-button {
   position: absolute;
   top: calc(var(--status-bar-height) + vars.$spacing-md);
-  left: vars.$spacing-xl;
   width: 64rpx;
   height: 64rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 50%;
   z-index: 100;
   cursor: pointer;
+}
+
+.nav-back-button {
+  left: vars.$spacing-xl;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
   box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
+}
+
+.nav-favorite-button {
+  right: vars.$spacing-xl;
+  background: transparent;
+  padding: vars.$spacing-sm;
 }
 
 .back-icon {
@@ -452,6 +534,30 @@ async function handleApply() {
   font-weight: 300;
   line-height: 1;
   margin-left: -4rpx;
+}
+
+.favorite-icon {
+  font-size: 48rpx;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.15);
+  display: inline-block;
+  transform: scale(1);
+}
+
+.favorite-icon.favorited {
+  color: #ff6b6b;
+  text-shadow: 0 2rpx 8rpx rgba(255, 107, 107, 0.4);
+  transform: scale(1.1);
+}
+
+.nav-favorite-button:active .favorite-icon {
+  transform: scale(0.95);
+}
+
+.nav-favorite-button:active .favorite-icon.favorited {
+  transform: scale(1.05);
 }
 
 .job-title-section {
@@ -564,7 +670,8 @@ async function handleApply() {
 }
 
 .company-section,
-.hr-section {
+.hr-section,
+.career-planning-section {
   background: vars.$surface-color;
   padding: vars.$spacing-xl;
   margin-top: vars.$spacing-md;

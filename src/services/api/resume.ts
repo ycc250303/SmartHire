@@ -15,6 +15,8 @@ export interface Resume {
 export interface UploadResumeParams {
   filePath: string;
   fileName?: string;
+  resumeName: string;
+  privacyLevel: number;
 }
 
 export interface UpdateResumeParams {
@@ -42,14 +44,21 @@ export function uploadResume(params: UploadResumeParams): Promise<Resume> {
   console.log('[Params]', fullUrl, params);
 
   return new Promise((resolve, reject) => {
+    const formData: Record<string, any> = {
+      resumeName: params.resumeName,
+      privacyLevel: params.privacyLevel,
+    };
+
     // #ifdef H5
     if (params.filePath.startsWith('data:') || params.filePath.startsWith('blob:')) {
       fetch(params.filePath)
         .then(res => res.blob())
         .then(blob => {
-          const formData = new FormData();
+          const uploadFormData = new FormData();
           const fileName = params.fileName || 'resume.pdf';
-          formData.append('resumeFile', blob, fileName);
+          uploadFormData.append('resumeFile', blob, fileName);
+          uploadFormData.append('resumeName', params.resumeName);
+          uploadFormData.append('privacyLevel', String(params.privacyLevel));
           
           const xhr = new XMLHttpRequest();
           xhr.open('POST', fullUrl, true);
@@ -86,7 +95,7 @@ export function uploadResume(params: UploadResumeParams): Promise<Resume> {
             reject(new Error('Network error'));
           };
           
-          xhr.send(formData);
+          xhr.send(uploadFormData);
         })
         .catch(error => {
           reject(new Error('Failed to read file: ' + (error instanceof Error ? error.message : String(error))));
@@ -96,7 +105,7 @@ export function uploadResume(params: UploadResumeParams): Promise<Resume> {
         url: fullUrl,
         filePath: params.filePath,
         name: 'resumeFile',
-        formData: {},
+        formData: formData,
         header: {
           'Authorization': token ? `Bearer ${token}` : '',
         },
@@ -138,7 +147,7 @@ export function uploadResume(params: UploadResumeParams): Promise<Resume> {
       url: fullUrl,
       filePath: params.filePath,
       name: 'resumeFile',
-      formData: {},
+      formData: formData,
       header: {
         'Authorization': token ? `Bearer ${token}` : '',
       },
@@ -196,10 +205,10 @@ export function getResumes(): Promise<Resume[]> {
  * Update resume
  * @returns Updated resume data
  */
-export function updateResume(id: number, params: UpdateResumeParams): Promise<Resume> {
+export function updateResume(id: number, params: UpdateResumeParams): Promise<null> {
   const url = `/api/seeker/update-resume/${id}`;
   console.log('[Params]', url, { id, ...params });
-  return http<Resume>({
+  return http<null>({
     url,
     method: 'PATCH',
     data: params,

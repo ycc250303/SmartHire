@@ -28,9 +28,26 @@
       }
     },
     {
+      "path": "pages/seeker/jobs/career-planning",
+      "style": {
+        "navigationBarTitleText": "职业路径规划",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff",
+        "navigationStyle": "custom"
+      }
+    },
+    {
       "path": "pages/seeker/jobs/applications",
       "style": {
         "navigationBarTitleText": "我的投递",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
+      "path": "pages/seeker/jobs/favorites",
+      "style": {
+        "navigationBarTitleText": "我的收藏",
         "navigationBarTextStyle": "black",
         "navigationBarBackgroundColor": "#ffffff"
       }

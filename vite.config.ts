@@ -36,6 +36,7 @@ export default defineConfig(({ mode }) => {
     define: {
       'import.meta.env.VITE_API_BASE_URL_PROD': JSON.stringify(productEnv.VITE_API_BASE_URL || env.VITE_API_BASE_URL || ''),
       'import.meta.env.VITE_API_BASE_URL_DEV': JSON.stringify(env.VITE_API_BASE_URL || ''),
+      'import.meta.env.VITE_API_BASE_URL_PY': JSON.stringify(env.VITE_API_BASE_URL_PY || ''),
     },
   };
 });

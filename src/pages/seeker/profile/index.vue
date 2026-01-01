@@ -39,6 +39,10 @@
         <text class="resume-label">{{ t('pages.profile.applications') }}</text>
         <text class="arrow">›</text>
       </view>
+      <view class="resume-item" @click="goToFavorites">
+        <text class="resume-label">{{ t('pages.profile.favorites') }}</text>
+        <text class="arrow">›</text>
+      </view>
     </view>
     
     <CustomTabBar />
@@ -112,6 +116,12 @@ function goToAttachmentResume() {
 function goToApplications() {
   uni.navigateTo({
     url: '/pages/seeker/jobs/applications'
+  });
+}
+
+function goToFavorites() {
+  uni.navigateTo({
+    url: '/pages/seeker/jobs/favorites'
   });
 }
 </script>

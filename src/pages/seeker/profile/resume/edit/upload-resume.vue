@@ -8,6 +8,36 @@
             <text class="file-name">{{ fileName || t('pages.resume.attachment.fileRequired') }}</text>
           </view>
         </view>
+
+        <view class="form-item">
+          <text class="form-label">{{ t('pages.resume.attachment.resumeName') }}</text>
+          <input
+            class="form-input"
+            v-model="resumeName"
+            :placeholder="t('pages.resume.attachment.resumeNamePlaceholder')"
+            placeholder-class="input-placeholder"
+            :maxlength="50"
+          />
+        </view>
+
+        <view class="form-item">
+          <text class="form-label">{{ t('pages.resume.attachment.privacyLevel') }}</text>
+          <picker
+            class="form-picker"
+            mode="selector"
+            :range="privacyOptions"
+            :range-key="'label'"
+            :value="privacyIndex"
+            @change="handlePrivacyChange"
+          >
+            <view class="picker-value">
+              <text class="picker-text">
+                {{ privacyOptions[privacyIndex]?.label }}
+              </text>
+              <text class="picker-arrow">›</text>
+            </view>
+          </picker>
+        </view>
       </view>
     </scroll-view>
 
@@ -22,7 +52,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { t } from '@/locales';
 import { useNavigationTitle } from '@/utils/useNavigationTitle';
@@ -33,15 +63,38 @@ useNavigationTitle('navigation.uploadResume');
 const uploading = ref(false);
 const filePath = ref('');
 const fileName = ref('');
+const resumeName = ref('');
+const privacyLevel = ref(0);
+
+const privacyOptions = [
+  { label: t('pages.resume.attachment.privacyPublic'), value: 0 },
+  { label: t('pages.resume.attachment.privacyPrivate'), value: 1 },
+  { label: t('pages.resume.attachment.privacyConfidential'), value: 2 },
+];
+
+const privacyIndex = computed(() => {
+  return privacyLevel.value;
+});
 
 onLoad((options: any) => {
   if (options?.filePath) {
     filePath.value = decodeURIComponent(options.filePath);
   }
   if (options?.defaultName) {
-    fileName.value = decodeURIComponent(options.defaultName) + '.pdf';
+    const decodedName = decodeURIComponent(options.defaultName);
+    fileName.value = decodedName.toLowerCase().endsWith('.pdf') ? decodedName : decodedName + '.pdf';
+    if (!resumeName.value) {
+      const nameWithoutExt = decodedName.toLowerCase().endsWith('.pdf') 
+        ? decodedName.slice(0, -4) 
+        : decodedName;
+      resumeName.value = nameWithoutExt;
+    }
   }
 });
+
+function handlePrivacyChange(e: any) {
+  privacyLevel.value = privacyOptions[parseInt(e.detail.value)].value;
+}
 
 async function handleUpload() {
   if (uploading.value) return;
@@ -54,12 +107,22 @@ async function handleUpload() {
     return;
   }
 
+  if (!resumeName.value || !resumeName.value.trim()) {
+    uni.showToast({
+      title: t('pages.resume.attachment.nameRequired'),
+      icon: 'none',
+    });
+    return;
+  }
+
   uploading.value = true;
 
   try {
     await uploadResume({
       filePath: filePath.value,
       fileName: fileName.value || 'resume.pdf',
+      resumeName: resumeName.value.trim(),
+      privacyLevel: privacyLevel.value,
     });
 
     uni.showToast({
@@ -131,6 +194,41 @@ async function handleUpload() {
 .file-name {
   font-size: 28rpx;
   color: #000000;
+}
+
+.form-input {
+  font-size: 30rpx;
+  color: #000000;
+  line-height: 1.5;
+  padding: 0;
+}
+
+.input-placeholder {
+  color: #C7C7CC;
+  font-size: 30rpx;
+}
+
+.form-picker {
+  width: 100%;
+}
+
+.picker-value {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.picker-text {
+  font-size: 30rpx;
+  color: #000000;
+  flex: 1;
+}
+
+.picker-arrow {
+  font-size: 48rpx;
+  color: #C6C6C8;
+  font-weight: 300;
+  margin-left: 16rpx;
 }
 
 .bottom-bar {

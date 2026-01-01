@@ -10,16 +10,20 @@
           v-for="resume in resumeList"
           :key="resume.id"
           class="resume-item"
-          @tap="handleEditResume(resume)"
         >
-          <view class="resume-item-content">
+          <view class="resume-item-content" @tap="handleEditResume(resume)">
             <view class="resume-item-header">
               <text class="resume-name">{{ resume.resumeName }}</text>
               <text class="resume-privacy">{{ getPrivacyLabel(resume.privacyLevel) }}</text>
             </view>
             <text class="resume-meta">{{ formatDate(resume.updatedAt) }}</text>
           </view>
-          <text class="item-arrow">›</text>
+          <view class="resume-item-actions">
+            <view class="action-button" @tap.stop="handleDownload(resume)">
+              <text class="action-icon">⬇</text>
+            </view>
+            <text class="item-arrow">›</text>
+          </view>
         </view>
       </view>
       <view v-else class="empty-state">
@@ -47,6 +51,7 @@ useNavigationTitle('navigation.attachmentResume');
 
 const loading = ref(false);
 const resumeList = ref<Resume[]>([]);
+const downloading = ref<number | null>(null);
 
 onLoad(() => {
   loadResumes();
@@ -307,6 +312,131 @@ function formatDate(dateString: string): string {
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 }
+
+async function handleDownload(resume: Resume) {
+  if (downloading.value === resume.id) return;
+  
+  if (!resume.fileUrl) {
+    uni.showToast({
+      title: t('pages.resume.attachment.downloadError'),
+      icon: 'none',
+    });
+    return;
+  }
+
+  downloading.value = resume.id;
+
+  try {
+    // #ifdef H5
+    const link = document.createElement('a');
+    link.href = resume.fileUrl;
+    link.download = resume.resumeName.endsWith('.pdf') ? resume.resumeName : `${resume.resumeName}.pdf`;
+    link.target = '_blank';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    uni.showToast({
+      title: t('pages.resume.attachment.downloadSuccess'),
+      icon: 'success',
+    });
+    // #endif
+
+    // #ifndef H5
+    uni.showLoading({
+      title: t('pages.resume.attachment.downloading'),
+      mask: true,
+    });
+
+    uni.downloadFile({
+      url: resume.fileUrl,
+      success: (res) => {
+        if (res.statusCode === 200) {
+          const filePath = res.tempFilePath;
+          const fileName = resume.resumeName.endsWith('.pdf') ? resume.resumeName : `${resume.resumeName}.pdf`;
+          
+          // #ifdef APP-PLUS
+          try {
+            const Documents = (plus as any).io.PUBLIC_DOCUMENTS;
+            (plus as any).io.resolveLocalFileSystemURL(filePath, (entry: any) => {
+              entry.copyTo(Documents, fileName, () => {
+                uni.hideLoading();
+                uni.showToast({
+                  title: t('pages.resume.attachment.downloadSuccess'),
+                  icon: 'success',
+                });
+              }, (error: any) => {
+                console.error('Save file failed:', error);
+                uni.hideLoading();
+                uni.showToast({
+                  title: t('pages.resume.attachment.downloadError'),
+                  icon: 'none',
+                });
+              });
+            }, (error: any) => {
+              console.error('Resolve file failed:', error);
+              uni.hideLoading();
+              uni.showToast({
+                title: t('pages.resume.attachment.downloadError'),
+                icon: 'none',
+              });
+            });
+          } catch (error) {
+            console.error('Download failed:', error);
+            uni.hideLoading();
+            uni.showToast({
+              title: t('pages.resume.attachment.downloadError'),
+              icon: 'none',
+            });
+          }
+          // #endif
+
+          // #ifndef APP-PLUS
+          uni.saveFile({
+            tempFilePath: filePath,
+            success: () => {
+              uni.hideLoading();
+              uni.showToast({
+                title: t('pages.resume.attachment.downloadSuccess'),
+                icon: 'success',
+              });
+            },
+            fail: () => {
+              uni.hideLoading();
+              uni.showToast({
+                title: t('pages.resume.attachment.downloadError'),
+                icon: 'none',
+              });
+            },
+          });
+          // #endif
+        } else {
+          uni.hideLoading();
+          uni.showToast({
+            title: t('pages.resume.attachment.downloadError'),
+            icon: 'none',
+          });
+        }
+      },
+      fail: () => {
+        uni.hideLoading();
+        uni.showToast({
+          title: t('pages.resume.attachment.downloadError'),
+          icon: 'none',
+        });
+      },
+    });
+    // #endif
+  } catch (error) {
+    console.error('Download failed:', error);
+    uni.showToast({
+      title: t('pages.resume.attachment.downloadError'),
+      icon: 'none',
+    });
+  } finally {
+    downloading.value = null;
+  }
+}
 </script>
 
 <style lang="scss" scoped>
@@ -355,10 +485,12 @@ function formatDate(dateString: string): string {
   align-items: center;
   box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
   transition: background-color 0.2s;
-  
-  &:active {
-    background-color: #F9F9F9;
-  }
+}
+
+.resume-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
 }
 
 .resume-item-content {
@@ -397,7 +529,26 @@ function formatDate(dateString: string): string {
   font-size: 48rpx;
   color: #C6C6C8;
   font-weight: 300;
-  margin-left: 16rpx;
+}
+
+.action-button {
+  width: 64rpx;
+  height: 64rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12rpx;
+  background-color: vars.$primary-color-soft;
+  transition: opacity 0.2s;
+  
+  &:active {
+    opacity: 0.7;
+  }
+}
+
+.action-icon {
+  font-size: 32rpx;
+  color: vars.$primary-color;
 }
 
 .empty-state {
