@@ -28,7 +28,9 @@
               mode="widthFix"
               @click="previewImage(message.fileUrl)"
             />
-            <text v-else class="content">{{ message.content || '[图片]' }}</text>
+            <text v-else class="content">{{
+              message.content || "[图片]"
+            }}</text>
           </template>
           <text v-else class="content">{{ message.content }}</text>
           <text class="time">{{ formatTime(message.createdAt) }}</text>
@@ -43,7 +45,9 @@
     </scroll-view>
 
     <view class="chat-input">
-      <button class="media" :disabled="sending || loading" @click="doSendImage">图片</button>
+      <button class="media" :disabled="sending || loading" @click="doSendImage">
+        图片
+      </button>
       <input
         v-model="draft"
         placeholder="输入消息..."
@@ -53,15 +57,21 @@
         confirm-type="send"
         @confirm="doSendMessage"
       />
-      <button class="send" :disabled="sending || loading" @click="doSendMessage">发送</button>
+      <button
+        class="send"
+        :disabled="sending || loading"
+        @click="doSendMessage"
+      >
+        发送
+      </button>
     </view>
   </view>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick } from 'vue';
-import { onLoad, onShow } from '@dcloudio/uni-app';
-import dayjs from 'dayjs';
+import { ref, computed, onMounted, nextTick } from "vue";
+import { onLoad, onShow } from "@dcloudio/uni-app";
+import dayjs from "dayjs";
 import {
   getChatHistory,
   sendMessage,
@@ -69,19 +79,19 @@ import {
   markAsRead,
   getConversations,
   type Message,
-} from '@/services/api/message';
-import { getCurrentUserInfo } from '@/services/api/user';
-import { t } from '@/locales';
+} from "@/services/api/message";
+import { getCurrentUserInfo } from "@/services/api/user";
+import { t } from "@/locales";
 
 const messages = ref<Message[]>([]);
-const draft = ref('');
-const chatTitle = ref(t('pages.chat.conversation.title'));
-const scrollIntoView = ref('');
+const draft = ref("");
+const chatTitle = ref(t("pages.chat.conversation.title"));
+const scrollIntoView = ref("");
 const conversationId = ref<number>(0);
 const otherUserId = ref<number>(0);
 const applicationId = ref<number>(0);
-const otherUserAvatar = ref<string>('');
-const currentUserAvatar = ref<string>('');
+const otherUserAvatar = ref<string>("");
+const currentUserAvatar = ref<string>("");
 const loading = ref(false);
 const sending = ref(false);
 
@@ -97,10 +107,11 @@ const sortedMessages = computed(() => {
 });
 
 const isImageMessage = (message: Message) => message.messageType === 2;
-const isFromOther = (message: Message) => !!otherUserId.value && message.senderId === otherUserId.value;
+const isFromOther = (message: Message) =>
+  !!otherUserId.value && message.senderId === otherUserId.value;
 
 const bubbleClass = (message: Message) => {
-  const base = isFromOther(message) ? 'other' : 'mine';
+  const base = isFromOther(message) ? "other" : "mine";
   return isImageMessage(message) ? `${base} image-bubble` : base;
 };
 
@@ -114,22 +125,34 @@ const previewImage = (url: string) => {
 
 const ensureConversationMeta = async () => {
   if (!conversationId.value) return;
-  if (otherUserId.value && applicationId.value && otherUserAvatar.value && currentUserAvatar.value) return;
+  if (
+    otherUserId.value &&
+    applicationId.value &&
+    otherUserAvatar.value &&
+    currentUserAvatar.value
+  )
+    return;
 
   if (!applicationId.value) {
-    const cachedByConv = Number(uni.getStorageSync(`hr_chat_app_by_conv_${conversationId.value}`));
-    if (Number.isFinite(cachedByConv) && cachedByConv > 0) applicationId.value = cachedByConv;
+    const cachedByConv = Number(
+      uni.getStorageSync(`hr_chat_app_by_conv_${conversationId.value}`)
+    );
+    if (Number.isFinite(cachedByConv) && cachedByConv > 0)
+      applicationId.value = cachedByConv;
   }
 
   if (!applicationId.value && otherUserId.value) {
-    const cachedByUser = Number(uni.getStorageSync(`hr_chat_app_by_user_${otherUserId.value}`));
-    if (Number.isFinite(cachedByUser) && cachedByUser > 0) applicationId.value = cachedByUser;
+    const cachedByUser = Number(
+      uni.getStorageSync(`hr_chat_app_by_user_${otherUserId.value}`)
+    );
+    if (Number.isFinite(cachedByUser) && cachedByUser > 0)
+      applicationId.value = cachedByUser;
   }
 
   try {
     if (!currentUserAvatar.value) {
       const me = await getCurrentUserInfo();
-      currentUserAvatar.value = me?.avatarUrl || '';
+      currentUserAvatar.value = me?.avatarUrl || "";
     }
   } catch {}
 
@@ -138,9 +161,14 @@ const ensureConversationMeta = async () => {
     const matched = list.find((c) => c.id === conversationId.value);
     if (!matched) return;
     if (!otherUserId.value) otherUserId.value = matched.otherUserId;
-    if (!applicationId.value && matched.applicationId) applicationId.value = matched.applicationId;
-    if (!otherUserAvatar.value) otherUserAvatar.value = matched.otherUserAvatar || '';
-    if (!chatTitle.value || chatTitle.value === t('pages.chat.conversation.title')) {
+    if (!applicationId.value && matched.applicationId)
+      applicationId.value = matched.applicationId;
+    if (!otherUserAvatar.value)
+      otherUserAvatar.value = matched.otherUserAvatar || "";
+    if (
+      !chatTitle.value ||
+      chatTitle.value === t("pages.chat.conversation.title")
+    ) {
       chatTitle.value = matched.otherUserName || chatTitle.value;
       uni.setNavigationBarTitle({ title: chatTitle.value });
     }
@@ -170,14 +198,17 @@ const loadChat = async () => {
     }
     nextTick(() => {
       const lastId = messages.value[messages.value.length - 1]?.id;
-      scrollIntoView.value = lastId ? `msg-${lastId}` : '';
+      scrollIntoView.value = lastId ? `msg-${lastId}` : "";
     });
     if (conversationId.value) {
       await markAsRead(conversationId.value);
     }
   } catch (err) {
-    console.error('Failed to load chat history:', err);
-    uni.showToast({ title: t('pages.chat.conversation.loadError'), icon: 'none' });
+    console.error("Failed to load chat history:", err);
+    uni.showToast({
+      title: t("pages.chat.conversation.loadError"),
+      icon: "none",
+    });
   } finally {
     loading.value = false;
   }
@@ -186,15 +217,11 @@ const loadChat = async () => {
 const doSendMessage = async () => {
   if (!draft.value.trim() || !conversationId.value) return;
   if (!otherUserId.value) {
-    uni.showToast({ title: '缺少收件人', icon: 'none' });
+    uni.showToast({ title: "缺少收件人", icon: "none" });
     return;
   }
   if (!applicationId.value) {
     await ensureConversationMeta();
-  }
-  if (!applicationId.value) {
-    uni.showToast({ title: '该会话缺少投递ID，请从“求职者详情-推荐并发起聊天”进入', icon: 'none' });
-    return;
   }
   const content = draft.value.trim();
   sending.value = true;
@@ -214,7 +241,7 @@ const doSendMessage = async () => {
     replyMessageType: null,
   };
   messages.value = [...messages.value, tempMessage];
-  draft.value = '';
+  draft.value = "";
   nextTick(() => {
     scrollIntoView.value = `msg-${tempId}`;
   });
@@ -222,20 +249,25 @@ const doSendMessage = async () => {
   try {
     const sent = await sendMessage({
       receiverId: otherUserId.value,
-      applicationId: applicationId.value,
+      applicationId: applicationId.value || 0,
       messageType: 1,
       content,
       fileUrl: null,
       replyTo: null,
     });
-    messages.value = messages.value.map((m) => (m.id === tempMessage.id ? sent : m));
+    messages.value = messages.value.map((m) =>
+      m.id === tempMessage.id ? sent : m
+    );
     nextTick(() => {
       scrollIntoView.value = `msg-${sent.id}`;
     });
   } catch (err) {
-    console.error('Failed to send message:', err);
+    console.error("Failed to send message:", err);
     messages.value = messages.value.filter((m) => m.id !== tempMessage.id);
-    uni.showToast({ title: t('pages.chat.conversation.sendError'), icon: 'none' });
+    uni.showToast({
+      title: t("pages.chat.conversation.sendError"),
+      icon: "none",
+    });
   } finally {
     sending.value = false;
   }
@@ -244,26 +276,24 @@ const doSendMessage = async () => {
 const doSendImage = async () => {
   if (!conversationId.value) return;
   if (!otherUserId.value) {
-    uni.showToast({ title: '缺少收件人', icon: 'none' });
+    uni.showToast({ title: "缺少收件人", icon: "none" });
     return;
   }
   if (!applicationId.value) {
     await ensureConversationMeta();
   }
-  if (!applicationId.value) {
-    uni.showToast({ title: '该会话缺少投递ID，请从“求职者详情-推荐并发起聊天”进入', icon: 'none' });
-    return;
-  }
 
-  const pick = await new Promise<{ tempFilePaths: string[] } | null>((resolve) => {
-    uni.chooseImage({
-      count: 1,
-      sizeType: ['compressed'],
-      sourceType: ['album', 'camera'],
-      success: (res) => resolve(res),
-      fail: () => resolve(null),
-    });
-  });
+  const pick = await new Promise<{ tempFilePaths: string[] } | null>(
+    (resolve) => {
+      uni.chooseImage({
+        count: 1,
+        sizeType: ["compressed"],
+        sourceType: ["album", "camera"],
+        success: (res) => resolve(res),
+        fail: () => resolve(null),
+      });
+    }
+  );
   const filePath = pick?.tempFilePaths?.[0];
   if (!filePath) return;
 
@@ -275,7 +305,7 @@ const doSendImage = async () => {
     senderId: 0,
     receiverId: otherUserId.value,
     messageType: 2,
-    content: '[图片]',
+    content: "[图片]",
     fileUrl: filePath,
     replyTo: null,
     createdAt: new Date().toISOString(),
@@ -291,24 +321,26 @@ const doSendImage = async () => {
   try {
     const sent = await sendMedia({
       receiverId: otherUserId.value,
-      applicationId: applicationId.value,
+      applicationId: applicationId.value || 0,
       messageType: 2,
       filePath,
     });
-    messages.value = messages.value.map((m) => (m.id === tempMessage.id ? sent : m));
+    messages.value = messages.value.map((m) =>
+      m.id === tempMessage.id ? sent : m
+    );
     nextTick(() => {
       scrollIntoView.value = `msg-${sent.id}`;
     });
   } catch (err) {
-    console.error('Failed to send image:', err);
+    console.error("Failed to send image:", err);
     messages.value = messages.value.filter((m) => m.id !== tempMessage.id);
-    uni.showToast({ title: '图片发送失败', icon: 'none' });
+    uni.showToast({ title: "图片发送失败", icon: "none" });
   } finally {
     sending.value = false;
   }
 };
 
-const formatTime = (time: string) => dayjs(time).format('MM/DD HH:mm');
+const formatTime = (time: string) => dayjs(time).format("MM/DD HH:mm");
 
 onLoad((options) => {
   if (options?.id) {
@@ -320,8 +352,15 @@ onLoad((options) => {
   if (options?.applicationId) {
     applicationId.value = parseInt(options.applicationId as string, 10);
     if (applicationId.value) {
-      uni.setStorageSync(`hr_chat_app_by_conv_${conversationId.value}`, applicationId.value);
-      if (otherUserId.value) uni.setStorageSync(`hr_chat_app_by_user_${otherUserId.value}`, applicationId.value);
+      uni.setStorageSync(
+        `hr_chat_app_by_conv_${conversationId.value}`,
+        applicationId.value
+      );
+      if (otherUserId.value)
+        uni.setStorageSync(
+          `hr_chat_app_by_user_${otherUserId.value}`,
+          applicationId.value
+        );
     }
   }
   if (options?.avatar) {
@@ -338,7 +377,9 @@ onLoad((options) => {
       chatTitle.value = options.username as string;
     }
   }
-  uni.setNavigationBarTitle({ title: chatTitle.value || t('pages.chat.conversation.title') });
+  uni.setNavigationBarTitle({
+    title: chatTitle.value || t("pages.chat.conversation.title"),
+  });
   ensureConversationMeta();
   loadChat();
 });
