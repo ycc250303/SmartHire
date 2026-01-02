@@ -15,7 +15,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * 公司管理员控制器
+ * HR服务公司管理控制器
  *
  * @author SmartHire Team
  * @since 2025-12-13

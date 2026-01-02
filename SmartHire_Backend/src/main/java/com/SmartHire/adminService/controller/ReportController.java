@@ -18,7 +18,8 @@ import jakarta.validation.constraints.NotNull;
 import java.util.Map;
 
 /**
- * 举报管理控制器
+ * 管理员服务举报管理控制器
+ * @module
  */
 @RestController
 @RequestMapping("/admin/reports")

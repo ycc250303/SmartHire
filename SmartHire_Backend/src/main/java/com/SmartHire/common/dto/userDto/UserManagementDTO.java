@@ -11,6 +11,7 @@ public class UserManagementDTO implements Serializable {
     private Long userId;
     private String username;
     private String email;
+    private String phone;
     private String userType;
     private Integer status;
     private String avatarUrl;
@@ -19,4 +20,3 @@ public class UserManagementDTO implements Serializable {
     private String company;
     private String position;
 }
-

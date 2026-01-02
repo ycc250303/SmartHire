@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/** 匹配功能控制器 */
+/** HR服务岗位匹配控制器 */
 @RestController
 @RequestMapping("/hr/matching")
 @Validated

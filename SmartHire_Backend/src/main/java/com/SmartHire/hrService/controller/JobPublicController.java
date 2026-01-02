@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * 求职者端公开岗位查询
+ * HR服务岗位公共展示控制器
  */
 @RestController
 @RequestMapping("/public/job-position")

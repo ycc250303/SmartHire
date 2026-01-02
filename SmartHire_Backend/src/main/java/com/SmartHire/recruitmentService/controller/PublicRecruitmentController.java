@@ -11,6 +11,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * 招聘服务公共招聘控制器
+ *
+ * @author SmartHire Team
+ * @since 2025-11-30
+ */
 @RestController
 @RequestMapping("/recruitment/public")
 @Validated
