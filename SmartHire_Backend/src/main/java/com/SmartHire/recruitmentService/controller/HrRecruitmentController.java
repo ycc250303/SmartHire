@@ -10,6 +10,7 @@ import com.SmartHire.recruitmentService.dto.ApplicationStatusUpdateDTO;
 import com.SmartHire.recruitmentService.service.HrApplicationService;
 import com.SmartHire.common.dto.seekerDto.SeekerCardDTO;
 import com.SmartHire.recruitmentService.service.InterviewService;
+import com.SmartHire.recruitmentService.service.OfferService;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
@@ -35,6 +36,9 @@ public class HrRecruitmentController {
 
     @Autowired
     private InterviewService interviewService;
+
+    @Autowired
+    private OfferService offerService;
 
     @Autowired
     private AdminApi adminApi;
@@ -95,9 +99,6 @@ public class HrRecruitmentController {
         Long applicationId = hrApplicationService.recommend(req);
         return Result.success("推荐成功", applicationId);
     }
-
-    @Autowired
-    private com.SmartHire.recruitmentService.service.OfferService offerService;
 
     /**
      * HR 发 Offer（最小可行：发送即置为已录用）
