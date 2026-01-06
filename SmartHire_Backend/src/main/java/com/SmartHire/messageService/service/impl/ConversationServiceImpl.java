@@ -30,7 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class ConversationServiceImpl extends ServiceImpl<ConversationMapper, Conversation>
     implements ConversationService {
-  
+
   @Autowired
   private ConversationEventProducer conversationEventProducer;
 
@@ -68,7 +68,7 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationMapper, Con
       conversation.setDeletedByUser2((byte) 0);
       this.save(conversation);
       log.info("创建会话成功：{}, user1Id={}, user2Id={}", conversation, minId, maxId);
-      
+
       // 发送会话创建事件，通知recruitmentService更新Application记录
       ConversationCreatedEvent event = new ConversationCreatedEvent();
       event.setConversationId(conversation.getId());
@@ -228,7 +228,7 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationMapper, Con
   private ConversationDTO convertToConversationDTO(Conversation conversation, Long currentUserId) {
     ConversationDTO dto = new ConversationDTO();
     dto.setId(conversation.getId());
-    
+
     // 确定对方用户ID
     Long otherUserId = conversation.getUser1Id().equals(currentUserId)
         ? conversation.getUser2Id()
@@ -264,6 +264,10 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationMapper, Con
       dto.setOtherCompanyLogo(
           this.getBaseMapper().getOtherCompanyLogo(conversation.getId(), currentUserId));
     }
+
+    // 获取投递记录ID
+    Long applicationId = this.getBaseMapper().getApplicationIdByConversationId(conversation.getId());
+    dto.setApplicationId(applicationId);
 
     return dto;
   }
