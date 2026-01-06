@@ -287,6 +287,193 @@
       "学习日志分析和故障排查方法",
       "实践：搭建完整的监控告警系统"
     ]
+  },
+  "机器学习": {
+    "brief": {
+      "required": "构建智能系统的基础能力，算法岗核心要求",
+      "optional": "掌握ML可以在业务中挖掘数据价值"
+    },
+    "importance": {
+      "required": "多数AI岗位都要求掌握常见机器学习算法和建模流程。",
+      "optional": "即便不是算法岗，懂ML也能和算法同学更好协作。"
+    },
+    "estimatedTime": "6-8周",
+    "learningTips": [
+      "熟悉监督学习、无监督学习等基本概念",
+      "掌握常见算法：线性回归、逻辑回归、树模型等",
+      "理解训练/验证/测试集划分和过拟合问题",
+      "实践：用真实数据完成一个简单分类/回归项目"
+    ]
+  },
+  "深度学习": {
+    "brief": {
+      "required": "图像、语音、NLP 等场景的主流技术路线",
+      "optional": "掌握DL可以参与更前沿的AI项目"
+    },
+    "importance": {
+      "required": "卷积网络、循环网络、Transformer 等是现代AI的核心基础。",
+      "optional": "掌握基本网络结构有助于理解各类开源模型的原理。"
+    },
+    "estimatedTime": "6-10周",
+    "learningTips": [
+      "理解神经元、激活函数、损失函数等基础概念",
+      "学习常见网络结构：MLP、CNN、RNN等",
+      "掌握反向传播和梯度下降的基本思想",
+      "实践：使用框架完成图像分类或文本分类任务"
+    ]
+  },
+  "Transformer": {
+    "brief": {
+      "required": "NLP 与大模型时代的核心架构",
+      "optional": "掌握Transformer有利于理解各类预训练大模型"
+    },
+    "importance": {
+      "required": "大多数主流LLM和NLP模型都基于Transformer结构。",
+      "optional": "理解自注意力机制有助于合理使用和微调预训练模型。"
+    },
+    "estimatedTime": "3-4周",
+    "learningTips": [
+      "学习自注意力机制和多头注意力的基本原理",
+      "理解编码器-解码器结构与仅解码器结构的区别",
+      "结合论文或可视化工具理解各层的作用",
+      "实践：基于现成实现跑通一个小型Transformer模型"
+    ]
+  },
+  "PyTorch": {
+    "brief": {
+      "required": "主流深度学习框架之一，研究与工业并重",
+      "optional": "掌握PyTorch方便使用大量开源模型"
+    },
+    "importance": {
+      "required": "众多论文与开源项目以PyTorch实现，是算法岗的常用工具。",
+      "optional": "PyTorch动态图机制有利于快速实验和调试。"
+    },
+    "estimatedTime": "3-4周",
+    "learningTips": [
+      "掌握Tensor、自动求导和基本算子",
+      "学习构建网络、定义损失函数与优化器",
+      "熟悉DataLoader和常见数据增强方式",
+      "实践：用PyTorch重现一个经典模型"
+    ]
+  },
+  "TensorFlow": {
+    "brief": {
+      "required": "成熟的深度学习框架，工业界应用广泛",
+      "optional": "掌握TF有利于部署到多种生产环境"
+    },
+    "importance": {
+      "required": "很多企业内部平台基于TensorFlow和Keras搭建。",
+      "optional": "了解TF生态有助于模型训练、服务化和跨平台部署。"
+    },
+    "estimatedTime": "3-4周",
+    "learningTips": [
+      "熟悉Keras高层API构建模型",
+      "掌握模型训练、保存和加载流程",
+      "了解TF Serving / TF Lite 等部署方案",
+      "实践：将一个训练好的模型部署为在线服务"
+    ]
+  },
+  "Numpy&Pandas": {
+    "brief": {
+      "required": "Python 数据分析与科学计算基础库",
+      "optional": "掌握后能大幅提升数据处理效率"
+    },
+    "importance": {
+      "required": "几乎所有ML/DL项目都依赖Numpy和Pandas做数据预处理。",
+      "optional": "写业务代码时也能快速做数据统计与分析。"
+    },
+    "estimatedTime": "2-3周",
+    "learningTips": [
+      "掌握Numpy数组操作和广播机制",
+      "熟悉Pandas的Series、DataFrame基本用法",
+      "学习常见统计、分组与透视操作",
+      "实践：对一份业务数据完成清洗和分析"
+    ]
+  },
+  "LLM应用开发": {
+    "brief": {
+      "required": "基于大模型构建智能应用的新方向",
+      "optional": "掌握LLM应用开发能快速做AI原型"
+    },
+    "importance": {
+      "required": "越来越多产品基于LLM实现智能问答、助理和自动化。",
+      "optional": "理解RAG、工具调用等模式，有助于结合业务打造AI功能。"
+    },
+    "estimatedTime": "3-5周",
+    "learningTips": [
+      "了解主流大模型能力与局限",
+      "学习RAG、Agent等常见应用模式",
+      "熟悉向量数据库基本概念与使用场景",
+      "实践：开发一个面向具体业务场景的LLM助手"
+    ]
+  },
+  "Prompt Engineering": {
+    "brief": {
+      "required": "提升大模型效果的关键技巧",
+      "optional": "掌握后能显著提高LLM在业务中的表现"
+    },
+    "importance": {
+      "required": "好的Prompt可以减少模型错误、提高稳定性。",
+      "optional": "在没有微调条件时，Prompt是最经济的优化手段。"
+    },
+    "estimatedTime": "1-2周",
+    "learningTips": [
+      "学习分步思考、角色设定等常见Prompt模板",
+      "针对具体任务不断迭代提示词并对比效果",
+      "总结高质量示例作为可复用模板",
+      "实践：为多个不同任务分别设计Prompt方案"
+    ]
+  },
+  "FastAPI": {
+    "brief": {
+      "required": "现代Python Web框架，适合快速构建API服务",
+      "optional": "掌握FastAPI能高效开发高性能接口"
+    },
+    "importance": {
+      "required": "在Python后端与AI服务封装场景中非常常见。",
+      "optional": "类型提示友好，易与Pydantic等工具集成。"
+    },
+    "estimatedTime": "1-2周",
+    "learningTips": [
+      "学习路由、依赖注入和请求/响应模型",
+      "掌握数据校验与自动文档生成",
+      "了解异步支持与性能优势",
+      "实践：封装一个模型推理或业务API服务"
+    ]
+  },
+  "Django": {
+    "brief": {
+      "required": "Python 经典全栈Web框架",
+      "optional": "适合快速搭建后台管理与业务系统"
+    },
+    "importance": {
+      "required": "很多Python项目采用Django完成完整Web后端。",
+      "optional": "内置ORM、Admin等组件，开发效率高。"
+    },
+    "estimatedTime": "3-4周",
+    "learningTips": [
+      "了解项目结构、应用和配置",
+      "掌握ORM和常见查询用法",
+      "熟悉视图、路由和模板系统",
+      "实践：搭建一个简单的后台管理系统"
+    ]
+  },
+  "Flask": {
+    "brief": {
+      "required": "轻量级Python Web框架",
+      "optional": "适合小型服务和原型验证"
+    },
+    "importance": {
+      "required": "在模型服务封装、小工具接口中应用广泛。",
+      "optional": "生态丰富，容易按需组合扩展组件。"
+    },
+    "estimatedTime": "1-2周",
+    "learningTips": [
+      "掌握路由、请求处理和模板渲染",
+      "了解常见扩展（数据库、登录等）",
+      "学习蓝图与配置管理",
+      "实践：实现一个REST风格的小型服务"
+    ]
   }
 }
 

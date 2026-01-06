@@ -9,7 +9,7 @@ export interface UpdateCompanyInfoParams {
   industry: string;
   website: string;
   logoUrl: string;
-  mainBusiness: string;
+  // mainBusiness: string;
   benefits: string;
   status: number;
   companyCreatedAt: string;

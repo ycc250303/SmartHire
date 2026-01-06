@@ -76,7 +76,7 @@
 
       <view class="company-section" v-if="job.company">
         <text class="section-title">{{ t('pages.jobs.jobDetail.company') }}</text>
-        <view class="company-card">
+        <view class="company-card" @click="goToCompanyDetail">
           <image v-if="job.company.companyLogo" :src="job.company.companyLogo" class="company-logo" mode="aspectFit" />
           <view class="company-info">
             <text class="company-name">{{ job.company.companyName }}</text>
@@ -445,6 +445,15 @@ async function handleApply() {
   } finally {
     applying.value = false;
   }
+}
+
+function goToCompanyDetail() {
+  if (!job.value?.company || !jobId.value) return;
+
+  const url = `/pages/seeker/jobs/company-detail?jobId=${jobId.value}`;
+  uni.navigateTo({
+    url,
+  });
 }
 </script>
 

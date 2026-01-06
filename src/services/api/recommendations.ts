@@ -397,7 +397,7 @@ export function getCareerPlanningAnalysis(jobId: number, forceRefresh?: boolean)
   return http<CareerPlanningAnalysisResponse>({
     url,
     method: 'POST',
-    timeout: 30000,
+    timeout: 90000,
   }).then(response => {
     console.log('[Response]', url, response);
     return response;

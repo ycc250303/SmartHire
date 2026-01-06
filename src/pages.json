@@ -28,6 +28,14 @@
       }
     },
     {
+      "path": "pages/seeker/jobs/company-detail",
+      "style": {
+        "navigationBarTitleText": "公司详情",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
       "path": "pages/seeker/jobs/career-planning",
       "style": {
         "navigationBarTitleText": "职业路径规划",

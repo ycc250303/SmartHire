@@ -82,7 +82,7 @@ export interface JobDetailCompany {
   financingStage?: number;
   industry?: string;
   description?: string;
-  mainBusiness?: string;
+  // mainBusiness?: string;
   website?: string;
 }
 
@@ -186,7 +186,7 @@ export function getApplications(params?: GetApplicationsParams): Promise<Applica
     .map(key => `${key}=${encodeURIComponent(queryParams[key])}`)
     .join('&');
   
-  const url = `/api/recruitment/seeker/applications${queryString ? `?${queryString}` : ''}`;
+  const url = `/api/recruitment/seeker/job-list${queryString ? `?${queryString}` : ''}`;
   console.log('[Params]', url, params);
   return http<ApplicationListResponse>({
     url,

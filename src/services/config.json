@@ -63,7 +63,7 @@
     "/api/hr/matching/job/*": "prod",
     "/api/recruitment/seeker/submit-resume": "prod",
     "/api/recruitment/seeker/job-position/*": "prod",
-    "/api/recruitment/seeker/applications": "prod",
+    "/api/recruitment/seeker/job-list": "prod",
     "/api/recruitment/hr/seeker-card": "prod",
     "/api/recruitment/hr/recommend": "prod",
     "/api/recruitment/hr/interviews": "prod",

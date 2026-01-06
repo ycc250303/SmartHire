@@ -327,6 +327,8 @@ async function handleDownload(resume: Resume) {
   downloading.value = resume.id;
 
   try {
+    const token = uni.getStorageSync('auth_token');
+
     // #ifdef H5
     const link = document.createElement('a');
     link.href = resume.fileUrl;
@@ -350,6 +352,9 @@ async function handleDownload(resume: Resume) {
 
     uni.downloadFile({
       url: resume.fileUrl,
+      header: {
+        Authorization: token ? `Bearer ${token}` : '',
+      },
       success: (res) => {
         if (res.statusCode === 200) {
           const filePath = res.tempFilePath;
