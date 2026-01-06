@@ -8,7 +8,8 @@ import lombok.Data;
 
 @Data
 public class SeekerJobPositionDTO implements Serializable {
-  @Serial private static final long serialVersionUID = 1L;
+  @Serial
+  private static final long serialVersionUID = 1L;
 
   private Long jobId;
   private String jobTitle;
@@ -43,7 +44,6 @@ public class SeekerJobPositionDTO implements Serializable {
     private Integer financingStage;
     private String industry;
     private String description;
-    private String mainBusiness;
     private String website;
   }
 
@@ -64,5 +64,3 @@ public class SeekerJobPositionDTO implements Serializable {
     private Long conversationId;
   }
 }
-
-
