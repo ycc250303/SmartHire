@@ -324,7 +324,6 @@ public class SeekerApplicationServiceImpl extends ServiceImpl<ApplicationMapper,
             c.setFinancingStage(company.getFinancingStage());
             c.setIndustry(company.getIndustry());
             c.setDescription(company.getDescription());
-            c.setMainBusiness(company.getMainBusiness());
             c.setWebsite(company.getWebsite());
             resp.setCompany(c);
         }
