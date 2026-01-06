@@ -36,8 +36,8 @@ public class HrInfo implements Serializable {
   /** 工作电话 */
   private String workPhone;
 
-  /** HR 类型：0-普通HR 1-老板 */
-  private Integer hrType;
+  /** 是否公司管理员：0-否 1-是 */
+  private Integer isCompanyAdmin;
 
   /** 创建时间 */
   private Date createdAt;

@@ -121,6 +121,21 @@ public enum ErrorCode {
     }
 
     /**
+     * 根据错误码获取枚举
+     *
+     * @param code 错误码
+     * @return 错误码枚举，找不到返回 SYSTEM_ERROR
+     */
+    public static ErrorCode fromCode(Integer code) {
+        for (ErrorCode errorCode : ErrorCode.values()) {
+            if (errorCode.getCode().equals(code)) {
+                return errorCode;
+            }
+        }
+        return SYSTEM_ERROR;
+    }
+
+    /**
      * 获取错误码
      *
      * @return 错误码

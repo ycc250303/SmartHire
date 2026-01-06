@@ -30,7 +30,7 @@ public class HrInfoDTO implements Serializable {
     /** 工作电话 */
     private String workPhone;
 
-    /** 是否为公司管理员：0-否 1-是 */
+    /** HR 类型：0-普通HR 1-老板 */
     private Integer isCompanyAdmin;
 
     /** 创建时间 */

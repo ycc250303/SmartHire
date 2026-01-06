@@ -4,6 +4,7 @@ import com.SmartHire.common.auth.RequireUserType;
 import com.SmartHire.common.entity.Result;
 import com.SmartHire.common.auth.UserType;
 import com.SmartHire.hrService.dto.HrInfoDTO;
+import com.SmartHire.hrService.dto.CompanyCreateDTO;
 import com.SmartHire.hrService.model.Company;
 import com.SmartHire.hrService.service.CompanyAdminService;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -26,13 +27,21 @@ import org.springframework.web.bind.annotation.*;
 @RequireUserType(UserType.HR) // 要求HR身份，Service层会验证是否为公司管理员
 public class CompanyAdminController {
 
-  @Autowired private CompanyAdminService companyAdminService;
+  @Autowired
+  private CompanyAdminService companyAdminService;
+
+  @PostMapping("/company")
+  @Operation(summary = "创建公司", description = "创建新公司，并等待管理员审核")
+  public Result<?> createCompany(@Valid @RequestBody CompanyCreateDTO createDTO) {
+    companyAdminService.createCompany(createDTO);
+    return Result.success("公司创建成功");
+  }
 
   /**
    * 修改公司信息
    *
    * @param companyId 公司ID
-   * @param company 公司信息
+   * @param company   公司信息
    * @return 操作结果
    */
   @PutMapping("/{companyId}/info")
@@ -47,7 +56,7 @@ public class CompanyAdminController {
    * 获取本公司HR列表
    *
    * @param current 当前页
-   * @param size 每页大小
+   * @param size    每页大小
    * @param keyword 搜索关键词（可选）
    * @return HR列表
    */
@@ -78,7 +87,7 @@ public class CompanyAdminController {
   /**
    * 审核拒绝HR
    *
-   * @param hrId HR ID
+   * @param hrId         HR ID
    * @param rejectReason 拒绝原因
    * @return 操作结果
    */
@@ -94,8 +103,8 @@ public class CompanyAdminController {
    * 获取本公司待审核岗位列表
    *
    * @param current 当前页
-   * @param size 每页大小
-   * @param status 审核状态（可选）
+   * @param size    每页大小
+   * @param status  审核状态（可选）
    * @param keyword 搜索关键词（可选）
    * @return 岗位审核列表
    */
@@ -107,8 +116,8 @@ public class CompanyAdminController {
       @RequestParam(required = false) String status,
       @RequestParam(required = false) String keyword) {
     Page<com.SmartHire.adminService.dto.JobAuditListDTO> page = new Page<>(current, size);
-    Page<com.SmartHire.adminService.dto.JobAuditListDTO> result =
-        companyAdminService.getCompanyJobAuditList(page, status, keyword);
+    Page<com.SmartHire.adminService.dto.JobAuditListDTO> result = companyAdminService.getCompanyJobAuditList(page,
+        status, keyword);
     return Result.success("查询成功", result);
   }
 
@@ -128,7 +137,7 @@ public class CompanyAdminController {
   /**
    * 审核拒绝岗位（公司审核）
    *
-   * @param jobId 岗位ID
+   * @param jobId        岗位ID
    * @param rejectReason 拒绝原因
    * @return 操作结果
    */
@@ -143,7 +152,7 @@ public class CompanyAdminController {
   /**
    * 要求修改岗位（公司审核）
    *
-   * @param jobId 岗位ID
+   * @param jobId        岗位ID
    * @param modifyReason 修改意见
    * @return 操作结果
    */
@@ -155,4 +164,3 @@ public class CompanyAdminController {
     return Result.success("已要求修改岗位");
   }
 }
-
