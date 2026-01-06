@@ -60,4 +60,10 @@ public class Company implements Serializable {
 
   /** 注册资本 */
   private String registeredCapital;
+
+  /** 审核状态 */
+  private String auditStatus;
+
+  /** 审核时间 */
+  private Date auditedAt;
 }

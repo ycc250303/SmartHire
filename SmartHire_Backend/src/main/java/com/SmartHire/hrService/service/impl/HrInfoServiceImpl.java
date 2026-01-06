@@ -96,12 +96,17 @@ public class HrInfoServiceImpl extends ServiceImpl<HrInfoMapper, HrInfo> impleme
     hrInfo.setRealName(createDTO.getRealName());
     hrInfo.setPosition(createDTO.getPosition());
     hrInfo.setWorkPhone(createDTO.getWorkPhone());
+    hrInfo.setIsCompanyAdmin(createDTO.getIsCompanyAdmin());
 
     Date now = new Date();
     hrInfo.setCreatedAt(now);
     hrInfo.setUpdatedAt(now);
 
     save(hrInfo);
+
+   
+
+    // TODO：HR审核和公司审核
 
     // 创建HR审核记录（状态为待审核）
     HrAuditRecord auditRecord = new HrAuditRecord();

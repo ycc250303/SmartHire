@@ -49,5 +49,5 @@ public class HrInfoCreateDTO implements Serializable {
     @NotNull(message = "HR类型不能为空")
     @Min(value = 0, message = "HR类型值不正确")
     @Max(value = 1, message = "HR类型值不正确")
-    private Integer hrType;
+    private Integer isCompanyAdmin;
 }
