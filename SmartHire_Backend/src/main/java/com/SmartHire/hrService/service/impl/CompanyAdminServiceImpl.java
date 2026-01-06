@@ -32,17 +32,23 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class CompanyAdminServiceImpl implements CompanyAdminService {
 
-  @Autowired private UserContext userContext;
+  @Autowired
+  private UserContext userContext;
 
-  @Autowired private HrInfoMapper hrInfoMapper;
+  @Autowired
+  private HrInfoMapper hrInfoMapper;
 
-  @Autowired private CompanyMapper companyMapper;
+  @Autowired
+  private CompanyMapper companyMapper;
 
-  @Autowired private HrAuditMapper hrAuditMapper;
+  @Autowired
+  private HrAuditMapper hrAuditMapper;
 
-  @Autowired private JobInfoMapper jobInfoMapper;
+  @Autowired
+  private JobInfoMapper jobInfoMapper;
 
-  @Autowired private JobAuditMapper jobAuditMapper;
+  @Autowired
+  private JobAuditMapper jobAuditMapper;
 
   /**
    * 获取当前登录HR信息并验证是否为公司管理员
@@ -51,15 +57,14 @@ public class CompanyAdminServiceImpl implements CompanyAdminService {
    */
   private HrInfo getCurrentHrInfoAndValidateAdmin() {
     Long userId = userContext.getCurrentUserId();
-    HrInfo hrInfo =
-        hrInfoMapper.selectOne(
-            new LambdaQueryWrapper<HrInfo>().eq(HrInfo::getUserId, userId));
+    HrInfo hrInfo = hrInfoMapper.selectOne(
+        new LambdaQueryWrapper<HrInfo>().eq(HrInfo::getUserId, userId));
 
     if (hrInfo == null) {
       throw new BusinessException(ErrorCode.HR_NOT_EXIST);
     }
 
-    if (!hrInfo.isCompanyAdmin()) {
+    if (hrInfo.getHrType() != 1) {
       throw new BusinessException(ErrorCode.PERMISSION_DENIED, "只有公司管理员才能执行此操作");
     }
 
@@ -105,12 +110,11 @@ public class CompanyAdminServiceImpl implements CompanyAdminService {
 
     if (keyword != null && !keyword.trim().isEmpty()) {
       wrapper.and(
-          w ->
-              w.like(HrInfo::getRealName, keyword)
-                  .or()
-                  .like(HrInfo::getPosition, keyword)
-                  .or()
-                  .like(HrInfo::getWorkPhone, keyword));
+          w -> w.like(HrInfo::getRealName, keyword)
+              .or()
+              .like(HrInfo::getPosition, keyword)
+              .or()
+              .like(HrInfo::getWorkPhone, keyword));
     }
 
     Page<HrInfo> hrPage = new Page<>(page.getCurrent(), page.getSize());
@@ -354,4 +358,3 @@ public class CompanyAdminServiceImpl implements CompanyAdminService {
     jobInfoMapper.updateById(jobInfo);
   }
 }
-
