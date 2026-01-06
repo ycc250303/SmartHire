@@ -160,10 +160,10 @@ export function updateJobPosition(jobId: number, payload: JobPositionUpdatePaylo
  * @returns List of job positions
  */
 export function getJobPositionList(status?: number): Promise<JobPosition[]> {
+  const query = typeof status === 'number' ? `?status=${encodeURIComponent(status)}` : '';
   return http<JobPosition[]>({
-    url: "/api/hr/job-position",
-    method: "GET",
-    data: typeof status === "number" ? { status } : undefined,
+    url: `/api/hr/job-position${query}`,
+    method: 'GET',
   });
 }
 
@@ -410,11 +410,24 @@ export interface ApplicationQueryParams {
  * @returns List of applications
  */
 export function getApplications(params?: ApplicationQueryParams): Promise<ApplicationItem[]> {
+  const primaryUrl = '/api/hr/application';
   return http<PageResult<ApplicationItem>>({
-    url: "/api/hr/application",
-    method: "GET",
+    url: primaryUrl,
+    method: 'GET',
     data: params,
-  }).then((page) => page?.records ?? []);
+  })
+    .then((page) => page?.records ?? [])
+    .catch(async (err) => {
+      const message = err instanceof Error ? err.message : String(err);
+      if (!message.includes('接口不存在') && !message.includes('Not Found')) {
+        throw err;
+      }
+      return http<PageResult<ApplicationItem>>({
+        url: '/api/recruitment/hr/application',
+        method: 'GET',
+        data: params,
+      }).then((page) => page?.records ?? []);
+    });
 }
 
 /**
@@ -422,9 +435,20 @@ export function getApplications(params?: ApplicationQueryParams): Promise<Applic
  * @returns Application detail data
  */
 export function getApplicationDetail(applicationId: number): Promise<ApplicationItem> {
+  const primaryUrl = `/api/hr/application/${applicationId}`;
   return http<ApplicationItem>({
-    url: `/api/hr/application/${applicationId}`,
-    method: "GET",
+    url: primaryUrl,
+    method: 'GET',
+  }).catch(async (err) => {
+    const message = err instanceof Error ? err.message : String(err);
+    if (!message.includes('接口不存在') && !message.includes('Not Found')) {
+      throw err;
+    }
+    // Older deployments expose application detail under recruitment service.
+    return http<ApplicationItem>({
+      url: `/api/recruitment/hr/${applicationId}`,
+      method: 'GET',
+    });
   });
 }
 

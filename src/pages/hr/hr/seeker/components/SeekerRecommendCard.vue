@@ -1,26 +1,33 @@
 <template>
-  <view class="seeker-card" @click="emit('click', seeker)">
+  <view class="candidate-card" @click="emit('click', seeker)">
     <view class="card-header">
-      <view class="name-wrap">
-        <text class="name">{{ seeker.username || '求职者' }}</text>
-        <view class="status-pill">{{ jobStatusText(seeker.jobStatus) }}</view>
-      </view>
-      <view class="right-meta">
-        <text class="age">{{ ageText(seeker.age) }}</text>
-        <text class="city">{{ seeker.city || '城市未知' }}</text>
-      </view>
-    </view>
+      <view class="left">
+        <view class="avatar-wrap">
+          <image v-if="seeker.avatarUrl" class="avatar" :src="seeker.avatarUrl" mode="aspectFill" />
+          <view v-else class="avatar-fallback">
+            <text class="avatar-initial">{{ initial }}</text>
+          </view>
+        </view>
 
-    <view class="meta-line">
-      <text class="meta">{{ seeker.highestEducation || '学历未知' }}</text>
-      <text class="dot">·</text>
-      <text class="meta">{{ seeker.major || '专业未知' }}</text>
-      <text class="dot">·</text>
-      <text class="meta">{{ seeker.graduationYear || '毕业时间未知' }}</text>
+        <view class="title-wrap">
+          <view class="name-row">
+            <text class="name">{{ seeker.username || '求职者' }}</text>
+            <view class="status-pill">
+              <text class="status-text">{{ jobStatusText(seeker.jobStatus) }}</text>
+            </view>
+          </view>
+          <text class="sub">{{ metaLine }}</text>
+        </view>
+      </view>
+
+      <view class="right">
+        <text class="age">{{ ageText(seeker.age) }}</text>
+      </view>
     </view>
 
     <view class="tags">
       <view class="tag tag-exp">{{ experienceText(seeker.workExperienceYear) }}</view>
+      <view class="tag tag-degree" v-if="seeker.highestEducation">{{ seeker.highestEducation }}</view>
       <view class="tag tag-intern" v-if="seeker.internshipExperience">有实习</view>
       <view class="tag tag-univ" v-if="seeker.university">{{ seeker.university }}</view>
     </view>
@@ -28,17 +35,28 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import type { PublicSeekerCard } from '@/services/api/hr';
 
 interface Props {
   seeker: PublicSeekerCard;
 }
 
-defineProps<Props>();
+const props = defineProps<Props>();
 
 const emit = defineEmits<{
   click: [seeker: PublicSeekerCard];
 }>();
+
+const initial = computed(() => (props.seeker.username?.trim()?.[0] || 'S').toUpperCase());
+
+const metaLine = computed(() => {
+  const parts: string[] = [];
+  if (props.seeker.city) parts.push(props.seeker.city);
+  if (props.seeker.major) parts.push(props.seeker.major);
+  if (props.seeker.graduationYear) parts.push(props.seeker.graduationYear);
+  return parts.length ? parts.join(' · ') : '信息待完善';
+});
 
 const jobStatusText = (status?: number) => {
   const map: Record<number, string> = {
@@ -66,32 +84,78 @@ const ageText = (age?: number) => {
 <style lang="scss" scoped>
 @use "@/styles/variables.scss" as vars;
 
-.seeker-card {
+.candidate-card {
   background-color: vars.$surface-color;
   border-radius: vars.$border-radius;
   padding: vars.$spacing-lg;
   margin-bottom: vars.$spacing-md;
   box-shadow: 0 12rpx 32rpx rgba(31, 55, 118, 0.08);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .card-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: vars.$spacing-sm;
   gap: vars.$spacing-md;
+  margin-bottom: vars.$spacing-md;
 }
 
-.name-wrap {
+.left {
+  display: flex;
+  gap: vars.$spacing-md;
+  min-width: 0;
+  flex: 1;
+}
+
+.avatar-wrap {
+  width: 84rpx;
+  height: 84rpx;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #eef2ff;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar {
+  width: 84rpx;
+  height: 84rpx;
+  border-radius: 50%;
+  display: block;
+}
+
+.avatar-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-initial {
+  font-size: 34rpx;
+  font-weight: 800;
+  color: vars.$primary-color;
+}
+
+.title-wrap {
+  flex: 1;
+  min-width: 0;
+}
+
+.name-row {
   display: flex;
   align-items: center;
   gap: vars.$spacing-sm;
-  min-width: 0;
 }
 
 .name {
   font-size: 36rpx;
-  font-weight: 700;
+  font-weight: 800;
   color: vars.$text-color;
   max-width: 360rpx;
   overflow: hidden;
@@ -100,44 +164,41 @@ const ageText = (age?: number) => {
 }
 
 .status-pill {
-  font-size: 22rpx;
   padding: 6rpx 14rpx;
   border-radius: 999rpx;
   background: rgba(75, 163, 255, 0.14);
-  color: vars.$primary-color;
   flex-shrink: 0;
 }
 
-.right-meta {
+.status-text {
+  font-size: 22rpx;
+  color: vars.$primary-color;
+  font-weight: 700;
+}
+
+.sub {
+  display: block;
+  margin-top: 10rpx;
+  font-size: 24rpx;
+  color: vars.$text-muted;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.right {
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 6rpx;
-  flex-shrink: 0;
 }
 
 .age {
-  font-size: 26rpx;
-  font-weight: 600;
+  font-size: 30rpx;
+  font-weight: 900;
   color: vars.$text-color;
   line-height: 1.1;
-}
-
-.city {
-  font-size: 22rpx;
-  color: vars.$text-muted;
-}
-
-.meta-line {
-  font-size: 24rpx;
-  color: vars.$text-muted;
-  line-height: 1.5;
-  margin-bottom: vars.$spacing-md;
-}
-
-.dot {
-  margin: 0 10rpx;
-  opacity: 0.6;
+  margin-top: 6rpx;
 }
 
 .tags {
@@ -157,14 +218,18 @@ const ageText = (age?: number) => {
   color: #1976d2;
 }
 
+.tag-degree {
+  background-color: #f5f5f5;
+  color: vars.$text-color;
+}
+
 .tag-intern {
   background-color: #fff3e0;
   color: #f57c00;
 }
 
 .tag-univ {
-  background-color: #f5f5f5;
-  color: vars.$text-color;
+  background-color: rgba(75, 163, 255, 0.14);
+  color: vars.$primary-color;
 }
 </style>
-

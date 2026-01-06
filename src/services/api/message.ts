@@ -214,6 +214,9 @@ export function sendMedia(params: SendMediaParams): Promise<Message> {
       messageType: params.messageType,
     });
 
+    // Some deployments expect dto as query param instead of form field name.
+    const fullUrlWithDto = `${fullUrl}?dto=${encodeURIComponent(payload)}`;
+
     // #ifdef H5
     if (params.filePath.startsWith('data:') || params.filePath.startsWith('blob:')) {
       fetch(params.filePath)
@@ -223,9 +226,10 @@ export function sendMedia(params: SendMediaParams): Promise<Message> {
           const fileName = params.filePath.includes('image') ? 'image.png' : 'file';
           formData.append('file', blob, fileName);
           formData.append('payload', payload);
+          formData.append('dto', payload);
           
           const xhr = new XMLHttpRequest();
-          xhr.open('POST', fullUrl, true);
+          xhr.open('POST', fullUrlWithDto, true);
           xhr.setRequestHeader('Authorization', token ? `Bearer ${token}` : '');
           
           xhr.onload = () => {
@@ -237,22 +241,22 @@ export function sendMedia(params: SendMediaParams): Promise<Message> {
                 data = xhr.responseText;
               }
               
-              if (xhr.status >= 200 && xhr.status < 300) {
-                if (data && data.code === 0) {
-                  console.log('[Response]', fullUrl, data.data);
-                  resolve(data.data);
-                } else if (data && !data.code) {
-                  console.log('[Response]', fullUrl, data);
-                  resolve(data);
-                } else {
-                  reject(new Error(data?.message || 'Send failed'));
-                }
+            if (xhr.status >= 200 && xhr.status < 300) {
+              if (data && data.code === 0) {
+                console.log('[Response]', fullUrl, data.data);
+                resolve(data.data);
+              } else if (data && !data.code) {
+                console.log('[Response]', fullUrl, data);
+                resolve(data);
               } else {
-                reject(new Error(`Request failed with status ${xhr.status}`));
+                reject(new Error(data?.message || 'Send failed'));
               }
-            } catch (error) {
-              reject(new Error('Failed to parse response: ' + (error instanceof Error ? error.message : String(error))));
+            } else {
+              reject(new Error(`Request failed with status ${xhr.status}`));
             }
+          } catch (error) {
+            reject(new Error('Failed to parse response: ' + (error instanceof Error ? error.message : String(error))));
+          }
           };
           
           xhr.onerror = () => {
@@ -266,11 +270,12 @@ export function sendMedia(params: SendMediaParams): Promise<Message> {
         });
     } else {
       uni.uploadFile({
-        url: fullUrl,
+        url: fullUrlWithDto,
         filePath: params.filePath,
         name: 'file',
         formData: {
           payload: payload,
+          dto: payload,
         },
         header: {
           'Authorization': token ? `Bearer ${token}` : '',
@@ -310,11 +315,12 @@ export function sendMedia(params: SendMediaParams): Promise<Message> {
     
     // #ifndef H5
     uni.uploadFile({
-      url: fullUrl,
+      url: fullUrlWithDto,
       filePath: params.filePath,
       name: 'file',
       formData: {
         payload: payload,
+        dto: payload,
       },
       header: {
         'Authorization': token ? `Bearer ${token}` : '',

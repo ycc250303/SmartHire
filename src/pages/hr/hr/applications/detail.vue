@@ -33,6 +33,7 @@
 
     <view class="card actions">
       <button class="primary" @click="goChat">Message Candidate</button>
+      <button class="outline" @click="goAi">AI Candidate Assistant</button>
     </view>
 
     <view class="loading" v-if="loading">Loading..</view>
@@ -116,6 +117,18 @@ const goChat = async () => {
     console.error('Failed to find conversation:', err);
     uni.switchTab({ url: '/pages/hr/hr/messages/index' });
   }
+};
+
+const goAi = () => {
+  if (!detail.value?.jobSeekerId || !detail.value?.jobId) {
+    uni.showToast({ title: 'Missing job/candidate', icon: 'none' });
+    return;
+  }
+  uni.navigateTo({
+    url: `/pages/hr/hr/ai/candidate-ai?jobSeekerId=${detail.value.jobSeekerId}&jobId=${detail.value.jobId}&candidateName=${encodeURIComponent(
+      detail.value.jobSeekerName || ''
+    )}&jobTitle=${encodeURIComponent(detail.value.jobTitle || '')}`,
+  });
 };
 
 const formatTime = (time?: string) => (time ? dayjs(time).format('YYYY-MM-DD HH:mm') : '--');
@@ -236,6 +249,16 @@ if (params?.applicationId) {
   background: #2f7cff;
   color: #fff;
   border: none;
+}
+
+.actions .outline {
+  width: 100%;
+  height: 84rpx;
+  border-radius: 18rpx;
+  margin-top: 14rpx;
+  border: 2rpx solid #2f7cff;
+  color: #2f7cff;
+  background: transparent;
 }
 
 .loading {

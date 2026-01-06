@@ -7,48 +7,19 @@
           <image :src="avatarImg" mode="aspectFill" />
         </view>
       </view>
-      <view class="hero-sub">欢迎回来，查看今天的待办</view>
+      <view class="hero-sub">欢迎回来，开始筛选候选人</view>
     </view>
 
-    <view class="card todo-card">
-      <view class="section-title">今日待办</view>
-      <view class="todo-list">
-        <view
-          class="todo-item"
-          v-for="todo in todos"
-          :key="todo.id"
-          @click="handleTodoClick(todo.route)"
-        >
-          <view>
-            <view class="todo-title">{{ todo.title }}</view>
-            <view class="todo-desc">{{ todo.desc }}</view>
-          </view>
-          <view class="todo-count">{{ todo.count }}</view>
-        </view>
-      </view>
-    </view>
-
-    <view class="card stats-card">
-      <view class="section-title">招聘进展概览</view>
-      <view class="stats-grid">
-        <view class="stat-item" v-for="stat in stats" :key="stat.id">
-          <text class="stat-label">{{ stat.label }}</text>
-          <text class="stat-value">{{ stat.value }}{{ stat.unit }}</text>
-          <text class="stat-trend" :class="stat.trend">{{ trendText(stat.trend) }}</text>
-        </view>
-      </view>
-    </view>
-
-    <view class="card recommend-card">
+    <view class="recommend-section">
       <view class="recommend-header">
         <view class="section-title">推荐求职者</view>
         <view class="action-link" @click="refreshSeekerCards">刷新</view>
       </view>
 
-      <view v-if="seekerLoading" class="hint">加载中...</view>
-      <view v-else-if="seekerError" class="hint">{{ seekerError }}</view>
+      <view v-if="seekerLoading" class="state">加载中...</view>
+      <view v-else-if="seekerError" class="state">{{ seekerError }}</view>
       <view v-else class="seeker-list">
-        <view v-if="seekerCards.length === 0" class="hint">暂无推荐</view>
+        <view v-if="seekerCards.length === 0" class="state">暂无推荐</view>
         <SeekerRecommendCard
           v-for="card in seekerCards"
           :key="card.userId ?? card.id ?? card.username"
@@ -65,25 +36,14 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
-import { fetchDashboardData, type DashboardTodoItem, type RecruitStatistic } from '@/mock/hr';
 import avatarImg from '@/static/user-avatar.png';
 import CustomTabBar from '@/components/common/CustomTabBar.vue';
 import { getPublicSeekerCards, type PublicSeekerCard } from '@/services/api/hr';
 import SeekerRecommendCard from '@/pages/hr/hr/seeker/components/SeekerRecommendCard.vue';
 
-const todos = ref<DashboardTodoItem[]>([]);
-const stats = ref<RecruitStatistic[]>([]);
-
 const seekerCards = ref<PublicSeekerCard[]>([]);
 const seekerLoading = ref(false);
 const seekerError = ref('');
-
-const loadDashboard = async () => {
-  // TODO: 替换为真实接口 GET /api/hr/dashboard
-  const data = await fetchDashboardData();
-  todos.value = data.todos;
-  stats.value = data.stats;
-};
 
 const refreshSeekerCards = async () => {
   seekerLoading.value = true;
@@ -103,35 +63,6 @@ const goProfile = () => {
   uni.navigateTo({ url: '/pages/hr/hr/profile/index' });
 };
 
-const parseQuery = (queryString?: string) => {
-  if (!queryString) return {} as Record<string, string>;
-  return queryString.split('&').reduce((acc, pair) => {
-    const [key, value] = pair.split('=');
-    if (key) {
-      acc[key] = decodeURIComponent(value || '');
-    }
-    return acc;
-  }, {} as Record<string, string>);
-};
-
-const handleTodoClick = (route?: string) => {
-  if (!route) return;
-  const [path, query] = route.split('?');
-  if (path === '/pages/hr/hr/messages/index') {
-    const params = parseQuery(query);
-    if (params.tab) {
-      uni.setStorageSync('hr_messages_tab', params.tab);
-    }
-    uni.switchTab({ url: path });
-    return;
-  }
-  if (path === '/pages/hr/hr/home/index' || path === '/pages/hr/hr/jobs/index') {
-    uni.switchTab({ url: path });
-    return;
-  }
-  uni.navigateTo({ url: route });
-};
-
 const openSeekerDetail = (card: PublicSeekerCard) => {
   const userId = (card.userId ?? card.id) as number | undefined;
   if (!userId || Number.isNaN(Number(userId))) {
@@ -143,21 +74,7 @@ const openSeekerDetail = (card: PublicSeekerCard) => {
   });
 };
 
-
-
-const trendText = (trend: RecruitStatistic['trend']) => {
-  switch (trend) {
-    case 'up':
-      return '较上周 ↑';
-    case 'down':
-      return '较上周 ↓';
-    default:
-      return '持平';
-  }
-};
-
 onMounted(() => {
-  loadDashboard();
   refreshSeekerCards();
 });
 
@@ -216,78 +133,14 @@ onShow(() => {
   color: #2f4b76;
 }
 
-.card {
-  background: #ffffff;
-  border-radius: 24rpx;
-  padding: 32rpx;
-  margin-bottom: 28rpx;
-  box-shadow: 0 12rpx 32rpx rgba(31, 55, 118, 0.08);
-}
-
 .section-title {
   font-size: 30rpx;
   font-weight: 600;
   margin-bottom: 24rpx;
 }
 
-.todo-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 24rpx 0;
-  border-bottom: 2rpx solid #f0f2f7;
-}
-
-.todo-item:last-child {
-  border-bottom: none;
-}
-
-.todo-title {
-  font-size: 28rpx;
-  font-weight: 500;
-}
-
-.todo-desc {
-  font-size: 24rpx;
-  color: #97a0b3;
-}
-
-.todo-count {
-  font-size: 32rpx;
-  font-weight: 700;
-  color: #2f7cff;
-}
-
-.stats-grid {
-  display: flex;
-  gap: 24rpx;
-}
-
-.stat-item {
-  flex: 1;
-  background: #f8faff;
-  border-radius: 20rpx;
-  padding: 24rpx;
-}
-
-.stat-label {
-  color: #7a869a;
-  font-size: 24rpx;
-}
-
-.stat-value {
-  display: block;
-  font-size: 36rpx;
-  font-weight: 600;
-  margin: 12rpx 0;
-}
-
-.stat-trend.up {
-  color: #28a745;
-}
-
-.stat-trend.down {
-  color: #ff5f5f;
+.recommend-section {
+  padding: 0 8rpx 24rpx;
 }
 
 .recommend-header {
@@ -301,10 +154,10 @@ onShow(() => {
   color: #2f7cff;
 }
 
-.hint {
+.state {
   color: #8a92a7;
   font-size: 24rpx;
-  padding: 10rpx 0;
+  padding: 16rpx 0;
 }
 
 .seeker-list {

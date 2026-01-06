@@ -77,6 +77,10 @@
           <textarea v-model="note" placeholder="匹配理由/推荐说明（可不填）" />
         </view>
 
+        <button class="outline" :disabled="!selectedJob || loading" @click="goAi">
+          AI 智能分析
+        </button>
+
         <button class="primary" :disabled="loading || recommending" @click="doRecommend">
           {{ recommending ? '推荐中...' : '推荐并发起聊天' }}
         </button>
@@ -131,6 +135,20 @@ const selectedJobLabel = computed(() => {
   if (selectedJob.value) return `${selectedJob.value.jobTitle}${selectedJob.value.city ? ` · ${selectedJob.value.city}` : ''}`;
   return jobs.value.length > 0 ? '请选择岗位' : '暂无可推荐岗位';
 });
+
+const goAi = () => {
+  if (!selectedJob.value?.id) {
+    uni.showToast({ title: '请先选择岗位', icon: 'none' });
+    return;
+  }
+  uni.navigateTo({
+    url: `/pages/hr/hr/ai/candidate-ai?userId=${encodeURIComponent(
+      userId.value
+    )}&jobId=${encodeURIComponent(selectedJob.value.id)}&candidateName=${encodeURIComponent(
+      seeker.value?.username || ''
+    )}&jobTitle=${encodeURIComponent(selectedJob.value.jobTitle || '')}`,
+  });
+};
 
 const onJobChange = (event: any) => {
   const index = Number(event.detail.value);
@@ -509,6 +527,18 @@ button.primary {
   font-size: 30rpx;
   font-weight: 800;
   box-shadow: 0 12rpx 26rpx rgba(47, 124, 255, 0.24);
+}
+
+button.outline {
+  width: 100%;
+  height: 88rpx;
+  border-radius: vars.$border-radius-sm;
+  border: 2rpx solid vars.$primary-color;
+  color: vars.$primary-color;
+  background: transparent;
+  font-size: 30rpx;
+  font-weight: 800;
+  margin-bottom: 14rpx;
 }
 
 </style>

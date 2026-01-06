@@ -19,6 +19,7 @@
 
     <view class="card">
       <view class="section-title">基础信息</view>
+      <view v-if="!hrInfo" class="hint">首次使用请先填写并保存（将自动完成HR信息登记）。</view>
       <view class="form-item">
         <text class="label">真实姓名</text>
         <input v-model="form.realName" placeholder="请输入真实姓名" />
@@ -46,7 +47,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { getHrInfo, updateHrInfo, type HrInfoUpdatePayload, type HrInfo } from '@/services/api/hr';
+import { getHrInfo, registerHr, updateHrInfo, type HrInfoUpdatePayload, type HrInfo } from '@/services/api/hr';
 import { useHrStore } from '@/store/hr';
 import avatarImg from '@/static/user-avatar.png';
 
@@ -74,7 +75,9 @@ const loadProfile = async () => {
     hrStore.setCompanyId(data.companyId);
   } catch (error) {
     console.error('Failed to load HR info:', error);
-    uni.showToast({ title: '加载失败', icon: 'none' });
+    // 允许“首次登记”场景：接口失败时仍展示表单，让用户走 register 流程
+    hrInfo.value = null;
+    uni.showToast({ title: '未获取到HR信息，请先填写并保存', icon: 'none' });
   } finally {
     loading.value = false;
   }
@@ -83,7 +86,18 @@ const loadProfile = async () => {
 const handleSave = async () => {
   saving.value = true;
   try {
-    await updateHrInfo(form.value);
+    const realName = form.value.realName?.trim();
+    const position = form.value.position?.trim();
+    const workPhone = form.value.workPhone?.trim();
+    if (!realName || !position || !workPhone) {
+      uni.showToast({ title: '请填写完整信息', icon: 'none' });
+      return;
+    }
+    if (!hrInfo.value) {
+      await registerHr({ realName, position, workPhone });
+    } else {
+      await updateHrInfo({ realName, position, workPhone });
+    }
     await loadProfile();
     uni.showToast({ title: '已保存', icon: 'success' });
   } catch (error) {
@@ -175,6 +189,15 @@ onMounted(() => {
 .section-title {
   font-size: 30rpx;
   font-weight: 600;
+  margin-bottom: 16rpx;
+}
+
+.hint {
+  padding: 16rpx 18rpx;
+  border-radius: 16rpx;
+  background: #f5f7fb;
+  color: #6f788f;
+  font-size: 24rpx;
   margin-bottom: 16rpx;
 }
 

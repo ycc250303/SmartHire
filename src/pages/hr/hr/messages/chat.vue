@@ -33,7 +33,12 @@
             }}</text>
           </template>
           <text v-else class="content">{{ message.content }}</text>
-          <text class="time">{{ formatTime(message.createdAt) }}</text>
+          <view class="meta">
+            <text class="time">{{ formatTime(message.createdAt) }}</text>
+            <text v-if="!isFromOther(message)" class="read" :class="{ yes: message.isRead === 1 }">
+              {{ message.isRead === 1 ? '已读' : '未读' }}
+            </text>
+          </view>
         </view>
         <image
           v-if="!isFromOther(message)"
@@ -123,6 +128,25 @@ const previewImage = (url: string) => {
   });
 };
 
+const restoreCachedApplicationId = () => {
+  if (applicationId.value) return;
+  if (!conversationId.value) return;
+  const cachedByConv = Number(
+    uni.getStorageSync(`hr_chat_app_by_conv_${conversationId.value}`)
+  );
+  if (Number.isFinite(cachedByConv) && cachedByConv > 0) {
+    applicationId.value = cachedByConv;
+    return;
+  }
+  if (!otherUserId.value) return;
+  const cachedByUser = Number(
+    uni.getStorageSync(`hr_chat_app_by_user_${otherUserId.value}`)
+  );
+  if (Number.isFinite(cachedByUser) && cachedByUser > 0) {
+    applicationId.value = cachedByUser;
+  }
+};
+
 const ensureConversationMeta = async () => {
   if (!conversationId.value) return;
   if (
@@ -187,10 +211,12 @@ const loadChat = async () => {
     });
     messages.value = data;
     if (!otherUserId.value && messages.value.length > 0) {
-      const last = messages.value[messages.value.length - 1];
-      const candidateId = last.senderId !== 0 ? last.senderId : last.receiverId;
-      if (candidateId) {
-        otherUserId.value = candidateId;
+      const last = messages.value.at(-1);
+      if (last) {
+        const candidateId = last.senderId !== 0 ? last.senderId : last.receiverId;
+        if (candidateId) {
+          otherUserId.value = candidateId;
+        }
       }
     }
     if (!otherUserAvatar.value && otherUserId.value) {
@@ -273,71 +299,65 @@ const doSendMessage = async () => {
   }
 };
 
-const doSendImage = async () => {
+const doSendImage = () => {
   if (!conversationId.value) return;
   if (!otherUserId.value) {
     uni.showToast({ title: "缺少收件人", icon: "none" });
     return;
   }
-  if (!applicationId.value) {
-    await ensureConversationMeta();
-  }
+  restoreCachedApplicationId();
 
-  const pick = await new Promise<{ tempFilePaths: string[] } | null>(
-    (resolve) => {
-      uni.chooseImage({
-        count: 1,
-        sizeType: ["compressed"],
-        sourceType: ["album", "camera"],
-        success: (res) => resolve(res),
-        fail: () => resolve(null),
+  uni.chooseImage({
+    count: 1,
+    sizeType: ["compressed"],
+    sourceType: ["album", "camera"],
+    success: async (res) => {
+      const filePath = res?.tempFilePaths?.[0];
+      if (!filePath) return;
+
+      sending.value = true;
+      const tempId = Date.now();
+      const tempMessage: Message = {
+        id: tempId,
+        conversationId: conversationId.value,
+        senderId: 0,
+        receiverId: otherUserId.value,
+        messageType: 2,
+        content: "[图片]",
+        fileUrl: filePath,
+        replyTo: null,
+        createdAt: new Date().toISOString(),
+        isRead: 0,
+        replyContent: null,
+        replyMessageType: null,
+      };
+      messages.value = [...messages.value, tempMessage];
+      nextTick(() => {
+        scrollIntoView.value = `msg-${tempId}`;
       });
-    }
-  );
-  const filePath = pick?.tempFilePaths?.[0];
-  if (!filePath) return;
 
-  sending.value = true;
-  const tempId = Date.now();
-  const tempMessage: Message = {
-    id: tempId,
-    conversationId: conversationId.value,
-    senderId: 0,
-    receiverId: otherUserId.value,
-    messageType: 2,
-    content: "[图片]",
-    fileUrl: filePath,
-    replyTo: null,
-    createdAt: new Date().toISOString(),
-    isRead: 0,
-    replyContent: null,
-    replyMessageType: null,
-  };
-  messages.value = [...messages.value, tempMessage];
-  nextTick(() => {
-    scrollIntoView.value = `msg-${tempId}`;
+      try {
+        const sent = await sendMedia({
+          receiverId: otherUserId.value,
+          applicationId: applicationId.value || 0,
+          messageType: 2,
+          filePath,
+        });
+        messages.value = messages.value.map((m) =>
+          m.id === tempMessage.id ? sent : m
+        );
+        nextTick(() => {
+          scrollIntoView.value = `msg-${sent.id}`;
+        });
+      } catch (err) {
+        console.error("Failed to send image:", err);
+        messages.value = messages.value.filter((m) => m.id !== tempMessage.id);
+        uni.showToast({ title: "图片发送失败", icon: "none" });
+      } finally {
+        sending.value = false;
+      }
+    },
   });
-
-  try {
-    const sent = await sendMedia({
-      receiverId: otherUserId.value,
-      applicationId: applicationId.value || 0,
-      messageType: 2,
-      filePath,
-    });
-    messages.value = messages.value.map((m) =>
-      m.id === tempMessage.id ? sent : m
-    );
-    nextTick(() => {
-      scrollIntoView.value = `msg-${sent.id}`;
-    });
-  } catch (err) {
-    console.error("Failed to send image:", err);
-    messages.value = messages.value.filter((m) => m.id !== tempMessage.id);
-    uni.showToast({ title: "图片发送失败", icon: "none" });
-  } finally {
-    sending.value = false;
-  }
 };
 
 const formatTime = (time: string) => dayjs(time).format("MM/DD HH:mm");
@@ -474,6 +494,30 @@ onMounted(() => {
   font-size: 22rpx;
   opacity: 0.7;
   align-self: flex-end;
+}
+
+.meta {
+  display: flex;
+  gap: 10rpx;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.read {
+  font-size: 22rpx;
+  opacity: 0.75;
+}
+
+.bubble.mine .read {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.bubble.other .read {
+  color: #6b7280;
+}
+
+.read.yes {
+  opacity: 0.95;
 }
 
 .chat-input {

@@ -316,6 +316,15 @@
       }
     },
     {
+      "path": "pages/hr/hr/ai/candidate-ai",
+      "style": {
+        "navigationBarTitleText": "AI 候选人助手",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff",
+        "navigationStyle": "custom"
+      }
+    },
+    {
       "path": "pages/hr/dashboard/index",
       "style": {
         "navigationBarTitleText": "优先处理",

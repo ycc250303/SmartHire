@@ -18,8 +18,17 @@
       <button class="publish-btn" @click="goCreateJob">发布岗位</button>
     </view>
 
+    <view v-if="!loading && loadError" class="error-card">
+      <view class="error-title">岗位列表加载失败</view>
+      <view class="error-desc">{{ loadError }}</view>
+      <view class="error-actions">
+        <button class="secondary-btn" @click="goProfile">去完善HR信息</button>
+        <button class="primary-btn" @click="loadJobs">重试</button>
+      </view>
+    </view>
+
     <view class="job-list">
-      <view class="job-card" v-for="job in filteredJobs" :key="job.id || job.jobId" @click="goJobDetail(job.id || job.jobId)">
+      <view class="job-card" v-for="job in filteredJobs" :key="job.id" @click="goJobDetail(job.id)">
         <view class="job-card-header">
           <view>
             <view class="job-title">{{ job.jobTitle }}</view>
@@ -59,7 +68,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import dayjs from 'dayjs';
-import { getJobPositionList, type JobPosition } from '@/services/api/hr';
+import { getHrInfo, getJobPositionList, type JobPosition } from '@/services/api/hr';
 import CustomTabBar from '@/components/common/CustomTabBar.vue';
 
 type FilterStatus = 'all' | number;
@@ -68,6 +77,7 @@ const jobs = ref<JobPosition[]>([]);
 const activeStatus = ref<FilterStatus>('all');
 const keyword = ref('');
 const loading = ref(false);
+const loadError = ref<string>('');
 
 const statusOptions = [
   { label: '全部', value: 'all' as FilterStatus },
@@ -78,11 +88,19 @@ const statusOptions = [
 
 const loadJobs = async () => {
   loading.value = true;
+  loadError.value = '';
   try {
+    // 先确保 HR 信息存在，避免后端因 companyId/hrId 为空直接报“系统内部错误”
+    await getHrInfo();
     const data = await getJobPositionList();
     jobs.value = data || [];
   } catch (error) {
     console.error('Failed to load jobs:', error);
+    const message = error instanceof Error ? error.message : String(error);
+    loadError.value =
+      message.includes('系统内部错误') || message.includes('Internal server error')
+        ? '系统内部错误（通常是HR信息/公司信息未完善导致），请先到“我的-个人信息”完善后重试。'
+        : message || '加载失败，请重试';
     uni.showToast({ title: '加载失败', icon: 'none' });
   } finally {
     loading.value = false;
@@ -98,7 +116,7 @@ const filteredJobs = computed(() => {
 });
 
 const goJobDetail = (jobId?: number) => {
-  if (!jobId && jobId !== 0) {
+  if (jobId === undefined || jobId === null) {
     uni.showToast({ title: '缺少岗位ID', icon: 'none' });
     return;
   }
@@ -111,6 +129,10 @@ const goCreateJob = () => {
 
 const editJob = (jobId: number) => {
   uni.navigateTo({ url: `/pages/hr/hr/jobs/edit?jobId=${jobId}` });
+};
+
+const goProfile = () => {
+  uni.navigateTo({ url: '/pages/hr/hr/profile/index' });
 };
 
 const statusText = (status: number) => {
@@ -144,6 +166,7 @@ onMounted(() => {
 
 onShow(() => {
   uni.hideTabBar();
+  loadJobs();
 });
 </script>
 
@@ -161,6 +184,52 @@ onShow(() => {
   padding: 24rpx;
   margin-bottom: 24rpx;
   box-shadow: 0 10rpx 30rpx rgba(0, 34, 90, 0.08);
+}
+
+.error-card {
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 28rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 10rpx 30rpx rgba(0, 34, 90, 0.05);
+}
+
+.error-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #1f2a3a;
+}
+
+.error-desc {
+  margin-top: 12rpx;
+  font-size: 26rpx;
+  color: #6f788f;
+  line-height: 1.5;
+}
+
+.error-actions {
+  display: flex;
+  gap: 16rpx;
+  margin-top: 18rpx;
+}
+
+.secondary-btn,
+.primary-btn {
+  flex: 1;
+  height: 80rpx;
+  border-radius: 18rpx;
+  font-size: 26rpx;
+  border: none;
+}
+
+.secondary-btn {
+  background: #f1f2f6;
+  color: #2b3445;
+}
+
+.primary-btn {
+  background: #2f7cff;
+  color: #fff;
 }
 
 .status-tabs {
