@@ -78,11 +78,15 @@ jobs:
 
           echo "$SMARTHIRE_TOKEN" | docker login ghcr.io -u "$GH_ACTOR" --password-stdin
 
-          docker pull ghcr.io/$REPO_OWNER/$IMAGE_NAME:$IMAGE_TAG
+          if ! docker image inspect ghcr.io/$REPO_OWNER/$IMAGE_NAME:$IMAGE_TAG > /dev/null 2>&1; then
+            echo "⬇️ 镜像不存在，开始拉取"
+            docker pull ghcr.io/$REPO_OWNER/$IMAGE_NAME:$IMAGE_TAG
+          else
+            echo "✅ 镜像已存在，跳过 pull"
+          fi
 
-          docker-compose down || true
           docker tag ghcr.io/$REPO_OWNER/$IMAGE_NAME:$IMAGE_TAG $IMAGE_NAME:latest
-          docker-compose up -d
+          docker-compose up -d --pull never
 
           echo "✅ 部署完成"
           EOF
