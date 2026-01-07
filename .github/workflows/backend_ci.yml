@@ -115,7 +115,38 @@ jobs:
             git push https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git "$TAG"
           fi
 
-      # 12. Only for main branch: create Release and upload JAR
+      # 12. Only for main branch: Delete existing release if exists (for overwrite)
+      - name: Delete existing release if exists (main only)
+        if: github.ref == 'refs/heads/main'
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.SMARTHIRE_TOKEN }}
+        run: |
+          # 确保 jq 已安装
+          if ! command -v jq &> /dev/null; then
+            sudo apt-get update && sudo apt-get install -y jq
+          fi
+          
+          TAG="v${{ env.VERSION }}"
+          echo "🔍 检查是否存在 Release: $TAG"
+          
+          RELEASE_ID=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/${{ github.repository }}/releases/tags/$TAG" \
+            | jq -r '.id // empty')
+          
+          if [ -n "$RELEASE_ID" ] && [ "$RELEASE_ID" != "null" ]; then
+            echo "🗑️ 删除已存在的 Release (ID: $RELEASE_ID)"
+            curl -X DELETE \
+              -H "Authorization: token $GITHUB_TOKEN" \
+              -H "Accept: application/vnd.github.v3+json" \
+              "https://api.github.com/repos/${{ github.repository }}/releases/$RELEASE_ID"
+            echo "✅ 已删除旧的 Release"
+          else
+            echo "ℹ️  Release 不存在，跳过删除步骤"
+          fi
+
+      # 13. Only for main branch: create Release and upload JAR
       - name: Create Release & Upload JAR (main only)
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v1
@@ -126,7 +157,7 @@ jobs:
           overwrite: true
           # 确保覆盖已存在的文件
           file_glob: true
-          # 如果release已存在，则更新它而不是创建新的
+          # 强制创建新的 release（已删除旧的）
           draft: false
           prerelease: false
         env:
