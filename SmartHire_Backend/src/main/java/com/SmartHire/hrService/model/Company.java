@@ -62,7 +62,7 @@ public class Company implements Serializable {
   private Date companyCreatedAt;
 
   /** 注册资本 */
-  private String registeredCapital;
+  private Integer registeredCapital;
 
   /** 审核状态 */
   private String auditStatus;

@@ -144,7 +144,7 @@ CREATE TABLE `company` (
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP NULL COMMENT '创建时间',
     `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     `company_created_at` DATETIME NOT NULL COMMENT '公司创建时间',
-    `registered_capital` VARCHAR(20) NOT NULL COMMENT '注册资本',
+    `registered_capital` INT NOT NULL COMMENT '注册资本（万元）',
     `audit_status` VARCHAR(20) DEFAULT 'pending' COMMENT '审核状态',
     `audited_at` DATETIME NULL COMMENT '审核时间';
 ) COMMENT '公司信息表' CHARSET = utf8mb4;

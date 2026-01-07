@@ -47,14 +47,14 @@ public class HrInfoServiceImpl extends ServiceImpl<HrInfoMapper, HrInfo> impleme
   }
 
   @Override
-  public  Long getCurrentHrId(){
-      Long userId = getCurrentUserId();
-      if (userId == null) {
-          return null;
-      }
-      HrInfo hrInfo = hrInfoMapper.selectOne(
-              new LambdaQueryWrapper<HrInfo>().eq(HrInfo::getUserId, userId));
-      return hrInfo != null ? hrInfo.getId() : null;
+  public Long getCurrentHrId() {
+    Long userId = getCurrentUserId();
+    if (userId == null) {
+      return null;
+    }
+    HrInfo hrInfo = hrInfoMapper.selectOne(
+        new LambdaQueryWrapper<HrInfo>().eq(HrInfo::getUserId, userId));
+    return hrInfo != null ? hrInfo.getId() : null;
   }
 
   /** 获取当前登录HR的信息 */
@@ -89,10 +89,30 @@ public class HrInfoServiceImpl extends ServiceImpl<HrInfoMapper, HrInfo> impleme
       throw new BusinessException(ErrorCode.COMPANY_NOT_EXIST);
     }
 
+    // 根据HR身份进行验证
+    if (createDTO.getIsCompanyAdmin() == 1) {
+      // 如果是老板，验证该用户是否是公司的创建者
+      if (company.getOwnerUserId() == null || !company.getOwnerUserId().equals(userId)) {
+        throw new BusinessException(ErrorCode.COMPANY_OWNER_MISMATCH);
+      }
+
+      // 检查该公司是否已经有老板了
+      HrInfo existingOwner = hrInfoMapper.selectOne(
+          new LambdaQueryWrapper<HrInfo>()
+              .eq(HrInfo::getCompanyId, createDTO.getCompanyId())
+              .eq(HrInfo::getIsCompanyAdmin, 1));
+      if (existingOwner != null) {
+        throw new BusinessException(ErrorCode.COMPANY_ALREADY_HAS_OWNER);
+      }
+    } else {
+      // 如果是普通HR，验证公司存在即可（已在上方验证）
+      // 可以添加其他业务规则，比如公司状态等
+    }
+
     // 创建HR信息
     HrInfo hrInfo = new HrInfo();
     hrInfo.setUserId(userId);
-    hrInfo.setCompanyId(createDTO.getCompanyId());
+    hrInfo.setCompanyId(createDTO.getCompanyId()); // 设置公司ID
     hrInfo.setRealName(createDTO.getRealName());
     hrInfo.setPosition(createDTO.getPosition());
     hrInfo.setWorkPhone(createDTO.getWorkPhone());
@@ -104,10 +124,7 @@ public class HrInfoServiceImpl extends ServiceImpl<HrInfoMapper, HrInfo> impleme
 
     save(hrInfo);
 
-   
-
     // TODO：HR审核和公司审核
-
     // 创建HR审核记录（状态为待审核）
     HrAuditRecord auditRecord = new HrAuditRecord();
     auditRecord.setHrId(hrInfo.getId());

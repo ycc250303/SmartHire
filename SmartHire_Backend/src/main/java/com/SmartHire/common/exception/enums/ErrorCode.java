@@ -67,6 +67,10 @@ public enum ErrorCode {
     INTERNSHIP_DAYS_PER_WEEK_REQUIRED(1208, "实习类型职位必须填写每周实习天数"),
     INTERNSHIP_DURATION_MONTHS_REQUIRED(1209, "实习类型职位必须填写实习时长"),
     EXPERIENCE_REQUIRED_FOR_FULL_TIME(1210, "全职类型职位必须填写经验要求"),
+    NOT_COMPANY_DATA(1211, "只能操作本公司的数据"),
+    NOT_COMPANY_ADMIN(1212, "只有公司管理员有权修改公司信息"),
+    COMPANY_OWNER_MISMATCH(1213, "只有创建公司的用户才能成为公司老板"),
+    COMPANY_ALREADY_HAS_OWNER(1214, "该公司已有老板，无法重复注册为老板"),
 
     // 招聘（投递/推荐）相关错误码 (1300-1399)
     APPLICATION_ALREADY_EXISTS(1301, "您已投递过该职位，请勿重复投递"),
