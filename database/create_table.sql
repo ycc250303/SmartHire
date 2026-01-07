@@ -13,8 +13,7 @@ CREATE TABLE `user` (
     `username` VARCHAR(50) NOT NULL COMMENT '用户名',
     `password` VARCHAR(255) NOT NULL COMMENT '加密密码',
     `email` VARCHAR(100) NOT NULL COMMENT '邮箱',
-    `phone` VARCHAR(20) NULL COMMENT '手机号',
-    `user_type` TINYINT NOT NULL COMMENT '用户类型：1-求职者 2-HR',
+    `phone` VARCHAR(20) NULL COMMENT '手机号' `user_type` TINYINT NOT NULL COMMENT '用户类型：1-求职者 2-HR',
     `status` TINYINT DEFAULT 1 NULL COMMENT '账户状态：0-禁用 1-正常',
     `avatar_url` VARCHAR(255) NULL COMMENT '头像URL',
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP NULL COMMENT '创建时间',
@@ -139,16 +138,33 @@ CREATE TABLE `company` (
     `website` VARCHAR(255) NULL COMMENT '公司网站',
     `logo_url` VARCHAR(255) NULL COMMENT '公司Logo',
     `description` TEXT NULL COMMENT '公司简介',
-    `main_business` TEXT NULL COMMENT '主要业务',
     `benefits` TEXT NULL COMMENT '福利待遇',
     `status` TINYINT DEFAULT 1 NULL COMMENT '状态：0-未认证 1-已认证',
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP NULL COMMENT '创建时间',
     `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     `company_created_at` DATETIME NOT NULL COMMENT '公司创建时间',
-    `registered_capital` VARCHAR(20) NOT NULL COMMENT '注册资本'
+    `registered_capital` VARCHAR(20) NOT NULL COMMENT '注册资本',
+    `audit_status` VARCHAR(20) DEFAULT 'pending' COMMENT '审核状态',
+    `audited_at` DATETIME NULL COMMENT '审核时间';
 ) COMMENT '公司信息表' CHARSET = utf8mb4;
 CREATE INDEX idx_company_name ON company (company_name);
 CREATE INDEX idx_industry ON company (industry);
+CREATE TABLE `company_audit_record` (
+    `id` BIGINT AUTO_INCREMENT COMMENT '审核记录ID' PRIMARY KEY,
+    `company_id` BIGINT NOT NULL COMMENT '公司ID',
+    `company_name` VARCHAR(100) NOT NULL COMMENT '公司名称',
+    `audit_status` VARCHAR(20) NOT NULL COMMENT '审核状态: pending-待审核 approved-已通过 rejected-已拒绝 modified-需修改',
+    `auditor_id` BIGINT NULL COMMENT '审核员ID（系统管理员）',
+    `auditor_name` VARCHAR(50) NULL COMMENT '审核员姓名',
+    `audit_reason` TEXT NULL COMMENT '审核意见',
+    `reject_reason` TEXT NULL COMMENT '拒绝原因',
+    `audited_at` DATETIME NULL COMMENT '审核时间',
+    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP NULL COMMENT '创建时间',
+    `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'
+) COMMENT '公司审核记录表' CHARSET = utf8mb4;
+CREATE INDEX idx_audit_status ON company_audit_record (audit_status);
+CREATE INDEX idx_auditor_id ON company_audit_record (auditor_id);
+CREATE INDEX idx_company_id ON company_audit_record (company_id);
 -- 职位表
 CREATE TABLE `job_info` (
     `id` BIGINT AUTO_INCREMENT COMMENT '职位ID' PRIMARY KEY,

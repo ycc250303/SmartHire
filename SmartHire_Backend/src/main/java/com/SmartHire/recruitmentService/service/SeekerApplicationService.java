@@ -1,6 +1,7 @@
 package com.SmartHire.recruitmentService.service;
 
 import com.SmartHire.common.dto.hrDto.JobCardDTO;
+import com.SmartHire.recruitmentService.dto.FullTimeJobRecommendationsDTO;
 import com.SmartHire.recruitmentService.dto.InternJobRecommendationsDTO;
 import com.SmartHire.recruitmentService.dto.SeekerApplicationListDTO;
 import com.SmartHire.recruitmentService.dto.SeekerJobPositionDTO;
@@ -53,6 +54,13 @@ public interface SeekerApplicationService extends IService<Application> {
      * @return 实习岗位推荐DTO
      */
     InternJobRecommendationsDTO getInternJobRecommendations();
+
+    /**
+     * 获取全职岗位推荐
+     *
+     * @return 全职岗位推荐DTO
+     */
+    FullTimeJobRecommendationsDTO getFullTimeJobRecommendations();
 
     /**
      * 获取面向求职者的岗位详情

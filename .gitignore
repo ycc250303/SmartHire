@@ -51,3 +51,4 @@ frontend-web/.env.production
 /.idea
 /node_modules
 /.idea
+/seeker
