@@ -1,8 +1,8 @@
 package com.SmartHire.hrService.service;
 
 import com.SmartHire.hrService.dto.JobInfoCreateDTO;
-import com.SmartHire.hrService.dto.JobInfoListDTO;
 import com.SmartHire.hrService.dto.JobInfoUpdateDTO;
+import com.SmartHire.common.dto.hrDto.JobInfoDTO;
 import com.SmartHire.common.dto.hrDto.JobSearchDTO;
 import com.SmartHire.common.dto.hrDto.JobCardDTO;
 import com.SmartHire.hrService.model.JobInfo;
@@ -41,7 +41,7 @@ public interface JobInfoService extends IService<JobInfo> {
    * @param status 状态筛选（可选）：0-已下线 1-招聘中 2-已暂停
    * @return 岗位列表
    */
-  List<JobInfoListDTO> getJobInfoList(Integer status);
+  List<JobInfoDTO> getJobInfoList(Integer status);
 
   /**
    * 更新岗位状态
@@ -57,7 +57,7 @@ public interface JobInfoService extends IService<JobInfo> {
    * @param jobId 岗位ID
    * @return 岗位详情
    */
-  JobInfoListDTO getJobInfoById(Long jobId);
+  JobInfoDTO getJobInfoById(Long jobId);
 
   /**
    * 求职者端岗位筛选

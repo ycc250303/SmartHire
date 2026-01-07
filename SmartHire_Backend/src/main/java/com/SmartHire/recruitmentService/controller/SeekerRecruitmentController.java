@@ -7,10 +7,7 @@ import com.SmartHire.common.auth.UserType;
 import com.SmartHire.common.dto.adminDto.ReportSubmitDTO;
 import com.SmartHire.common.entity.Result;
 import com.SmartHire.common.dto.hrDto.JobCardDTO;
-import com.SmartHire.recruitmentService.dto.InternJobRecommendationsDTO;
-import com.SmartHire.recruitmentService.dto.SeekerApplicationListDTO;
-import com.SmartHire.recruitmentService.dto.SeekerJobPositionDTO;
-import com.SmartHire.recruitmentService.dto.SubmitResumeDTO;
+import com.SmartHire.recruitmentService.dto.*;
 import com.SmartHire.recruitmentService.service.SeekerApplicationService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
@@ -76,6 +73,13 @@ public class SeekerRecruitmentController {
     @Operation(summary = "获取实习岗位推荐", description = "获取用户首页推荐的实习岗位列表，优先使用简历/求职者信息进行关键词匹配计算得分（向量搜索未就绪）")
     public Result<InternJobRecommendationsDTO> getInternJobRecommendations() {
         InternJobRecommendationsDTO resp = seekerApplicationService.getInternJobRecommendations();
+        return Result.success("获取岗位列表成功", resp);
+    }
+
+    @GetMapping("/job-recommendations/full-time")
+    @Operation(summary = "获取全职岗位推荐", description = "获取用户首页推荐的全职岗位列表，优先使用简历/求职者信息进行关键词匹配计算得分（向量搜索未就绪）")
+    public Result<FullTimeJobRecommendationsDTO> getFullTimeJobRecommendations() {
+        FullTimeJobRecommendationsDTO resp = seekerApplicationService.getFullTimeJobRecommendations();
         return Result.success("获取岗位列表成功", resp);
     }
 

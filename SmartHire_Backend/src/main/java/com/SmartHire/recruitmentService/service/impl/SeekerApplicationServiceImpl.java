@@ -17,6 +17,8 @@ import com.SmartHire.common.dto.userDto.UserCommonDTO;
 import com.SmartHire.common.event.ApplicationCreatedEvent;
 import com.SmartHire.common.exception.enums.ErrorCode;
 import com.SmartHire.common.exception.exception.BusinessException;
+import com.SmartHire.recruitmentService.dto.FullTimeJobItemDTO;
+import com.SmartHire.recruitmentService.dto.FullTimeJobRecommendationsDTO;
 import com.SmartHire.recruitmentService.dto.InternJobItemDTO;
 import com.SmartHire.recruitmentService.dto.InternJobRecommendationsDTO;
 import com.SmartHire.recruitmentService.dto.SeekerApplicationDTO;
@@ -180,36 +182,49 @@ public class SeekerApplicationServiceImpl extends ServiceImpl<ApplicationMapper,
         return jobCard;
     }
 
-    @Override
-    public InternJobRecommendationsDTO getInternJobRecommendations() {
+    /**
+     * 岗位卡片和匹配分数的包装类
+     */
+    private static class JobCardWithScore {
+        private final JobCardDTO jobCard;
+        private final Integer matchScore;
+
+        public JobCardWithScore(JobCardDTO jobCard, Integer matchScore) {
+            this.jobCard = jobCard;
+            this.matchScore = matchScore;
+        }
+
+        public JobCardDTO getJobCard() {
+            return jobCard;
+        }
+
+        public Integer getMatchScore() {
+            return matchScore;
+        }
+    }
+
+    /**
+     * 获取岗位推荐并计算匹配分数的公共逻辑
+     *
+     * @param jobType 岗位类型：0-全职，1-实习
+     * @return 带匹配分数的岗位卡片列表，按匹配分数降序排序
+     */
+    private List<JobCardWithScore> getJobRecommendationsWithScore(Integer jobType) {
         JobSearchDTO searchDTO = new JobSearchDTO();
-        searchDTO.setJobType(1); // 1 == internship
+        searchDTO.setJobType(jobType);
         searchDTO.setPage(1);
-        searchDTO.setSize(12);
+        searchDTO.setSize(20);
 
         List<JobCardDTO> jobCards = hrApi.searchPublicJobs(searchDTO);
 
-        Long targetUserId = null;
-        try {
-            targetUserId = userContext.getCurrentUserId();
-        } catch (Exception ignored) {
-        }
-
-        Long jobSeekerId = null;
+        Long targetUserId = userContext.getCurrentUserId();
+        Long jobSeekerId = seekerApi.getJobSeekerIdByUserId(targetUserId);
         SeekerCommonDTO seeker = null;
         SeekerCardDTO seekerCard = null;
-        if (targetUserId != null) {
-            try {
-                jobSeekerId = seekerApi.getJobSeekerIdByUserId(targetUserId);
-            } catch (Exception ignored) {
-            }
-        }
+
         if (jobSeekerId != null) {
-            try {
-                seeker = seekerApi.getJobSeekerById(jobSeekerId);
-                seekerCard = seekerApi.getSeekerCard(targetUserId);
-            } catch (Exception ignored) {
-            }
+            seeker = seekerApi.getJobSeekerById(jobSeekerId);
+            seekerCard = seekerApi.getSeekerCard(targetUserId);
         }
 
         StringBuilder kw = new StringBuilder();
@@ -224,8 +239,67 @@ public class SeekerApplicationServiceImpl extends ServiceImpl<ApplicationMapper,
         String keyword = kw.toString().trim();
         String lowerKeyword = keyword.toLowerCase(Locale.ROOT);
 
-        List<InternJobItemDTO> items = new ArrayList<>();
+        List<JobCardWithScore> jobCardsWithScore = new ArrayList<>();
         for (JobCardDTO jc : jobCards) {
+            int score = calculateMatchScore(jc, seeker, lowerKeyword);
+            jobCardsWithScore.add(new JobCardWithScore(jc, score));
+        }
+
+        jobCardsWithScore.sort(
+                Comparator.comparing(JobCardWithScore::getMatchScore, Comparator.nullsLast(Comparator.naturalOrder()))
+                        .reversed());
+
+        return jobCardsWithScore;
+    }
+
+    /**
+     * 计算岗位匹配分数
+     *
+     * @param jobCard      岗位卡片
+     * @param seeker       求职者信息
+     * @param lowerKeyword 小写关键词
+     * @return 匹配分数（0-100）
+     */
+    private int calculateMatchScore(JobCardDTO jobCard, SeekerCommonDTO seeker, String lowerKeyword) {
+        int score = 50;
+        String combined = (Objects.toString(jobCard.getJobTitle(), "") + " "
+                + Objects.toString(jobCard.getCompanyName(), "")
+                + " "
+                + Objects.toString(jobCard.getCity(), "")).toLowerCase(Locale.ROOT);
+        if (!lowerKeyword.isEmpty()) {
+            if (combined.contains(lowerKeyword)) {
+                score += 30;
+            } else {
+                String[] toks = lowerKeyword.split("\\s+");
+                for (String t : toks) {
+                    if (!t.isEmpty() && combined.contains(t)) {
+                        score += 10;
+                    }
+                }
+            }
+        }
+        if (seeker != null && seeker.getEducation() != null && jobCard.getEducationRequired() != null
+                && seeker.getEducation().equals(jobCard.getEducationRequired())) {
+            score += 10;
+        }
+        if (seeker != null && seeker.getCurrentCity() != null
+                && seeker.getCurrentCity().equalsIgnoreCase(jobCard.getCity())) {
+            score += 5;
+        }
+        if (score > 100)
+            score = 100;
+        if (score < 0)
+            score = 0;
+        return score;
+    }
+
+    @Override
+    public InternJobRecommendationsDTO getInternJobRecommendations() {
+        List<JobCardWithScore> jobCardsWithScore = getJobRecommendationsWithScore(1); // 1 == internship
+
+        List<InternJobItemDTO> items = new ArrayList<>();
+        for (JobCardWithScore jcws : jobCardsWithScore) {
+            JobCardDTO jc = jcws.getJobCard();
             InternJobItemDTO item = new InternJobItemDTO();
             item.setJobId(jc.getJobId());
             item.setTitle(jc.getJobTitle());
@@ -234,44 +308,38 @@ public class SeekerApplicationServiceImpl extends ServiceImpl<ApplicationMapper,
             item.setAddress(jc.getAddress());
             item.setSalary_min(jc.getSalaryMin() == null ? 0 : jc.getSalaryMin().intValue());
             item.setSalary_max(jc.getSalaryMax() == null ? 0 : jc.getSalaryMax().intValue());
-
-            int score = 50;
-            String combined = (Objects.toString(jc.getJobTitle(), "") + " " + Objects.toString(jc.getCompanyName(), "")
-                    + " "
-                    + Objects.toString(jc.getCity(), "")).toLowerCase(Locale.ROOT);
-            if (!lowerKeyword.isEmpty()) {
-                if (combined.contains(lowerKeyword)) {
-                    score += 30;
-                } else {
-                    String[] toks = lowerKeyword.split("\\s+");
-                    for (String t : toks) {
-                        if (!t.isEmpty() && combined.contains(t)) {
-                            score += 10;
-                        }
-                    }
-                }
-            }
-            if (seeker != null && seeker.getEducation() != null && jc.getEducationRequired() != null
-                    && seeker.getEducation().equals(jc.getEducationRequired())) {
-                score += 10;
-            }
-            if (seeker != null && seeker.getCurrentCity() != null
-                    && seeker.getCurrentCity().equalsIgnoreCase(jc.getCity())) {
-                score += 5;
-            }
-            if (score > 100)
-                score = 100;
-            if (score < 0)
-                score = 0;
-            item.setMatchScore(score);
+            item.setSkills(jc.getSkills());
+            item.setMatchScore(jcws.getMatchScore());
             items.add(item);
         }
 
-        items.sort(
-                Comparator.comparing(InternJobItemDTO::getMatchScore, Comparator.nullsLast(Comparator.naturalOrder()))
-                        .reversed());
-
         InternJobRecommendationsDTO resp = new InternJobRecommendationsDTO();
+        resp.setJobs(items);
+        return resp;
+    }
+
+    @Override
+    public FullTimeJobRecommendationsDTO getFullTimeJobRecommendations() {
+        List<JobCardWithScore> jobCardsWithScore = getJobRecommendationsWithScore(0); // 0 == full-time
+
+        List<FullTimeJobItemDTO> items = new ArrayList<>();
+        for (JobCardWithScore jcws : jobCardsWithScore) {
+            JobCardDTO jc = jcws.getJobCard();
+            FullTimeJobItemDTO item = new FullTimeJobItemDTO();
+            item.setJobId(jc.getJobId());
+            item.setTitle(jc.getJobTitle());
+            item.setCompanyName(jc.getCompanyName());
+            item.setCity(jc.getCity());
+            item.setAddress(jc.getAddress());
+            item.setSalary_min(jc.getSalaryMin() == null ? 0 : jc.getSalaryMin().intValue());
+            item.setSalary_max(jc.getSalaryMax() == null ? 0 : jc.getSalaryMax().intValue());
+            item.setSkills(jc.getSkills());
+            item.setExperienceRequired(jc.getExperienceRequired());
+            item.setMatchScore(jcws.getMatchScore());
+            items.add(item);
+        }
+
+        FullTimeJobRecommendationsDTO resp = new FullTimeJobRecommendationsDTO();
         resp.setJobs(items);
         return resp;
     }
