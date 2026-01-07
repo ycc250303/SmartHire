@@ -782,11 +782,30 @@ const submitOps = async () => {
       }
       const type = interviewTypeOptions[interviewTypeIndex.value]?.value ?? 2;
       const locationOrLink = interviewForm.value.locationOrLink.trim();
+      const normalizeDateTime = (raw: string): string => {
+        const trimmed = raw.trim().replace(/\//g, "-").replace(/\./g, "-");
+        const match = trimmed.match(
+          /^(\d{4})-(\d{1,2})-(\d{1,2})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?$/
+        );
+        if (match) {
+          const [, y, mo, d, h, mi, s] = match;
+          const pad2 = (v: string) => v.padStart(2, "0");
+          // Prefer "YYYY-MM-DD HH:mm:ss" for Java backends
+          return `${y}-${pad2(mo)}-${pad2(d)} ${pad2(h)}:${pad2(mi)}:${pad2(s || "00")}`;
+        }
+        // Already ISO? normalize to space-separated and ensure seconds
+        if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(trimmed)) return trimmed.replace("T", " ") + ":00";
+        if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/.test(trimmed)) return trimmed.replace("T", " ");
+        return trimmed;
+      };
+      const interviewTime = normalizeDateTime(interviewForm.value.interviewTime);
 
       await scheduleInterview({
         applicationId: appId,
-        interviewTime: interviewForm.value.interviewTime.trim(),
+        interviewTime,
+        duration: 30,
         interviewType: type,
+        interviewRound: 1,
         location: type === 3 ? (locationOrLink || undefined) : undefined,
         meetingLink: type !== 3 ? (locationOrLink || undefined) : undefined,
         notifyCandidate: true,

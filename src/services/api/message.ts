@@ -220,9 +220,12 @@ export function sendMedia(params: SendMediaParams): Promise<Message> {
     };
   
     const dtoString = JSON.stringify(dto);
-    // Compatibility: some deployments use `dto`, some use `payload` (see Java backend MessageController)
-    const fullUrlWithDto = `${fullUrl}?dto=${encodeURIComponent(dtoString)}&payload=${encodeURIComponent(dtoString)}`;
-  
+    // Compatibility: some deployments require query param `dto`; Java backend expects multipart field `payload`.
+    // Send both in query string to maximize compatibility.
+    const dtoEncoded = encodeURIComponent(dtoString);
+    const uploadUrl = fullUrl.includes('?')
+      ? `${fullUrl}&dto=${dtoEncoded}&payload=${dtoEncoded}`
+      : `${fullUrl}?dto=${dtoEncoded}&payload=${dtoEncoded}`;
     // #ifdef H5
     if (params.filePath.startsWith('data:') || params.filePath.startsWith('blob:')) {
       fetch(params.filePath)
@@ -238,11 +241,11 @@ export function sendMedia(params: SendMediaParams): Promise<Message> {
           }
           
           formData.append('file', blob, fileName);
-          formData.append('dto', dtoString);
           formData.append('payload', dtoString);
+          formData.append('dto', dtoString);
           
           const xhr = new XMLHttpRequest();
-          xhr.open('POST', fullUrl, true);
+          xhr.open('POST', uploadUrl, true);
           xhr.setRequestHeader('Authorization', token ? `Bearer ${token}` : '');
           
           xhr.onload = () => {
@@ -283,12 +286,12 @@ export function sendMedia(params: SendMediaParams): Promise<Message> {
         });
     } else {
       uni.uploadFile({
-        url: fullUrlWithDto,
+        url: uploadUrl,
         filePath: params.filePath,
         name: 'file',
         formData: {
-          dto: dtoString,
           payload: dtoString,
+          dto: dtoString,
         },
         header: {
           'Authorization': token ? `Bearer ${token}` : '',
@@ -327,12 +330,12 @@ export function sendMedia(params: SendMediaParams): Promise<Message> {
     // #endif
     
     uni.uploadFile({
-      url: fullUrl,
+      url: uploadUrl,
       filePath: params.filePath,
       name: 'file',
       formData: {
-        dto: dtoString,
         payload: dtoString,
+        dto: dtoString,
       },
       header: {
         'Authorization': token ? `Bearer ${token}` : '',

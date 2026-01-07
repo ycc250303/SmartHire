@@ -3,7 +3,12 @@
     <view class="card-header">
       <view class="left">
         <view class="avatar-wrap">
-          <image v-if="seeker.avatarUrl" class="avatar" :src="seeker.avatarUrl" mode="aspectFill" />
+          <image
+            v-if="seeker.avatarUrl"
+            class="avatar"
+            :src="seeker.avatarUrl"
+            mode="aspectFill"
+          />
           <view v-else class="avatar-fallback">
             <text class="avatar-initial">{{ initial }}</text>
           </view>
@@ -21,6 +26,10 @@
       </view>
 
       <view class="right">
+        <view class="match-score" v-if="matchScore !== null">
+          <text class="score-value">{{ matchScore }}%</text>
+          <text class="score-label">{{ t('pages.jobs.matchScore') }}</text>
+        </view>
         <text class="age">{{ ageText(seeker.age) }}</text>
       </view>
     </view>
@@ -36,10 +45,12 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { t } from '@/locales';
 import type { PublicSeekerCard } from '@/services/api/hr';
 
 interface Props {
   seeker: PublicSeekerCard;
+  matchScore?: number | null;
 }
 
 const props = defineProps<Props>();
@@ -48,13 +59,15 @@ const emit = defineEmits<{
   click: [seeker: PublicSeekerCard];
 }>();
 
-const initial = computed(() => (props.seeker.username?.trim()?.[0] || 'S').toUpperCase());
+const seeker = computed(() => props.seeker);
+
+const initial = computed(() => (seeker.value.username?.trim()?.[0] || 'S').toUpperCase());
 
 const metaLine = computed(() => {
   const parts: string[] = [];
-  if (props.seeker.city) parts.push(props.seeker.city);
-  if (props.seeker.major) parts.push(props.seeker.major);
-  if (props.seeker.graduationYear) parts.push(props.seeker.graduationYear);
+  if (seeker.value.city) parts.push(seeker.value.city);
+  if (seeker.value.major) parts.push(seeker.value.major);
+  if (seeker.value.graduationYear) parts.push(seeker.value.graduationYear);
   return parts.length ? parts.join(' · ') : '信息待完善';
 });
 
@@ -79,6 +92,14 @@ const ageText = (age?: number) => {
   if (age === undefined || age === null) return '--';
   return `${age}岁`;
 };
+
+const matchScore = computed<number | null>(() => {
+  const value = props.matchScore;
+  if (value === undefined || value === null) return null;
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return null;
+  return Math.round(parsed);
+});
 </script>
 
 <style lang="scss" scoped>
@@ -87,9 +108,9 @@ const ageText = (age?: number) => {
 .candidate-card {
   background-color: vars.$surface-color;
   border-radius: vars.$border-radius;
-  padding: vars.$spacing-lg;
-  margin-bottom: vars.$spacing-md;
-  box-shadow: 0 12rpx 32rpx rgba(31, 55, 118, 0.08);
+  padding: vars.$spacing-md;
+  margin-bottom: vars.$spacing-sm;
+  box-shadow: 0 10rpx 28rpx rgba(31, 55, 118, 0.08);
   width: 100%;
   box-sizing: border-box;
 }
@@ -191,6 +212,27 @@ const ageText = (age?: number) => {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
+  gap: 10rpx;
+}
+
+.match-score {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+
+.score-value {
+  font-size: 44rpx;
+  font-weight: 800;
+  color: vars.$primary-color;
+  line-height: 1;
+}
+
+.score-label {
+  font-size: 20rpx;
+  color: vars.$text-muted;
+  margin-top: 4rpx;
 }
 
 .age {

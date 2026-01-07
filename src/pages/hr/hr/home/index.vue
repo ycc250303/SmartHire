@@ -24,6 +24,7 @@
           v-for="card in seekerCards"
           :key="card.userId ?? card.id ?? card.username"
           :seeker="card"
+          :matchScore="getMatchScore(card)"
           @click="openSeekerDetail"
         />
       </view>
@@ -38,12 +39,14 @@ import { ref, onMounted } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import avatarImg from '@/static/user-avatar.png';
 import CustomTabBar from '@/components/common/CustomTabBar.vue';
-import { getPublicSeekerCards, type PublicSeekerCard } from '@/services/api/hr';
+import { getApplicationDetail, getPublicSeekerCards, type PublicSeekerCard } from '@/services/api/hr';
+import { getCandidateMatchAnalysis } from '@/services/api/hr-ai';
 import SeekerRecommendCard from '@/pages/hr/hr/seeker/components/SeekerRecommendCard.vue';
 
 const seekerCards = ref<PublicSeekerCard[]>([]);
 const seekerLoading = ref(false);
 const seekerError = ref('');
+const matchScoreByUserId = ref<Record<number, number>>({});
 
 const refreshSeekerCards = async () => {
   seekerLoading.value = true;
@@ -51,6 +54,7 @@ const refreshSeekerCards = async () => {
   try {
     const data = await getPublicSeekerCards();
     seekerCards.value = Array.isArray(data) ? data : [];
+    await loadMatchScores(seekerCards.value);
   } catch (err) {
     console.error('Failed to load public seeker cards:', err);
     seekerError.value = '推荐加载失败';
@@ -72,6 +76,45 @@ const openSeekerDetail = (card: PublicSeekerCard) => {
   uni.navigateTo({
     url: `/pages/hr/hr/seeker/detail?userId=${encodeURIComponent(userId)}&username=${encodeURIComponent(card.username || '')}`,
   });
+};
+
+const getMatchScore = (card: PublicSeekerCard): number | null => {
+  const userId = Number(card.userId ?? card.id);
+  if (!Number.isFinite(userId) || userId <= 0) return null;
+  const score = matchScoreByUserId.value[userId];
+  if (!Number.isFinite(score)) return null;
+  return score;
+};
+
+const loadMatchScores = async (cards: PublicSeekerCard[]) => {
+  const top = (cards || []).slice(0, 6);
+  const nextScores: Record<number, number> = { ...matchScoreByUserId.value };
+
+  for (const card of top) {
+    const userId = Number(card.userId ?? card.id);
+    if (!Number.isFinite(userId) || userId <= 0) continue;
+    if (Number.isFinite(nextScores[userId])) continue;
+
+    const cachedAppId = Number(uni.getStorageSync(`hr_chat_app_by_user_${userId}`));
+    if (!Number.isFinite(cachedAppId) || cachedAppId <= 0) continue;
+
+    try {
+      const detail = await getApplicationDetail(cachedAppId);
+      const analysis = await getCandidateMatchAnalysis(detail.jobSeekerId, detail.jobId);
+      const rawScore =
+        (analysis as any)?.match_analysis?.overall_score ??
+        (analysis as any)?.match_score ??
+        (analysis as any)?.matchScore;
+      const parsed = Number(rawScore);
+      if (Number.isFinite(parsed)) {
+        nextScores[userId] = Math.round(parsed);
+        matchScoreByUserId.value = { ...nextScores };
+      }
+    } catch (e) {
+      // ignore per-card errors (no record / no permission / not generated yet)
+      continue;
+    }
+  }
 };
 
 onMounted(() => {

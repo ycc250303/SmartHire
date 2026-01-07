@@ -522,16 +522,17 @@ watch(activeTab, (tab) => {
 }
 
 .ai-pill {
-  padding: 6rpx 14rpx;
+  padding: 8rpx 18rpx;
   border-radius: 999rpx;
   background: rgba(75, 163, 255, 0.14);
   display: flex;
   align-items: center;
   justify-content: center;
+  min-height: 44rpx;
 }
 
 .ai-text {
-  font-size: 22rpx;
+  font-size: 24rpx;
   color: #2f7cff;
   font-weight: 800;
   line-height: 1;

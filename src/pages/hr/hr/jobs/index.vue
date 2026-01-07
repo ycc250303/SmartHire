@@ -271,10 +271,10 @@ onShow(() => {
 .job-card {
   background: #fff;
   border-radius: 24rpx;
-  padding: 28rpx;
-  padding-bottom: 120rpx;
-  margin-bottom: 24rpx;
-  box-shadow: 0 10rpx 30rpx rgba(0, 34, 90, 0.05);
+  padding: 24rpx;
+  padding-bottom: 108rpx;
+  margin-bottom: 18rpx;
+  box-shadow: 0 8rpx 24rpx rgba(0, 34, 90, 0.05);
   position: relative;
 }
 
@@ -354,9 +354,9 @@ onShow(() => {
   color: #fff;
   border: none;
   border-radius: 20rpx;
-  padding: 0 40rpx;
-  height: 72rpx;
-  line-height: 72rpx;
+  padding: 0 36rpx;
+  height: 68rpx;
+  line-height: 68rpx;
   font-size: 26rpx;
   box-shadow: 0 12rpx 24rpx rgba(47, 124, 255, 0.25);
 }
