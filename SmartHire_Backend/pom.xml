@@ -15,7 +15,7 @@
     <!-- 项目基本信息 -->
     <groupId>com.example</groupId>
     <artifactId>SmartHire_Backend</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.0.2-SNAPSHOT</version>
     <name>SmartHire_Backend</name>
     <description>SmartHire_Backend</description>
     <url/>
