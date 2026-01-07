@@ -49,7 +49,7 @@ public class SeekerJobPositionDTO implements Serializable {
 
   @Data
   public static class HrDTO implements Serializable {
-    private Long hrId;
+    private Long hrUserId;
     private String realName;
     private String position;
     private String avatarUrl;
