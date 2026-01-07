@@ -4,8 +4,8 @@ import com.SmartHire.common.auth.UserContext;
 import com.SmartHire.common.exception.enums.ErrorCode;
 import com.SmartHire.common.exception.exception.BusinessException;
 import com.SmartHire.hrService.dto.JobInfoCreateDTO;
-import com.SmartHire.hrService.dto.JobInfoListDTO;
 import com.SmartHire.hrService.dto.JobInfoUpdateDTO;
+import com.SmartHire.common.dto.hrDto.JobInfoDTO;
 import com.SmartHire.common.dto.hrDto.JobCardDTO;
 import com.SmartHire.common.dto.hrDto.JobSearchDTO;
 import com.SmartHire.hrService.mapper.CompanyMapper;
@@ -74,9 +74,9 @@ public class JobInfoServiceImpl extends ServiceImpl<JobInfoMapper, JobInfo>
   @Override
   @Transactional
   public Long createJobInfo(JobInfoCreateDTO createDTO) {
-      Long currentHrId = userContext.getCurrentUserId();
+    Long currentHrId = userContext.getCurrentUserId();
 
-      // 验证全职类型字段
+    // 验证全职类型字段
     if (createDTO.getJobType() != null
         && createDTO.getJobType() == 0
         && createDTO.getExperienceRequired() == null) {
@@ -257,7 +257,7 @@ public class JobInfoServiceImpl extends ServiceImpl<JobInfoMapper, JobInfo>
   }
 
   @Override
-  public List<JobInfoListDTO> getJobInfoList(Integer status) {
+  public List<JobInfoDTO> getJobInfoList(Integer status) {
     Long currentHrId = hrInfoService.getCurrentHrId();
 
     // 构建查询条件
@@ -276,7 +276,7 @@ public class JobInfoServiceImpl extends ServiceImpl<JobInfoMapper, JobInfo>
     return jobInfos.stream()
         .map(
             job -> {
-              JobInfoListDTO dto = new JobInfoListDTO();
+              JobInfoDTO dto = new JobInfoDTO();
               BeanUtils.copyProperties(job, dto);
 
               // 查询技能要求
@@ -309,7 +309,7 @@ public class JobInfoServiceImpl extends ServiceImpl<JobInfoMapper, JobInfo>
   }
 
   @Override
-  public JobInfoListDTO getJobInfoById(Long jobId) {
+  public JobInfoDTO getJobInfoById(Long jobId) {
     // validateJobOwnership(jobId);
 
     JobInfo jobInfo = getById(jobId);
@@ -317,7 +317,7 @@ public class JobInfoServiceImpl extends ServiceImpl<JobInfoMapper, JobInfo>
       throw new BusinessException(ErrorCode.JOB_NOT_EXIST);
     }
 
-    JobInfoListDTO dto = new JobInfoListDTO();
+    JobInfoDTO dto = new JobInfoDTO();
     BeanUtils.copyProperties(jobInfo, dto);
 
     // 查询技能要求
@@ -333,7 +333,7 @@ public class JobInfoServiceImpl extends ServiceImpl<JobInfoMapper, JobInfo>
     int size = searchDTO.getSize() == null ? 20 : searchDTO.getSize();
     int offset = (page - 1) * size;
 
-    return jobInfoMapper.searchPublicJobCards(
+    List<JobCardDTO> jobCards = jobInfoMapper.searchPublicJobCards(
         searchDTO.getCity(),
         searchDTO.getJobType(),
         searchDTO.getEducationRequired(),
@@ -344,6 +344,18 @@ public class JobInfoServiceImpl extends ServiceImpl<JobInfoMapper, JobInfo>
         searchDTO.getCompanyId(),
         offset,
         size);
+
+    // 为每个岗位卡片填充技能要求
+    if (jobCards != null) {
+      for (JobCardDTO jobCard : jobCards) {
+        if (jobCard != null && jobCard.getJobId() != null) {
+          List<String> skills = jobSkillRequirementMapper.selectSkillNamesByJobId(jobCard.getJobId());
+          jobCard.setSkills(skills);
+        }
+      }
+    }
+
+    return jobCards;
   }
 
   @Override

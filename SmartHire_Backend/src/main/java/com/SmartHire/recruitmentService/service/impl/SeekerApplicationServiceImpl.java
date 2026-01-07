@@ -308,6 +308,7 @@ public class SeekerApplicationServiceImpl extends ServiceImpl<ApplicationMapper,
             item.setAddress(jc.getAddress());
             item.setSalary_min(jc.getSalaryMin() == null ? 0 : jc.getSalaryMin().intValue());
             item.setSalary_max(jc.getSalaryMax() == null ? 0 : jc.getSalaryMax().intValue());
+            item.setSkills(jc.getSkills());
             item.setMatchScore(jcws.getMatchScore());
             items.add(item);
         }

@@ -7,10 +7,10 @@ import com.SmartHire.common.dto.hrDto.JobCardDTO;
 import com.SmartHire.common.dto.hrDto.JobFullDetailDTO;
 import com.SmartHire.common.dto.hrDto.JobInfoDTO;
 import com.SmartHire.common.dto.hrDto.JobSearchDTO;
-import com.SmartHire.hrService.dto.JobInfoListDTO;
 import com.SmartHire.hrService.mapper.CompanyMapper;
 import com.SmartHire.hrService.mapper.HrInfoMapper;
 import com.SmartHire.hrService.mapper.JobInfoMapper;
+import com.SmartHire.hrService.mapper.JobSkillRequirementMapper;
 import com.SmartHire.hrService.model.Company;
 import com.SmartHire.hrService.model.HrInfo;
 import com.SmartHire.hrService.model.JobInfo;
@@ -40,6 +40,9 @@ public class HrApiImpl implements HrApi {
 
   @Autowired
   private HrInfoService hrInfoService;
+
+  @Autowired
+  private JobSkillRequirementMapper jobSkillRequirementMapper;
 
   @Override
   public Long getHrIdByUserId(Long userId) {
@@ -110,7 +113,13 @@ public class HrApiImpl implements HrApi {
     if (jobId == null) {
       return null;
     }
-    return jobInfoMapper.selectJobCardById(jobId);
+    JobCardDTO jobCard = jobInfoMapper.selectJobCardById(jobId);
+    if (jobCard != null) {
+      // 填充技能要求
+      List<String> skills = jobSkillRequirementMapper.selectSkillNamesByJobId(jobId);
+      jobCard.setSkills(skills);
+    }
+    return jobCard;
   }
 
   @Override
@@ -186,12 +195,6 @@ public class HrApiImpl implements HrApi {
 
   @Override
   public JobInfoDTO getJobInfoWithSkills(Long jobId) {
-    JobInfoListDTO internalDto = jobInfoService.getJobInfoById(jobId);
-    if (internalDto == null) {
-      return null;
-    }
-    JobInfoDTO dto = new JobInfoDTO();
-    BeanUtils.copyProperties(internalDto, dto);
-    return dto;
+    return jobInfoService.getJobInfoById(jobId);
   }
 }
