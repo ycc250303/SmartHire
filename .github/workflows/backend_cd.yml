@@ -86,7 +86,7 @@ jobs:
           fi
 
           docker tag ghcr.io/$REPO_OWNER/$IMAGE_NAME:$IMAGE_TAG $IMAGE_NAME:latest
-          docker-compose up -d --pull never --force-recreate backend
+          docker-compose up -d --force-recreate backend
 
           echo "✅ 部署完成"
           EOF

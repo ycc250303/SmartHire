@@ -398,7 +398,7 @@ public class SeekerApplicationServiceImpl extends ServiceImpl<ApplicationMapper,
 
         if (hrInfo != null) {
             SeekerJobPositionDTO.HrDTO h = new SeekerJobPositionDTO.HrDTO();
-            h.setHrId(hrInfo.getId());
+            h.setHrUserId(hrInfo.getUserId());
             h.setRealName(hrInfo.getRealName());
             h.setPosition(hrInfo.getPosition());
             h.setAvatarUrl(hrUser == null ? null : hrUser.getAvatarUrl());
