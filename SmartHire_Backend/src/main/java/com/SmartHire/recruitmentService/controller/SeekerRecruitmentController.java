@@ -87,6 +87,24 @@ public class SeekerRecruitmentController {
         return Result.success("获取岗位列表成功", resp);
     }
 
+    @GetMapping("/job-list/intern/latest")
+    @Operation(summary = "获取最新实习岗位", description = "获取最新的实习岗位列表，按时间倒序排序")
+    public Result<InternJobRecommendationsDTO> getInternJobsLatest(
+            @RequestParam(value = "page", required = false) Integer page,
+            @RequestParam(value = "size", required = false) Integer size) {
+        InternJobRecommendationsDTO resp = seekerApplicationService.getInternJobsLatest(page, size);
+        return Result.success("获取最新实习岗位成功", resp);
+    }
+
+    @GetMapping("/job-list/full-time/latest")
+    @Operation(summary = "获取最新全职岗位", description = "获取最新的全职岗位列表，按时间倒序排序")
+    public Result<FullTimeJobRecommendationsDTO> getFullTimeJobsLatest(
+            @RequestParam(value = "page", required = false) Integer page,
+            @RequestParam(value = "size", required = false) Integer size) {
+        FullTimeJobRecommendationsDTO resp = seekerApplicationService.getFullTimeJobsLatest(page, size);
+        return Result.success("获取最新全职岗位成功", resp);
+    }
+
     @GetMapping("/job-position/{jobId}")
     @Operation(summary = "获取面向求职者的岗位详情", description = "返回岗位详情（包含公司、HR、申请状态等），供求职者端展示")
     public Result<SeekerJobPositionDTO> getJobPosition(@PathVariable @NotNull Long jobId) {
