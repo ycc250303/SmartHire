@@ -20,6 +20,9 @@ public class Company implements Serializable {
   @TableId(value = "id", type = IdType.AUTO)
   private Long id;
 
+  /** 公司老板的用户ID */
+  private Long ownerUserId;
+
   /** 公司名称 */
   private String companyName;
 
@@ -59,7 +62,7 @@ public class Company implements Serializable {
   private Date companyCreatedAt;
 
   /** 注册资本 */
-  private String registeredCapital;
+  private Integer registeredCapital;
 
   /** 审核状态 */
   private String auditStatus;

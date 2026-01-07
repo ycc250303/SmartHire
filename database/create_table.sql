@@ -131,6 +131,7 @@ CREATE INDEX idx_user_id ON ban_record (user_id);
 -- 公司信息表
 CREATE TABLE `company` (
     `id` BIGINT AUTO_INCREMENT COMMENT '公司ID' PRIMARY KEY,
+    `owner_user_id` bigint not null comment '公司老板的用户id',
     `company_name` VARCHAR(100) NOT NULL COMMENT '公司名称',
     `industry` VARCHAR(50) NULL COMMENT '所属行业',
     `company_scale` TINYINT NULL COMMENT '公司规模 1:0-20 2：20-99 3:100-499 4:500-999 5:1000-3000 6:3000-10000 7:10000以上',
@@ -143,7 +144,7 @@ CREATE TABLE `company` (
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP NULL COMMENT '创建时间',
     `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     `company_created_at` DATETIME NOT NULL COMMENT '公司创建时间',
-    `registered_capital` VARCHAR(20) NOT NULL COMMENT '注册资本',
+    `registered_capital` INT NOT NULL COMMENT '注册资本（万元）',
     `audit_status` VARCHAR(20) DEFAULT 'pending' COMMENT '审核状态',
     `audited_at` DATETIME NULL COMMENT '审核时间';
 ) COMMENT '公司信息表' CHARSET = utf8mb4;

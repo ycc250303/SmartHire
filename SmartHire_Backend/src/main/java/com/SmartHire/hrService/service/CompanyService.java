@@ -1,9 +1,12 @@
 package com.SmartHire.hrService.service;
 
+import com.SmartHire.hrService.dto.CompanyNameDTO;
 import com.SmartHire.hrService.dto.HrInfoDTO;
-import com.SmartHire.hrService.dto.CompanyCreateDTO;
+import com.SmartHire.hrService.dto.CompanyDTO;
 import com.SmartHire.hrService.model.Company;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+
+import java.util.List;
 
 /**
  * 公司管理员服务接口
@@ -11,22 +14,40 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
  * @author SmartHire Team
  * @since 2025-12-13
  */
-public interface CompanyAdminService {
+public interface CompanyService {
 
     /**
      * 创建公司
      *
      * @param createDTO 公司创建信息
      */
-    void createCompany(CompanyCreateDTO createDTO);
+    Long createCompany(CompanyDTO createDTO);
+
+    /**
+     * 获取公司信息
+     *
+     * @param companyId 公司ID
+     * @return 公司信息
+     */
+    CompanyDTO getCompanyById(Long companyId);
+
+    /**
+     * 获取公司列表
+     *
+     * @param current  当前页
+     * @param size     每页大小
+     * @param keyword  搜索关键词（可选）
+     * @return 公司列表
+     */
+    List<CompanyNameDTO> getCompanies(Long current, Long size, String keyword);
 
     /**
      * 更新公司信息
      *
      * @param companyId 公司ID
-     * @param company   公司信息
+     * @param companyDTO   公司信息
      */
-    void updateCompanyInfo(Long companyId, Company company);
+    void updateCompanyInfo(Long companyId, CompanyDTO companyDTO);
 
     /**
      * 获取本公司HR列表

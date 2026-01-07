@@ -3,7 +3,8 @@ package com.SmartHire.hrService.service.impl;
 import com.SmartHire.common.auth.UserContext;
 import com.SmartHire.common.exception.enums.ErrorCode;
 import com.SmartHire.common.exception.exception.BusinessException;
-import com.SmartHire.hrService.dto.CompanyCreateDTO;
+import com.SmartHire.hrService.dto.CompanyDTO;
+import com.SmartHire.hrService.dto.CompanyNameDTO;
 import com.SmartHire.hrService.dto.HrInfoDTO;
 import com.SmartHire.hrService.mapper.CompanyMapper;
 import com.SmartHire.hrService.mapper.HrAuditMapper;
@@ -13,7 +14,7 @@ import com.SmartHire.hrService.model.Company;
 import com.SmartHire.hrService.model.HrAuditRecord;
 import com.SmartHire.hrService.model.HrInfo;
 import com.SmartHire.hrService.model.JobInfo;
-import com.SmartHire.hrService.service.CompanyAdminService;
+import com.SmartHire.hrService.service.CompanyService;
 import com.SmartHire.adminService.enums.AuditStatus;
 import com.SmartHire.adminService.mapper.JobAuditMapper;
 import com.SmartHire.adminService.model.JobAuditRecord;
@@ -21,6 +22,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 import java.util.Date;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -33,7 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
  * @since 2025-12-13
  */
 @Service
-public class CompanyAdminServiceImpl implements CompanyAdminService {
+public class CompanyServiceImpl implements CompanyService {
 
     @Autowired
     private UserContext userContext;
@@ -54,10 +56,12 @@ public class CompanyAdminServiceImpl implements CompanyAdminService {
     private JobAuditMapper jobAuditMapper;
 
     @Override
-    public void createCompany(CompanyCreateDTO createDTO) {
+    public Long createCompany(CompanyDTO createDTO) {
+        Long userId = userContext.getCurrentUserId();
 
         Company company = new Company();
         company.setCompanyName(createDTO.getCompanyName());
+        company.setOwnerUserId(userId);
         company.setDescription(createDTO.getDescription());
         company.setCompanyScale(createDTO.getCompanyScale());
         company.setFinancingStage(createDTO.getFinancingStage());
@@ -72,6 +76,46 @@ public class CompanyAdminServiceImpl implements CompanyAdminService {
         company.setUpdatedAt(new Date());
         companyMapper.insert(company);
         // TODO：管理员审核
+
+        return company.getId();
+    }
+
+    @Override
+    public CompanyDTO getCompanyById(Long companyId) {
+        Company company = companyMapper.selectById(companyId);
+        CompanyDTO companyDTO = new CompanyDTO();
+        companyDTO.setCompanyName(company.getCompanyName());
+        companyDTO.setDescription(company.getDescription());
+        companyDTO.setCompanyScale(company.getCompanyScale());
+        companyDTO.setFinancingStage(company.getFinancingStage());
+        companyDTO.setIndustry(company.getIndustry());
+        companyDTO.setWebsite(company.getWebsite());
+        companyDTO.setLogoUrl(company.getLogoUrl());
+        companyDTO.setBenefits(company.getBenefits());
+        companyDTO.setRegisteredCapital(company.getRegisteredCapital());
+        return companyDTO;
+    }
+
+    @Override
+    public List<CompanyNameDTO> getCompanies(Long current, Long size, String keyword) {
+        Page<Company> page = new Page<>(current, size);
+        LambdaQueryWrapper<Company> wrapper = new LambdaQueryWrapper<>();
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            wrapper.like(Company::getCompanyName, keyword);
+        }
+        // TODO：只查询已通过审核且状态正常的公司
+        // wrapper.eq(Company::getStatus, 1);
+
+        Page<Company> result = companyMapper.selectPage(page, wrapper);
+
+        return result.getRecords().stream()
+                .map(company -> {
+                    CompanyNameDTO dto = new CompanyNameDTO();
+                    dto.setCompanyId(company.getId());
+                    dto.setCompanyName(company.getCompanyName());
+                    return dto;
+                })
+                .toList();
     }
 
     /**
@@ -101,15 +145,25 @@ public class CompanyAdminServiceImpl implements CompanyAdminService {
      * @param companyId 公司ID
      */
     private void validateCompanyOwnership(Long companyId) {
-        HrInfo currentHr = getCurrentHrInfoAndValidateAdmin();
-        if (!currentHr.getCompanyId().equals(companyId)) {
-            throw new BusinessException(ErrorCode.PERMISSION_DENIED, "只能操作本公司的数据");
+        Long currentUserId = userContext.getCurrentUserId();
+        // 检查当前用户是否是该公司的 HR 成员
+        HrInfo hrInfo = hrInfoMapper.selectOne(
+                new LambdaQueryWrapper<HrInfo>()
+                        .eq(HrInfo::getUserId, currentUserId)
+                        .eq(HrInfo::getCompanyId, companyId));
+
+        if (hrInfo == null) {
+            throw new BusinessException(ErrorCode.NOT_COMPANY_DATA);
+        }
+
+        if (hrInfo.getIsCompanyAdmin() != 1) {
+            throw new BusinessException(ErrorCode.NOT_COMPANY_ADMIN);
         }
     }
 
     @Override
     @Transactional
-    public void updateCompanyInfo(Long companyId, Company company) {
+    public void updateCompanyInfo(Long companyId, CompanyDTO companyDTO) {
         validateCompanyOwnership(companyId);
 
         Company existingCompany = companyMapper.selectById(companyId);
@@ -118,7 +172,17 @@ public class CompanyAdminServiceImpl implements CompanyAdminService {
         }
 
         // 更新公司信息
+        Company company = new Company();
         company.setId(companyId);
+        company.setCompanyName(companyDTO.getCompanyName());
+        company.setDescription(companyDTO.getDescription());
+        company.setCompanyScale(companyDTO.getCompanyScale());
+        company.setFinancingStage(companyDTO.getFinancingStage());
+        company.setIndustry(companyDTO.getIndustry());
+        company.setWebsite(companyDTO.getWebsite());
+        company.setLogoUrl(companyDTO.getLogoUrl());
+        company.setBenefits(companyDTO.getBenefits());
+        company.setRegisteredCapital(companyDTO.getRegisteredCapital());
         company.setUpdatedAt(new Date());
         companyMapper.updateById(company);
     }
