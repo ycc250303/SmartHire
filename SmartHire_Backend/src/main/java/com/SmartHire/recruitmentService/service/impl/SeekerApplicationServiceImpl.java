@@ -21,6 +21,7 @@ import com.SmartHire.recruitmentService.dto.FullTimeJobItemDTO;
 import com.SmartHire.recruitmentService.dto.FullTimeJobRecommendationsDTO;
 import com.SmartHire.recruitmentService.dto.InternJobItemDTO;
 import com.SmartHire.recruitmentService.dto.InternJobRecommendationsDTO;
+import com.SmartHire.recruitmentService.dto.InterviewResponseDTO;
 import com.SmartHire.recruitmentService.dto.SeekerApplicationDTO;
 import com.SmartHire.recruitmentService.dto.SeekerApplicationListDTO;
 import com.SmartHire.recruitmentService.dto.SeekerJobPositionDTO;
@@ -28,6 +29,7 @@ import com.SmartHire.recruitmentService.dto.SubmitResumeDTO;
 import com.SmartHire.recruitmentService.mapper.ApplicationMapper;
 import com.SmartHire.recruitmentService.model.Application;
 import com.SmartHire.recruitmentService.service.ApplicationEventProducer;
+import com.SmartHire.recruitmentService.service.InterviewService;
 import com.SmartHire.recruitmentService.service.SeekerApplicationService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -71,6 +73,9 @@ public class SeekerApplicationServiceImpl extends ServiceImpl<ApplicationMapper,
 
     @Autowired
     private ApplicationEventProducer applicationEventProducer;
+
+    @Autowired
+    private InterviewService interviewService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -436,5 +441,10 @@ public class SeekerApplicationServiceImpl extends ServiceImpl<ApplicationMapper,
         resp.setApplication(appDto);
 
         return resp;
+    }
+
+    @Override
+    public void respondToInterview(InterviewResponseDTO request) {
+        interviewService.respondToInterview(request);
     }
 }
