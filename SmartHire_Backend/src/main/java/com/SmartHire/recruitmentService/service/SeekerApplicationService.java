@@ -3,6 +3,7 @@ package com.SmartHire.recruitmentService.service;
 import com.SmartHire.common.dto.hrDto.JobCardDTO;
 import com.SmartHire.recruitmentService.dto.FullTimeJobRecommendationsDTO;
 import com.SmartHire.recruitmentService.dto.InternJobRecommendationsDTO;
+import com.SmartHire.recruitmentService.dto.InterviewResponseDTO;
 import com.SmartHire.recruitmentService.dto.SeekerApplicationListDTO;
 import com.SmartHire.recruitmentService.dto.SeekerJobPositionDTO;
 import com.SmartHire.recruitmentService.dto.SubmitResumeDTO;
@@ -69,4 +70,11 @@ public interface SeekerApplicationService extends IService<Application> {
      * @return 岗位详情DTO
      */
     SeekerJobPositionDTO getJobPosition(Long jobId);
+
+    /**
+     * 响应面试邀请
+     *
+     * @param request 响应请求
+     */
+    void respondToInterview(InterviewResponseDTO request);
 }

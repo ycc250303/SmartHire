@@ -1,5 +1,6 @@
 package com.SmartHire.recruitmentService.service;
 
+import com.SmartHire.recruitmentService.dto.InterviewResponseDTO;
 import com.SmartHire.recruitmentService.dto.InterviewScheduleRequest;
 
 /**
@@ -16,6 +17,19 @@ public interface InterviewService {
    * @return interviewId
    */
   Long scheduleInterview(InterviewScheduleRequest request);
+
+  /**
+   * 响应面试邀请（求职者调用）
+   *
+   * @param request 响应请求
+   */
+  void respondToInterview(InterviewResponseDTO request);
+
+  /**
+   * 获取面试状态
+   *
+   * @param interviewId 面试ID
+   * @return 面试状态：0-待确认 1-已确认 2-已完成 3-已取消
+   */
+  Integer getInterviewStatus(Long interviewId);
 }
-
-

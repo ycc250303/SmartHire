@@ -2,8 +2,11 @@ package com.SmartHire.recruitmentService.service.impl;
 
 import com.SmartHire.common.api.SeekerApi;
 import com.SmartHire.common.api.HrApi;
+import com.SmartHire.common.api.MessageApi;
+import com.SmartHire.common.dto.messageDto.SendMessageCommonDTO;
 import com.SmartHire.common.exception.enums.ErrorCode;
 import com.SmartHire.common.exception.exception.BusinessException;
+import com.SmartHire.recruitmentService.dto.InterviewResponseDTO;
 import com.SmartHire.recruitmentService.dto.InterviewScheduleRequest;
 import com.SmartHire.recruitmentService.mapper.InterviewMapper;
 import com.SmartHire.recruitmentService.mapper.ApplicationMapper;
@@ -39,6 +42,9 @@ public class InterviewServiceImpl extends ServiceImpl<InterviewMapper, Interview
 
   @Autowired
   private HrApi hrApi;
+
+  @Autowired
+  private MessageApi messageApi;
 
   @Autowired
   private UserContext userContext;
@@ -120,5 +126,101 @@ public class InterviewServiceImpl extends ServiceImpl<InterviewMapper, Interview
     log.info("面试安排已发布事件: interviewId={}, applicationId={}", interview.getId(), applicationId);
 
     return interview.getId();
+  }
+
+  @Override
+  @Transactional(rollbackFor = Exception.class)
+  public void respondToInterview(InterviewResponseDTO request) {
+    if (request == null || request.getInterviewId() == null || request.getResponse() == null) {
+      throw new BusinessException(ErrorCode.VALIDATION_ERROR);
+    }
+
+    Interview interview = this.getById(request.getInterviewId());
+    if (interview == null) {
+      throw new BusinessException(ErrorCode.INTERVIEW_NOT_EXIST);
+    }
+
+    // 验证当前用户是否有权限响应（必须是该投递的求职者）
+    Application application = applicationMapper.selectById(interview.getApplicationId());
+    if (application == null) {
+      throw new BusinessException(ErrorCode.APPLICATION_NOT_EXIST);
+    }
+
+    Long currentUserId = userContext.getCurrentUserId();
+    Long currentSeekerId = seekerApi.getJobSeekerIdByUserId(currentUserId);
+    if (currentSeekerId == null || !currentSeekerId.equals(application.getJobSeekerId())) {
+      log.warn("用户无权响应此面试邀请: userId={}, interviewId={}", currentUserId, request.getInterviewId());
+      throw new BusinessException(ErrorCode.PERMISSION_DENIED);
+    }
+
+    // 检查当前面试状态，只有待确认(0)状态才能响应
+    if (interview.getStatus() != 0) {
+      throw new BusinessException(ErrorCode.VALIDATION_ERROR, "面试当前状态不可响应");
+    }
+
+    if (request.getResponse() == 1) {
+      // 接受
+      interview.setStatus((byte) 1); // 已确认
+    } else if (request.getResponse() == 2) {
+      // 拒绝
+      interview.setStatus((byte) 3); // 已取消/已拒绝
+    } else {
+      throw new BusinessException(ErrorCode.VALIDATION_ERROR, "非法的响应状态值");
+    }
+
+    interview.setUpdatedAt(new Date());
+    boolean updated = this.updateById(interview);
+    if (!updated) {
+      throw new BusinessException(ErrorCode.SYSTEM_ERROR, "更新面试状态失败");
+    }
+
+    log.info("求职者已响应面试邀请: interviewId={}, response={}", interview.getId(), request.getResponse());
+
+    // 发送消息通知 HR
+    sendResponseNotificationToHr(application, request.getResponse());
+  }
+
+  /**
+   * 向 HR 发送响应通知消息
+   *
+   * @param application 投递记录
+   * @param response    响应结果 (1-接受, 2-拒绝)
+   */
+  private void sendResponseNotificationToHr(Application application, Integer response) {
+    try {
+      Long hrId = hrApi.getHrIdByJobId(application.getJobId());
+      if (hrId == null) {
+        log.warn("无法找到岗位的对应HR: jobId={}", application.getJobId());
+        return;
+      }
+      Long hrUserId = hrApi.getHrUserIdByHrId(hrId);
+      if (hrUserId == null) {
+        log.warn("无法找到HR对应的用户ID: hrId={}", hrId);
+        return;
+      }
+
+      String action = response == 1 ? "接受" : "拒绝";
+      String content = String.format("候选人已%s您的面试邀请。面试记录ID: %d", action, application.getId());
+
+      SendMessageCommonDTO messageDTO = new SendMessageCommonDTO();
+      messageDTO.setReceiverId(hrUserId);
+      messageDTO.setMessageType(1); // 文本消息
+      messageDTO.setContent(content);
+
+      messageApi.sendMessage(userContext.getCurrentUserId(), messageDTO);
+      log.info("已向HR发送面试响应消息通知: hrUserId={}, response={}", hrUserId, action);
+    } catch (Exception e) {
+      log.error("向HR发送面试响应消息通知失败", e);
+      // 通知的失败不应影响主业务流程的回滚
+    }
+  }
+
+  @Override
+  public Integer getInterviewStatus(Long interviewId) {
+    Interview interview = this.getById(interviewId);
+    if (interview == null) {
+      throw new BusinessException(ErrorCode.INTERVIEW_NOT_EXIST);
+    }
+    return interview.getStatus() == null ? null : interview.getStatus().intValue();
   }
 }

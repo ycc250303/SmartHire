@@ -97,4 +97,11 @@ public class SeekerRecruitmentController {
         adminApi.submitReport(request, userContext.getCurrentUserId());
         return Result.success("举报成功");
     }
+
+    @PostMapping("/interview/respond")
+    @Operation(summary = "接受或拒绝面试邀请", description = "求职者对HR发起的面试邀请进行响应（接受并确认/拒绝）")
+    public Result<?> respondToInterview(@Valid @RequestBody InterviewResponseDTO request) {
+        seekerApplicationService.respondToInterview(request);
+        return Result.success("操作成功");
+    }
 }
