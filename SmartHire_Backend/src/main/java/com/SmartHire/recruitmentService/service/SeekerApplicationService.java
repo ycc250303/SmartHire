@@ -62,6 +62,24 @@ public interface SeekerApplicationService extends IService<Application> {
      * @return 全职岗位推荐DTO
      */
     FullTimeJobRecommendationsDTO getFullTimeJobRecommendations();
+    
+    /**
+     * 获取最新的实习岗位列表（按时间排序）
+     *
+     * @param page 页码
+     * @param size 每页大小
+     * @return 实习岗位列表
+     */
+    InternJobRecommendationsDTO getInternJobsLatest(Integer page, Integer size);
+
+    /**
+     * 获取最新的全职岗位列表（按时间排序）
+     *
+     * @param page 页码
+     * @param size 每页大小
+     * @return 全职岗位列表
+     */
+    FullTimeJobRecommendationsDTO getFullTimeJobsLatest(Integer page, Integer size);
 
     /**
      * 获取面向求职者的岗位详情

@@ -350,6 +350,65 @@ public class SeekerApplicationServiceImpl extends ServiceImpl<ApplicationMapper,
     }
 
     @Override
+    public InternJobRecommendationsDTO getInternJobsLatest(Integer page, Integer size) {
+        JobSearchDTO searchDTO = new JobSearchDTO();
+        searchDTO.setJobType(1); // 实习
+        searchDTO.setPage(page != null ? page : 1);
+        searchDTO.setSize(size != null ? size : 20);
+
+        List<JobCardDTO> jobCards = hrApi.searchPublicJobs(searchDTO);
+        List<InternJobItemDTO> items = new ArrayList<>();
+        
+        for (JobCardDTO jc : jobCards) {
+            InternJobItemDTO item = new InternJobItemDTO();
+            item.setJobId(jc.getJobId());
+            item.setTitle(jc.getJobTitle());
+            item.setCompanyName(jc.getCompanyName());
+            item.setCity(jc.getCity());
+            item.setAddress(jc.getAddress());
+            item.setSalary_min(jc.getSalaryMin() == null ? 0 : jc.getSalaryMin().intValue());
+            item.setSalary_max(jc.getSalaryMax() == null ? 0 : jc.getSalaryMax().intValue());
+            item.setSkills(jc.getSkills());
+            item.setMatchScore(0); // 最新列表不计算匹配分
+            items.add(item);
+        }
+
+        InternJobRecommendationsDTO resp = new InternJobRecommendationsDTO();
+        resp.setJobs(items);
+        return resp;
+    }
+
+    @Override
+    public FullTimeJobRecommendationsDTO getFullTimeJobsLatest(Integer page, Integer size) {
+        JobSearchDTO searchDTO = new JobSearchDTO();
+        searchDTO.setJobType(0); // 全职
+        searchDTO.setPage(page != null ? page : 1);
+        searchDTO.setSize(size != null ? size : 20);
+
+        List<JobCardDTO> jobCards = hrApi.searchPublicJobs(searchDTO);
+        List<FullTimeJobItemDTO> items = new ArrayList<>();
+
+        for (JobCardDTO jc : jobCards) {
+            FullTimeJobItemDTO item = new FullTimeJobItemDTO();
+            item.setJobId(jc.getJobId());
+            item.setTitle(jc.getJobTitle());
+            item.setCompanyName(jc.getCompanyName());
+            item.setCity(jc.getCity());
+            item.setAddress(jc.getAddress());
+            item.setSalary_min(jc.getSalaryMin() == null ? 0 : jc.getSalaryMin().intValue());
+            item.setSalary_max(jc.getSalaryMax() == null ? 0 : jc.getSalaryMax().intValue());
+            item.setSkills(jc.getSkills());
+            item.setExperienceRequired(jc.getExperienceRequired());
+            item.setMatchScore(0); // 最新列表不计算匹配分
+            items.add(item);
+        }
+
+        FullTimeJobRecommendationsDTO resp = new FullTimeJobRecommendationsDTO();
+        resp.setJobs(items);
+        return resp;
+    }
+
+    @Override
     public SeekerJobPositionDTO getJobPosition(Long jobId) {
         JobFullDetailDTO fullDetail = hrApi.getJobFullDetail(jobId);
         if (fullDetail == null) {
