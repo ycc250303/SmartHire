@@ -20,6 +20,9 @@ public class Company implements Serializable {
   @TableId(value = "id", type = IdType.AUTO)
   private Long id;
 
+  /** 公司老板的用户ID */
+  private Long ownerUserId;
+
   /** 公司名称 */
   private String companyName;
 

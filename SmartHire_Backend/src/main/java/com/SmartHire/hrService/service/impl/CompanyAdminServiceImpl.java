@@ -55,9 +55,11 @@ public class CompanyAdminServiceImpl implements CompanyAdminService {
 
     @Override
     public void createCompany(CompanyCreateDTO createDTO) {
+        Long userId = userContext.getCurrentUserId();
 
         Company company = new Company();
         company.setCompanyName(createDTO.getCompanyName());
+        company.setOwnerUserId(userId);
         company.setDescription(createDTO.getDescription());
         company.setCompanyScale(createDTO.getCompanyScale());
         company.setFinancingStage(createDTO.getFinancingStage());
