@@ -36,7 +36,7 @@ export interface GetChatHistoryParams {
 
 export interface SendMessageParams {
   receiverId: number;
-  applicationId: number;
+  applicationId?: number | null;
   messageType: number;
   content: string;
   fileUrl: null;
@@ -97,14 +97,17 @@ export function getChatHistory(params: GetChatHistoryParams): Promise<Message[]>
  */
 export function sendMessage(params: SendMessageParams): Promise<Message> {
   const url = '/api/message/send-text';
-  const requestData = {
+  const requestData: Record<string, any> = {
     receiverId: params.receiverId,
-    applicationId: params.applicationId,
     messageType: params.messageType,
     content: params.content,
     fileUrl: params.fileUrl,
     replyTo: params.replyTo,
   };
+  const applicationId = typeof params.applicationId === 'number' ? params.applicationId : null;
+  if (applicationId && applicationId > 0) {
+    requestData.applicationId = applicationId;
+  }
   console.log('[Params]', url, requestData);
   return http<Message>({
     url,
@@ -183,9 +186,10 @@ export function getUnreadCount(): Promise<number> {
 
 export interface SendMediaParams {
   receiverId: number;
-  applicationId: number;
+  applicationId?: number | null;
   messageType: number;
   filePath: string;
+  content?: string;
 }
 
 /**
@@ -208,14 +212,16 @@ export function sendMedia(params: SendMediaParams): Promise<Message> {
   console.log('[Params]', fullUrl, params);
 
   return new Promise((resolve, reject) => {
-    const payload = JSON.stringify({
+    const dto: Record<string, any> = {
       receiverId: params.receiverId,
-      applicationId: params.applicationId,
+      applicationId: typeof params.applicationId === 'number' ? params.applicationId : 0,
       messageType: params.messageType,
-    });
+      content: params.content ?? (params.messageType === 2 ? '[图片]' : ''),
+    };
 
-    // Some deployments expect dto as query param instead of form field name.
-    const fullUrlWithDto = `${fullUrl}?dto=${encodeURIComponent(payload)}`;
+    const dtoString = JSON.stringify(dto);
+    // Compatibility: some deployments use `dto`, some use `payload` (see Java backend MessageController)
+    const fullUrlWithDto = `${fullUrl}?dto=${encodeURIComponent(dtoString)}&payload=${encodeURIComponent(dtoString)}`;
 
     // #ifdef H5
     if (params.filePath.startsWith('data:') || params.filePath.startsWith('blob:')) {
@@ -225,8 +231,8 @@ export function sendMedia(params: SendMediaParams): Promise<Message> {
           const formData = new FormData();
           const fileName = params.filePath.includes('image') ? 'image.png' : 'file';
           formData.append('file', blob, fileName);
-          formData.append('payload', payload);
-          formData.append('dto', payload);
+          formData.append('dto', dtoString);
+          formData.append('payload', dtoString);
           
           const xhr = new XMLHttpRequest();
           xhr.open('POST', fullUrlWithDto, true);
@@ -274,8 +280,8 @@ export function sendMedia(params: SendMediaParams): Promise<Message> {
         filePath: params.filePath,
         name: 'file',
         formData: {
-          payload: payload,
-          dto: payload,
+          dto: dtoString,
+          payload: dtoString,
         },
         header: {
           'Authorization': token ? `Bearer ${token}` : '',
@@ -319,8 +325,8 @@ export function sendMedia(params: SendMediaParams): Promise<Message> {
       filePath: params.filePath,
       name: 'file',
       formData: {
-        payload: payload,
-        dto: payload,
+        dto: dtoString,
+        payload: dtoString,
       },
       header: {
         'Authorization': token ? `Bearer ${token}` : '',

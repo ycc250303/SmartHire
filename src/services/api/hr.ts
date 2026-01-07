@@ -322,6 +322,61 @@ export function recommendJob(payload: RecommendJobPayload): Promise<number> {
   });
 }
 
+// ============ 招聘流程：面试 / Offer / 拒绝 ============
+export interface InterviewScheduleRequest {
+  applicationId: number;
+  interviewTime: string;
+  duration?: number;
+  interviewType?: number; // 1-电话 2-视频 3-现场
+  interviewRound?: number;
+  location?: string;
+  meetingLink?: string;
+  interviewer?: string;
+  notifyCandidate?: boolean;
+  note?: string;
+}
+
+export function scheduleInterview(payload: InterviewScheduleRequest): Promise<null> {
+  return http<null>({
+    url: "/api/recruitment/hr/interviews",
+    method: "POST",
+    data: payload,
+  });
+}
+
+export interface OfferRequest {
+  applicationId: number;
+  title?: string;
+  baseSalary?: number;
+  bonus?: number;
+  startDate?: string;
+  employmentType?: string; // full_time/part_time/intern
+  send?: boolean;
+  note?: string;
+}
+
+export function sendOffer(payload: OfferRequest): Promise<null> {
+  return http<null>({
+    url: "/api/recruitment/hr/offers",
+    method: "POST",
+    data: payload,
+  });
+}
+
+export interface RejectRequest {
+  reason?: string;
+  sendNotification?: boolean;
+  templateId?: string;
+}
+
+export function rejectCandidate(applicationId: number, payload: RejectRequest): Promise<null> {
+  return http<null>({
+    url: `/api/recruitment/hr/application/${applicationId}/reject`,
+    method: "PATCH",
+    data: payload,
+  });
+}
+
 // ============ 兼容旧页面的占位接口（仍可接入后端时复用） ============
 export interface CandidateListItem {
   candidateId: number;

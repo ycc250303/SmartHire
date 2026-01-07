@@ -11,7 +11,7 @@
             confirm-type="search"
           />
           <view class="search-clear" v-if="searchKeyword" @click="clearSearch">
-            <text class="clear-icon">✕</text>
+            <text class="clear-icon">×</text>
           </view>
         </view>
         <view class="search-button" @click="handleSearch">
@@ -146,21 +146,27 @@
               :class="{ active: selectedEducation === 0 }"
               @click="handleEducationSelect(0)"
             >
-              <text class="filter-option-text">{{ t('degree.highSchoolOrBelow') }}</text>
+              <text class="filter-option-text">{{
+                t('degree.highSchoolOrBelow')
+              }}</text>
             </view>
             <view
               class="filter-option"
               :class="{ active: selectedEducation === 1 }"
               @click="handleEducationSelect(1)"
             >
-              <text class="filter-option-text">{{ t('degree.associateDegree') }}</text>
+              <text class="filter-option-text">{{
+                t('degree.associateDegree')
+              }}</text>
             </view>
             <view
               class="filter-option"
               :class="{ active: selectedEducation === 2 }"
               @click="handleEducationSelect(2)"
             >
-              <text class="filter-option-text">{{ t('degree.bachelorDegree') }}</text>
+              <text class="filter-option-text">{{
+                t('degree.bachelorDegree')
+              }}</text>
             </view>
             <view
               class="filter-option"
@@ -194,11 +200,7 @@
           <text class="empty-text">{{ t('pages.search.noResults') }}</text>
         </view>
         <view v-else-if="jobs.length > 0" class="job-list">
-          <SearchJobCard
-            v-for="job in jobs"
-            :key="job.jobId"
-            :job="job"
-          />
+          <SearchJobCard v-for="job in jobs" :key="job.jobId" :job="job" />
         </view>
         <view v-else class="empty-state">
           <text class="empty-text">{{ t('pages.search.placeholder') }}</text>
@@ -220,14 +222,18 @@
 import { ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { t } from '@/locales';
-import { searchJobPositions, type JobSearchParams, type JobSearchResult } from '@/services/api/recruitment';
+import {
+  searchJobPositions,
+  type JobSearchParams,
+  type JobSearchResult,
+} from '@/services/api/recruitment';
 import SearchJobCard from '@/components/common/SearchJobCard.vue';
 import CityPicker from '@/components/common/CityPicker.vue';
 import { useCityData } from '@/utils/useCityData';
 
 onLoad(() => {
   uni.setNavigationBarTitle({
-    title: t('navigation.search')
+    title: t('navigation.search'),
   });
 });
 
@@ -248,7 +254,16 @@ const hasSearched = ref(false);
 const cityPickerValue = ref<string | null>(null);
 const showCityPicker = ref(false);
 
-const popularCityKeys = ['beijing', 'shanghai', 'guangzhou', 'shenzhen', 'hangzhou', 'chengdu', 'nanjing', 'wuhan'];
+const popularCityKeys = [
+  'beijing',
+  'shanghai',
+  'guangzhou',
+  'shenzhen',
+  'hangzhou',
+  'chengdu',
+  'nanjing',
+  'wuhan',
+];
 
 const cityKeyToNameMap: Record<string, string> = {
   beijing: '北京',
@@ -314,12 +329,16 @@ function handleCityPickerTrigger() {
     query.select('.city-picker-hidden .picker-trigger').boundingClientRect();
     query.exec((res) => {
       if (res && res[0]) {
-        const trigger = uni.createSelectorQuery().select('.city-picker-hidden .picker-trigger');
-        trigger.node((nodeRes: any) => {
-          if (nodeRes && nodeRes.node) {
-            nodeRes.node.click();
-          }
-        }).exec();
+        const trigger = uni
+          .createSelectorQuery()
+          .select('.city-picker-hidden .picker-trigger');
+        trigger
+          .node((nodeRes: any) => {
+            if (nodeRes && nodeRes.node) {
+              nodeRes.node.click();
+            }
+          })
+          .exec();
       }
     });
   }, 100);
@@ -358,11 +377,17 @@ function handleEducationSelect(education: number | null) {
 }
 
 async function handleSearch() {
-  if (!searchKeyword.value.trim() && !selectedCity.value && selectedJobType.value === null && 
-      selectedEducation.value === null && !minSalary.value && !maxSalary.value) {
+  if (
+    !searchKeyword.value.trim() &&
+    !selectedCity.value &&
+    selectedJobType.value === null &&
+    selectedEducation.value === null &&
+    !minSalary.value &&
+    !maxSalary.value
+  ) {
     uni.showToast({
       title: t('pages.search.enterKeyword'),
-      icon: 'none'
+      icon: 'none',
     });
     return;
   }
@@ -467,7 +492,7 @@ async function handleSearch() {
 
 .filter-group {
   margin-bottom: vars.$spacing-xl;
-  
+
   &:last-child {
     margin-bottom: 0;
   }

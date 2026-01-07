@@ -3,7 +3,7 @@
     <view class="card-header">
       <text class="job-title">{{ job.jobTitle }}</text>
     </view>
-    
+
     <view class="job-meta">
       <text class="meta-text">
         {{ job.companyName || '' }} · {{ job.city || '' }}
@@ -12,12 +12,18 @@
         {{ formatSalary(job.salaryMin, job.salaryMax) }}
       </view>
     </view>
-    
+
     <view class="job-tags">
-      <view class="tag tag-type" v-if="job.jobType !== undefined && job.jobType !== null">
+      <view
+        class="tag tag-type"
+        v-if="job.jobType !== undefined && job.jobType !== null"
+      >
         {{ getJobTypeText(job.jobType) }}
       </view>
-      <view class="tag tag-degree" v-if="job.educationRequired !== undefined && job.educationRequired !== null">
+      <view
+        class="tag tag-degree"
+        v-if="job.educationRequired !== undefined && job.educationRequired !== null"
+      >
         {{ getDegreeText(job.educationRequired) }}
       </view>
     </view>
@@ -57,7 +63,7 @@ function getDegreeText(degree: number): string {
 
 function handleCardClick() {
   uni.navigateTo({
-    url: `/pages/seeker/jobs/detail?jobId=${props.job.jobId}`
+    url: `/pages/seeker/jobs/detail?jobId=${props.job.jobId}`,
   });
 }
 </script>
