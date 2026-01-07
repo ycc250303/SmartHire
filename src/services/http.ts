@@ -300,6 +300,13 @@ export function http<TResponse = unknown, TData extends RequestData = RequestDat
     let retryCount = 0;
 
     const makeRequest = async (): Promise<void> => {
+      console.log('[HTTP Debug]', {
+        apiPath,
+        baseUrl,
+        env: getEnvironmentForApi(apiPath),
+        VITE_API_BASE_URL_PROD: import.meta.env.VITE_API_BASE_URL_PROD,
+      });
+      
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
         ...config.header,
@@ -320,6 +327,8 @@ export function http<TResponse = unknown, TData extends RequestData = RequestDat
       }
       
       const fullUrl = normalizedBaseUrl ? `${normalizedBaseUrl}${normalizedPath}` : normalizedPath;
+      
+      console.log('[HTTP Debug] Full URL:', fullUrl);
 
       uni.request({
         url: fullUrl,

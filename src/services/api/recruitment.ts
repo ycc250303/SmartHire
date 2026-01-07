@@ -61,13 +61,13 @@ export interface JobSearchResult {
  * @returns List of job search results
  */
 export function searchJobPositions(params: JobSearchParams): Promise<JobSearchResult[]> {
-  const url = '/public/job-position/search';
+  const url = '/api/public/job-position/search';
   console.log('[Params]', url, params);
   return http<JobSearchResult[]>({
     url,
     method: 'POST',
     data: params,
-    skipAuth: true,
+    // skipAuth: true,
   }).then(response => {
     console.log('[Response]', url, response);
     return response;
