@@ -2,6 +2,7 @@ package com.SmartHire.recruitmentService.controller;
 
 import com.SmartHire.common.entity.Result;
 import com.SmartHire.recruitmentService.service.InterviewService;
+import com.SmartHire.recruitmentService.service.OfferService;
 import com.SmartHire.recruitmentService.service.SeekerApplicationService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.constraints.NotNull;
@@ -28,6 +29,9 @@ public class PublicRecruitmentController {
     @Autowired
     private InterviewService interviewService;
 
+    @Autowired
+    private OfferService offerService;
+
     @GetMapping("/application/exists")
     @Operation(summary = "检查是否存在投递/推荐记录", description = "检查是否存在投递/推荐记录")
     public Result<Boolean> checkApplicationExists(
@@ -43,6 +47,14 @@ public class PublicRecruitmentController {
     public Result<Integer> getInterviewStatus(
             @RequestParam @NotNull(message = "面试ID不能为空") Long interviewId) {
         Integer status = interviewService.getInterviewStatus(interviewId);
+        return Result.success("查询成功", status);
+    }
+
+    @GetMapping("/offer/status")
+    @Operation(summary = "获取 Offer 状态", description = "根据 Offer ID 获取当前 Offer 状态（0-待接受 1-已接受 2-已拒绝）")
+    public Result<Integer> getOfferStatus(
+            @RequestParam @NotNull(message = "Offer ID 不能为空") Long offerId) {
+        Integer status = offerService.getOfferStatus(offerId);
         return Result.success("查询成功", status);
     }
 }

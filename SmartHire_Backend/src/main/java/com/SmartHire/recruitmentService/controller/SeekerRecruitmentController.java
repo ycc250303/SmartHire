@@ -9,6 +9,7 @@ import com.SmartHire.common.entity.Result;
 import com.SmartHire.common.dto.hrDto.JobCardDTO;
 import com.SmartHire.recruitmentService.dto.*;
 import com.SmartHire.recruitmentService.service.SeekerApplicationService;
+import com.SmartHire.recruitmentService.service.OfferService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -38,6 +39,9 @@ import org.springframework.web.bind.annotation.RestController;
 public class SeekerRecruitmentController {
     @Autowired
     private SeekerApplicationService seekerApplicationService;
+
+    @Autowired
+    private OfferService offerService;
 
     @Autowired
     private AdminApi adminApi;
@@ -102,6 +106,13 @@ public class SeekerRecruitmentController {
     @Operation(summary = "接受或拒绝面试邀请", description = "求职者对HR发起的面试邀请进行响应（接受并确认/拒绝）")
     public Result<?> respondToInterview(@Valid @RequestBody InterviewResponseDTO request) {
         seekerApplicationService.respondToInterview(request);
+        return Result.success("操作成功");
+    }
+
+    @PostMapping("/offer/respond")
+    @Operation(summary = "接受或拒绝 Offer", description = "求职者对HR发起的 Offer 进行响应（接受/拒绝）")
+    public Result<?> respondToOffer(@Valid @RequestBody OfferResponseDTO request) {
+        offerService.respondToOffer(request);
         return Result.success("操作成功");
     }
 }
