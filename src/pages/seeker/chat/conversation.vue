@@ -6,6 +6,7 @@
       </view>
       <view class="header-content">
         <text class="header-username">{{ displayUsername }}</text>
+        <text v-if="headerSubtitle" class="header-subtitle">{{ headerSubtitle }}</text>
       </view>
     </view>
 
@@ -79,10 +80,22 @@
               </view>
             </view>
             <view v-if="message.fileUrl" class="message-file">
-              <image v-if="isImage(message.fileUrl)" :src="message.fileUrl" mode="aspectFit" class="message-image" />
-              <text v-else class="file-link">{{ t('pages.chat.conversation.file') }}</text>
+              <image
+                v-if="isImage(message.fileUrl)"
+                :src="message.fileUrl"
+                mode="aspectFit"
+                class="message-image"
+                @click="previewImage(message.fileUrl)"
+              />
+              <view v-else class="file-card" @click="downloadFile(message.fileUrl)">
+                <view class="file-icon">📄</view>
+                <view class="file-meta">
+                  <text class="file-name">{{ getFileName(message.fileUrl) }}</text>
+                  <text v-if="getFileExt(message.fileUrl)" class="file-size">{{ getFileExt(message.fileUrl) }}</text>
+                </view>
+              </view>
             </view>
-            <text v-if="message.content" class="message-content">{{ message.content }}</text>
+            <text v-if="message.content && !message.fileUrl" class="message-content">{{ message.content }}</text>
             <view class="message-footer">
               <text class="message-time">{{ formatMessageTime(message.createdAt) }}</text>
               <text v-if="isSentByMe(message) && message.isRead === 1" class="read-indicator">✓✓</text>
@@ -109,6 +122,9 @@
         </view>
       </view>
       <view class="input-row">
+        <view class="attachment-icon" @click="showAttachmentOptions">
+          <text class="icon-text">+</text>
+        </view>
         <input
           ref="messageInputRef"
           class="message-input"
@@ -142,7 +158,7 @@ import { ref, computed, onMounted, nextTick, watch } from 'vue';
 import { onLoad, onShow } from '@dcloudio/uni-app';
 import { t } from '@/locales';
 import dayjs from 'dayjs';
-import { getChatHistory, sendMessage, markAsRead, getConversations, type Message } from '@/services/api/message';
+import { getChatHistory, sendMessage, sendMedia, markAsRead, getConversations, type Message } from '@/services/api/message';
 import { useUserStore } from '@/store/user';
 import { useImageUrl } from '@/utils/useImageUrl';
 import { getCurrentUserInfo } from '@/services/api/user';
@@ -247,6 +263,11 @@ const displayUsername = computed(() => {
   return t('pages.chat.conversation.title');
 });
 
+const headerSubtitle = computed(() => {
+  if (jobInfo.value?.companyName) return jobInfo.value.companyName;
+  return '';
+});
+
 onLoad((options: any) => {
   console.log('Conversation onLoad options:', options);
   
@@ -298,17 +319,13 @@ onLoad((options: any) => {
 });
 
 onShow(() => {
-  if (conversationId.value) {
-    loadMessages();
-    markMessagesAsRead();
-  }
+  loadMessages();
+  markMessagesAsRead();
 });
 
 onMounted(() => {
   initLayout();
-  if (conversationId.value) {
-    loadMessages();
-  }
+  loadMessages();
   ensureAvatarInfo();
 });
 
@@ -370,8 +387,30 @@ watch(replyingTo, () => {
   });
 });
 
+async function ensureConversationId(): Promise<boolean> {
+  if (conversationId.value) return true;
+  if (!otherUserId.value) return false;
+  try {
+    const list = await getConversations();
+    const found = list.find(c => c.otherUserId === otherUserId.value || (c.applicationId && c.applicationId === applicationId.value));
+    if (found) {
+      conversationId.value = found.id;
+      if (found.applicationId) {
+        applicationId.value = found.applicationId;
+      }
+      return true;
+    }
+  } catch (err) {
+    console.error('Failed to resolve conversation id:', err);
+  }
+  return false;
+}
+
 async function loadMessages() {
-  if (!conversationId.value) return;
+  if (!conversationId.value) {
+    const resolved = await ensureConversationId();
+    if (!resolved) return;
+  }
   
   loading.value = true;
   error.value = null;
@@ -433,22 +472,20 @@ async function loadMoreMessages() {
 async function handleSend() {
   console.log('handleSend called', { canSend: canSend.value, conversationId: conversationId.value, otherUserId: otherUserId.value, applicationId: applicationId.value });
   
-  if (!canSend.value || !conversationId.value) {
-    console.log('Early return: canSend or conversationId check failed');
+  if (!canSend.value) {
+    console.log('Early return: canSend check failed');
     return;
   }
   
   if (!otherUserId.value) {
-    console.log('No otherUserId, trying to get from conversation');
     try {
       const conversations = await getConversations();
-      const currentConversation = conversations.find(c => c.id === conversationId.value);
+      const currentConversation = conversationId.value ? conversations.find(c => c.id === conversationId.value) : undefined;
       if (currentConversation) {
         otherUserId.value = currentConversation.otherUserId;
         if (currentConversation.applicationId) {
           applicationId.value = currentConversation.applicationId;
         }
-        console.log('Got otherUserId from conversation:', otherUserId.value);
       } else {
         uni.showToast({
           title: t('pages.chat.conversation.sendError'),
@@ -505,6 +542,9 @@ async function handleSend() {
       replyTo: tempMessage.replyTo,
     });
     
+    if (!conversationId.value && sentMessage.conversationId) {
+      conversationId.value = sentMessage.conversationId;
+    }
     const index = messages.value.findIndex(m => m.id === tempMessage.id);
     if (index !== -1) {
       messages.value[index] = sentMessage;
@@ -605,6 +645,20 @@ function isImage(url: string | null): boolean {
   return imageExtensions.some(ext => url.toLowerCase().includes(ext));
 }
 
+function getFileName(url: string | null): string {
+  if (!url) return 'file';
+  const parts = url.split('/');
+  const last = parts[parts.length - 1] || 'file';
+  const decoded = decodeURIComponent(last);
+  return decoded.length > 28 ? `${decoded.slice(0, 25)}...` : decoded;
+}
+
+function getFileExt(url: string | null): string {
+  if (!url) return '';
+  const match = url.toLowerCase().match(/\.([a-z0-9]+)(\?|#|$)/);
+  return match && match[1] ? match[1].toUpperCase() : '';
+}
+
 function formatMessageTime(time: string): string {
   return dayjs(time).format(t('pages.chat.conversation.timeFormat'));
 }
@@ -631,6 +685,144 @@ async function markMessagesAsRead() {
   } catch (err) {
     console.error('Failed to mark messages as read:', err);
   }
+}
+
+function showAttachmentOptions() {
+  if (sending.value) return;
+  
+  uni.showActionSheet({
+    itemList: [t('pages.chat.conversation.sendImage'), t('pages.chat.conversation.sendFile')],
+    success: (res) => {
+      if (res.tapIndex === 0) {
+        chooseImage();
+      } else if (res.tapIndex === 1) {
+        chooseFile();
+      }
+    }
+  });
+}
+
+function chooseImage() {
+  // #ifdef H5
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.onchange = (e: any) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event: any) => {
+        sendMediaMessage(event.target.result, 2);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  input.click();
+  // #endif
+  
+  // #ifndef H5
+  uni.chooseImage({
+    count: 1,
+    sizeType: ['compressed'],
+    sourceType: ['album', 'camera'],
+    success: (res) => {
+      if (res.tempFilePaths && res.tempFilePaths[0]) {
+        sendMediaMessage(res.tempFilePaths[0], 2);
+      }
+    }
+  });
+  // #endif
+}
+
+function chooseFile() {
+  // #ifdef H5
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx';
+  input.onchange = (e: any) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event: any) => {
+        sendMediaMessage(event.target.result, 3);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  input.click();
+  // #endif
+  
+  // #ifndef H5
+  uni.chooseMessageFile({
+    count: 1,
+    type: 'file',
+    success: (res) => {
+      if (res.tempFiles && res.tempFiles[0] && res.tempFiles[0].path) {
+        sendMediaMessage(res.tempFiles[0].path, 3);
+      }
+    }
+  });
+  // #endif
+}
+
+async function sendMediaMessage(filePath: string, messageType: number) {
+  if (!otherUserId.value) {
+    uni.showToast({ title: t('pages.chat.conversation.sendError'), icon: 'none' });
+    return;
+  }
+  
+  sending.value = true;
+  
+  try {
+    const message = await sendMedia({
+      receiverId: otherUserId.value,
+      applicationId: applicationId.value || 0,
+      messageType,
+      filePath
+    });
+    
+    if (!conversationId.value && message.conversationId) {
+      conversationId.value = message.conversationId;
+    }
+    messages.value.push(message);
+    scrollToBottom(true);
+  } catch (err) {
+    console.error('Failed to send media:', err);
+    uni.showToast({ title: t('pages.chat.conversation.sendError'), icon: 'none' });
+  } finally {
+    sending.value = false;
+  }
+}
+
+function previewImage(url: string) {
+  uni.previewImage({ urls: [url], current: url });
+}
+
+function downloadFile(url: string) {
+  // #ifdef H5
+  window.open(url, '_blank');
+  // #endif
+  
+  // #ifndef H5
+  uni.showLoading({ title: t('pages.chat.conversation.downloading') });
+  uni.downloadFile({
+    url,
+    success: (res) => {
+      uni.hideLoading();
+      if (res.statusCode === 200) {
+        uni.openDocument({
+          filePath: res.tempFilePath,
+          showMenu: true,
+          fail: () => uni.showToast({ title: t('pages.chat.conversation.openFileError'), icon: 'none' })
+        });
+      }
+    },
+    fail: () => {
+      uni.hideLoading();
+      uni.showToast({ title: t('pages.chat.conversation.downloadError'), icon: 'none' });
+    }
+  });
+  // #endif
 }
 
 function handleBack() {
@@ -698,6 +890,7 @@ function handleBack() {
   justify-content: center;
   padding: 0 100rpx;
   box-sizing: border-box;
+  flex-direction: column;
 }
 
 .header-username {
@@ -709,6 +902,16 @@ function handleBack() {
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 100%;
+}
+
+.header-subtitle {
+  margin-top: 4rpx;
+  font-size: 24rpx;
+  color: vars.$text-muted;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .job-info-card {
@@ -959,6 +1162,59 @@ function handleBack() {
   max-width: 400rpx;
   max-height: 600rpx;
   border-radius: vars.$border-radius-sm;
+  
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+.file-card {
+  display: flex;
+  align-items: center;
+  gap: vars.$spacing-md;
+  padding: vars.$spacing-md vars.$spacing-lg;
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: vars.$border-radius-sm;
+  min-width: 260rpx;
+  max-width: 420rpx;
+  box-sizing: border-box;
+  
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+.message-sent .file-card {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.file-icon {
+  font-size: 48rpx;
+  line-height: 1;
+}
+
+.file-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+  min-width: 0;
+}
+
+.file-name {
+  font-size: 28rpx;
+  color: vars.$text-color;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.message-sent .file-name {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.file-size {
+  font-size: 22rpx;
+  color: vars.$text-muted;
 }
 
 .file-link {
@@ -1072,6 +1328,28 @@ function handleBack() {
   align-items: center;
   padding: vars.$spacing-md vars.$spacing-lg;
   gap: vars.$spacing-md;
+}
+
+.attachment-icon {
+  width: 72rpx;
+  height: 72rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: vars.$bg-color;
+  border-radius: vars.$border-radius-sm;
+  flex-shrink: 0;
+  
+  &:active {
+    opacity: 0.6;
+  }
+}
+
+.icon-text {
+  font-size: 48rpx;
+  color: vars.$text-muted;
+  line-height: 1;
+  font-weight: 300;
 }
 
 .message-input {

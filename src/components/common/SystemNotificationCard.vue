@@ -48,20 +48,13 @@ const typeClass = computed(() => {
 
 const formattedTime = computed(() => {
   if (!props.notification.createdAt) return '';
-  
   const notificationTime = dayjs(props.notification.createdAt);
   const now = dayjs();
   const diffDays = now.diff(notificationTime, 'day');
-  
   if (diffDays === 0) {
     return notificationTime.format('HH:mm');
-  } else if (diffDays === 1) {
-    return t('pages.chat.list.yesterday');
-  } else if (diffDays < 7) {
-    return notificationTime.format('MM/DD');
-  } else {
-    return notificationTime.format('YYYY/MM/DD');
   }
+  return notificationTime.format('YYYY/MM/DD HH:mm');
 });
 
 function handleClick() {

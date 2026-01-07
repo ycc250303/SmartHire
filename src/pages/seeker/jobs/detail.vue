@@ -50,6 +50,20 @@
         </view>
       </view>
 
+      <view class="job-location-section" v-if="hasMapLocation">
+        <text class="section-title">{{ t('pages.jobs.jobDetail.location') }}</text>
+        <view class="map-container" @click="handleOpenLocation">
+          <map
+            class="map"
+            :latitude="mapLatitude"
+            :longitude="mapLongitude"
+            :markers="mapMarkers"
+            :scale="13"
+            show-location
+          />
+        </view>
+      </view>
+
       <view class="job-description-section" v-if="job.description">
         <text class="section-title">{{ t('pages.jobs.jobDetail.description') }}</text>
         <text class="section-content">{{ job.description }}</text>
@@ -126,13 +140,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { t } from '@/locales';
 import { getJobDetail, submitResume, type JobDetail } from '@/services/api/recruitment';
 import { getResumes, type Resume } from '@/services/api/resume';
 import { favoriteJob, unfavoriteJob, getFavoriteJobs } from '@/services/api/seeker';
 import CareerPlanningCard from '@/components/common/CareerPlanningCard.vue';
+import { CITY_CENTER_MAP } from '@/data/cityCenters';
 
 const job = ref<JobDetail | null>(null);
 const loading = ref(false);
@@ -141,6 +156,45 @@ const applying = ref(false);
 const jobId = ref<number | null>(null);
 const isFavorite = ref(false);
 const favoriting = ref(false);
+
+function normalizeCityName(city: string | null | undefined): string | null {
+  if (!city) return null;
+  let name = city.trim();
+  if (name.endsWith('市')) {
+    name = name.slice(0, -1);
+  }
+  return name || null;
+}
+
+const mapLocation = computed(() => {
+  const cityName = normalizeCityName(job.value?.city);
+  if (!cityName) return null;
+  const info = CITY_CENTER_MAP[cityName];
+  if (!info) return null;
+  return {
+    latitude: info.latitude,
+    longitude: info.longitude,
+  };
+});
+
+const hasMapLocation = computed(() => !!mapLocation.value);
+
+const mapLatitude = computed(() => mapLocation.value?.latitude ?? 0);
+const mapLongitude = computed(() => mapLocation.value?.longitude ?? 0);
+
+const mapMarkers = computed(() => {
+  if (!mapLocation.value) {
+    return [];
+  }
+  return [
+    {
+      id: 1,
+      latitude: mapLocation.value.latitude,
+      longitude: mapLocation.value.longitude,
+      title: job.value?.company?.companyName || job.value?.jobTitle || '',
+    },
+  ];
+});
 
 onLoad((options: any) => {
   if (options?.jobId) {
@@ -170,6 +224,16 @@ async function loadJobDetail() {
   } finally {
     loading.value = false;
   }
+}
+
+function handleOpenLocation() {
+  if (!mapLocation.value) return;
+  uni.openLocation({
+    latitude: mapLocation.value.latitude,
+    longitude: mapLocation.value.longitude,
+    name: job.value?.company?.companyName || job.value?.jobTitle || '',
+    address: job.value?.address || job.value?.city || '',
+  });
 }
 
 async function checkFavoriteStatus() {
@@ -608,6 +672,25 @@ function goToCompanyDetail() {
   display: flex;
   flex-direction: column;
   gap: vars.$spacing-md;
+}
+
+.job-location-section {
+  background: vars.$surface-color;
+  padding: vars.$spacing-xl;
+  margin-top: vars.$spacing-md;
+  border-radius: vars.$border-radius;
+}
+
+.map-container {
+  margin-top: vars.$spacing-md;
+  border-radius: vars.$border-radius;
+  overflow: hidden;
+  height: 300rpx;
+}
+
+.map {
+  width: 100%;
+  height: 100%;
 }
 
 .info-item {

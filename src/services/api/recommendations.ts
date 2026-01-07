@@ -38,6 +38,14 @@ export interface InternJobRecommendationsResponse {
   jobs: InternJobItem[];
 }
 
+export type JobRecommendationItem = InternJobItem;
+
+export interface FullTimeJobItem extends InternJobItem {}
+
+export interface FullTimeJobRecommendationsResponse {
+  jobs: FullTimeJobItem[];
+}
+
 function mapJobDetailToInternJobItem(detail: JobDetail): Partial<InternJobItem> {
   const educationRequired = detail.educationRequired;
   let degrees: Degree | null = null;
@@ -201,6 +209,14 @@ async function batchCalculateMatchScores(
   }
 }
 
+function sortJobsByMatchScore<T extends { matchScore?: number | null }>(jobs: T[]): T[] {
+  return [...jobs].sort((a, b) => {
+    const aScore = a.matchScore ?? -1;
+    const bScore = b.matchScore ?? -1;
+    return bScore - aScore;
+  });
+}
+
 export async function calculateMatchScore(jobId: number): Promise<number | null> {
   try {
     const seekerProfile = await buildSeekerProfile();
@@ -280,7 +296,7 @@ export async function getInternJobRecommendationsWithSupplement(userId?: number 
   );
   
   return {
-    jobs: supplementedJobs,
+    jobs: sortJobsByMatchScore(supplementedJobs),
   };
 }
 
@@ -294,6 +310,45 @@ export function getInternJobRecommendations(userId?: number | null): Promise<Int
   const url = '/api/recruitment/seeker/job-recommendations/intern';
   console.log('[Params]', url, params);
   return http<InternJobRecommendationsResponse>({
+    url,
+    method: 'GET',
+    data: params,
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
+  });
+}
+
+export async function getFullTimeJobRecommendationsWithSupplement(userId?: number | null): Promise<FullTimeJobRecommendationsResponse> {
+  const response = await getFullTimeJobRecommendations(userId);
+  
+  const seekerProfile = await buildSeekerProfile();
+  const pyMatchScores = await batchCalculateMatchScores(response.jobs, seekerProfile);
+  
+  const jobsWithPyScores = response.jobs.map(job => ({
+    ...job,
+    matchScore: pyMatchScores.get(job.jobId) ?? job.matchScore ?? null,
+  }));
+  
+  const supplementedJobs = await Promise.all(
+    jobsWithPyScores.map(job => supplementJobItem(job))
+  );
+  
+  return {
+    jobs: sortJobsByMatchScore(supplementedJobs),
+  };
+}
+
+export function getFullTimeJobRecommendations(userId?: number | null): Promise<FullTimeJobRecommendationsResponse> {
+  const params: Record<string, any> = {};
+  
+  if (userId !== undefined && userId !== null) {
+    params.userId = userId;
+  }
+  
+  const url = '/api/recruitment/seeker/job-recommendations/full-time';
+  console.log('[Params]', url, params);
+  return http<FullTimeJobRecommendationsResponse>({
     url,
     method: 'GET',
     data: params,

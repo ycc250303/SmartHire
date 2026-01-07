@@ -187,18 +187,10 @@ function formatTime(time?: string): string {
   if (!time) return '';
   
   const messageTime = dayjs(time);
-  const now = dayjs();
-  const diffDays = now.diff(messageTime, 'day');
-  
-  if (diffDays === 0) {
+  if (messageTime.isSame(dayjs(), 'day')) {
     return messageTime.format('HH:mm');
-  } else if (diffDays === 1) {
-    return t('pages.chat.list.yesterday');
-  } else if (diffDays < 7) {
-    return messageTime.format('MM/DD');
-  } else {
-    return messageTime.format('YYYY/MM/DD');
   }
+  return messageTime.format('YYYY/MM/DD HH:mm');
 }
 
 function openConversation(conversation: Conversation) {

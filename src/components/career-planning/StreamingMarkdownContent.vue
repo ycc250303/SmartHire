@@ -1,6 +1,5 @@
 <template>
   <view class="streaming-markdown-content">
-    <!-- 直接渲染文本内容，让浏览器自然换行 -->
     <text class="markdown-text" decode>{{ props.content }}</text>
     <text v-if="isStreaming" class="streaming-cursor">|</text>
   </view>

@@ -78,6 +78,7 @@ export default {
         unfavoriting: '取消收藏中...',
         careerPlanning: '职业路径规划解析',
         careerPlanningDescription: '获取AI职业规划建议与学习路径',
+        location: '工作地点',
       },
       careerPlanningPage: {
         title: '职业路径规划',
@@ -298,6 +299,11 @@ export default {
         replying: '正在回复',
         you: '你',
         file: '文件',
+        sendImage: '发送图片',
+        sendFile: '发送文件',
+        downloading: '下载中...',
+        openFileError: '打开文件失败',
+        downloadError: '下载失败',
       },
       notifications: {
         title: '通知',

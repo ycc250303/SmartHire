@@ -193,7 +193,7 @@ export interface SendMediaParams {
 }
 
 /**
- * Send media message (image)
+ * Send media message (image, file)
  * @returns Sent message data
  */
 export function sendMedia(params: SendMediaParams): Promise<Message> {
@@ -210,7 +210,7 @@ export function sendMedia(params: SendMediaParams): Promise<Message> {
   const token = uni.getStorageSync('auth_token');
 
   console.log('[Params]', fullUrl, params);
-
+  
   return new Promise((resolve, reject) => {
     const dto: Record<string, any> = {
       receiverId: params.receiverId,
@@ -218,24 +218,31 @@ export function sendMedia(params: SendMediaParams): Promise<Message> {
       messageType: params.messageType,
       content: params.content ?? (params.messageType === 2 ? '[图片]' : ''),
     };
-
+  
     const dtoString = JSON.stringify(dto);
     // Compatibility: some deployments use `dto`, some use `payload` (see Java backend MessageController)
     const fullUrlWithDto = `${fullUrl}?dto=${encodeURIComponent(dtoString)}&payload=${encodeURIComponent(dtoString)}`;
-
+  
     // #ifdef H5
     if (params.filePath.startsWith('data:') || params.filePath.startsWith('blob:')) {
       fetch(params.filePath)
         .then(res => res.blob())
         .then(blob => {
           const formData = new FormData();
-          const fileName = params.filePath.includes('image') ? 'image.png' : 'file';
+          
+          let fileName = 'file';
+          if (params.messageType === 2) {
+            fileName = 'image.png';
+          } else if (params.filePath.includes('pdf')) {
+            fileName = 'document.pdf';
+          }
+          
           formData.append('file', blob, fileName);
           formData.append('dto', dtoString);
           formData.append('payload', dtoString);
           
           const xhr = new XMLHttpRequest();
-          xhr.open('POST', fullUrlWithDto, true);
+          xhr.open('POST', fullUrl, true);
           xhr.setRequestHeader('Authorization', token ? `Bearer ${token}` : '');
           
           xhr.onload = () => {
@@ -247,22 +254,22 @@ export function sendMedia(params: SendMediaParams): Promise<Message> {
                 data = xhr.responseText;
               }
               
-            if (xhr.status >= 200 && xhr.status < 300) {
-              if (data && data.code === 0) {
-                console.log('[Response]', fullUrl, data.data);
-                resolve(data.data);
-              } else if (data && !data.code) {
-                console.log('[Response]', fullUrl, data);
-                resolve(data);
+              if (xhr.status >= 200 && xhr.status < 300) {
+                if (data && data.code === 0) {
+                  console.log('[Response]', fullUrl, data.data);
+                  resolve(data.data);
+                } else if (data && !data.code) {
+                  console.log('[Response]', fullUrl, data);
+                  resolve(data);
+                } else {
+                  reject(new Error(data?.message || 'Send failed'));
+                }
               } else {
-                reject(new Error(data?.message || 'Send failed'));
+                reject(new Error(`Request failed with status ${xhr.status}`));
               }
-            } else {
-              reject(new Error(`Request failed with status ${xhr.status}`));
+            } catch (error) {
+              reject(new Error('Failed to parse response: ' + (error instanceof Error ? error.message : String(error))));
             }
-          } catch (error) {
-            reject(new Error('Failed to parse response: ' + (error instanceof Error ? error.message : String(error))));
-          }
           };
           
           xhr.onerror = () => {
@@ -319,9 +326,8 @@ export function sendMedia(params: SendMediaParams): Promise<Message> {
     }
     // #endif
     
-    // #ifndef H5
     uni.uploadFile({
-      url: fullUrlWithDto,
+      url: fullUrl,
       filePath: params.filePath,
       name: 'file',
       formData: {
@@ -361,6 +367,5 @@ export function sendMedia(params: SendMediaParams): Promise<Message> {
         reject(new Error(error.errMsg || 'Upload failed'));
       },
     });
-    // #endif
   });
 }

@@ -79,6 +79,7 @@ export default {
         unfavoriting: 'Unfavoriting...',
         careerPlanning: 'Career Planning Analysis',
         careerPlanningDescription: 'Get AI career planning advice and learning paths',
+        location: 'Location',
       },
       careerPlanningPage: {
         title: 'Career Planning',
@@ -299,6 +300,11 @@ export default {
         replying: 'Replying',
         you: 'You',
         file: 'File',
+        sendImage: 'Send Image',
+        sendFile: 'Send File',
+        downloading: 'Downloading...',
+        openFileError: 'Failed to open file',
+        downloadError: 'Download failed',
       },
       notifications: {
         title: 'Notifications',

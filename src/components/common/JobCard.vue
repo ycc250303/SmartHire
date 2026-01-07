@@ -25,11 +25,11 @@
 
 <script setup lang="ts">
 import { t } from '@/locales';
-import type { InternJobItem } from '@/services/api/recommendations';
+import type { JobRecommendationItem } from '@/services/api/recommendations';
 import { Degree } from '@/services/api/recommendations';
 
 interface Props {
-  job: InternJobItem;
+  job: JobRecommendationItem;
 }
 
 const props = defineProps<Props>();

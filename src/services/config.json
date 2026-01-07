@@ -52,6 +52,7 @@
     "/api/seeker/update-resume/*": "prod",
     "/api/seeker/delete-resume/*": "prod",
     "/api/recruitment/seeker/job-recommendations/intern": "prod",
+    "/api/recruitment/seeker/job-recommendations/full-time": "prod",
     "/api/hr/info": "prod",
     "/api/hr/info/*": "prod",
     "/api/hr/job-position": "prod",
