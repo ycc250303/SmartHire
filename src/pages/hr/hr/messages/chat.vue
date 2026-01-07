@@ -580,10 +580,9 @@ const doSendImage = () => {
       try {
         const sent = await sendMedia({
           receiverId: otherUserId.value,
-          applicationId: applicationId.value,
+          applicationId: applicationId.value || 0,
           messageType: 2,
           filePath,
-          content: "[图片]",
         });
         messages.value = messages.value.map((m) =>
           m.id === tempMessage.id ? sent : m

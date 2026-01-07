@@ -268,10 +268,12 @@ export interface ApplicationExistsResult {
  * Backend route: GET /recruitment/public/application/exists
  */
 export function checkApplicationExists(payload: ApplicationExistsPayload): Promise<ApplicationExistsResult> {
+  const jobId = encodeURIComponent(String(payload.jobId));
+  const seekerUserId = encodeURIComponent(String(payload.seekerUserId));
   return http<unknown>({
-    url: "/api/recruitment/public/application/exists",
+    // Backend implementations vary: some expect seekerUserId, some expect seekerId; include both as query params.
+    url: `/api/recruitment/public/application/exists?jobId=${jobId}&seekerUserId=${seekerUserId}&seekerId=${seekerUserId}`,
     method: "GET",
-    data: payload,
   }).then((resp) => {
     if (typeof resp === "boolean") return { exists: resp };
     if (typeof resp === "number") return { exists: resp > 0, applicationId: resp > 0 ? resp : undefined };

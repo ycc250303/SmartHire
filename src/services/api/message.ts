@@ -209,23 +209,27 @@ export function sendMedia(params: SendMediaParams): Promise<Message> {
   const fullUrl = `${normalizedBaseUrl}${normalizedPath}`;
   const token = uni.getStorageSync('auth_token');
 
-  console.log('[Params]', fullUrl, params);
-  
   return new Promise((resolve, reject) => {
     const dto: Record<string, any> = {
       receiverId: params.receiverId,
-      applicationId: typeof params.applicationId === 'number' ? params.applicationId : 0,
       messageType: params.messageType,
-      content: params.content ?? (params.messageType === 2 ? '[图片]' : ''),
     };
+    // 添加 content（如果提供）
+    if (params.content !== undefined) {
+      dto.content = params.content;
+    } else if (params.messageType === 2) {
+      dto.content = '[图片]';
+    }
+    // 添加 applicationId（如果提供且大于 0）
+    if (params.applicationId !== undefined && params.applicationId !== null) {
+      const appId = typeof params.applicationId === 'number' ? params.applicationId : Number(params.applicationId);
+      if (appId > 0) {
+        dto.applicationId = appId;
+      }
+    }
   
     const dtoString = JSON.stringify(dto);
-    // Compatibility: some deployments require query param `dto`; Java backend expects multipart field `payload`.
-    // Send both in query string to maximize compatibility.
-    const dtoEncoded = encodeURIComponent(dtoString);
-    const uploadUrl = fullUrl.includes('?')
-      ? `${fullUrl}&dto=${dtoEncoded}&payload=${dtoEncoded}`
-      : `${fullUrl}?dto=${dtoEncoded}&payload=${dtoEncoded}`;
+    console.log('[Params]', fullUrl, { params, dto, dtoString });
     // #ifdef H5
     if (params.filePath.startsWith('data:') || params.filePath.startsWith('blob:')) {
       fetch(params.filePath)
@@ -243,10 +247,12 @@ export function sendMedia(params: SendMediaParams): Promise<Message> {
           formData.append('file', blob, fileName);
           formData.append('payload', dtoString);
           formData.append('dto', dtoString);
+          // 对于 H5 环境的 FormData 请求，不在 URL 中添加查询参数，只在 FormData 中发送
           
           const xhr = new XMLHttpRequest();
-          xhr.open('POST', uploadUrl, true);
+          xhr.open('POST', fullUrl, true);
           xhr.setRequestHeader('Authorization', token ? `Bearer ${token}` : '');
+          // 不要设置 Content-Type，让浏览器自动设置（包含 boundary）
           
           xhr.onload = () => {
             try {
@@ -265,10 +271,12 @@ export function sendMedia(params: SendMediaParams): Promise<Message> {
                   console.log('[Response]', fullUrl, data);
                   resolve(data);
                 } else {
-                  reject(new Error(data?.message || 'Send failed'));
+                  const errorMsg = data?.message || data?.detail || 'Send failed';
+                  reject(new Error(errorMsg));
                 }
               } else {
-                reject(new Error(`Request failed with status ${xhr.status}`));
+                const errorMsg = data?.message || data?.detail || `Request failed with status ${xhr.status}`;
+                reject(new Error(errorMsg));
               }
             } catch (error) {
               reject(new Error('Failed to parse response: ' + (error instanceof Error ? error.message : String(error))));
@@ -285,8 +293,14 @@ export function sendMedia(params: SendMediaParams): Promise<Message> {
           reject(new Error('Failed to read file: ' + (error instanceof Error ? error.message : String(error))));
         });
     } else {
+      // 对于非 H5 环境，使用 uni.uploadFile，URL 中可以包含查询参数
+      const dtoEncoded = encodeURIComponent(dtoString);
+      const uploadUrlWithQuery = fullUrl.includes('?')
+        ? `${fullUrl}&dto=${dtoEncoded}&payload=${dtoEncoded}`
+        : `${fullUrl}?dto=${dtoEncoded}&payload=${dtoEncoded}`;
+      
       uni.uploadFile({
-        url: uploadUrl,
+        url: uploadUrlWithQuery,
         filePath: params.filePath,
         name: 'file',
         formData: {
@@ -323,14 +337,27 @@ export function sendMedia(params: SendMediaParams): Promise<Message> {
           }
         },
         fail: (error) => {
-          reject(new Error(error.errMsg || 'Upload failed'));
+          const errMsg = error.errMsg || 'Upload failed';
+          // 如果错误信息包含"参数格式错误"，提供更详细的错误信息
+          if (errMsg.includes('参数格式错误') || errMsg.includes('参数')) {
+            reject(new Error(`参数格式错误: ${JSON.stringify(dto)}`));
+          } else {
+            reject(new Error(errMsg));
+          }
         },
       });
     }
     // #endif
     
+    // #ifndef H5
+    // 对于非 H5 环境（小程序等），使用 uni.uploadFile，URL 中可以包含查询参数
+    const dtoEncoded = encodeURIComponent(dtoString);
+    const uploadUrlWithQuery = fullUrl.includes('?')
+      ? `${fullUrl}&dto=${dtoEncoded}&payload=${dtoEncoded}`
+      : `${fullUrl}?dto=${dtoEncoded}&payload=${dtoEncoded}`;
+    
     uni.uploadFile({
-      url: uploadUrl,
+      url: uploadUrlWithQuery,
       filePath: params.filePath,
       name: 'file',
       formData: {
@@ -357,18 +384,26 @@ export function sendMedia(params: SendMediaParams): Promise<Message> {
               console.log('[Response]', fullUrl, data);
               resolve(data);
             } else {
-              reject(new Error(data?.message || 'Send failed'));
+              reject(new Error(data?.message || data?.detail || 'Send failed'));
             }
           } else {
-            reject(new Error(`Request failed with status ${res.statusCode}`));
+            const errorMsg = data?.message || data?.detail || `Request failed with status ${res.statusCode}`;
+            reject(new Error(errorMsg));
           }
         } catch (error) {
           reject(new Error('Failed to parse response: ' + (error instanceof Error ? error.message : String(error))));
         }
       },
       fail: (error) => {
-        reject(new Error(error.errMsg || 'Upload failed'));
+        const errMsg = error.errMsg || 'Upload failed';
+        // 如果错误信息包含"参数格式错误"，提供更详细的错误信息
+        if (errMsg.includes('参数格式错误') || errMsg.includes('参数')) {
+          reject(new Error(`参数格式错误: ${JSON.stringify(dto)}`));
+        } else {
+          reject(new Error(errMsg));
+        }
       },
     });
+    // #endif
   });
 }

@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <view class="seeker-detail">
     <view v-if="loading" class="state-card">
       <text class="state-text">加载中...</text>
@@ -35,7 +35,7 @@
           <view class="chip">{{ seeker.major || '专业未知' }}</view>
           <view class="chip">{{ seeker.graduationYear || '毕业时间未知' }}</view>
           <view class="chip">{{ experienceText(seeker.workExperienceYear) }}</view>
-          <view class="chip">{{ seeker.internshipExperience ? '有实习经历' : '无实习经历' }}</view>
+          <view class="chip">{{ seeker.internshipExperience ? '有实习经验' : '无实习经验' }}</view>
           <view class="chip" v-if="seeker.university">{{ seeker.university }}</view>
           <view class="chip" v-if="seeker.city">{{ seeker.city }}</view>
         </view>
@@ -74,7 +74,7 @@
 
         <view class="form-item textarea">
           <text class="label">备注（可选）</text>
-          <textarea v-model="note" placeholder="匹配理由/推荐说明（可不填）" />
+          <textarea v-model="note" placeholder="匹配理由/推荐说明（可不填）"></textarea>
         </view>
 
         <button class="outline" :disabled="!selectedJob || loading" @click="goAi">
@@ -96,6 +96,7 @@ import {
   getSeekerCard,
   getJobPositionList,
   checkApplicationExists,
+  getApplicationDetail,
   recommendJob,
   type SeekerCard,
   type JobPosition,
@@ -136,17 +137,42 @@ const selectedJobLabel = computed(() => {
   return jobs.value.length > 0 ? '请选择岗位' : '暂无可推荐岗位';
 });
 
-const goAi = () => {
+const goAi = async () => {
   if (!selectedJob.value?.id) {
-    uni.showToast({ title: '请先选择岗位', icon: 'none' });
+    uni.showToast({ title: "请先选择岗位", icon: "none" });
     return;
   }
+  uni.showLoading({ title: "AI分析..." });
+  try {
+    const exists = await checkApplicationExists({
+      jobId: selectedJob.value.id,
+      seekerUserId: userId.value,
+    });
+    if (exists?.exists && exists.applicationId) {
+      const detail = await getApplicationDetail(exists.applicationId);
+      if (detail?.jobSeekerId) {
+        uni.navigateTo({
+          url: `/pages/hr/hr/ai/candidate-ai?jobSeekerId=${encodeURIComponent(
+            detail.jobSeekerId
+          )}&jobId=${encodeURIComponent(detail.jobId || selectedJob.value.id)}&candidateName=${encodeURIComponent(
+            seeker.value?.username || ""
+          )}&jobTitle=${encodeURIComponent(selectedJob.value.jobTitle || "")}`,
+        });
+        return;
+      }
+    }
+  } catch (err) {
+    console.error("Failed to open AI:", err);
+  } finally {
+    uni.hideLoading();
+  }
+
   uni.navigateTo({
     url: `/pages/hr/hr/ai/candidate-ai?userId=${encodeURIComponent(
       userId.value
     )}&jobId=${encodeURIComponent(selectedJob.value.id)}&candidateName=${encodeURIComponent(
-      seeker.value?.username || ''
-    )}&jobTitle=${encodeURIComponent(selectedJob.value.jobTitle || '')}`,
+      seeker.value?.username || ""
+    )}&jobTitle=${encodeURIComponent(selectedJob.value.jobTitle || "")}`,
   });
 };
 
@@ -266,7 +292,7 @@ const doRecommend = async () => {
     const intro =
       `你好，我向你推荐岗位：${selectedJob.value.jobTitle}` +
       (selectedJob.value.city ? `（${selectedJob.value.city}）` : '') +
-      (note.value.trim() ? `。备注：${note.value.trim()}` : '。');
+      (note.value.trim() ? `。备注：${note.value.trim()}` : '');
 
     let sentConversationId: number | null = null;
     let lastError: unknown = null;
@@ -542,3 +568,11 @@ button.outline {
 }
 
 </style>
+
+
+
+
+
+
+
+

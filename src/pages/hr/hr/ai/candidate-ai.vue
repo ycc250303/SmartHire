@@ -36,6 +36,12 @@
       <view v-else-if="!jobSeekerId && seekerUserId && resolveError" class="state-card">
         <text class="state-text">{{ resolveError }}</text>
         <view class="retry-btn" @click="resolveCandidate"><text class="retry-text">重试</text></view>
+        <view v-if="seekerUserId && jobId" class="action-hint">
+          <text class="hint-text">提示：请先在"求职者详情"页面选择岗位并点击"推荐并发起聊天"创建推荐记录</text>
+          <view class="primary-btn" @click="goToSeekerDetail" style="margin-top: 16rpx;">
+            <text class="primary-btn-text">前往求职者详情</text>
+          </view>
+        </view>
       </view>
 
       <view v-else-if="!jobSeekerId" class="state-card">
@@ -273,7 +279,7 @@ import { computed, onBeforeUnmount, ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import RadarChart from '@/components/common/RadarChart.vue';
 import StreamingMarkdown from '@/components/career-planning/StreamingMarkdown.vue';
-import { checkApplicationExists, getApplicationDetail } from '@/services/api/hr';
+import { checkApplicationExists, getApplicationDetail, getSeekerCard, getApplications } from '@/services/api/hr';
 import {
   getCandidateEvaluation,
   getCandidateMatchAnalysis,
@@ -355,6 +361,16 @@ const scoreColor = computed(() => {
 
 const handleBack = () => uni.navigateBack();
 
+const goToSeekerDetail = () => {
+  if (!seekerUserId.value) {
+    uni.showToast({ title: '缺少用户ID', icon: 'none' });
+    return;
+  }
+  uni.navigateTo({
+    url: `/pages/hr/hr/seeker/detail?userId=${encodeURIComponent(seekerUserId.value)}&username=${encodeURIComponent(candidateName.value || '')}`,
+  });
+};
+
 const switchTab = async (key: TabKey) => {
   activeTab.value = key;
   if (key === 'match' && !matchData.value && !matchLoading.value) await loadMatch(false);
@@ -379,21 +395,96 @@ const resolveCandidate = async (): Promise<boolean> => {
   resolving.value = true;
   resolveError.value = '';
   try {
+    // 首先尝试通过投递记录获取 jobSeekerId
     const exists = await checkApplicationExists({ jobId: jobId.value, seekerUserId: seekerUserId.value });
-    if (!exists?.exists || !exists.applicationId) {
-      resolveError.value = '缺少投递/推荐记录，无法生成AI分析（请先在“求职者详情-推荐并发起聊天”创建记录）';
-      return false;
+    if (exists?.exists && exists.applicationId) {
+      const detail = await getApplicationDetail(exists.applicationId);
+      if (detail?.jobSeekerId) {
+        jobSeekerId.value = detail.jobSeekerId;
+        jobId.value = detail.jobId || jobId.value;
+        if (!jobTitle.value) jobTitle.value = detail.jobTitle || '';
+        if (!candidateName.value) candidateName.value = detail.jobSeekerName || '';
+        return true;
+      }
     }
-    const detail = await getApplicationDetail(exists.applicationId);
-    if (!detail?.jobSeekerId) {
-      resolveError.value = '解析候选人失败';
-      return false;
+
+    // 如果没有投递记录，尝试通过其他方式获取 jobSeekerId
+    // 方法1: 通过 getApplications 接口查询（如果该求职者有任何投递记录）
+    // 先尝试查询当前岗位的投递记录
+    try {
+      let applications = await getApplications({
+        jobId: jobId.value,
+        keyword: candidateName.value || undefined,
+      });
+      // 如果当前岗位没有记录，尝试不指定 jobId，只通过 keyword 查找（该求职者可能对其他岗位有投递记录）
+      if (applications.length === 0 && candidateName.value) {
+        applications = await getApplications({
+          keyword: candidateName.value,
+        });
+      }
+      // 查找匹配的投递记录（优先匹配当前岗位，其次匹配名称）
+      const matchedApp = applications.find((app) => {
+        // 优先匹配当前岗位
+        if (app.jobId === jobId.value) {
+          return true;
+        }
+        // 其次匹配名称（如果知道 candidateName）
+        if (candidateName.value && app.jobSeekerName === candidateName.value) {
+          return true;
+        }
+        return false;
+      });
+      if (matchedApp?.id && matchedApp.id > 0) {
+        // 通过 getApplicationDetail 获取详细信息，确保 jobSeekerId 正确
+        try {
+          const detail = await getApplicationDetail(matchedApp.id);
+          if (detail?.jobSeekerId) {
+            jobSeekerId.value = detail.jobSeekerId;
+            // 如果找到的是当前岗位的记录，更新 jobId 和 jobTitle
+            if (detail.jobId === jobId.value) {
+              jobId.value = detail.jobId;
+              if (!jobTitle.value) jobTitle.value = detail.jobTitle || '';
+            }
+            if (!candidateName.value) candidateName.value = detail.jobSeekerName || '';
+            return true;
+          }
+        } catch (detailErr) {
+          console.warn('Failed to get application detail:', detailErr);
+          // 如果 getApplicationDetail 失败，尝试直接使用 matchedApp 中的 jobSeekerId
+          if (matchedApp.jobSeekerId) {
+            jobSeekerId.value = matchedApp.jobSeekerId;
+            if (matchedApp.jobId === jobId.value) {
+              if (!jobTitle.value) jobTitle.value = matchedApp.jobTitle || '';
+            }
+            if (!candidateName.value) candidateName.value = matchedApp.jobSeekerName || '';
+            return true;
+          }
+        }
+      }
+    } catch (appErr) {
+      console.warn('Failed to get applications for jobSeekerId:', appErr);
+      // 继续尝试其他方式
     }
-    jobSeekerId.value = detail.jobSeekerId;
-    jobId.value = detail.jobId || jobId.value;
-    if (!jobTitle.value) jobTitle.value = detail.jobTitle || '';
-    if (!candidateName.value) candidateName.value = detail.jobSeekerName || '';
-    return true;
+
+    // 方法2: 尝试通过 getSeekerCard 获取 jobSeekerId
+    // 注意：这需要后端支持在 SeekerCard 中返回 jobSeekerId
+    try {
+      const seekerCard = await getSeekerCard(seekerUserId.value);
+      // 如果 SeekerCard 中有 jobSeekerId 字段，使用它
+      if ((seekerCard as any)?.jobSeekerId) {
+        jobSeekerId.value = (seekerCard as any).jobSeekerId;
+        if (!candidateName.value) candidateName.value = seekerCard.username || '';
+        return true;
+      }
+    } catch (cardErr) {
+      console.warn('Failed to get seeker card for jobSeekerId:', cardErr);
+      // 继续尝试其他方式
+    }
+
+    // 如果以上方式都失败，说明无法获取 jobSeekerId
+    // 提供友好的错误提示，引导用户先创建推荐记录
+    resolveError.value = '缺少投递/推荐记录，无法生成AI分析（请先在"求职者详情-推荐并发起聊天"创建记录）';
+    return false;
   } catch (e) {
     console.error('Failed to resolve jobSeekerId:', e);
     resolveError.value = e instanceof Error ? e.message : '解析失败';
@@ -412,7 +503,13 @@ const loadMatch = async (forceRefresh: boolean) => {
     matchData.value = await getCandidateMatchAnalysis(jobSeekerId.value, jobId.value, forceRefresh);
   } catch (e) {
     console.error('Failed to load match analysis:', e);
-    matchError.value = e instanceof Error ? e.message : '加载失败';
+    const errorMsg = e instanceof Error ? e.message : '加载失败';
+    // 如果是 404 错误，提示可能是 jobSeekerId 不正确
+    if (errorMsg.includes('404') || errorMsg.includes('not found') || errorMsg.includes('找不到')) {
+      matchError.value = '无法找到候选人信息，请先创建推荐记录';
+    } else {
+      matchError.value = errorMsg;
+    }
   } finally {
     matchLoading.value = false;
   }
@@ -975,5 +1072,19 @@ onLoad((options) => {
   margin-top: 18rpx;
   display: flex;
   justify-content: flex-end;
+}
+
+.action-hint {
+  margin-top: 20rpx;
+  padding: 20rpx;
+  background: #f8faff;
+  border-radius: vars.$border-radius-sm;
+}
+
+.hint-text {
+  display: block;
+  font-size: 24rpx;
+  color: vars.$text-muted;
+  line-height: 1.6;
 }
 </style>

@@ -73,6 +73,7 @@
     "/api/recruitment/hr/application/*": "prod",
     "/api/recruitment/hr/application/*/comment": "prod",
     "/api/recruitment/hr/*": "prod",
+    "/api/recruitment/public/application/exists": "prod",
     "/api/hr/application": "prod",
     "/api/hr/application/*": "prod",
     "/api/hr/application/*/status": "prod",

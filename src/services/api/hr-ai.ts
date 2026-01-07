@@ -1,5 +1,7 @@
 import { http, getApiBaseUrl, getApiPathFromUrl, getToken } from '../http';
 
+const AI_TIMEOUT_MS = 60000;
+
 export interface CandidateMatchAnalysisResponse {
   match_analysis?: {
     overall_score?: number;
@@ -86,17 +88,17 @@ function buildJobQuery(jobId: number, forceRefresh?: boolean): string {
 
 export function getCandidateMatchAnalysis(jobSeekerId: number, jobId: number, forceRefresh?: boolean) {
   const url = `/api/ai/hr/candidate/${jobSeekerId}/analysis${buildJobQuery(jobId, forceRefresh)}`;
-  return http<CandidateMatchAnalysisResponse>({ url, method: 'POST' });
+  return http<CandidateMatchAnalysisResponse>({ url, method: 'POST', timeout: AI_TIMEOUT_MS });
 }
 
 export function getCandidateEvaluation(jobSeekerId: number, jobId: number, forceRefresh?: boolean) {
   const url = `/api/ai/hr/candidate/${jobSeekerId}/evaluation${buildJobQuery(jobId, forceRefresh)}`;
-  return http<CandidateEvaluationResponse>({ url, method: 'POST' });
+  return http<CandidateEvaluationResponse>({ url, method: 'POST', timeout: AI_TIMEOUT_MS });
 }
 
 export function getCandidateRecommendation(jobSeekerId: number, jobId: number, forceRefresh?: boolean) {
   const url = `/api/ai/hr/candidate/${jobSeekerId}/recommendation${buildJobQuery(jobId, forceRefresh)}`;
-  return http<CandidateRecommendationResponse>({ url, method: 'POST' });
+  return http<CandidateRecommendationResponse>({ url, method: 'POST', timeout: AI_TIMEOUT_MS });
 }
 
 export type StreamCallbacks = {
