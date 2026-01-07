@@ -14,6 +14,7 @@ from app.db.models import (
     WorkExperience,
     ProjectExperience,
     HrInfo,
+    JobSeekerExpectation,
 )
 
 logger = logging.getLogger(__name__)
@@ -27,6 +28,7 @@ def get_job_info(db: Session, job_id: int) -> Optional[Dict[str, Any]]:
         .filter(
             JobInfo.id == job_id,
             JobInfo.status == 1,
+            # TODO
             # JobInfo.audit_status == "approved",
             # JobInfo.company_audit_status == "approved",
         )
@@ -239,7 +241,7 @@ def get_candidate_info_by_id(db: Session, job_seeker_id: int) -> Optional[Dict[s
 
 
 def verify_hr_job_access(db: Session, hr_user_id: int, job_id: int) -> bool:
-    """验证HR是否有权限访问该岗位"""
+    """Verify if HR has permission to access the job position"""
     logger.debug(f"[DBService] Verifying HR job access: hrUserId={hr_user_id}, jobId={job_id}")
     
     hr_info = db.query(HrInfo).filter(HrInfo.user_id == hr_user_id).first()
@@ -253,7 +255,72 @@ def verify_hr_job_access(db: Session, hr_user_id: int, job_id: int) -> bool:
         return False
     
     has_access = job.hr_id == hr_info.id
-    logger.debug(f"[DBService] HR job access: {has_access} (hrId={hr_info.id}, jobHrId={job.hr_id})")
+    
+    logger.debug(
+        f"[DBService] HR job access: {has_access} "
+        f"(hrId={hr_info.id}, jobHrId={job.hr_id})"
+    )
     
     return has_access
+
+
+def get_seeker_expectation(db: Session, job_seeker_id: int) -> Optional[Dict[str, Any]]:
+    logger.debug(f"[DBService] Fetching seeker expectation: jobSeekerId={job_seeker_id}")
+    
+    expectation = (
+        db.query(JobSeekerExpectation)
+        .filter(JobSeekerExpectation.job_seeker_id == job_seeker_id)
+        .first()
+    )
+    
+    if not expectation:
+        logger.debug(f"[DBService] Seeker expectation not found: jobSeekerId={job_seeker_id}")
+        return None
+    
+    result = {
+        "expected_position": expectation.expected_position or "",
+        "work_city": expectation.work_city or "",
+        "salary_min": float(expectation.salary_min) if expectation.salary_min else None,
+        "salary_max": float(expectation.salary_max) if expectation.salary_max else None,
+    }
+    
+    logger.debug(f"[DBService] Seeker expectation retrieved: position={result['expected_position']}, city={result['work_city']}")
+    
+    return result
+
+
+def get_seeker_full_profile(db: Session, user_id: int) -> Optional[Dict[str, Any]]:
+    logger.debug(f"[DBService] Fetching seeker full profile: userId={user_id}")
+    
+    seeker_info = get_seeker_info(db, user_id)
+    if not seeker_info:
+        return None
+    
+    job_seeker_id = seeker_info["id"]
+    
+    education = get_seeker_education(db, job_seeker_id)
+    skills = get_seeker_skills(db, job_seeker_id)
+    work_experiences = get_seeker_work_experience(db, job_seeker_id)
+    project_experiences = get_seeker_project_experience(db, job_seeker_id)
+    expectation = get_seeker_expectation(db, job_seeker_id)
+    
+    work_years = calculate_work_years(work_experiences)
+    
+    education_map = {0: "高中及以下", 1: "专科", 2: "本科", 3: "硕士", 4: "博士"}
+    education_text = education_map.get(seeker_info.get("education"), "未知")
+    
+    result = {
+        "seeker_info": seeker_info,
+        "education": education,
+        "education_text": education_text,
+        "skills": skills,
+        "work_experiences": work_experiences,
+        "project_experiences": project_experiences,
+        "expectation": expectation,
+        "work_years": work_years,
+    }
+    
+    logger.debug(f"[DBService] Seeker full profile retrieved: education={education_text}, workYears={work_years}, skillsCount={len(skills)}, workExpCount={len(work_experiences)}, projectCount={len(project_experiences)}")
+    
+    return result
 

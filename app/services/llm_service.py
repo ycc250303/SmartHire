@@ -807,4 +807,61 @@ class LLMService:
             error_prefix = self.messages.stream.get("error_prefix", "Error: ")
             logger.error(f"[LLM] Failed to generate HR interview questions stream: {e}", exc_info=True)
             yield f"\n\n[{error_prefix}{str(e)}]"
+    
+    def generate_seeker_career_path(
+        self,
+        education: str,
+        work_years: float,
+        current_city: str,
+        skills_text: str,
+        work_experiences_text: str,
+        project_experiences_text: str,
+        target_position: str,
+        target_city: str,
+        target_skills: str
+    ) -> Optional[Dict[str, Any]]:
+        logger.info(f"[LLM] Generating seeker career path: targetPosition={target_position}, education={education}, workYears={work_years}")
+        
+        system_message = self.prompts.seeker_career_path.get("system", "")
+        user_template = self.prompts.seeker_career_path.get("user_template", "")
+        
+        prompt = user_template.format(
+            education=education,
+            work_years=work_years,
+            current_city=current_city,
+            skills_text=skills_text,
+            work_experiences_text=work_experiences_text,
+            project_experiences_text=project_experiences_text,
+            target_position=target_position,
+            target_city=target_city,
+            target_skills=target_skills
+        )
+        
+        prompt_length = len(prompt)
+        logger.debug(f"[LLM] Seeker career path prompt: length={prompt_length}")
+        
+        try:
+            request_data = {
+                "model": self.model,
+                "messages": [
+                    {"role": "system", "content": system_message},
+                    {"role": "user", "content": prompt}
+                ],
+            }
+            logger.info(f"[LLM] Calling LLM API for seeker career path: model={self.model}, stream=False, responseFormat=json_object")
+            response = self._call_api(request_data, stream=False)
+            result = self._parse_response(response)
+            logger.info(f"[LLM] Seeker career path received: responseLength={len(result)}")
+            
+            try:
+                career_path_data = json.loads(result)
+                logger.info(f"[LLM] Seeker career path parsed successfully: hasProfileSummary={bool(career_path_data.get('profile_summary'))}, hasGapAnalysis={bool(career_path_data.get('gap_analysis'))}, hasCareerRoadmap={bool(career_path_data.get('career_roadmap'))}, hasLearningPlan={bool(career_path_data.get('learning_plan'))}, hasInterviewPrep={bool(career_path_data.get('interview_prep'))}")
+                return career_path_data
+            except json.JSONDecodeError as e:
+                logger.error(f"[LLM] Failed to parse seeker career path JSON: {e}, rawResponse={result[:200]}")
+                return None
+                
+        except Exception as e:
+            logger.error(f"[LLM] Failed to generate seeker career path: {e}", exc_info=True)
+            return None
 

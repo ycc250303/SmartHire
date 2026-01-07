@@ -11,6 +11,7 @@ from app.db.connection import (
 from app.api.matching import router as matching_router
 from app.api.career_planning import router as career_planning_router
 from app.api.hr_services import router as hr_services_router
+from app.api.seeker_career_path import router as seeker_career_path_router
 
 logging.basicConfig(
     level=logging.INFO,
@@ -76,6 +77,7 @@ app.add_middleware(
 app.include_router(matching_router, prefix="/smarthire/api")
 app.include_router(career_planning_router, prefix="/smarthire/api")
 app.include_router(hr_services_router, prefix="/smarthire/api")
+app.include_router(seeker_career_path_router, prefix="/smarthire/api")
 
 logger.info("Registered routes:")
 for route in app.routes:

@@ -43,6 +43,7 @@ class PromptsConfig(BaseModel):
     candidate_evaluation: Dict[str, Any] = {}
     candidate_recommendation: Dict[str, Any] = {}
     hr_interview_questions: Dict[str, Any] = {}
+    seeker_career_path: Dict[str, Any] = {}
 
 
 class MessagesConfig(BaseModel):

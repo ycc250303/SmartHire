@@ -41,6 +41,19 @@ class JobSeeker(Base):
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
 
 
+class JobSeekerExpectation(Base):
+    __tablename__ = "job_seeker_expectation"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    job_seeker_id = Column(Integer, ForeignKey("job_seeker.id"), nullable=False)
+    expected_position = Column(String(100))
+    work_city = Column(String(50))
+    salary_min = Column(DECIMAL(10, 2))
+    salary_max = Column(DECIMAL(10, 2))
+    created_at = Column(DateTime, default=datetime.now)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+
+
 class JobInfo(Base):
     __tablename__ = "job_info"
     
@@ -154,4 +167,5 @@ class HrInfo(Base):
     __tablename__ = "hr_info"
     
     id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("user.id"), nullable=False, unique=True)
 

@@ -15,8 +15,8 @@ def extract_token(credentials: HTTPAuthorizationCredentials) -> str:
 
 def verify_token(token: str) -> dict:
     try:
-        logger.info(f"Verifying token (first 50 chars): {token[:50]}...")
-        logger.info(f"Token length: {len(token)}")
+        # logger.info(f"Verifying token (first 50 chars): {token[:50]}...")
+        # logger.info(f"Token length: {len(token)}")
         logger.info(f"Using secret key: {config.jwt.secret_key}, algorithm: {config.jwt.algorithm}")
         
         # Try decoding without verification first to see the payload
