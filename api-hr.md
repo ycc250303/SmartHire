@@ -36,10 +36,10 @@ POST /smarthire/api/ai/hr/candidate/{job_seeker_id}/analysis
 
 | 名称           | 位置  | 类型    | 必选 | 说明                                 |
 | -------------- | ----- | ------- | ---- | ------------------------------------ |
-| job_seeker_id  | path  | integer | 是   | 候选人ID（job_seeker表的id）         |
+| job_seeker_id  | path  | integer | 是   | 候选人ID（job_seeker表的id，若未提供有效值可用userId替代） |
 | job_id         | query | integer | 是   | 岗位ID                               |
 | force_refresh  | query | boolean | 否   | 是否强制刷新（默认false，使用缓存） |
-| userId         | -     | integer | -    | 从JWT Token中自动提取，无需前端传递 |
+| userId         | query | integer | 否   | 可选候选人userId；job_seeker_id与userId二选一，优先使用job_seeker_id |
 
 ### 请求头
 
@@ -92,6 +92,7 @@ POST /smarthire/api/ai/hr/candidate/{job_seeker_id}/analysis
   },
   "candidate_info": {
     "job_seeker_id": 123,
+    "user_id": 456,
     "real_name": "张三",
     "education": "本科",
     "work_experience_year": 4.5,
@@ -194,6 +195,17 @@ POST /smarthire/api/ai/hr/candidate/{job_seeker_id}/analysis
 | is_qualified    | boolean | 是否符合学历要求   |
 | match_score     | float   | 学历匹配分数       |
 
+#### candidate_info 结构
+
+| 名称                 | 类型    | 说明                     |
+| -------------------- | ------- | ------------------------ |
+| job_seeker_id        | integer | 候选人ID（job_seeker表） |
+| user_id              | integer | 用户ID（user表）         |
+| real_name            | string  | 真实姓名                 |
+| education            | string  | 学历文本                 |
+| work_experience_year | float   | 工作年限                 |
+| current_city         | string  | 当前城市                 |
+
 ### 数据来源说明
 
 所有数据均为真实数据，无假数据：
@@ -225,10 +237,10 @@ POST /smarthire/api/ai/hr/candidate/{job_seeker_id}/evaluation
 
 | 名称          | 位置  | 类型    | 必选 | 说明                                 |
 | ------------- | ----- | ------- | ---- | ------------------------------------ |
-| job_seeker_id | path  | integer | 是   | 候选人ID（job_seeker表的id）         |
+| job_seeker_id | path  | integer | 是   | 候选人ID（job_seeker表的id，若未提供有效值可用userId替代） |
 | job_id        | query | integer | 是   | 岗位ID                               |
 | force_refresh | query | boolean | 否   | 是否强制刷新（默认false，使用缓存） |
-| userId        | -     | integer | -    | 从JWT Token中自动提取，无需前端传递 |
+| userId        | query | integer | 否   | 可选候选人userId；job_seeker_id与userId二选一，优先使用job_seeker_id |
 
 ### 请求头
 
@@ -291,6 +303,7 @@ POST /smarthire/api/ai/hr/candidate/{job_seeker_id}/evaluation
   },
   "candidate_summary": {
     "job_seeker_id": 123,
+    "user_id": 456,
     "real_name": "张三",
     "education": "本科",
     "work_experience_year": 4.5,
@@ -374,9 +387,9 @@ GET /smarthire/api/ai/hr/candidate/{job_seeker_id}/interview-questions
 
 | 名称          | 位置  | 类型    | 必选 | 说明                                 |
 | ------------- | ----- | ------- | ---- | ------------------------------------ |
-| job_seeker_id | path  | integer | 是   | 候选人ID（job_seeker表的id）         |
+| job_seeker_id | path  | integer | 是   | 候选人ID（job_seeker表的id，若未提供有效值可用userId替代） |
 | job_id        | query | integer | 是   | 岗位ID                               |
-| userId        | -     | integer | -    | 从JWT Token中自动提取，无需前端传递 |
+| userId        | query | integer | 否   | 可选候选人userId；job_seeker_id与userId二选一，优先使用job_seeker_id |
 
 ### 请求头
 
@@ -392,7 +405,7 @@ GET /smarthire/api/ai/hr/candidate/{job_seeker_id}/interview-questions
 **SSE事件格式**：
 
 ```
-data: {"type":"start","message":"开始生成面试问题..."}
+data: {"type":"start","message":"开始生成面试问题...","job_seeker_id":123,"user_id":456}
 
 data: {"type":"chunk","content":"## 技术问题\n\n**1. 请解释Spring Boot的自动配置原理**\n\n*考察点：* 对Spring Boot核心机制的理解\n\n*参考回答要点：*"}
 
@@ -407,7 +420,7 @@ data: {"type":"done"}
 
 | 类型    | 说明                     |
 | ------- | ------------------------ |
-| start   | 开始生成，包含提示消息   |
+| start   | 开始生成，包含提示消息、job_seeker_id和user_id |
 | chunk   | 内容块，包含部分生成文本 |
 | done    | 生成完成                 |
 | error  | 生成错误，包含错误消息   |
@@ -468,10 +481,10 @@ POST /smarthire/api/ai/hr/candidate/{job_seeker_id}/recommendation
 
 | 名称          | 位置  | 类型    | 必选 | 说明                                 |
 | ------------- | ----- | ------- | ---- | ------------------------------------ |
-| job_seeker_id | path  | integer | 是   | 候选人ID（job_seeker表的id）         |
+| job_seeker_id | path  | integer | 是   | 候选人ID（job_seeker表的id，若未提供有效值可用userId替代） |
 | job_id        | query | integer | 是   | 岗位ID                               |
 | force_refresh | query | boolean | 否   | 是否强制刷新（默认false，使用缓存） |
-| userId        | -     | integer | -    | 从JWT Token中自动提取，无需前端传递 |
+| userId        | query | integer | 否   | 可选候选人userId；job_seeker_id与userId二选一，优先使用job_seeker_id |
 
 ### 请求头
 
@@ -520,6 +533,8 @@ POST /smarthire/api/ai/hr/candidate/{job_seeker_id}/recommendation
   },
   "match_score": 78,
   "candidate_highlights": {
+    "job_seeker_id": 123,
+    "user_id": 456,
     "work_experience": "4.5年Java开发经验",
     "key_skills": ["Java", "Spring Boot", "MySQL", "Redis"],
     "project_count": 3,
@@ -540,6 +555,19 @@ POST /smarthire/api/ai/hr/candidate/{job_seeker_id}/recommendation
 | recommendation_text | string | 完整推荐理由（LLM生成，200-300字） |
 | suggested_next_steps | array | 建议下一步行动                 |
 
+#### candidate_summary 结构
+
+| 名称                 | 类型    | 说明                     |
+| -------------------- | ------- | ------------------------ |
+| job_seeker_id        | integer | 候选人ID（job_seeker表） |
+| user_id              | integer | 用户ID（user表）         |
+| real_name            | string  | 真实姓名                 |
+| education            | string  | 学历文本                 |
+| work_experience_year | float   | 工作年限                 |
+| skill_count          | integer | 技能数量                 |
+| project_count        | integer | 项目数量                 |
+| work_experience_count| integer | 工作经历数量             |
+
 #### key_points 数组元素结构
 
 | 名称        | 类型   | 说明                           |
@@ -554,6 +582,17 @@ POST /smarthire/api/ai/hr/candidate/{job_seeker_id}/recommendation
 | --------- | ------ | ------------------------------ |
 | concern   | string | 关注点描述                     |
 | mitigation | string | 应对措施（LLM生成）            |
+
+#### candidate_highlights 结构
+
+| 名称            | 类型    | 说明                     |
+| --------------- | ------- | ------------------------ |
+| job_seeker_id   | integer | 候选人ID（job_seeker表） |
+| user_id         | integer | 用户ID（user表）         |
+| work_experience | string  | 工作年限描述             |
+| key_skills      | array   | 关键技能列表             |
+| project_count   | integer | 项目数量                 |
+| education       | string  | 学历文本                 |
 
 ### 数据来源说明
 
@@ -619,6 +658,7 @@ POST /smarthire/api/ai/hr/candidate/{job_seeker_id}/recommendation
   },
   "candidate_info": {
     "job_seeker_id": 123,
+    "user_id": 456,
     "real_name": "张三",
     "education": "本科",
     "work_experience_year": 4.5,

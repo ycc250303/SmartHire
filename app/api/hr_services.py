@@ -12,6 +12,7 @@ from app.services.db_service import (
     get_job_info,
     get_job_skills_detailed,
     get_candidate_info_by_id,
+    get_candidate_info_by_seeker_or_user,
     get_seeker_education,
     get_seeker_skills,
     get_seeker_work_experience,
@@ -55,7 +56,8 @@ def _prepare_candidate_analysis_data(
     db: Session,
     job_seeker_id: int,
     job_id: int,
-    hr_user_id: int
+    hr_user_id: int,
+    seeker_user_id: Optional[int] = None,
 ) -> Dict[str, Any]:
     """准备候选人分析数据"""
     logger.info(f"[HRService] Preparing candidate analysis: jobSeekerId={job_seeker_id}, jobId={job_id}, hrUserId={hr_user_id}")
@@ -75,31 +77,22 @@ def _prepare_candidate_analysis_data(
             detail=f"Job {job_id} not found"
         )
     
-    # 获取候选人信息
-    candidate_info = get_candidate_info_by_id(db, job_seeker_id)
-    if not candidate_info:
+    # 获取候选人信息（支持 job_seeker_id 或 user_id）
+    candidate_info, resolved_job_seeker_id, candidate_user_id = get_candidate_info_by_seeker_or_user(
+        db, job_seeker_id=job_seeker_id, user_id=seeker_user_id
+    )
+    if not candidate_info or not resolved_job_seeker_id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Candidate {job_seeker_id} not found"
+            detail="Candidate not found"
         )
-    
-    # 获取候选人的user_id（用于匹配分数计算）
-    from app.db.models import JobSeeker, User
-    seeker = db.query(JobSeeker).filter(JobSeeker.id == job_seeker_id).first()
-    if not seeker:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Candidate {job_seeker_id} not found"
-        )
-    
-    candidate_user_id = seeker.user_id
     
     # 获取详细数据
     job_skills_detailed = get_job_skills_detailed(db, job_id)
-    seeker_education = get_seeker_education(db, job_seeker_id)
-    seeker_skills = get_seeker_skills(db, job_seeker_id)
-    seeker_work_experiences = get_seeker_work_experience(db, job_seeker_id)
-    seeker_project_experiences = get_seeker_project_experience(db, job_seeker_id)
+    seeker_education = get_seeker_education(db, resolved_job_seeker_id)
+    seeker_skills = get_seeker_skills(db, resolved_job_seeker_id)
+    seeker_work_experiences = get_seeker_work_experience(db, resolved_job_seeker_id)
+    seeker_project_experiences = get_seeker_project_experience(db, resolved_job_seeker_id)
     
     # 计算匹配分数
     overall_score = calculate_single_match_score(db, candidate_user_id, job_id)
@@ -150,7 +143,8 @@ def _prepare_candidate_analysis_data(
         "seeker_work_experiences": seeker_work_experiences,
         "seeker_project_experiences": seeker_project_experiences,
         "skill_gap": skill_gap,
-        "candidate_user_id": candidate_user_id
+        "candidate_user_id": candidate_user_id,
+        "job_seeker_id": resolved_job_seeker_id,
     }
 
 
@@ -159,27 +153,39 @@ def get_candidate_analysis(
     job_seeker_id: int,
     job_id: int = Query(..., description="岗位ID"),
     force_refresh: bool = Query(False, description="Force refresh cache"),
+    user_id: Optional[int] = Query(None, alias="userId", description="候选人userId，可替代job_seeker_id"),
     hr_user_id: int = Depends(get_current_hr_user),
     db: Session = Depends(get_db),
 ):
     """候选人匹配分析"""
     logger.info(f"[HRService] Candidate analysis request: jobSeekerId={job_seeker_id}, jobId={job_id}, hrUserId={hr_user_id}")
     
-    cache_key = f"hr_analysis:{hr_user_id}:{job_seeker_id}:{job_id}"
-    
-    if not force_refresh:
-        cached = get_cached_data(cache_key)
-        if cached:
-            logger.info(f"[HRService] Analysis cache hit: jobSeekerId={job_seeker_id}, jobId={job_id}")
-            return cached
-    
     try:
-        analysis_data = _prepare_candidate_analysis_data(db, job_seeker_id, job_id, hr_user_id)
+        analysis_data = _prepare_candidate_analysis_data(
+            db, job_seeker_id, job_id, hr_user_id, seeker_user_id=user_id
+        )
         
+        resolved_job_seeker_id = analysis_data.get("job_seeker_id", job_seeker_id)
+        cache_key = f"hr_analysis:{hr_user_id}:{resolved_job_seeker_id}:{job_id}"
+
+        if not force_refresh:
+            cached = get_cached_data(cache_key)
+            if cached:
+                logger.info(f"[HRService] Analysis cache hit: jobSeekerId={resolved_job_seeker_id}, jobId={job_id}")
+                return cached
+
+        candidate_info = analysis_data["candidate_info"]
         response = {
             "match_analysis": analysis_data["match_analysis"],
             "gap_analysis": analysis_data["gap_analysis"],
-            "candidate_info": analysis_data["candidate_info"],
+            "candidate_info": {
+                "job_seeker_id": candidate_info.get("job_seeker_id"),
+                "user_id": candidate_info.get("user_id"),
+                "real_name": candidate_info.get("real_name", ""),
+                "education": candidate_info.get("education_text", ""),
+                "work_experience_year": candidate_info.get("work_experience_year", 0),
+                "current_city": candidate_info.get("current_city", "")
+            },
             "job_info": {
                 "job_id": analysis_data["job_info"]["id"],
                 "job_title": analysis_data["job_info"]["job_title"],
@@ -207,22 +213,26 @@ def get_candidate_evaluation(
     job_seeker_id: int,
     job_id: int = Query(..., description="岗位ID"),
     force_refresh: bool = Query(False, description="Force refresh cache"),
+    user_id: Optional[int] = Query(None, alias="userId", description="候选人userId，可替代job_seeker_id"),
     hr_user_id: int = Depends(get_current_hr_user),
     db: Session = Depends(get_db),
 ):
     """候选人综合评估报告"""
     logger.info(f"[HRService] Candidate evaluation request: jobSeekerId={job_seeker_id}, jobId={job_id}, hrUserId={hr_user_id}")
     
-    cache_key = f"hr_evaluation:{hr_user_id}:{job_seeker_id}:{job_id}"
-    
-    if not force_refresh:
-        cached = get_cached_data(cache_key)
-        if cached:
-            logger.info(f"[HRService] Evaluation cache hit: jobSeekerId={job_seeker_id}, jobId={job_id}")
-            return cached
-    
     try:
-        analysis_data = _prepare_candidate_analysis_data(db, job_seeker_id, job_id, hr_user_id)
+        analysis_data = _prepare_candidate_analysis_data(
+            db, job_seeker_id, job_id, hr_user_id, seeker_user_id=user_id
+        )
+
+        resolved_job_seeker_id = analysis_data.get("job_seeker_id", job_seeker_id)
+        cache_key = f"hr_evaluation:{hr_user_id}:{resolved_job_seeker_id}:{job_id}"
+
+        if not force_refresh:
+            cached = get_cached_data(cache_key)
+            if cached:
+                logger.info(f"[HRService] Evaluation cache hit: jobSeekerId={resolved_job_seeker_id}, jobId={job_id}")
+                return cached
         
         candidate_info = analysis_data["candidate_info"]
         job_info = analysis_data["job_info"]
@@ -277,7 +287,8 @@ def get_candidate_evaluation(
             logger.error(f"[HRService] LLM evaluation error: {e}", exc_info=True)
         
         candidate_summary = {
-            "job_seeker_id": job_seeker_id,
+            "job_seeker_id": resolved_job_seeker_id,
+            "user_id": candidate_info.get("user_id"),
             "real_name": candidate_info.get("real_name", ""),
             "education": candidate_info.get("education_text", ""),
             "work_experience_year": candidate_info.get("work_experience_year", 0),
@@ -318,6 +329,7 @@ def get_candidate_evaluation(
 async def stream_interview_questions(
     job_seeker_id: int,
     job_id: int = Query(..., description="岗位ID"),
+    user_id: Optional[int] = Query(None, alias="userId", description="候选人userId，可替代job_seeker_id"),
     hr_user_id: int = Depends(get_current_hr_user),
     db: Session = Depends(get_db),
 ):
@@ -325,7 +337,9 @@ async def stream_interview_questions(
     logger.info(f"[HRService] Interview questions stream request: jobSeekerId={job_seeker_id}, jobId={job_id}, hrUserId={hr_user_id}")
     
     try:
-        analysis_data = _prepare_candidate_analysis_data(db, job_seeker_id, job_id, hr_user_id)
+        analysis_data = _prepare_candidate_analysis_data(
+            db, job_seeker_id, job_id, hr_user_id, seeker_user_id=user_id
+        )
         
         candidate_info = analysis_data["candidate_info"]
         job_info = analysis_data["job_info"]
@@ -333,6 +347,7 @@ async def stream_interview_questions(
         seeker_work_experiences = analysis_data["seeker_work_experiences"]
         seeker_project_experiences = analysis_data["seeker_project_experiences"]
         skill_gap = analysis_data["skill_gap"]
+        resolved_job_seeker_id = analysis_data.get("job_seeker_id", job_seeker_id)
         
         # 准备LLM输入数据
         skills_text = ", ".join([s.get("name", "") for s in seeker_skills]) if seeker_skills else "无"
@@ -356,8 +371,14 @@ async def stream_interview_questions(
         
         async def generate_stream() -> AsyncGenerator[str, None]:
             try:
-                start_message = "开始生成面试问题..."
-                yield f"data: {json.dumps({'type': 'start', 'message': start_message}, ensure_ascii=False)}\n\n"
+                candidate_user_id = analysis_data.get("candidate_user_id")
+                start_data = {
+                    'type': 'start',
+                    'message': "开始生成面试问题...",
+                    'job_seeker_id': resolved_job_seeker_id,
+                    'user_id': candidate_user_id
+                }
+                yield f"data: {json.dumps(start_data, ensure_ascii=False)}\n\n"
                 
                 async for chunk in llm_service.generate_hr_interview_questions_stream(
                     candidate_name=candidate_info.get("real_name", ""),
@@ -405,22 +426,26 @@ def get_candidate_recommendation(
     job_seeker_id: int,
     job_id: int = Query(..., description="岗位ID"),
     force_refresh: bool = Query(False, description="Force refresh cache"),
+    user_id: Optional[int] = Query(None, alias="userId", description="候选人userId，可替代job_seeker_id"),
     hr_user_id: int = Depends(get_current_hr_user),
     db: Session = Depends(get_db),
 ):
     """候选人推荐理由"""
     logger.info(f"[HRService] Candidate recommendation request: jobSeekerId={job_seeker_id}, jobId={job_id}, hrUserId={hr_user_id}")
     
-    cache_key = f"hr_recommendation:{hr_user_id}:{job_seeker_id}:{job_id}"
-    
-    if not force_refresh:
-        cached = get_cached_data(cache_key)
-        if cached:
-            logger.info(f"[HRService] Recommendation cache hit: jobSeekerId={job_seeker_id}, jobId={job_id}")
-            return cached
-    
     try:
-        analysis_data = _prepare_candidate_analysis_data(db, job_seeker_id, job_id, hr_user_id)
+        analysis_data = _prepare_candidate_analysis_data(
+            db, job_seeker_id, job_id, hr_user_id, seeker_user_id=user_id
+        )
+
+        resolved_job_seeker_id = analysis_data.get("job_seeker_id", job_seeker_id)
+        cache_key = f"hr_recommendation:{hr_user_id}:{resolved_job_seeker_id}:{job_id}"
+
+        if not force_refresh:
+            cached = get_cached_data(cache_key)
+            if cached:
+                logger.info(f"[HRService] Recommendation cache hit: jobSeekerId={resolved_job_seeker_id}, jobId={job_id}")
+                return cached
         
         candidate_info = analysis_data["candidate_info"]
         job_info = analysis_data["job_info"]
@@ -459,6 +484,8 @@ def get_candidate_recommendation(
             logger.error(f"[HRService] LLM recommendation error: {e}", exc_info=True)
         
         candidate_highlights = {
+            "job_seeker_id": resolved_job_seeker_id,
+            "user_id": candidate_info.get("user_id"),
             "work_experience": f"{candidate_info.get('work_experience_year', 0)}年工作经验",
             "key_skills": [s.get("name", "") for s in seeker_skills[:5]],
             "project_count": len(seeker_project_experiences),

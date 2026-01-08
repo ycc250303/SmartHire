@@ -1,5 +1,5 @@
 import logging
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Tuple
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from sqlalchemy.orm import Session
@@ -228,6 +228,7 @@ def get_candidate_info_by_id(db: Session, job_seeker_id: int) -> Optional[Dict[s
     
     result = {
         "job_seeker_id": seeker.id,
+        "user_id": seeker.user_id,
         "real_name": seeker.real_name or "",
         "education": seeker.education,
         "education_text": education_text,
@@ -238,6 +239,35 @@ def get_candidate_info_by_id(db: Session, job_seeker_id: int) -> Optional[Dict[s
     logger.debug(f"[DBService] Candidate info retrieved: jobSeekerId={result['job_seeker_id']}, name={result['real_name']}, education={result['education_text']}")
     
     return result
+
+
+def get_candidate_info_by_seeker_or_user(
+    db: Session, job_seeker_id: Optional[int] = None, user_id: Optional[int] = None
+) -> Tuple[Optional[Dict[str, Any]], Optional[int], Optional[int]]:
+    """Return candidate info by job_seeker_id or user_id"""
+    seeker = None
+    if job_seeker_id:
+        seeker = db.query(JobSeeker).filter(JobSeeker.id == job_seeker_id).first()
+    if seeker is None and user_id:
+        seeker = db.query(JobSeeker).filter(JobSeeker.user_id == user_id).first()
+    if not seeker:
+        logger.warning(f"[DBService] Candidate not found by seekerId={job_seeker_id} or userId={user_id}")
+        return None, None, None
+    
+    education_map = {0: "高中及以下", 1: "专科", 2: "本科", 3: "硕士", 4: "博士"}
+    education_text = education_map.get(seeker.education, "未知")
+    
+    result = {
+        "job_seeker_id": seeker.id,
+        "user_id": seeker.user_id,
+        "real_name": seeker.real_name or "",
+        "education": seeker.education,
+        "education_text": education_text,
+        "work_experience_year": seeker.work_experience_year or 0,
+        "current_city": seeker.current_city or "",
+    }
+    
+    return result, seeker.id, seeker.user_id
 
 
 def verify_hr_job_access(db: Session, hr_user_id: int, job_id: int) -> bool:
