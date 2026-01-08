@@ -100,7 +100,6 @@
         </view>
 
         <view v-if="opsStep === 'menu'" class="sheet-menu">
-          <button class="sheet-item" @click="startRecommend">推荐岗位</button>
           <button class="sheet-item" @click="startInterview">发送面试邀请</button>
           <button class="sheet-item" @click="startOffer">发送 Offer</button>
           <button class="sheet-item danger" @click="startReject">拒绝候选人</button>
@@ -1278,8 +1277,8 @@ button.send:active {
 }
 
 .sheet-menu {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 16rpx;
 }
 
@@ -1294,6 +1293,7 @@ button.send:active {
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 100%;
 }
 
 .sheet-item.danger {

@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <view class="jobs-page">
     <view class="filter-bar">
       <scroll-view scroll-x class="status-tabs">
@@ -30,26 +30,32 @@
     <view class="job-list">
       <view class="job-card" v-for="job in filteredJobs" :key="job.id" @click="goJobDetail(job.id)">
         <view class="job-card-header">
-          <view>
+          <view class="title-area">
             <view class="job-title">{{ job.jobTitle }}</view>
             <view class="job-meta">{{ job.city }} · {{ salaryText(job) }}</view>
           </view>
-          <view class="status-tag" :class="statusClass(job.status)">{{ statusText(job.status) }}</view>
-        </view>
-        <view class="job-stats">
-          <view class="stat">
-            <text class="label">浏览</text>
-            <text class="value">{{ job.viewCount ?? 0 }}</text>
-          </view>
-          <view class="stat">
-            <text class="label">申请</text>
-            <text class="value">{{ job.applicationCount ?? 0 }}</text>
+          <view class="header-actions">
+            <view class="status-tag" :class="statusClass(job.status)">{{ statusText(job.status) }}</view>
+            <button class="edit-btn" @click.stop="editJob(job.id)">编辑</button>
           </view>
         </view>
+
+        <view class="job-summary">
+          <view class="summary-item">
+            <text class="summary-label">浏览</text>
+            <text class="summary-value">{{ job.viewCount ?? 0 }}</text>
+          </view>
+          <view class="summary-divider"></view>
+          <view class="summary-item">
+            <text class="summary-label">申请</text>
+            <text class="summary-value">{{ job.applicationCount ?? 0 }}</text>
+          </view>
+        </view>
+
         <view class="job-footer">
           <text class="update-time">更新于 {{ formatTime(job.updatedAt) }}</text>
+          <text class="hint">点击查看详情</text>
         </view>
-        <button class="edit-btn" @click.stop="editJob(job.id)">编辑</button>
       </view>
     </view>
 
@@ -59,7 +65,7 @@
     <view class="loading" v-if="loading">
       <text>加载中...</text>
     </view>
-    
+
     <CustomTabBar />
   </view>
 </template>
@@ -93,7 +99,20 @@ const loadJobs = async () => {
     // 先确保 HR 信息存在，避免后端因 companyId/hrId 为空直接报“系统内部错误”
     await getHrInfo();
     const data = await getJobPositionList();
-    jobs.value = data || [];
+    const normalizeCount = (value: unknown) => {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : 0;
+    };
+    jobs.value = (data || []).map((job) => {
+      const raw = job as JobPosition & Record<string, unknown>;
+      return {
+        ...job,
+        viewCount: normalizeCount(raw.viewCount ?? raw.view_count ?? raw.views),
+        applicationCount: normalizeCount(
+          raw.applicationCount ?? raw.application_count ?? raw.applyCount ?? raw.application_num
+        ),
+      };
+    });
   } catch (error) {
     console.error('Failed to load jobs:', error);
     const message = error instanceof Error ? error.message : String(error);
@@ -272,21 +291,38 @@ onShow(() => {
   background: #fff;
   border-radius: 24rpx;
   padding: 24rpx;
-  padding-bottom: 108rpx;
   margin-bottom: 18rpx;
-  box-shadow: 0 8rpx 24rpx rgba(0, 34, 90, 0.05);
+  box-shadow: 0 10rpx 26rpx rgba(0, 34, 90, 0.06);
   position: relative;
+  overflow: hidden;
+}
+
+.job-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 6rpx;
+  background: linear-gradient(90deg, rgba(47, 124, 255, 0.6), rgba(75, 163, 255, 0.2));
 }
 
 .job-card-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  gap: 18rpx;
+}
+
+.title-area {
+  min-width: 0;
+  flex: 1;
 }
 
 .job-title {
   font-size: 32rpx;
   font-weight: 600;
+  color: #1e2532;
 }
 
 .job-meta {
@@ -295,8 +331,16 @@ onShow(() => {
   margin-top: 6rpx;
 }
 
+.header-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12rpx;
+  flex-shrink: 0;
+}
+
 .status-tag {
-  padding: 10rpx 24rpx;
+  padding: 8rpx 22rpx;
   border-radius: 999rpx;
   font-size: 24rpx;
   background: #edf2ff;
@@ -313,32 +357,56 @@ onShow(() => {
   color: #9ea6b4;
 }
 
-.job-stats {
-  display: flex;
-  margin: 24rpx 0;
-  border-top: 2rpx dashed #f0f1f4;
-  padding-top: 24rpx;
-}
-
-.stat {
-  flex: 1;
-  text-align: center;
-}
-
-.stat .label {
+.edit-btn {
+  background: #f1f4ff;
+  color: #2f7cff;
+  border: none;
+  border-radius: 999rpx;
+  padding: 0 26rpx;
+  height: 56rpx;
+  line-height: 56rpx;
   font-size: 24rpx;
-  color: #99a3b4;
 }
 
-.stat .value {
-  display: block;
+.job-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  margin-top: 22rpx;
+  padding: 18rpx 0;
+  background: #f7f9ff;
+  border-radius: 16rpx;
+}
+
+.summary-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.summary-label {
+  font-size: 22rpx;
+  color: #9aa3b2;
+}
+
+.summary-value {
+  margin-top: 6rpx;
   font-size: 30rpx;
-  font-weight: 600;
-  margin-top: 8rpx;
+  font-weight: 700;
+  color: #1e2532;
+}
+
+.summary-divider {
+  width: 2rpx;
+  height: 48rpx;
+  background: #e5e9f2;
 }
 
 .job-footer {
-  padding-right: 200rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 18rpx;
 }
 
 .update-time {
@@ -346,19 +414,9 @@ onShow(() => {
   color: #a0a7b7;
 }
 
-.edit-btn {
-  position: absolute;
-  right: 28rpx;
-  bottom: 28rpx;
-  background: #2f7cff;
-  color: #fff;
-  border: none;
-  border-radius: 20rpx;
-  padding: 0 36rpx;
-  height: 68rpx;
-  line-height: 68rpx;
-  font-size: 26rpx;
-  box-shadow: 0 12rpx 24rpx rgba(47, 124, 255, 0.25);
+.hint {
+  font-size: 22rpx;
+  color: #c0c6d4;
 }
 
 .empty,
