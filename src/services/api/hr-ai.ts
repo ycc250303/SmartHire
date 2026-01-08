@@ -77,27 +77,50 @@ export interface CandidateRecommendationResponse {
   candidate_highlights?: Record<string, unknown>;
 }
 
-function buildJobQuery(jobId: number, forceRefresh?: boolean): string {
+function buildJobQuery(jobId: number, forceRefresh?: boolean, userId?: number): string {
   const parts: string[] = [];
   parts.push(`job_id=${encodeURIComponent(String(jobId))}`);
   if (typeof forceRefresh === 'boolean') {
     parts.push(`force_refresh=${encodeURIComponent(String(forceRefresh))}`);
   }
+  if (typeof userId === 'number' && Number.isFinite(userId) && userId > 0) {
+    parts.push(`userId=${encodeURIComponent(String(userId))}`);
+  }
   return parts.length ? `?${parts.join('&')}` : '';
 }
 
-export function getCandidateMatchAnalysis(jobSeekerId: number, jobId: number, forceRefresh?: boolean) {
-  const url = `/api/ai/hr/candidate/${jobSeekerId}/analysis${buildJobQuery(jobId, forceRefresh)}`;
+function buildCandidateBase(jobSeekerId: number | undefined | null) {
+  const candidateId = typeof jobSeekerId === 'number' && jobSeekerId > 0 ? jobSeekerId : 0;
+  return `/api/ai/hr/candidate/${candidateId}`;
+}
+
+export function getCandidateMatchAnalysis(
+  jobSeekerId: number,
+  jobId: number,
+  forceRefresh?: boolean,
+  userId?: number,
+) {
+  const url = `${buildCandidateBase(jobSeekerId)}/analysis${buildJobQuery(jobId, forceRefresh, userId)}`;
   return http<CandidateMatchAnalysisResponse>({ url, method: 'POST', timeout: AI_TIMEOUT_MS });
 }
 
-export function getCandidateEvaluation(jobSeekerId: number, jobId: number, forceRefresh?: boolean) {
-  const url = `/api/ai/hr/candidate/${jobSeekerId}/evaluation${buildJobQuery(jobId, forceRefresh)}`;
+export function getCandidateEvaluation(
+  jobSeekerId: number,
+  jobId: number,
+  forceRefresh?: boolean,
+  userId?: number,
+) {
+  const url = `${buildCandidateBase(jobSeekerId)}/evaluation${buildJobQuery(jobId, forceRefresh, userId)}`;
   return http<CandidateEvaluationResponse>({ url, method: 'POST', timeout: AI_TIMEOUT_MS });
 }
 
-export function getCandidateRecommendation(jobSeekerId: number, jobId: number, forceRefresh?: boolean) {
-  const url = `/api/ai/hr/candidate/${jobSeekerId}/recommendation${buildJobQuery(jobId, forceRefresh)}`;
+export function getCandidateRecommendation(
+  jobSeekerId: number,
+  jobId: number,
+  forceRefresh?: boolean,
+  userId?: number,
+) {
+  const url = `${buildCandidateBase(jobSeekerId)}/recommendation${buildJobQuery(jobId, forceRefresh, userId)}`;
   return http<CandidateRecommendationResponse>({ url, method: 'POST', timeout: AI_TIMEOUT_MS });
 }
 

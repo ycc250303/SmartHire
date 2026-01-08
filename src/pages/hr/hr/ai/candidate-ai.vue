@@ -29,11 +29,11 @@
         <text class="state-text">缺少参数：jobId</text>
       </view>
 
-      <view v-else-if="!jobSeekerId && seekerUserId && resolving" class="state-card">
+      <view v-else-if="!hasCandidate && seekerUserId && resolving" class="state-card">
         <text class="state-text">正在解析候选人信息...</text>
       </view>
 
-      <view v-else-if="!jobSeekerId && seekerUserId && resolveError" class="state-card">
+      <view v-else-if="!hasCandidate && seekerUserId && resolveError" class="state-card">
         <text class="state-text">{{ resolveError }}</text>
         <view class="retry-btn" @click="resolveCandidate"><text class="retry-text">重试</text></view>
         <view v-if="seekerUserId && jobId" class="action-hint">
@@ -44,14 +44,14 @@
         </view>
       </view>
 
-      <view v-else-if="!jobSeekerId" class="state-card">
-        <text class="state-text">缺少候选人ID（需要 jobSeekerId，或提供 userId 并确保已存在投递/推荐记录）</text>
+      <view v-else-if="!hasCandidate" class="state-card">
+        <text class="state-text">缺少候选人ID（请提供 jobSeekerId 或 userId）</text>
       </view>
 
       <template v-else>
         <view class="basic-card">
           <view class="basic-row">
-            <text class="basic-name">{{ candidateName || `候选人#${jobSeekerId}` }}</text>
+            <text class="basic-name">{{ candidateName || `候选人#${jobSeekerId || seekerUserId}` }}</text>
             <view class="basic-badge">
               <text class="basic-badge-text">岗位ID: {{ jobId }}</text>
             </view>
@@ -308,6 +308,7 @@ const activeTab = ref<TabKey>('match');
 
 const resolving = ref(false);
 const resolveError = ref('');
+const useUserIdFallback = ref(false);
 
 const matchLoading = ref(false);
 const matchError = ref<string>('');
@@ -328,6 +329,10 @@ let interviewCancel: null | (() => void) = null;
 
 const anyLoading = computed(
   () => matchLoading.value || evaluationLoading.value || recommendationLoading.value || interviewStatus.value === 'loading',
+);
+
+const hasCandidate = computed(
+  () => (jobSeekerId.value && jobSeekerId.value > 0) || (useUserIdFallback.value && seekerUserId.value > 0),
 );
 
 const matchRateText = computed(() => {
@@ -389,7 +394,10 @@ const handleRefresh = async () => {
 };
 
 const resolveCandidate = async (): Promise<boolean> => {
-  if (jobSeekerId.value) return true;
+  if (jobSeekerId.value) {
+    useUserIdFallback.value = false;
+    return true;
+  }
   if (!seekerUserId.value || !jobId.value) return false;
 
   resolving.value = true;
@@ -481,10 +489,9 @@ const resolveCandidate = async (): Promise<boolean> => {
       // 继续尝试其他方式
     }
 
-    // 如果以上方式都失败，说明无法获取 jobSeekerId
-    // 提供友好的错误提示，引导用户先创建推荐记录
-    resolveError.value = '缺少投递/推荐记录，无法生成AI分析（请先在"求职者详情-推荐并发起聊天"创建记录）';
-    return false;
+    // 如果以上方式都失败，改为使用 userId 作为候选人参数（后端已支持）
+    useUserIdFallback.value = true;
+    return true;
   } catch (e) {
     console.error('Failed to resolve jobSeekerId:', e);
     resolveError.value = e instanceof Error ? e.message : '解析失败';
@@ -500,7 +507,12 @@ const loadMatch = async (forceRefresh: boolean) => {
   matchLoading.value = true;
   matchError.value = '';
   try {
-    matchData.value = await getCandidateMatchAnalysis(jobSeekerId.value, jobId.value, forceRefresh);
+    matchData.value = await getCandidateMatchAnalysis(
+      jobSeekerId.value,
+      jobId.value,
+      forceRefresh,
+      useUserIdFallback.value ? seekerUserId.value : undefined,
+    );
   } catch (e) {
     console.error('Failed to load match analysis:', e);
     const errorMsg = e instanceof Error ? e.message : '加载失败';
@@ -521,7 +533,12 @@ const loadEvaluation = async (forceRefresh: boolean) => {
   evaluationLoading.value = true;
   evaluationError.value = '';
   try {
-    evaluationData.value = await getCandidateEvaluation(jobSeekerId.value, jobId.value, forceRefresh);
+    evaluationData.value = await getCandidateEvaluation(
+      jobSeekerId.value,
+      jobId.value,
+      forceRefresh,
+      useUserIdFallback.value ? seekerUserId.value : undefined,
+    );
   } catch (e) {
     console.error('Failed to load evaluation:', e);
     evaluationError.value = e instanceof Error ? e.message : '加载失败';
@@ -536,7 +553,12 @@ const loadRecommendation = async (forceRefresh: boolean) => {
   recommendationLoading.value = true;
   recommendationError.value = '';
   try {
-    recommendationData.value = await getCandidateRecommendation(jobSeekerId.value, jobId.value, forceRefresh);
+    recommendationData.value = await getCandidateRecommendation(
+      jobSeekerId.value,
+      jobId.value,
+      forceRefresh,
+      useUserIdFallback.value ? seekerUserId.value : undefined,
+    );
   } catch (e) {
     console.error('Failed to load recommendation:', e);
     recommendationError.value = e instanceof Error ? e.message : '加载失败';
@@ -600,7 +622,7 @@ onLoad((options) => {
 
   if (jobId.value) {
     resolveCandidate().finally(() => {
-      if (jobSeekerId.value) {
+      if (hasCandidate.value) {
         loadMatch(false);
       }
     });
