@@ -88,12 +88,6 @@ public class InterviewServiceImpl extends ServiceImpl<InterviewMapper, Interview
     interview.setCreatedAt(now);
     interview.setUpdatedAt(now);
 
-    boolean saved = this.save(interview);
-    if (!saved) {
-      log.error("保存面试记录失败, applicationId={}, interviewTime={}", applicationId, request.getInterviewTime());
-      throw new BusinessException(ErrorCode.SYSTEM_ERROR);
-    }
-
     // 更新 application 状态为 待面试 (2)
     application.setStatus((byte) 2);
     application.setUpdatedAt(now);
@@ -118,17 +112,24 @@ public class InterviewServiceImpl extends ServiceImpl<InterviewMapper, Interview
 
     SendMessageCommonDTO messageDTO = new SendMessageCommonDTO();
     messageDTO.setReceiverId(seekerUserId);
-    messageDTO.setMessageType(8); // 面试邀请
+    messageDTO.setMessageType(1); // 文本形式的面试邀请
     messageDTO.setContent(content);
 
     MessageCommonDTO messageResult = messageApi.sendMessage(hrUserId, messageDTO);
-    if (messageResult != null && messageResult.getId() != null) {
-      interview.setMessageId(messageResult.getId());
-      this.updateById(interview);
-      log.info("面试安排消息已发送, messageId={}, interviewId={}", messageResult.getId(), interview.getId());
-    } else {
-      log.warn("面试安排消息发送成功但未返回消息ID, interviewId={}", interview.getId());
+    if (messageResult == null || messageResult.getId() == null) {
+      log.error("发送面试安排消息失败, applicationId={}", applicationId);
+      throw new BusinessException(ErrorCode.SYSTEM_ERROR, "发送面试消息失败，请重试");
     }
+
+    interview.setMessageId(messageResult.getId());
+
+    boolean saved = this.save(interview);
+    if (!saved) {
+      log.error("保存面试记录失败, applicationId={}, interviewTime={}", applicationId, request.getInterviewTime());
+      throw new BusinessException(ErrorCode.SYSTEM_ERROR);
+    }
+
+    log.info("面试安排消息已发送, messageId={}, interviewId={}", messageResult.getId(), interview.getId());
 
     return interview.getId();
   }

@@ -100,7 +100,7 @@ public class OfferServiceImpl implements OfferService {
 
       SendMessageCommonDTO messageDTO = new SendMessageCommonDTO();
       messageDTO.setReceiverId(seekerUserId);
-      messageDTO.setMessageType(9); // Offer 通知
+      messageDTO.setMessageType(1); // 文本的消息类型
       messageDTO.setContent(content.toString());
 
       MessageCommonDTO messageResult = messageApi.sendMessage(hrUserId, messageDTO);
@@ -112,6 +112,8 @@ public class OfferServiceImpl implements OfferService {
       offer.setHrId(currentHrId);
       if (messageResult != null && messageResult.getId() != null) {
         offer.setMessageId(messageResult.getId());
+      } else {
+        throw new BusinessException(ErrorCode.SYSTEM_ERROR);
       }
       if (request.getBaseSalary() != null) {
         offer.setBaseSalary(BigDecimal.valueOf(request.getBaseSalary()));
