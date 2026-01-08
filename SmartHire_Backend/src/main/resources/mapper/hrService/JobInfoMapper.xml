@@ -109,5 +109,17 @@
         WHERE j.id = #{jobId}
     </select>
 
+    <update id="incrementViewCount">
+        UPDATE job_info
+        SET view_count = view_count + 1
+        WHERE id = #{jobId}
+    </update>
+
+    <update id="incrementApplicationCount">
+        UPDATE job_info
+        SET application_count = application_count + 1
+        WHERE id = #{jobId}
+    </update>
+
 </mapper>
 

@@ -23,7 +23,7 @@ public interface JobInfoService extends IService<JobInfo> {
   /**
    * 更新岗位信息
    *
-   * @param jobId 岗位ID
+   * @param jobId     岗位ID
    * @param updateDTO 更新DTO
    */
   void updateJobInfo(Long jobId, JobInfoUpdateDTO updateDTO);
@@ -46,7 +46,7 @@ public interface JobInfoService extends IService<JobInfo> {
   /**
    * 更新岗位状态
    *
-   * @param jobId 岗位ID
+   * @param jobId  岗位ID
    * @param status 状态：0-已下线 1-招聘中 2-已暂停
    */
   void updateJobInfoStatus(Long jobId, Integer status);
@@ -73,4 +73,18 @@ public interface JobInfoService extends IService<JobInfo> {
    * @param jobId 岗位ID
    */
   void submitJobForAudit(Long jobId);
+
+  /**
+   * 增加岗位浏览量
+   *
+   * @param jobId 岗位ID
+   */
+  void incrementViewCount(Long jobId);
+
+  /**
+   * 增加岗位投递量
+   *
+   * @param jobId 岗位ID
+   */
+  void incrementApplicationCount(Long jobId);
 }

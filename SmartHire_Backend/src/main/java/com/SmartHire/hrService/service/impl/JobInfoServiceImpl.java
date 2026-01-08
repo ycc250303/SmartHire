@@ -434,4 +434,14 @@ public class JobInfoServiceImpl extends ServiceImpl<JobInfoMapper, JobInfo>
       jobAuditMapper.updateById(auditRecord);
     }
   }
+
+  @Override
+  public void incrementViewCount(Long jobId) {
+    jobInfoMapper.incrementViewCount(jobId);
+  }
+
+  @Override
+  public void incrementApplicationCount(Long jobId) {
+    jobInfoMapper.incrementApplicationCount(jobId);
+  }
 }

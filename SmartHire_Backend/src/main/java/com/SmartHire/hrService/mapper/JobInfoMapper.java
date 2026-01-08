@@ -44,4 +44,18 @@ public interface JobInfoMapper extends BaseMapper<JobInfo> {
    * @return 岗位卡片信息
    */
   JobCardDTO selectJobCardById(@Param("jobId") Long jobId);
+
+  /**
+   * 增加岗位浏览量
+   *
+   * @param jobId 岗位ID
+   */
+  void incrementViewCount(@Param("jobId") Long jobId);
+
+  /**
+   * 增加岗位投递量
+   *
+   * @param jobId 岗位ID
+   */
+  void incrementApplicationCount(@Param("jobId") Long jobId);
 }

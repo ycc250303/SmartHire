@@ -128,6 +128,10 @@ public class SeekerApplicationServiceImpl extends ServiceImpl<ApplicationMapper,
         }
 
         log.info("投递{}成功, jobId={}, seekerId={}, conversationId={}", resumeType, jobId, seekerId, conversationId);
+
+        // 增加岗位投递量
+        hrApi.incrementApplicationCount(jobId);
+
         return new SubmitResumeResponseDTO(application.getId(), conversationId);
     }
 
@@ -407,6 +411,9 @@ public class SeekerApplicationServiceImpl extends ServiceImpl<ApplicationMapper,
         if (fullDetail == null) {
             throw new BusinessException(ErrorCode.JOB_NOT_EXIST);
         }
+
+        // 增加岗位浏览量
+        hrApi.incrementViewCount(jobId);
 
         JobInfoDTO jobModel = fullDetail.getJobInfo();
         CompanyDTO company = fullDetail.getCompany();
