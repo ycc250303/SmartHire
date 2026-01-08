@@ -36,8 +36,8 @@
           <view class="chip">{{ seeker.graduationYear || '毕业时间未知' }}</view>
           <view class="chip">{{ experienceText(seeker.workExperienceYear) }}</view>
           <view class="chip">{{ seeker.internshipExperience ? '有实习经验' : '无实习经验' }}</view>
-          <view class="chip" v-if="seeker.university">{{ seeker.university }}</view>
-          <view class="chip" v-if="seeker.city">{{ seeker.city }}</view>
+          <view class="chip" v-if="displayUniversity">{{ displayUniversity }}</view>
+          <view class="chip" v-if="displayCity">{{ displayCity }}</view>
         </view>
 
         <view class="info-grid">
@@ -47,11 +47,11 @@
           </view>
           <view class="info-item">
             <text class="k">城市</text>
-            <text class="v">{{ seeker.city || '未知' }}</text>
+            <text class="v">{{ displayCity || '未知' }}</text>
           </view>
           <view class="info-item">
             <text class="k">学校</text>
-            <text class="v">{{ seeker.university || '未知' }}</text>
+            <text class="v">{{ displayUniversity || '未知' }}</text>
           </view>
           <view class="info-item">
             <text class="k">毕业</text>
@@ -123,8 +123,8 @@
               <text class="sub-title">技能</text>
               <view class="skill-row" v-for="(item, idx) in resumeSkills" :key="`skill-${idx}`">
                 <text class="skill-name">{{ item.skillName || item.name || '技能' }}</text>
-                <text class="skill-level" v-if="item.level || item.proficiency">
-                  {{ item.level || item.proficiency }}
+                <text class="skill-level" v-if="item.level !== undefined || item.proficiency !== undefined">
+                  {{ formatSkillLevel(item.level ?? item.proficiency) }}
                 </text>
               </view>
             </view>
@@ -187,15 +187,20 @@ const resumeOpen = ref(false);
 const resumeLoading = ref(false);
 const resumeError = ref('');
 const onlineResume = ref<any>(null);
+const initialCity = ref('');
+const initialUniversity = ref('');
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const fallbackInitial = computed(() => (seeker.value?.username?.trim()?.[0] || 'H').toUpperCase());
 
+const displayCity = computed(() => seeker.value?.city || initialCity.value || '');
+const displayUniversity = computed(() => seeker.value?.university || initialUniversity.value || '');
+
 const basicMeta = computed(() => {
   const parts: string[] = [];
   if (seeker.value?.age !== undefined && seeker.value?.age !== null) parts.push(`${seeker.value.age}岁`);
-  if (seeker.value?.city) parts.push(seeker.value.city);
+  if (displayCity.value) parts.push(displayCity.value);
   if (seeker.value?.highestEducation) parts.push(seeker.value.highestEducation);
   return parts.length > 0 ? parts.join(' · ') : '信息待完善';
 });
@@ -246,6 +251,17 @@ const formatPeriod = (start?: string, end?: string) => {
   const endText = formatDateOnly(end) || '至今';
   if (!start && !end) return '';
   return `${startText} - ${endText}`;
+};
+
+const formatSkillLevel = (level?: number) => {
+  const parsed = Number(level);
+  if (!Number.isFinite(parsed)) return '';
+  const map: Record<number, string> = {
+    0: '了解',
+    1: '熟悉',
+    2: '掌握',
+  };
+  return map[parsed] ?? '';
 };
 
 const loadOnlineResume = async () => {
@@ -343,6 +359,16 @@ const loadData = async () => {
       getJobPositionList(1),
     ]);
     seeker.value = card || null;
+    if (seeker.value) {
+      const city = seeker.value.city?.trim();
+      const university = seeker.value.university?.trim();
+      if (!city && initialCity.value) {
+        seeker.value.city = initialCity.value;
+      }
+      if (!university && initialUniversity.value) {
+        seeker.value.university = initialUniversity.value;
+      }
+    }
     jobs.value = Array.isArray(jobList) ? jobList : [];
   } catch (err) {
     console.error('Failed to load seeker detail:', err);
@@ -483,6 +509,20 @@ onLoad((options) => {
     return;
   }
   userId.value = parsed;
+  if (options?.city) {
+    try {
+      initialCity.value = decodeURIComponent(options.city as string);
+    } catch {
+      initialCity.value = options.city as string;
+    }
+  }
+  if (options?.university) {
+    try {
+      initialUniversity.value = decodeURIComponent(options.university as string);
+    } catch {
+      initialUniversity.value = options.university as string;
+    }
+  }
   loadData();
 });
 </script>

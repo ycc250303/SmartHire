@@ -18,6 +18,7 @@ export interface CompanyListItem {
 export interface CompanySearchParams {
   current?: number;
   size?: number;
+  keyword?: string;
 }
 
 export interface CompanySearchResponse {
@@ -53,6 +54,7 @@ export function searchCompanies(params?: CompanySearchParams): Promise<CompanySe
   const queryParams: string[] = [];
   if (params?.current !== undefined) queryParams.push(`current=${params.current}`);
   if (params?.size !== undefined) queryParams.push(`size=${params.size}`);
+  if (params?.keyword) queryParams.push(`keyword=${encodeURIComponent(params.keyword)}`);
   const queryString = queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
   const url = `/api/hr/company/companies${queryString}`;
   console.log('[Params]', url, params);

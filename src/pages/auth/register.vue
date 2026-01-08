@@ -447,7 +447,6 @@ const companyFormData = ref<{
 });
 const companySearchKeyword = ref('');
 const companySearchResults = ref<CompanyListItem[]>([]);
-const companyAllResults = ref<CompanyListItem[]>([]);
 const selectedCompany = ref<CompanyListItem | null>(null);
 const isSearchingCompany = ref(false);
 let companySearchTimer: number | null = null;
@@ -595,33 +594,31 @@ function selectHrFlow(type: 'create' | 'join') {
   } else {
     companySearchKeyword.value = '';
     companySearchResults.value = [];
-    companyAllResults.value = [];
     selectedCompany.value = null;
   }
 }
 
 async function handleSearchCompany() {
+  const keyword = companySearchKeyword.value.trim();
+  if (!keyword) {
+    companySearchResults.value = [];
+    errorMessage.value = t('auth.register.hrFlow.validation.searchKeywordRequired');
+    return;
+  }
+
   isSearchingCompany.value = true;
   errorMessage.value = '';
-  
+
   try {
-    if (companyAllResults.value.length === 0) {
-      const response = await searchCompanies({
-        current: 1,
-        size: 200,
-      });
-      const list = Array.isArray(response)
-        ? response
-        : (response?.records ?? (response as any)?.data ?? []);
-      companyAllResults.value = Array.isArray(list) ? list : [];
-    }
-
-    const keyword = companySearchKeyword.value.trim().toLowerCase();
-    const filtered = keyword
-      ? companyAllResults.value.filter(item => item.companyName.toLowerCase().includes(keyword))
-      : companyAllResults.value;
-
-    companySearchResults.value = filtered;
+    const response = await searchCompanies({
+      current: 1,
+      size: 20,
+      keyword,
+    });
+    const list = Array.isArray(response)
+      ? response
+      : (response?.records ?? (response as any)?.data ?? []);
+    companySearchResults.value = Array.isArray(list) ? list : [];
     if (companySearchResults.value.length === 0) {
       errorMessage.value = t('auth.register.hrFlow.noCompanyFound');
     }
@@ -649,6 +646,11 @@ function onCompanySearchInput() {
   }
 
   companySearchTimer = setTimeout(() => {
+    if (!companySearchKeyword.value.trim()) {
+      companySearchResults.value = [];
+      errorMessage.value = '';
+      return;
+    }
     handleSearchCompany();
   }, 300) as unknown as number;
 }

@@ -526,6 +526,22 @@ export function getSeekerInfo(): Promise<SeekerInfo> {
 }
 
 /**
+ * Get seeker information by userId (HR side)
+ * @returns Seeker information data
+ */
+export function getSeekerInfoByUserId(userId: number): Promise<SeekerInfo> {
+  const url = `/api/seeker/get-seeker-info?userId=${encodeURIComponent(userId)}`;
+  console.log('[Params]', url, { userId });
+  return http<SeekerInfo>({
+    url,
+    method: 'GET',
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
+  });
+}
+
+/**
  * Update seeker basic information
  * @returns Operation result
  */

@@ -1,9 +1,9 @@
-<template>
+﻿<template>
   <view class="job-edit">
     <view class="form-card">
       <view class="form-item">
         <text class="label">岗位标题</text>
-        <input v-model="form.jobTitle" placeholder="请输入职位标题" />
+        <input v-model="form.jobTitle" placeholder="请输入岗位标题" />
       </view>
       <view class="form-item">
         <text class="label">工作地点</text>
@@ -59,6 +59,24 @@
         <text class="label">任职要求</text>
         <textarea v-model="form.requirements" placeholder="技能、经验要求等"></textarea>
       </view>
+      <view class="form-item">
+        <view class="label-row">
+          <text class="label">技能要求</text>
+          <text class="link-button" @click="addSkill">添加技能</text>
+        </view>
+        <view class="skill-list" v-if="form.skills && form.skills.length">
+          <view class="skill-item" v-for="(item, idx) in form.skills" :key="`skill-${idx}`">
+            <input v-model="item.skillName" placeholder="如：Java / Vue.js" />
+            <view class="skill-actions">
+              <view class="skill-flag" @click="toggleSkillRequired(idx)">
+                <text class="skill-flag-text">{{ item.isRequired === 1 ? '必填' : '加分' }}</text>
+              </view>
+              <text class="remove-skill" @click="removeSkill(idx)">删除</text>
+            </view>
+          </view>
+        </view>
+        <view class="skill-empty" v-else>暂未添加技能要求</view>
+      </view>
       <button class="primary" :disabled="saving" @click="handleSubmit">{{ submitText }}</button>
     </view>
 
@@ -77,13 +95,14 @@ import {
   getJobPositionById,
   type JobPositionCreatePayload,
   type JobPosition,
+  type JobSkill,
 } from '@/services/api/hr';
 import { getHrInfo } from '@/services/api/hr';
 import { useHrStore } from '@/store/hr';
 
-const jobTypes = ['Full-time', 'Internship'];
+const jobTypes = ['全职', '实习'];
 const jobTypeValue = ref<number | null>(null);
-const experienceOptions = ['应届生', '1年以内', '1-3年', '3-5年', '5-10年', '10年以上'];
+const experienceOptions = ['应届/0年', '1年以内', '1-3年', '3-5年', '5-10年', '10年以上'];
 const experienceValue = ref<number | null>(null);
 const jobId = ref<number | null>(null);
 const loading = ref(false);
@@ -104,6 +123,7 @@ const form = reactive<JobPositionCreatePayload>({
   description: '',
   responsibilities: '',
   requirements: '',
+  skills: [],
 });
 
 const submitText = computed(() => (jobId.value ? '保存修改' : '发布岗位'));
@@ -135,6 +155,50 @@ const ensureCompanyId = async () => {
   }
 };
 
+const normalizeSkills = (skills?: Array<JobSkill | string>) => {
+  if (!Array.isArray(skills)) return [];
+  return skills
+    .map((skill) => {
+      if (typeof skill === 'string') {
+        const name = skill.trim();
+        if (!name) return null;
+        return { skillName: name, isRequired: 0 };
+      }
+      const name = skill.skillName?.trim();
+      if (!name) return null;
+      return { skillName: name, isRequired: skill.isRequired === 1 ? 1 : 0 };
+    })
+    .filter((item): item is JobSkill => Boolean(item));
+};
+
+const buildSkillsPayload = () => {
+  const skills = form.skills ?? [];
+  return skills
+    .map((item) => {
+      const name = item.skillName?.trim();
+      if (!name) return null;
+      return { skillName: name, isRequired: item.isRequired === 1 ? 1 : 0 };
+    })
+    .filter((item): item is JobSkill => Boolean(item));
+};
+
+const addSkill = () => {
+  if (!form.skills) {
+    form.skills = [];
+  }
+  form.skills.push({ skillName: '', isRequired: 0 });
+};
+
+const removeSkill = (index: number) => {
+  form.skills?.splice(index, 1);
+};
+
+const toggleSkillRequired = (index: number) => {
+  const skill = form.skills?.[index];
+  if (!skill) return;
+  skill.isRequired = skill.isRequired === 1 ? 0 : 1;
+};
+
 const populateForm = (data?: JobPosition) => {
   if (!data) {
     return;
@@ -152,6 +216,7 @@ const populateForm = (data?: JobPosition) => {
   form.description = data.description || '';
   form.responsibilities = data.responsibilities || '';
   form.requirements = data.requirements || '';
+  form.skills = normalizeSkills(data.skills);
   jobTypeValue.value = data.jobType ?? null;
   experienceValue.value = typeof data.experienceRequired === 'number' ? data.experienceRequired : null;
 };
@@ -221,11 +286,14 @@ const handleSubmit = async () => {
     form.city = city;
     form.description = description;
 
+    const skillsPayload = buildSkillsPayload();
+    const payload = { ...form, skills: skillsPayload };
+
     if (jobId.value) {
-      await updateJobPosition(jobId.value, { ...form });
+      await updateJobPosition(jobId.value, payload);
       uni.showToast({ title: '保存成功', icon: 'success' });
     } else {
-      const newId = await createJobPosition({ ...form });
+      const newId = await createJobPosition(payload);
       jobId.value = newId;
       uni.showToast({ title: '发布成功', icon: 'success' });
     }
@@ -296,11 +364,26 @@ onLoad(async (options) => {
   min-width: 0;
 }
 
+.label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12rpx;
+}
+
 .label {
   display: block;
   margin-bottom: 12rpx;
   font-size: 26rpx;
   color: #5a6275;
+}
+
+.link-button {
+  font-size: 24rpx;
+  color: #2f7cff;
+  padding: 6rpx 12rpx;
+  border-radius: 999rpx;
+  background: rgba(47, 124, 255, 0.12);
 }
 
 input,
@@ -331,6 +414,46 @@ textarea {
   background: #f5f7fb;
   border-radius: 16rpx;
   color: #7a8398;
+}
+
+.skill-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.skill-item {
+  background: #f5f7fb;
+  border-radius: 16rpx;
+  padding: 16rpx;
+}
+
+.skill-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 12rpx;
+}
+
+.skill-flag {
+  padding: 6rpx 14rpx;
+  border-radius: 999rpx;
+  background: #e8f3ff;
+}
+
+.skill-flag-text {
+  font-size: 22rpx;
+  color: #2f7cff;
+}
+
+.remove-skill {
+  font-size: 22rpx;
+  color: #ff7a00;
+}
+
+.skill-empty {
+  font-size: 24rpx;
+  color: #9aa3b2;
 }
 
 button.primary {

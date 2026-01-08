@@ -40,7 +40,7 @@ interface PageResult<T> {
  * @returns Operation result
  */
 export function registerHr(params: RegisterHrParams): Promise<null> {
-  const url = '/api/hr/info';
+  const url = '/api/hr/info/register';
   console.log('[Params]', url, params);
   return http<null>({
     url,
@@ -232,6 +232,7 @@ export function getSeekerCard(userId: number): Promise<SeekerCard> {
 // ============ HR 推荐求职者/推荐岗位 ============
 export type PublicSeekerCard = SeekerCard & {
   id?: number;
+  realName?: string;
 };
 
 /**

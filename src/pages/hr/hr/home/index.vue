@@ -40,6 +40,7 @@ import { onShow } from '@dcloudio/uni-app';
 import avatarImg from '@/static/user-avatar.png';
 import CustomTabBar from '@/components/common/CustomTabBar.vue';
 import { getApplicationDetail, getPublicSeekerCards, type PublicSeekerCard } from '@/services/api/hr';
+import { getSeekerInfoByUserId } from '@/services/api/seeker';
 import { getCandidateMatchAnalysis } from '@/services/api/hr-ai';
 import SeekerRecommendCard from '@/pages/hr/hr/seeker/components/SeekerRecommendCard.vue';
 
@@ -55,6 +56,7 @@ const refreshSeekerCards = async () => {
     const data = await getPublicSeekerCards();
     seekerCards.value = Array.isArray(data) ? data : [];
     await loadMatchScores(seekerCards.value);
+    await loadSeekerRealNames(seekerCards.value);
   } catch (err) {
     console.error('Failed to load public seeker cards:', err);
     seekerError.value = '推荐加载失败';
@@ -74,7 +76,11 @@ const openSeekerDetail = (card: PublicSeekerCard) => {
     return;
   }
   uni.navigateTo({
-    url: `/pages/hr/hr/seeker/detail?userId=${encodeURIComponent(userId)}&username=${encodeURIComponent(card.username || '')}`,
+    url:
+      `/pages/hr/hr/seeker/detail?userId=${encodeURIComponent(userId)}` +
+      `&username=${encodeURIComponent(card.username || '')}` +
+      `&city=${encodeURIComponent(card.city || '')}` +
+      `&university=${encodeURIComponent(card.university || '')}`,
   });
 };
 
@@ -115,6 +121,37 @@ const loadMatchScores = async (cards: PublicSeekerCard[]) => {
       continue;
     }
   }
+};
+
+const loadSeekerRealNames = async (cards: PublicSeekerCard[]) => {
+  const ids = (cards || [])
+    .map((card) => Number(card.userId ?? card.id))
+    .filter((id) => Number.isFinite(id) && id > 0);
+  const uniqueIds = Array.from(new Set(ids)).slice(0, 8);
+  if (uniqueIds.length === 0) return;
+
+  const nameMap: Record<number, string> = {};
+  await Promise.all(
+    uniqueIds.map(async (id) => {
+      try {
+        const info = await getSeekerInfoByUserId(id);
+        if (info?.realName) {
+          nameMap[id] = info.realName;
+        }
+      } catch {
+        // ignore per-user failure
+      }
+    })
+  );
+
+  if (Object.keys(nameMap).length === 0) return;
+
+  seekerCards.value = (cards || []).map((card) => {
+    const id = Number(card.userId ?? card.id);
+    const realName = nameMap[id];
+    if (!realName) return card;
+    return { ...card, realName };
+  });
 };
 
 onMounted(() => {

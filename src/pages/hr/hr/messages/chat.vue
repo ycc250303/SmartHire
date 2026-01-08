@@ -123,9 +123,7 @@
           <template v-else-if="opsType === 'interview'">
             <view class="form-item">
               <text class="label">面试时间</text>
-              <picker mode="date" :value="interviewForm.interviewTime" @change="onPickInterviewDate">
-                <view class="picker">{{ interviewDateLabel }}</view>
-              </picker>
+              <input v-model="interviewForm.interviewTime" placeholder="如：2026-01-08 14:00" />
             </view>
             <view class="form-item">
               <text class="label">面试方式</text>
@@ -160,9 +158,7 @@
             </view>
             <view class="form-item">
               <text class="label">到岗日期（可选）</text>
-              <picker mode="date" :value="offerForm.startDate" @change="onPickOfferDate">
-                <view class="picker">{{ offerDateLabel }}</view>
-              </picker>
+              <input v-model="offerForm.startDate" placeholder="如：2026-02-01" />
             </view>
             <view class="form-item">
               <text class="label">雇佣类型</text>
@@ -641,59 +637,12 @@ const selectedJobLabel = computed(() => {
   return job ? `${job.jobTitle}${job.city ? `（${job.city}）` : ""}` : "请选择岗位";
 });
 
-const formatDateCN = (raw: string) => {
-  if (!raw) return "";
-  const cleaned = raw.trim();
-  const datePart = cleaned.includes("T")
-    ? cleaned.split("T")[0]
-    : cleaned.includes(" ")
-      ? cleaned.split(" ")[0]
-      : cleaned;
-  const match = datePart.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
-  if (!match) return cleaned;
-  const [, y, m, d] = match;
-  const pad2 = (v: string) => v.padStart(2, "0");
-  return `${y}年${pad2(m)}月${pad2(d)}日`;
-};
-
-const formatDateValue = (raw: string) => {
-  if (!raw) return "";
-  const cleaned = raw.trim();
-  if (cleaned.includes("T")) return cleaned.split("T")[0];
-  if (cleaned.includes(" ")) return cleaned.split(" ")[0];
-  return cleaned;
-};
-
-const toDateTimeValue = (raw: string) => {
-  const dateOnly = formatDateValue(raw);
-  if (!dateOnly) return "";
-  return `${dateOnly} 09:00`;
-};
-
-const interviewDateLabel = computed(() =>
-  interviewForm.value.interviewTime
-    ? formatDateCN(interviewForm.value.interviewTime)
-    : "请选择日期"
-);
-
-const offerDateLabel = computed(() =>
-  offerForm.value.startDate ? formatDateCN(offerForm.value.startDate) : "请选择日期"
-);
-
 const onPickJob = (e: any) => {
   selectedJobIndex.value = Number(e?.detail?.value ?? 0);
 };
 
 const onPickInterviewType = (e: any) => {
   interviewTypeIndex.value = Number(e?.detail?.value ?? 0);
-};
-
-const onPickInterviewDate = (e: any) => {
-  interviewForm.value.interviewTime = String(e?.detail?.value || "");
-};
-
-const onPickOfferDate = (e: any) => {
-  offerForm.value.startDate = String(e?.detail?.value || "");
 };
 
 const onPickEmploymentType = (e: any) => {
@@ -832,35 +781,38 @@ const submitOps = async () => {
       }
       const type = interviewTypeOptions[interviewTypeIndex.value]?.value ?? 2;
       const locationOrLink = interviewForm.value.locationOrLink.trim();
-      const interviewTime = toDateTimeValue(interviewForm.value.interviewTime);
-      const isLikelyUrl = (value: string) => /^https?:\/\//i.test(value);
-      const noteText = interviewForm.value.note.trim();
+      const normalizeDateTime = (raw: string): string => {
+        const trimmed = raw.trim().replace(/\//g, "-").replace(/\./g, "-");
+        const match = trimmed.match(
+          /^(\d{4})-(\d{1,2})-(\d{1,2})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?$/
+        );
+        if (match) {
+          const [, y, mo, d, h, mi, s] = match;
+          const pad2 = (v: string) => v.padStart(2, "0");
+          // Prefer "YYYY-MM-DD HH:mm:ss" for Java backends
+          return `${y}-${pad2(mo)}-${pad2(d)} ${pad2(h)}:${pad2(mi)}:${pad2(s || "00")}`;
+        }
+        // Already ISO? normalize to space-separated and ensure seconds
+        if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(trimmed)) return trimmed.replace("T", " ") + ":00";
+        if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/.test(trimmed)) return trimmed.replace("T", " ");
+        return trimmed;
+      };
+      const interviewTime = normalizeDateTime(interviewForm.value.interviewTime);
 
-      const interviewPayload: any = {
+      await scheduleInterview({
         applicationId: appId,
         interviewTime,
         duration: 30,
         interviewType: type,
         interviewRound: 1,
+        location: type === 3 ? (locationOrLink || undefined) : undefined,
+        meetingLink: type !== 3 ? (locationOrLink || undefined) : undefined,
         notifyCandidate: true,
-      };
-      if (type === 3 && locationOrLink) {
-        interviewPayload.location = locationOrLink;
-      } else if (type !== 3 && locationOrLink) {
-        if (isLikelyUrl(locationOrLink)) {
-          interviewPayload.meetingLink = locationOrLink;
-        } else {
-          interviewPayload.note = noteText
-            ? `${noteText}（会议链接：${locationOrLink}）`
-            : `会议链接：${locationOrLink}`;
-        }
-      }
-      if (noteText && !interviewPayload.note) interviewPayload.note = noteText;
-
-      await scheduleInterview(interviewPayload);
+        note: interviewForm.value.note.trim() || undefined,
+      });
 
       const text =
-        `【面试邀请】\n面试时间：${formatDateCN(interviewForm.value.interviewTime.trim())}\n` +
+        `【面试邀请】\n面试时间：${interviewForm.value.interviewTime.trim()}\n` +
         `方式：${interviewTypeOptions[interviewTypeIndex.value]?.label}\n` +
         (type === 3
           ? `地点：${locationOrLink || "待定"}\n`
@@ -886,28 +838,22 @@ const submitOps = async () => {
       const baseSalary = Number(offerForm.value.baseSalary);
       const bonus = Number(offerForm.value.bonus);
 
-      const offerPayload: any = {
+      await sendOffer({
         applicationId: appId,
+        title: offerForm.value.title.trim() || undefined,
+        baseSalary: Number.isFinite(baseSalary) ? baseSalary : undefined,
+        bonus: Number.isFinite(bonus) ? bonus : undefined,
+        startDate: offerForm.value.startDate.trim() || undefined,
+        employmentType: employmentTypeOptions[employmentTypeIndex.value]?.value,
         send: true,
-      };
-      const title = offerForm.value.title.trim();
-      const startDate = formatDateValue(offerForm.value.startDate.trim());
-      if (title) offerPayload.title = title;
-      if (Number.isFinite(baseSalary)) offerPayload.baseSalary = baseSalary;
-      if (Number.isFinite(bonus)) offerPayload.bonus = bonus;
-      if (startDate) offerPayload.startDate = startDate;
-      if (employmentTypeOptions[employmentTypeIndex.value]?.value) {
-        offerPayload.employmentType = employmentTypeOptions[employmentTypeIndex.value]?.value;
-      }
-      if (offerForm.value.note.trim()) offerPayload.note = offerForm.value.note.trim();
-
-      await sendOffer(offerPayload);
+        note: offerForm.value.note.trim() || undefined,
+      });
 
       const text =
         `【Offer】\n职位：${offerForm.value.title.trim() || "（未填写）"}\n` +
         `基本薪资：${offerForm.value.baseSalary || "未填写"}\n` +
         `奖金/补贴：${offerForm.value.bonus || "未填写"}\n` +
-        `到岗日期：${formatDateCN(offerForm.value.startDate.trim()) || "未填写"}\n` +
+        `到岗日期：${offerForm.value.startDate.trim() || "未填写"}\n` +
         `雇佣类型：${employmentTypeOptions[employmentTypeIndex.value]?.label}\n` +
         `备注：${offerForm.value.note.trim() || "无"}`;
 

@@ -16,7 +16,7 @@
 
         <view class="title-wrap">
           <view class="name-row">
-            <text class="name">{{ seeker.username || '求职者' }}</text>
+            <text class="name">{{ displayName }}</text>
             <view class="status-pill">
               <text class="status-text">{{ jobStatusText(seeker.jobStatus) }}</text>
             </view>
@@ -61,7 +61,8 @@ const emit = defineEmits<{
 
 const seeker = computed(() => props.seeker);
 
-const initial = computed(() => (seeker.value.username?.trim()?.[0] || 'S').toUpperCase());
+const displayName = computed(() => seeker.value.realName || seeker.value.username || '求职者');
+const initial = computed(() => (displayName.value.trim()?.[0] || 'S').toUpperCase());
 
 const metaLine = computed(() => {
   const parts: string[] = [];
