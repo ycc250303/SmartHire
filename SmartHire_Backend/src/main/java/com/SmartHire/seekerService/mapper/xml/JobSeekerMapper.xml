@@ -22,6 +22,7 @@
     <resultMap id="SeekerCardResultMap" type="com.SmartHire.common.dto.seekerDto.SeekerCardDTO">
         <result column="user_id" property="userId" />
         <result column="username" property="username" />
+        <result column="real_name" property="realName" />
         <result column="age" property="age" />
         <result column="highest_education" property="highestEducation" />
         <result column="major" property="major" />
@@ -44,6 +45,7 @@
         SELECT
             js.user_id,
             u.username,
+            js.real_name,
             TIMESTAMPDIFF(YEAR, js.birth_date, CURDATE()) AS age,
             CASE
                 WHEN ee.education IS NOT NULL THEN
