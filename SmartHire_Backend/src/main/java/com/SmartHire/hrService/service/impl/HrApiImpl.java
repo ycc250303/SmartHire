@@ -197,4 +197,14 @@ public class HrApiImpl implements HrApi {
   public JobInfoDTO getJobInfoWithSkills(Long jobId) {
     return jobInfoService.getJobInfoById(jobId);
   }
+
+  @Override
+  public void incrementViewCount(Long jobId) {
+    jobInfoService.incrementViewCount(jobId);
+  }
+
+  @Override
+  public void incrementApplicationCount(Long jobId) {
+    jobInfoService.incrementApplicationCount(jobId);
+  }
 }

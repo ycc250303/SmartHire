@@ -123,4 +123,18 @@ public interface HrApi {
    * @return 公司信息，如果公司不存在返回null
    */
   CompanyDTO getCompanyById(Long companyId);
+
+  /**
+   * 增加岗位浏览量
+   *
+   * @param jobId 岗位ID
+   */
+  void incrementViewCount(Long jobId);
+
+  /**
+   * 增加岗位投递量
+   *
+   * @param jobId 岗位ID
+   */
+  void incrementApplicationCount(Long jobId);
 }
