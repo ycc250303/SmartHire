@@ -27,6 +27,9 @@ public class Offer implements Serializable {
   /** 投递记录ID */
   private Long applicationId;
 
+  /** 关联的消息ID */
+  private Long messageId;
+
   /** 求职者ID */
   private Long jobSeekerId;
 
@@ -54,4 +57,3 @@ public class Offer implements Serializable {
   /** 更新时间 */
   private Date updatedAt;
 }
-

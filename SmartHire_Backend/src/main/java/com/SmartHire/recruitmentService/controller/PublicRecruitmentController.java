@@ -57,4 +57,20 @@ public class PublicRecruitmentController {
         Integer status = offerService.getOfferStatus(offerId);
         return Result.success("查询成功", status);
     }
+
+    @GetMapping("/interview/id-by-message")
+    @Operation(summary = "根据消息ID获取面试ID", description = "根据消息ID获取面试ID")
+    public Result<Long> getInterviewIdByMessageId(
+            @RequestParam @NotNull(message = "消息ID不能为空") Long messageId) {
+        Long interviewId = interviewService.getInterviewIdByMessageId(messageId);
+        return Result.success("查询成功", interviewId);
+    }
+
+    @GetMapping("/offer/id-by-message")
+    @Operation(summary = "根据消息ID获取 Offer ID", description = "根据消息ID获取 Offer ID")
+    public Result<Long> getOfferIdByMessageId(
+            @RequestParam @NotNull(message = "消息ID不能为空") Long messageId) {
+        Long offerId = offerService.getOfferIdByMessageId(messageId);
+        return Result.success("查询成功", offerId);
+    }
 }

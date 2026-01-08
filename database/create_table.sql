@@ -399,6 +399,7 @@ CREATE INDEX idx_status ON application (status);
 CREATE TABLE `interview` (
     `id` BIGINT AUTO_INCREMENT COMMENT '面试ID' PRIMARY KEY,
     `application_id` BIGINT NOT NULL COMMENT '投递记录ID',
+    `message_id` BIGINT NOT NULL COMMENT '消息ID',
     `interview_type` TINYINT NOT NULL COMMENT '面试类型：1-电话 2-视频 3-现场',
     `interview_round` INT DEFAULT 1 NULL COMMENT '面试轮次',
     `interview_time` DATETIME NOT NULL COMMENT '面试时间',
@@ -419,6 +420,7 @@ CREATE INDEX idx_status ON interview (status);
 CREATE TABLE `offer` (
     `id` BIGINT AUTO_INCREMENT COMMENT 'Offer ID' PRIMARY KEY,
     `application_id` BIGINT NOT NULL COMMENT '投递记录ID',
+    `message_id` BIGINT NOT NULL COMMENT '消息ID',
     `job_seeker_id` BIGINT NOT NULL COMMENT '求职者ID',
     `hr_id` BIGINT NOT NULL COMMENT 'HR ID',
     `base_salary` DECIMAL(10, 2) NULL COMMENT '基本薪资',
@@ -460,7 +462,7 @@ CREATE TABLE `chat_message` (
     `conversation_id` BIGINT NOT NULL COMMENT '会话ID',
     `sender_id` BIGINT NOT NULL COMMENT '发送者用户ID',
     `receiver_id` BIGINT NOT NULL COMMENT '接收者用户ID',
-    `message_type` TINYINT DEFAULT 1 NULL COMMENT '消息类型：1-文本 2-图片 3-文件 4-语音 5-视频 6-系统通知 7-卡片消息',
+    `message_type` TINYINT DEFAULT 1 NULL COMMENT '消息类型：1-文本 2-图片 3-文件 4-语音 5-视频 6-系统通知 7-卡片消息 8-面试邀请 9-Offer 10-拒绝通知',
     `content` TEXT NULL COMMENT '消息内容',
     `file_url` VARCHAR(255) NULL COMMENT '文件/图片/语音/视频URL',
     `reply_to` BIGINT NULL COMMENT '引用的消息ID',

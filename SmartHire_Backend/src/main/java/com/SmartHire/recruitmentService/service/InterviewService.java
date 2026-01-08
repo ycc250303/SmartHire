@@ -32,4 +32,12 @@ public interface InterviewService {
    * @return 面试状态：0-待确认 1-已确认 2-已完成 3-已取消
    */
   Integer getInterviewStatus(Long interviewId);
+
+  /**
+   * 根据消息ID获取面试ID
+   *
+   * @param messageId 消息ID
+   * @return 面试ID
+   */
+  Long getInterviewIdByMessageId(Long messageId);
 }

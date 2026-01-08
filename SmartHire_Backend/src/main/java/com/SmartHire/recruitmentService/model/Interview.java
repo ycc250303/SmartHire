@@ -24,6 +24,9 @@ public class Interview implements Serializable {
 
   private Long applicationId;
 
+  /** 关联的消息ID */
+  private Long messageId;
+
   /** 面试类型：1-电话 2-视频 3-现场 */
   private Byte interviewType;
 
@@ -56,5 +59,3 @@ public class Interview implements Serializable {
 
   private Date updatedAt;
 }
-
-

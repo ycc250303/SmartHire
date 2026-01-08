@@ -60,7 +60,7 @@ HR与求职者之间的聊天消息记录。
 | application_id | bigint | NO | MUL | - | 申请ID |
 | sender_id | bigint | NO | MUL | - | 发送者ID |
 | receiver_id | bigint | NO | | - | 接收者ID |
-| message_type | tinyint | YES | | 1 | 消息类型 |
+| message_type | tinyint | YES | | 1 | 消息类型：1-文本 2-图片 3-文件 4-语音 5-视频 6-系统通知 7-卡片消息 8-面试邀请 9-Offer 10-拒绝通知 |
 | content | text | YES | | - | 消息内容 |
 | file_url | varchar(255) | YES | | - | 文件链接 |
 | reply_to | bigint | YES | | - | 回复的消息ID |
