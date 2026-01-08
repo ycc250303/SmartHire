@@ -62,6 +62,78 @@
 
       <view class="resume-card section">
         <view class="section-header">
+          <text class="section-title">在线简历</text>
+          <text class="link-button" @click="toggleResume">
+            {{ resumeOpen ? '收起' : '查看' }}
+          </text>
+        </view>
+
+        <view v-if="!resumeOpen" class="resume-hint">
+          点击查看求职者详细简历信息
+        </view>
+
+        <view v-else class="resume-detail">
+          <view v-if="resumeLoading" class="state-inline">加载中...</view>
+          <view v-else-if="resumeError" class="state-inline">{{ resumeError }}</view>
+          <view v-else-if="!onlineResume" class="state-inline">暂无在线简历</view>
+          <view v-else>
+            <view class="resume-subsection" v-if="resumeExpectations.length">
+              <text class="sub-title">求职期望</text>
+              <view class="resume-item" v-for="(item, idx) in resumeExpectations" :key="`exp-${idx}`">
+                <text class="item-title">{{ item.jobTitle || '期望岗位' }}</text>
+                <text class="item-meta">
+                  {{ formatMeta([item.city, formatSalary(item), item.jobType]) }}
+                </text>
+              </view>
+            </view>
+
+            <view class="resume-subsection" v-if="resumeWorkExperiences.length">
+              <text class="sub-title">工作经历</text>
+              <view class="resume-item" v-for="(item, idx) in resumeWorkExperiences" :key="`work-${idx}`">
+                <text class="item-title">{{ item.companyName || item.company || '工作经历' }}</text>
+                <text class="item-meta">
+                  {{ formatMeta([item.position, formatPeriod(item.startDate, item.endDate)]) }}
+                </text>
+                <text class="item-desc" v-if="item.description">{{ item.description }}</text>
+              </view>
+            </view>
+
+            <view class="resume-subsection" v-if="resumeProjectExperiences.length">
+              <text class="sub-title">项目经历</text>
+              <view class="resume-item" v-for="(item, idx) in resumeProjectExperiences" :key="`project-${idx}`">
+                <text class="item-title">{{ item.projectName || '项目经历' }}</text>
+                <text class="item-meta">
+                  {{ formatMeta([item.role, formatPeriod(item.startDate, item.endDate)]) }}
+                </text>
+                <text class="item-desc" v-if="item.description">{{ item.description }}</text>
+              </view>
+            </view>
+
+            <view class="resume-subsection" v-if="resumeEducationExperiences.length">
+              <text class="sub-title">教育经历</text>
+              <view class="resume-item" v-for="(item, idx) in resumeEducationExperiences" :key="`edu-${idx}`">
+                <text class="item-title">{{ item.schoolName || item.school || '教育经历' }}</text>
+                <text class="item-meta">
+                  {{ formatMeta([item.major, item.degree, formatPeriod(item.startDate, item.endDate)]) }}
+                </text>
+              </view>
+            </view>
+
+            <view class="resume-subsection" v-if="resumeSkills.length">
+              <text class="sub-title">技能</text>
+              <view class="skill-row" v-for="(item, idx) in resumeSkills" :key="`skill-${idx}`">
+                <text class="skill-name">{{ item.skillName || item.name || '技能' }}</text>
+                <text class="skill-level" v-if="item.level || item.proficiency">
+                  {{ item.level || item.proficiency }}
+                </text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view class="resume-card section">
+        <view class="section-header">
           <text class="section-title">推荐岗位</text>
         </view>
 
@@ -102,6 +174,7 @@ import {
   type JobPosition,
 } from '@/services/api/hr';
 import { getConversations, sendMessage } from '@/services/api/message';
+import { getOnlineResume } from '@/services/api/seeker';
 
 const userId = ref<number>(0);
 const seeker = ref<SeekerCard | null>(null);
@@ -110,6 +183,10 @@ const selectedJobIndex = ref<number | null>(null);
 const note = ref('');
 const loading = ref(false);
 const recommending = ref(false);
+const resumeOpen = ref(false);
+const resumeLoading = ref(false);
+const resumeError = ref('');
+const onlineResume = ref<any>(null);
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -136,6 +213,54 @@ const selectedJobLabel = computed(() => {
   if (selectedJob.value) return `${selectedJob.value.jobTitle}${selectedJob.value.city ? ` · ${selectedJob.value.city}` : ''}`;
   return jobs.value.length > 0 ? '请选择岗位' : '暂无可推荐岗位';
 });
+
+const resumeExpectations = computed(() => onlineResume.value?.jobSeekerExpectations || []);
+const resumeWorkExperiences = computed(() => onlineResume.value?.workExperiences || []);
+const resumeProjectExperiences = computed(() => onlineResume.value?.projectExperiences || []);
+const resumeEducationExperiences = computed(() => onlineResume.value?.educationExperiences || []);
+const resumeSkills = computed(() => onlineResume.value?.skills || []);
+
+const formatMeta = (items: Array<string | number | null | undefined>) =>
+  items.filter((item) => item !== null && item !== undefined && String(item).trim() !== '').join(' · ');
+
+const formatSalary = (item: any) => {
+  const min = item?.salaryMin;
+  const max = item?.salaryMax;
+  if (min && max) return `${min}-${max}`;
+  if (min) return `>=${min}`;
+  if (max) return `<=${max}`;
+  return '';
+};
+
+const formatPeriod = (start?: string, end?: string) => {
+  if (!start && !end) return '';
+  return `${start || '未知'} - ${end || '至今'}`;
+};
+
+const loadOnlineResume = async () => {
+  if (!userId.value) return;
+  resumeLoading.value = true;
+  resumeError.value = '';
+  try {
+    const resp = await getOnlineResume(userId.value);
+    onlineResume.value = resp?.data ?? resp ?? null;
+    if (!onlineResume.value) {
+      resumeError.value = '暂无在线简历';
+    }
+  } catch (err) {
+    console.error('Failed to load online resume:', err);
+    resumeError.value = '加载失败';
+  } finally {
+    resumeLoading.value = false;
+  }
+};
+
+const toggleResume = () => {
+  resumeOpen.value = !resumeOpen.value;
+  if (resumeOpen.value && !onlineResume.value && !resumeLoading.value) {
+    loadOnlineResume();
+  }
+};
 
 const goAi = async () => {
   if (!selectedJob.value?.id) {
@@ -469,6 +594,90 @@ onLoad((options) => {
   font-size: 30rpx;
   font-weight: 700;
   color: vars.$text-color;
+}
+
+.link-button {
+  font-size: 24rpx;
+  color: vars.$primary-color;
+  padding: 6rpx 10rpx;
+  border-radius: 999rpx;
+  background: rgba(75, 163, 255, 0.12);
+}
+
+.resume-hint {
+  font-size: 24rpx;
+  color: vars.$text-muted;
+  padding: 6rpx 0 2rpx;
+}
+
+.resume-detail {
+  display: flex;
+  flex-direction: column;
+  gap: vars.$spacing-md;
+}
+
+.state-inline {
+  font-size: 24rpx;
+  color: vars.$text-muted;
+  padding: 8rpx 0;
+}
+
+.resume-subsection {
+  display: flex;
+  flex-direction: column;
+  gap: vars.$spacing-sm;
+}
+
+.sub-title {
+  font-size: 26rpx;
+  font-weight: 700;
+  color: vars.$text-color;
+}
+
+.resume-item {
+  background: #f8faff;
+  border-radius: vars.$border-radius-sm;
+  padding: 16rpx 18rpx;
+}
+
+.item-title {
+  font-size: 26rpx;
+  font-weight: 700;
+  color: vars.$text-color;
+}
+
+.item-meta {
+  display: block;
+  margin-top: 6rpx;
+  font-size: 22rpx;
+  color: vars.$text-muted;
+}
+
+.item-desc {
+  display: block;
+  margin-top: 6rpx;
+  font-size: 22rpx;
+  color: vars.$text-color;
+  line-height: 1.5;
+}
+
+.skill-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12rpx 16rpx;
+  border-radius: vars.$border-radius-sm;
+  background: #f8faff;
+}
+
+.skill-name {
+  font-size: 24rpx;
+  color: vars.$text-color;
+}
+
+.skill-level {
+  font-size: 22rpx;
+  color: vars.$text-muted;
 }
 
 .chips {
