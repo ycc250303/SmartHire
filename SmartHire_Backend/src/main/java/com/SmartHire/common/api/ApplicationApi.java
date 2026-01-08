@@ -20,4 +20,12 @@ public interface ApplicationApi {
    * @return 投递记录是否存在
    */
   boolean existsApplication(Long applicationId);
+
+  /**
+   * 根据投递ID获取会话ID
+   *
+   * @param applicationId 投递ID
+   * @return 会话ID
+   */
+  Long getConversationIdByApplicationId(Long applicationId);
 }

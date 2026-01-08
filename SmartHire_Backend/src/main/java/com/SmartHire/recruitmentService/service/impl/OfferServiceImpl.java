@@ -85,18 +85,6 @@ public class OfferServiceImpl implements OfferService {
       // 构建并发送消息通知求职者
       StringBuilder content = new StringBuilder();
       content.append("恭喜，您收到录用通知！");
-      if (request.getTitle() != null) {
-        content.append(" 职位：").append(request.getTitle()).append("；");
-      }
-      if (request.getBaseSalary() != null) {
-        content.append(" 薪资：").append(request.getBaseSalary()).append("；");
-      }
-      if (request.getStartDate() != null) {
-        content.append(" 到岗：").append(request.getStartDate().toString()).append("；");
-      }
-      if (request.getNote() != null && !request.getNote().isEmpty()) {
-        content.append(" 备注：").append(request.getNote());
-      }
 
       SendMessageCommonDTO messageDTO = new SendMessageCommonDTO();
       messageDTO.setReceiverId(seekerUserId);

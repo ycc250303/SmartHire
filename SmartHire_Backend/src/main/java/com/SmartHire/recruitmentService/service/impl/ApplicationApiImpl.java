@@ -4,7 +4,6 @@ import com.SmartHire.common.api.ApplicationApi;
 import com.SmartHire.recruitmentService.model.Application;
 import com.SmartHire.recruitmentService.service.SeekerApplicationService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 /** 投递记录服务API实现类 */
@@ -22,5 +21,10 @@ public class ApplicationApiImpl implements ApplicationApi {
   @Override
   public boolean existsApplication(Long applicationId) {
     return seekerApplicationService.getById(applicationId) != null;
+  }
+
+  @Override
+  public Long getConversationIdByApplicationId(Long applicationId) {
+    return seekerApplicationService.getConversationIdByApplicationId(applicationId);
   }
 }
