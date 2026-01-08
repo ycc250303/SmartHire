@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 @RestController
 @RequestMapping("/seeker")
-@RequireUserType({UserType.SEEKER})
+@RequireUserType({ UserType.SEEKER })
 public class SeekerAccountController {
 
     @Autowired
@@ -41,6 +41,7 @@ public class SeekerAccountController {
      * 获取求职者信息
      */
     @GetMapping("/get-seeker-info")
+    @RequireUserType({ UserType.SEEKER, UserType.HR })
     @Operation(summary = "获取求职者信息", description = "获取求职者信息")
     public Result<SeekerInfoDTO> getSeekerInfo() {
         SeekerInfoDTO seekerInfo = jobSeekerService.getSeekerInfo();
@@ -68,4 +69,3 @@ public class SeekerAccountController {
         return Result.success("删除求职者信息成功");
     }
 }
-
