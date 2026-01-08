@@ -137,11 +137,12 @@ public class OfferServiceImpl implements OfferService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public void respondToOffer(OfferResponseDTO request) {
-    if (request == null || request.getOfferId() == null || request.getResponse() == null) {
+    if (request == null || request.getMessageId() == null || request.getResponse() == null) {
       throw new BusinessException(ErrorCode.VALIDATION_ERROR);
     }
 
-    Offer offer = offerMapper.selectById(request.getOfferId());
+    Offer offer = offerMapper.selectOne(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Offer>()
+        .eq(Offer::getMessageId, request.getMessageId()));
     if (offer == null) {
       throw new BusinessException(ErrorCode.OFFER_NOT_EXIST);
     }
@@ -150,7 +151,7 @@ public class OfferServiceImpl implements OfferService {
     Long currentUserId = userContext.getCurrentUserId();
     Long currentSeekerId = seekerApi.getJobSeekerIdByUserId(currentUserId);
     if (currentSeekerId == null || !currentSeekerId.equals(offer.getJobSeekerId())) {
-      log.warn("用户无权响应此 Offer: userId={}, offerId={}", currentUserId, request.getOfferId());
+      log.warn("用户无权响应此 Offer: userId={}, messageId={}", currentUserId, request.getMessageId());
       throw new BusinessException(ErrorCode.PERMISSION_DENIED);
     }
 

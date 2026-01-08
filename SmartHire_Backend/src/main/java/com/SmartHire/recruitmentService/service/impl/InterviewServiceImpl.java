@@ -136,11 +136,13 @@ public class InterviewServiceImpl extends ServiceImpl<InterviewMapper, Interview
   @Override
   @Transactional(rollbackFor = Exception.class)
   public void respondToInterview(InterviewResponseDTO request) {
-    if (request == null || request.getInterviewId() == null || request.getResponse() == null) {
+    if (request == null || request.getMessageId() == null || request.getResponse() == null) {
       throw new BusinessException(ErrorCode.VALIDATION_ERROR);
     }
 
-    Interview interview = this.getById(request.getInterviewId());
+    Interview interview = this.lambdaQuery()
+        .eq(Interview::getMessageId, request.getMessageId())
+        .one();
     if (interview == null) {
       throw new BusinessException(ErrorCode.INTERVIEW_NOT_EXIST);
     }
@@ -154,7 +156,7 @@ public class InterviewServiceImpl extends ServiceImpl<InterviewMapper, Interview
     Long currentUserId = userContext.getCurrentUserId();
     Long currentSeekerId = seekerApi.getJobSeekerIdByUserId(currentUserId);
     if (currentSeekerId == null || !currentSeekerId.equals(application.getJobSeekerId())) {
-      log.warn("用户无权响应此面试邀请: userId={}, interviewId={}", currentUserId, request.getInterviewId());
+      log.warn("用户无权响应此面试邀请: userId={}, messageId={}", currentUserId, request.getMessageId());
       throw new BusinessException(ErrorCode.PERMISSION_DENIED);
     }
 

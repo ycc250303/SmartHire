@@ -14,9 +14,9 @@ import java.io.Serializable;
 public class OfferResponseDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    @Schema(description = "Offer记录ID")
-    @NotNull(message = "OfferID不能为空")
-    private Long offerId;
+    @Schema(description = "消息ID")
+    @NotNull(message = "消息ID不能为空")
+    private Long messageId;
 
     @Schema(description = "响应状态：1-接受Offer 2-拒绝Offer")
     @NotNull(message = "状态不能为空")
