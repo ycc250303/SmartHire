@@ -74,7 +74,14 @@ public class JobInfoServiceImpl extends ServiceImpl<JobInfoMapper, JobInfo>
   @Override
   @Transactional
   public Long createJobInfo(JobInfoCreateDTO createDTO) {
-    Long currentHrId = userContext.getCurrentUserId();
+    Long userId = userContext.getCurrentUserId();
+
+    // 获取当前HR的信息
+    HrInfo hrInfo = hrInfoMapper.selectOne(
+        new LambdaQueryWrapper<HrInfo>().eq(HrInfo::getUserId, userId));
+    if (hrInfo == null) {
+      throw new BusinessException(ErrorCode.HR_NOT_EXIST);
+    }
 
     // 验证全职类型字段
     if (createDTO.getJobType() != null
@@ -93,16 +100,13 @@ public class JobInfoServiceImpl extends ServiceImpl<JobInfoMapper, JobInfo>
       }
     }
 
-    // 验证公司是否存在（外键验证）
-    Company company = companyMapper.selectById(createDTO.getCompanyId());
-    if (company == null) {
-      throw new BusinessException(ErrorCode.COMPANY_NOT_EXIST);
-    }
-
     // 创建岗位实体
     JobInfo jobInfo = new JobInfo();
     BeanUtils.copyProperties(createDTO, jobInfo);
-    jobInfo.setHrId(currentHrId);
+
+    // 强制使用当前登录HR的ID和所属公司ID，不信任前端传参
+    jobInfo.setHrId(hrInfo.getId());
+    jobInfo.setCompanyId(hrInfo.getCompanyId());
 
     // 设置默认值
     if (jobInfo.getStatus() == null) {

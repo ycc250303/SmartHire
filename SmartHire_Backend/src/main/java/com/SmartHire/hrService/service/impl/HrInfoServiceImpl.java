@@ -160,9 +160,9 @@ public class HrInfoServiceImpl extends ServiceImpl<HrInfoMapper, HrInfo> impleme
       }
       hrInfo.setCreatedAt(now);
       hrInfo.setUpdatedAt(now);
-      // TODO: HR信息关联公司
-      hrInfo.setCompanyId(1L);
-      save(hrInfo);
+
+      // 不再硬编码 companyId 为 1L，而是抛出异常要求先注册（包含选择公司）
+      throw new BusinessException(ErrorCode.HR_NOT_EXIST, "HR信息不存在，请先进行注册并关联公司");
     } else {
       // 已存在则走更新逻辑
       updateHrInfo(updateDTO);
