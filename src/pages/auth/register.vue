@@ -178,29 +178,175 @@
 
       <!-- HR Form -->
       <template v-else>
-        <view class="form-field">
-          <input
-            class="field-input"
-            v-model="additionalFormData.realName"
-            :placeholder="t('auth.register.realName')"
-          />
+        <!-- HR Flow Selection -->
+        <view v-if="hrFlowType === null" class="hr-flow-selection">
+          <view class="flow-title">{{ t('auth.register.hrFlow.selectFlow') }}</view>
+          <view class="flow-cards">
+            <view class="flow-card" @click="selectHrFlow('create')">
+              <text class="flow-card-text">{{ t('auth.register.hrFlow.createCompany') }}</text>
+            </view>
+            <view class="flow-card" @click="selectHrFlow('join')">
+              <text class="flow-card-text">{{ t('auth.register.hrFlow.joinCompany') }}</text>
+            </view>
+          </view>
         </view>
 
-        <view class="form-field">
-          <input
-            class="field-input"
-            v-model="additionalFormData.position"
-            :placeholder="t('auth.register.position')"
-          />
-        </view>
+        <!-- HR Basic Info -->
+        <template v-else>
+          <view class="form-field">
+            <input
+              class="field-input"
+              v-model="additionalFormData.realName"
+              :placeholder="t('auth.register.realName')"
+            />
+          </view>
 
-        <view class="form-field">
-          <input
-            class="field-input"
-            v-model="additionalFormData.workPhone"
-            :placeholder="t('auth.register.workPhone')"
-          />
-        </view>
+          <view class="form-field">
+            <input
+              class="field-input"
+              v-model="additionalFormData.position"
+              :placeholder="t('auth.register.position')"
+            />
+          </view>
+
+          <view class="form-field">
+            <input
+              class="field-input"
+              v-model="additionalFormData.workPhone"
+              :placeholder="t('auth.register.workPhone')"
+            />
+          </view>
+
+          <!-- Create Company Form -->
+          <template v-if="hrFlowType === 'create'">
+            <view class="form-section-divider">
+              <text class="divider-text">{{ t('auth.register.hrFlow.companyInfo') }}</text>
+            </view>
+
+            <view class="form-field">
+              <input
+                class="field-input"
+                v-model="companyFormData.companyName"
+                :placeholder="t('auth.register.hrFlow.companyNamePlaceholder')"
+              />
+            </view>
+
+            <view class="form-field">
+              <textarea
+                class="field-textarea"
+                v-model="companyFormData.description"
+                :placeholder="t('auth.register.hrFlow.descriptionPlaceholder')"
+                maxlength="500"
+              />
+            </view>
+
+            <view class="form-field">
+              <picker
+                mode="selector"
+                :range="companyScaleOptions"
+                :range-key="'label'"
+                @change="onCompanyScaleChange"
+                :value="companyScaleIndex"
+              >
+                <view class="picker-input">
+                  <text class="picker-text" :class="{ 'placeholder': companyFormData.companyScale === 0 }">
+                    {{ companyScaleLabel }}
+                  </text>
+                  <text class="picker-arrow">›</text>
+                </view>
+              </picker>
+            </view>
+
+            <view class="form-field">
+              <picker
+                mode="selector"
+                :range="financingStageOptions"
+                :range-key="'label'"
+                @change="onFinancingStageChange"
+                :value="financingStageIndex"
+              >
+                <view class="picker-input">
+                  <text class="picker-text" :class="{ 'placeholder': companyFormData.financingStage === undefined || companyFormData.financingStage === null }">
+                    {{ financingStageLabel }}
+                  </text>
+                  <text class="picker-arrow">›</text>
+                </view>
+              </picker>
+            </view>
+
+            <view class="form-field">
+              <input
+                class="field-input"
+                v-model="companyFormData.industry"
+                :placeholder="t('auth.register.hrFlow.industryPlaceholder')"
+              />
+            </view>
+
+            <view class="form-field">
+              <picker
+                mode="date"
+                :value="companyFormData.companyCreatedAt"
+                @change="(e: any) => companyFormData.companyCreatedAt = e.detail.value"
+              >
+                <view class="picker-input">
+                  <text class="picker-text" :class="{ 'placeholder': !companyFormData.companyCreatedAt }">
+                    {{ companyFormData.companyCreatedAt || t('auth.register.hrFlow.companyCreatedAt') }}
+                  </text>
+                  <text class="picker-arrow">›</text>
+                </view>
+              </picker>
+            </view>
+
+            <view class="form-field">
+              <input
+                class="field-input"
+                type="digit"
+                v-model="companyFormData.registeredCapital"
+                :placeholder="t('auth.register.hrFlow.registeredCapitalPlaceholder')"
+              />
+            </view>
+          </template>
+
+          <!-- Join Company Form -->
+          <template v-else>
+            <view class="form-section-divider">
+              <text class="divider-text">{{ t('auth.register.hrFlow.searchCompany') }}</text>
+            </view>
+
+            <view class="form-field">
+              <view class="code-input-wrapper">
+                <input
+                  class="field-input code-input"
+                  v-model="companySearchKeyword"
+                  :placeholder="t('auth.register.hrFlow.searchCompanyPlaceholder')"
+                  @confirm="handleSearchCompany"
+                  @input="onCompanySearchInput"
+                />
+                <button
+                  class="send-code-btn"
+                  :disabled="isSearchingCompany"
+                  @click="handleSearchCompany"
+                >
+                  <text v-if="isSearchingCompany">{{ t('auth.register.hrFlow.searching') }}</text>
+                  <text v-else>{{ t('auth.register.hrFlow.searchCompanyButton') }}</text>
+                </button>
+              </view>
+            </view>
+
+            <view v-if="companySearchResults.length > 0" class="company-list">
+              <view
+                v-for="company in companySearchResults"
+                :key="company.companyId"
+                class="company-item"
+                :class="{ 'selected': selectedCompany?.companyId === company.companyId }"
+                @click="selectCompany(company)"
+              >
+                <text class="company-name">{{ company.companyName }}</text>
+                <text v-if="selectedCompany?.companyId === company.companyId" class="company-selected">{{ t('auth.register.hrFlow.companySelected') }}</text>
+              </view>
+            </view>
+          </template>
+        </template>
       </template>
 
       <!-- Error Message -->
@@ -233,6 +379,7 @@ import { Gender, UserType, register, sendVerificationCode, login, type RegisterP
 import { setTokens, ApiError } from '@/services/http';
 import { registerSeeker, type RegisterSeekerParams } from '@/services/api/seeker';
 import { registerHr, type RegisterHrParams } from '@/services/api/hr';
+import { createCompany, searchCompanies, type CompanyDTO, type CompanyListItem } from '@/services/api/company';
 import CityPicker from '@/components/common/CityPicker.vue';
 
 useNavigationTitle('navigation.register');
@@ -244,6 +391,7 @@ const countdown = ref(0);
 const errorMessage = ref('');
 const showPassword = ref(false);
 let countdownTimer: number | null = null;
+const hasLoggedInAfterRegister = ref(false);
 
 const formData = ref<{
   username: string;
@@ -278,6 +426,89 @@ const additionalFormData = ref<{
   position: '',
   workPhone: '',
 });
+
+const hrFlowType = ref<'create' | 'join' | null>(null);
+const companyFormData = ref<{
+  companyName: string;
+  description: string;
+  companyScale: number;
+  financingStage: number | undefined;
+  industry: string;
+  companyCreatedAt: string;
+  registeredCapital: number;
+}>({
+  companyName: '',
+  description: '',
+  companyScale: 0,
+  financingStage: undefined,
+  industry: '',
+  companyCreatedAt: '',
+  registeredCapital: 0,
+});
+const companySearchKeyword = ref('');
+const companySearchResults = ref<CompanyListItem[]>([]);
+const companyAllResults = ref<CompanyListItem[]>([]);
+const selectedCompany = ref<CompanyListItem | null>(null);
+const isSearchingCompany = ref(false);
+let companySearchTimer: number | null = null;
+const companyScaleOptions = computed(() => [
+  { label: t('auth.register.hrFlow.companyScaleOptions.1'), value: 1 },
+  { label: t('auth.register.hrFlow.companyScaleOptions.2'), value: 2 },
+  { label: t('auth.register.hrFlow.companyScaleOptions.3'), value: 3 },
+  { label: t('auth.register.hrFlow.companyScaleOptions.4'), value: 4 },
+  { label: t('auth.register.hrFlow.companyScaleOptions.5'), value: 5 },
+]);
+const financingStageOptions = computed(() => [
+  { label: t('auth.register.hrFlow.financingStageOptions.0'), value: 0 },
+  { label: t('auth.register.hrFlow.financingStageOptions.1'), value: 1 },
+  { label: t('auth.register.hrFlow.financingStageOptions.2'), value: 2 },
+  { label: t('auth.register.hrFlow.financingStageOptions.3'), value: 3 },
+  { label: t('auth.register.hrFlow.financingStageOptions.4'), value: 4 },
+  { label: t('auth.register.hrFlow.financingStageOptions.5'), value: 5 },
+]);
+
+const companyScaleIndex = computed(() => {
+  const index = companyScaleOptions.value.findIndex(opt => opt.value === companyFormData.value.companyScale);
+  return index >= 0 ? index : 0;
+});
+
+const companyScaleLabel = computed(() => {
+  if (companyFormData.value.companyScale === 0) {
+    return t('auth.register.hrFlow.companyScale');
+  }
+  const option = companyScaleOptions.value.find(opt => opt.value === companyFormData.value.companyScale);
+  return option?.label || '';
+});
+
+const financingStageIndex = computed(() => {
+  if (companyFormData.value.financingStage === undefined || companyFormData.value.financingStage === null) {
+    return 0;
+  }
+  const index = financingStageOptions.value.findIndex(opt => opt.value === companyFormData.value.financingStage);
+  return index >= 0 ? index : 0;
+});
+
+const financingStageLabel = computed(() => {
+  if (companyFormData.value.financingStage === undefined || companyFormData.value.financingStage === null) {
+    return t('auth.register.hrFlow.financingStage');
+  }
+  const option = financingStageOptions.value.find(opt => opt.value === companyFormData.value.financingStage);
+  return option?.label || t('auth.register.hrFlow.financingStage');
+});
+
+function onCompanyScaleChange(e: any) {
+  const option = companyScaleOptions.value[e.detail.value];
+  if (option) {
+    companyFormData.value.companyScale = option.value;
+  }
+}
+
+function onFinancingStageChange(e: any) {
+  const option = financingStageOptions.value[e.detail.value];
+  if (option) {
+    companyFormData.value.financingStage = option.value;
+  }
+}
 
 const jobStatusOptions = [
   { label: t('auth.register.jobStatusOptions.0'), value: 0 },
@@ -337,9 +568,89 @@ function goBack() {
 
 function goBackToStep2() {
   if (step.value === 3) {
-    step.value = 2;
+    if (formData.value.userType === UserType.HR && hrFlowType.value !== null) {
+      hrFlowType.value = null;
+      selectedCompany.value = null;
+      companySearchResults.value = [];
+      companySearchKeyword.value = '';
+    } else {
+      step.value = 2;
+    }
     errorMessage.value = '';
   }
+}
+
+function selectHrFlow(type: 'create' | 'join') {
+  hrFlowType.value = type;
+  if (type === 'create') {
+    companyFormData.value = {
+      companyName: '',
+      description: '',
+      companyScale: 0,
+      financingStage: undefined,
+      industry: '',
+      companyCreatedAt: '',
+      registeredCapital: 0,
+    };
+  } else {
+    companySearchKeyword.value = '';
+    companySearchResults.value = [];
+    companyAllResults.value = [];
+    selectedCompany.value = null;
+  }
+}
+
+async function handleSearchCompany() {
+  isSearchingCompany.value = true;
+  errorMessage.value = '';
+  
+  try {
+    if (companyAllResults.value.length === 0) {
+      const response = await searchCompanies({
+        current: 1,
+        size: 200,
+      });
+      const list = Array.isArray(response)
+        ? response
+        : (response?.records ?? (response as any)?.data ?? []);
+      companyAllResults.value = Array.isArray(list) ? list : [];
+    }
+
+    const keyword = companySearchKeyword.value.trim().toLowerCase();
+    const filtered = keyword
+      ? companyAllResults.value.filter(item => item.companyName.toLowerCase().includes(keyword))
+      : companyAllResults.value;
+
+    companySearchResults.value = filtered;
+    if (companySearchResults.value.length === 0) {
+      errorMessage.value = t('auth.register.hrFlow.noCompanyFound');
+    }
+  } catch (err) {
+    if (err instanceof ApiError) {
+      errorMessage.value = err.message || t('auth.register.hrFlow.searchError');
+    } else if (err instanceof Error) {
+      errorMessage.value = err.message || t('auth.register.hrFlow.searchError');
+    } else {
+      errorMessage.value = t('auth.register.hrFlow.searchError');
+    }
+  } finally {
+    isSearchingCompany.value = false;
+  }
+}
+
+function selectCompany(company: CompanyListItem) {
+  selectedCompany.value = company;
+}
+
+function onCompanySearchInput() {
+  if (companySearchTimer) {
+    clearTimeout(companySearchTimer);
+    companySearchTimer = null;
+  }
+
+  companySearchTimer = setTimeout(() => {
+    handleSearchCompany();
+  }, 300) as unknown as number;
 }
 
 function onBirthDateChange(e: any) {
@@ -471,6 +782,26 @@ async function handleNext() {
 
     await register(registerParams);
 
+    try {
+      const loginResponse = await login({
+        username: formData.value.username.trim(),
+        password: formData.value.password,
+      });
+
+      if (loginResponse?.accessToken) {
+        setTokens(
+          loginResponse.accessToken,
+          loginResponse.refreshToken,
+          loginResponse.expiresIn
+        );
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Login failed';
+      errorMessage.value = msg;
+      loading.value = false;
+      return;
+    }
+
     step.value = 3;
   } catch (err) {
     if (err instanceof ApiError) {
@@ -504,6 +835,9 @@ function validateAdditionalForm(): string | null {
       return t('auth.register.validation.jobStatusRequired');
     }
   } else {
+    if (hrFlowType.value === null) {
+      return t('auth.register.hrFlow.validation.flowTypeRequired');
+    }
     if (!additionalFormData.value.position.trim()) {
       return t('auth.register.validation.positionRequired');
     }
@@ -512,6 +846,33 @@ function validateAdditionalForm(): string | null {
     }
     if (!isValidPhone(additionalFormData.value.workPhone)) {
       return t('auth.register.validation.workPhoneInvalid');
+    }
+    if (hrFlowType.value === 'create') {
+      if (!companyFormData.value.companyName.trim()) {
+        return t('auth.register.hrFlow.validation.companyNameRequired');
+      }
+      if (!companyFormData.value.description.trim()) {
+        return t('auth.register.hrFlow.validation.descriptionRequired');
+      }
+      if (companyFormData.value.companyScale === 0) {
+        return t('auth.register.hrFlow.validation.companyScaleRequired');
+      }
+      if (companyFormData.value.financingStage === undefined || companyFormData.value.financingStage === null) {
+        return t('auth.register.hrFlow.validation.financingStageRequired');
+      }
+      if (!companyFormData.value.industry.trim()) {
+        return t('auth.register.hrFlow.validation.industryRequired');
+      }
+      if (!companyFormData.value.companyCreatedAt) {
+        return t('auth.register.hrFlow.validation.companyCreatedAtRequired');
+      }
+      if (companyFormData.value.registeredCapital <= 0) {
+        return t('auth.register.hrFlow.validation.registeredCapitalRequired');
+      }
+    } else {
+      if (!selectedCompany.value) {
+        return t('auth.register.hrFlow.validation.companyRequired');
+      }
     }
   }
 
@@ -595,10 +956,39 @@ async function handleCompleteRegistration() {
       };
       await registerSeeker(seekerParams);
     } else {
+      let companyId: number | undefined;
+      
+      if (hrFlowType.value === 'create') {
+        if (!companyFormData.value.companyName || !companyFormData.value.description || 
+            companyFormData.value.companyScale === 0 || companyFormData.value.financingStage === undefined ||
+            !companyFormData.value.industry || !companyFormData.value.companyCreatedAt ||
+            companyFormData.value.registeredCapital <= 0) {
+          throw new Error('Company data is incomplete');
+        }
+        const companyData: CompanyDTO = {
+          companyName: companyFormData.value.companyName,
+          description: companyFormData.value.description,
+          companyScale: companyFormData.value.companyScale,
+          financingStage: companyFormData.value.financingStage,
+          industry: companyFormData.value.industry,
+          companyCreatedAt: companyFormData.value.companyCreatedAt,
+          registeredCapital: companyFormData.value.registeredCapital,
+        };
+        companyId = await createCompany(companyData);
+      } else if (hrFlowType.value === 'join' && selectedCompany.value) {
+        companyId = selectedCompany.value.companyId;
+      }
+      
+      if (!companyId) {
+        throw new Error('Company ID is required');
+      }
+      
       const hrParams: RegisterHrParams = {
         realName: additionalFormData.value.realName.trim(),
         position: additionalFormData.value.position.trim(),
         workPhone: additionalFormData.value.workPhone.trim(),
+        companyId: companyId,
+        isCompanyAdmin: hrFlowType.value === 'create' ? 1 : 0,
       };
       await registerHr(hrParams);
     }
@@ -959,5 +1349,109 @@ async function handleCompleteRegistration() {
     color: vars.$text-muted;
     margin-left: vars.$spacing-sm;
   }
+}
+
+.hr-flow-selection {
+  margin-bottom: vars.$spacing-lg;
+}
+
+.flow-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: vars.$text-color;
+  margin-bottom: vars.$spacing-md;
+}
+
+.flow-cards {
+  display: flex;
+  flex-direction: column;
+  gap: vars.$spacing-md;
+}
+
+.flow-card {
+  background-color: vars.$surface-color;
+  border-radius: vars.$border-radius-lg;
+  padding: 40rpx vars.$spacing-lg;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+
+  &:active {
+    transform: scale(0.98);
+    background-color: vars.$primary-color-soft;
+  }
+}
+
+.flow-card-text {
+  font-size: 30rpx;
+  font-weight: 500;
+  color: vars.$text-color;
+}
+
+.form-section-divider {
+  margin: vars.$spacing-xl 0 vars.$spacing-md 0;
+  padding-top: vars.$spacing-lg;
+  border-top: 1rpx solid #e5e7eb;
+}
+
+.divider-text {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: vars.$text-color;
+}
+
+.field-textarea {
+  width: 100%;
+  min-height: 200rpx;
+  background-color: #f5f7fa;
+  border-radius: vars.$border-radius;
+  padding: vars.$spacing-md;
+  font-size: 30rpx;
+  color: vars.$text-color;
+  box-sizing: border-box;
+
+  &::placeholder {
+    color: vars.$text-muted;
+  }
+}
+
+.company-list {
+  margin-top: vars.$spacing-md;
+  display: flex;
+  flex-direction: column;
+  gap: vars.$spacing-sm;
+}
+
+.company-item {
+  background-color: #f5f7fa;
+  border-radius: vars.$border-radius;
+  padding: vars.$spacing-md;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.3s ease;
+
+  &:active {
+    background-color: vars.$primary-color-soft;
+  }
+
+  &.selected {
+    background-color: vars.$primary-color-soft;
+    border: 2rpx solid vars.$primary-color;
+  }
+}
+
+.company-name {
+  font-size: 30rpx;
+  color: vars.$text-color;
+  flex: 1;
+}
+
+.company-selected {
+  font-size: 24rpx;
+  color: vars.$primary-color;
+  font-weight: 500;
 }
 </style>

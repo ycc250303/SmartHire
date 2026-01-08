@@ -14,10 +14,15 @@
     <scroll-view v-else-if="job" class="content-scroll" scroll-y>
       <view class="job-header">
         <view class="nav-back-button" @click="handleBack">
-          <text class="back-icon">‹</text>
+          <text class="back-icon"><</text>
         </view>
-        <view class="nav-favorite-button" @click="toggleFavorite" v-if="!loading">
-          <text class="favorite-icon" :class="{ 'favorited': isFavorite }">{{ isFavorite ? '♥' : '♡' }}</text>
+        <view class="nav-action-buttons" v-if="!loading">
+          <view class="nav-favorite-button" @click="toggleFavorite">
+            <text class="favorite-icon" :class="{ 'favorited': isFavorite }">{{ isFavorite ? '♥' : '♡' }}</text>
+          </view>
+          <view class="nav-report-button" @click="goToReportPage">
+            <text class="report-icon">!</text>
+          </view>
         </view>
         <view class="job-title-section">
           <text class="job-title">{{ job.jobTitle }}</text>
@@ -207,6 +212,13 @@ onLoad((options: any) => {
 
 function handleBack() {
   uni.navigateBack();
+}
+
+function goToReportPage() {
+  if (!jobId.value) return;
+  uni.navigateTo({
+    url: `/pages/seeker/jobs/report?jobId=${jobId.value}`
+  });
 }
 
 async function loadJobDetail() {
@@ -576,7 +588,7 @@ function goToCompanyDetail() {
 }
 
 .nav-back-button,
-.nav-favorite-button {
+.nav-action-buttons {
   position: absolute;
   top: calc(var(--status-bar-height) + vars.$spacing-md);
   width: 64rpx;
@@ -590,23 +602,41 @@ function goToCompanyDetail() {
 
 .nav-back-button {
   left: vars.$spacing-xl;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 50%;
-  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
+  background: transparent;
+  width: 72rpx;
+  height: 72rpx;
 }
 
-.nav-favorite-button {
+.nav-action-buttons {
   right: vars.$spacing-xl;
-  background: transparent;
+  width: auto;
+  gap: vars.$spacing-sm;
+}
+
+.nav-report-button,
+.nav-favorite-button {
+  width: 64rpx;
+  height: 64rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: vars.$spacing-sm;
 }
 
 .back-icon {
-  font-size: 48rpx;
+  font-size: 52rpx;
   color: vars.$text-color;
-  font-weight: 300;
+  font-weight: 600;
   line-height: 1;
-  margin-left: -4rpx;
+  margin-left: -6rpx;
+}
+
+.report-icon {
+  font-size: 48rpx;
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 600;
+  line-height: 1;
+  text-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.15);
 }
 
 .favorite-icon {

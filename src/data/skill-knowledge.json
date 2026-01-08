@@ -474,6 +474,346 @@
       "学习蓝图与配置管理",
       "实践：实现一个REST风格的小型服务"
     ]
+  },
+  "HTML": {
+    "brief": {
+      "required": "Web前端的基础标记语言，所有网页的骨架",
+      "optional": "掌握HTML是前端开发的入门基础"
+    },
+    "importance": {
+      "required": "该岗位需要开发Web前端，HTML是构建网页结构的基础。熟练掌握语义化标签、表单处理、HTML5新特性是前端工程师的基本功。",
+      "optional": "HTML是前端开发的基础，即使使用框架开发，也需要理解HTML结构。掌握语义化HTML能提升代码可读性和SEO效果。"
+    },
+    "estimatedTime": "1-2周",
+    "learningTips": [
+      "学习HTML5语义化标签：header、nav、article、section等",
+      "掌握表单元素和表单验证",
+      "理解文档结构和DOM树概念",
+      "实践：手写一个完整的静态网页"
+    ]
+  },
+  "CSS3": {
+    "brief": {
+      "required": "样式表语言，控制网页外观和布局",
+      "optional": "掌握CSS3可以打造精美的用户界面"
+    },
+    "importance": {
+      "required": "该岗位需要实现精美的用户界面，CSS3是控制样式和布局的核心技术。掌握Flexbox、Grid布局、动画效果等是前端开发的必备技能。",
+      "optional": "CSS3是现代前端开发的基础，掌握它能让你实现各种视觉效果，提升用户体验。"
+    },
+    "estimatedTime": "3-4周",
+    "learningTips": [
+      "学习CSS3新特性：Flexbox、Grid、动画、过渡",
+      "掌握响应式设计和媒体查询",
+      "理解CSS选择器和优先级规则",
+      "实践：实现一个响应式的多页面网站"
+    ]
+  },
+  "JavaScript": {
+    "brief": {
+      "required": "前端开发的核心编程语言，实现交互功能",
+      "optional": "掌握JavaScript可以开发动态Web应用"
+    },
+    "importance": {
+      "required": "JavaScript是前端开发的核心语言，该岗位需要熟练掌握ES6+语法、异步编程、DOM操作等。几乎所有前端框架都基于JavaScript。",
+      "optional": "JavaScript是最流行的编程语言之一，掌握它能让你开发交互丰富的Web应用，也是学习前端框架的基础。"
+    },
+    "estimatedTime": "6-8周（零基础）",
+    "learningTips": [
+      "掌握ES6+语法：箭头函数、解构、模板字符串、Promise",
+      "学习异步编程：async/await、Promise、事件循环",
+      "理解闭包、作用域、原型链等核心概念",
+      "实践：开发一个交互式的Web应用"
+    ]
+  },
+  "Node.js": {
+    "brief": {
+      "required": "JavaScript运行时，全栈开发的核心技术",
+      "optional": "掌握Node.js可以实现前后端统一技术栈"
+    },
+    "importance": {
+      "required": "该岗位需要开发后端服务，Node.js让JavaScript可以运行在服务器端。掌握Node.js能实现全栈开发，提升开发效率。",
+      "optional": "Node.js是前端工程师向全栈发展的桥梁，学习它能让你用同一门语言开发前后端，提升技术广度。"
+    },
+    "estimatedTime": "3-4周（有JS基础）",
+    "learningTips": [
+      "学习Node.js核心模块：fs、path、http、events",
+      "掌握npm包管理和常用框架：Express、Koa",
+      "理解异步I/O和事件驱动模型",
+      "实践：开发一个RESTful API服务"
+    ]
+  },
+  "Webpack": {
+    "brief": {
+      "required": "前端模块打包工具，现代前端工程化标配",
+      "optional": "掌握Webpack可以优化项目构建流程"
+    },
+    "importance": {
+      "required": "该项目使用Webpack进行模块打包和资源管理，需要掌握配置、插件、loader等核心概念。这是前端工程化的基础工具。",
+      "optional": "Webpack是前端工程化的标准工具，学习它能让你理解现代前端项目的构建流程，提升开发效率。"
+    },
+    "estimatedTime": "2-3周",
+    "learningTips": [
+      "学习Webpack核心概念：entry、output、loader、plugin",
+      "掌握常用loader：babel-loader、css-loader、file-loader",
+      "理解代码分割和懒加载策略",
+      "实践：配置一个完整的前端项目构建流程"
+    ]
+  },
+  "前端性能优化": {
+    "brief": {
+      "required": "提升用户体验的关键技能，大厂面试重点",
+      "optional": "掌握性能优化可以显著提升应用质量"
+    },
+    "importance": {
+      "required": "该岗位需要优化前端性能，包括加载速度、渲染性能、资源优化等。这是提升用户体验和SEO排名的关键技能。",
+      "optional": "性能优化是前端工程师的核心能力之一，掌握它能让你开发出更流畅的应用，在面试中也是加分项。"
+    },
+    "estimatedTime": "2-3周",
+    "learningTips": [
+      "学习性能指标：FCP、LCP、TTI、CLS等",
+      "掌握优化技巧：代码分割、懒加载、资源压缩、CDN",
+      "理解浏览器渲染原理和重排重绘",
+      "实践：优化一个现有项目的性能指标"
+    ]
+  },
+  "响应式设计": {
+    "brief": {
+      "required": "适配多端设备，现代Web应用必备",
+      "optional": "掌握响应式设计可以提升用户体验"
+    },
+    "importance": {
+      "required": "该岗位需要开发适配PC、平板、手机等多端的前端应用。响应式设计是确保应用在不同设备上良好显示的关键。",
+      "optional": "响应式设计是现代Web开发的标准要求，掌握它能让你开发出适配各种设备的应用，提升用户覆盖范围。"
+    },
+    "estimatedTime": "2周",
+    "learningTips": [
+      "学习媒体查询和断点设计",
+      "掌握Flexbox和Grid布局实现响应式",
+      "理解移动优先的设计理念",
+      "实践：将一个PC端网站改造为响应式设计"
+    ]
+  },
+  "消息队列": {
+    "brief": {
+      "required": "异步处理和系统解耦的核心技术，高并发必备",
+      "optional": "掌握消息队列可以提升系统架构能力"
+    },
+    "importance": {
+      "required": "该岗位需要处理高并发场景，消息队列（RabbitMQ、Kafka等）是异步处理、系统解耦、削峰填谷的关键技术。",
+      "optional": "消息队列是分布式系统的重要组成部分，学习它能让你理解异步处理模式，提升系统设计能力。"
+    },
+    "estimatedTime": "2-3周",
+    "learningTips": [
+      "学习消息队列的基本概念和应用场景",
+      "掌握主流工具：RabbitMQ、Kafka、RocketMQ",
+      "理解消息可靠性、顺序性、幂等性",
+      "实践：在项目中引入消息队列处理异步任务"
+    ]
+  },
+  "微服务架构": {
+    "brief": {
+      "required": "大型系统的架构模式，云原生应用基础",
+      "optional": "掌握微服务可以设计可扩展的系统架构"
+    },
+    "importance": {
+      "required": "该岗位需要设计和维护微服务架构，包括服务拆分、服务治理、分布式事务等。这是大型互联网公司的标准架构模式。",
+      "optional": "微服务是云原生应用的基础架构，学习它能让你理解大型系统的设计思路，提升架构能力。"
+    },
+    "estimatedTime": "4-6周",
+    "learningTips": [
+      "学习微服务的基本概念和设计原则",
+      "掌握服务发现、配置中心、API网关",
+      "理解分布式事务和一致性解决方案",
+      "实践：将一个单体应用拆分为微服务架构"
+    ]
+  },
+  "RESTful API": {
+    "brief": {
+      "required": "Web API设计标准，前后端交互的基础",
+      "optional": "掌握RESTful设计可以提升API质量"
+    },
+    "importance": {
+      "required": "该岗位需要设计和开发RESTful API，这是前后端分离架构中数据交互的标准方式。掌握RESTful设计原则是后端开发的基础。",
+      "optional": "RESTful是Web API设计的主流标准，学习它能让你设计出规范、易用的接口，提升团队协作效率。"
+    },
+    "estimatedTime": "1-2周",
+    "learningTips": [
+      "学习RESTful设计原则和HTTP方法",
+      "掌握状态码、请求头、响应格式规范",
+      "理解资源设计和URL命名规范",
+      "实践：设计并实现一套完整的RESTful API"
+    ]
+  },
+  "GraphQL": {
+    "brief": {
+      "required": "现代API查询语言，灵活的数据获取方案",
+      "optional": "掌握GraphQL可以优化前后端数据交互"
+    },
+    "importance": {
+      "required": "该项目采用GraphQL作为API查询语言，需要掌握Schema定义、查询优化、数据加载等核心概念。",
+      "optional": "GraphQL是RESTful的替代方案，学习它能让你设计更灵活的API，减少前后端沟通成本。"
+    },
+    "estimatedTime": "2-3周",
+    "learningTips": [
+      "学习GraphQL Schema定义和类型系统",
+      "掌握查询、变更、订阅操作",
+      "理解DataLoader解决N+1查询问题",
+      "实践：将现有RESTful API迁移到GraphQL"
+    ]
+  },
+  "Nginx": {
+    "brief": {
+      "required": "高性能Web服务器和反向代理，部署必备",
+      "optional": "掌握Nginx可以优化服务器性能"
+    },
+    "importance": {
+      "required": "该岗位需要配置Nginx作为Web服务器和反向代理，处理负载均衡、SSL、静态资源等。这是生产环境部署的标准工具。",
+      "optional": "Nginx是高性能Web服务器的首选，学习它能让你更好地理解Web服务器原理，优化应用性能。"
+    },
+    "estimatedTime": "2-3周",
+    "learningTips": [
+      "学习Nginx配置文件和常用指令",
+      "掌握反向代理、负载均衡配置",
+      "理解SSL证书配置和HTTPS部署",
+      "实践：配置Nginx部署一个Web应用"
+    ]
+  },
+  "负载均衡": {
+    "brief": {
+      "required": "高可用系统的核心技术，大流量场景必备",
+      "optional": "掌握负载均衡可以提升系统稳定性"
+    },
+    "importance": {
+      "required": "该岗位需要处理高并发场景，负载均衡是分散请求压力、提升系统可用性的关键技术。",
+      "optional": "负载均衡是分布式系统的基础，学习它能让你理解高可用架构的设计思路。"
+    },
+    "estimatedTime": "2周",
+    "learningTips": [
+      "学习负载均衡的基本原理和算法",
+      "掌握Nginx、HAProxy等负载均衡工具",
+      "理解健康检查和故障转移机制",
+      "实践：搭建一个负载均衡的高可用服务"
+    ]
+  },
+  "分布式系统": {
+    "brief": {
+      "required": "大型系统的架构基础，高并发场景必备",
+      "optional": "掌握分布式系统可以设计可扩展架构"
+    },
+    "importance": {
+      "required": "该岗位需要设计和维护分布式系统，包括分布式存储、分布式计算、一致性协议等。这是大型互联网公司的核心技术。",
+      "optional": "分布式系统是处理大规模数据和高并发的标准方案，学习它能让你理解大型系统的设计原理。"
+    },
+    "estimatedTime": "6-8周",
+    "learningTips": [
+      "学习分布式系统的基本概念和挑战",
+      "掌握CAP定理、一致性协议、分布式事务",
+      "理解分布式存储和计算框架",
+      "实践：设计一个分布式系统的核心模块"
+    ]
+  },
+  "API网关": {
+    "brief": {
+      "required": "微服务架构的入口，统一API管理",
+      "optional": "掌握API网关可以简化微服务架构"
+    },
+    "importance": {
+      "required": "该岗位采用微服务架构，API网关是统一入口、路由转发、限流熔断的关键组件。",
+      "optional": "API网关是微服务架构的标准组件，学习它能让你理解服务治理的核心概念。"
+    },
+    "estimatedTime": "2-3周",
+    "learningTips": [
+      "学习API网关的作用和功能",
+      "掌握Kong、Zuul、Spring Cloud Gateway等工具",
+      "理解路由、限流、认证、监控等功能",
+      "实践：搭建一个API网关管理微服务"
+    ]
+  },
+  "PostgreSQL": {
+    "brief": {
+      "required": "功能强大的开源关系型数据库",
+      "optional": "掌握PostgreSQL可以应对复杂数据场景"
+    },
+    "importance": {
+      "required": "该岗位需要处理复杂的数据场景，PostgreSQL支持JSON、全文搜索、地理数据等高级特性，是企业级应用的首选。",
+      "optional": "PostgreSQL是功能最强大的开源数据库，学习它能让你应对更复杂的数据需求，提升数据库技能。"
+    },
+    "estimatedTime": "3-4周",
+    "learningTips": [
+      "学习PostgreSQL的高级特性：JSON、数组、全文搜索",
+      "掌握索引优化和查询计划分析",
+      "理解事务隔离和并发控制",
+      "实践：设计一个使用PostgreSQL高级特性的应用"
+    ]
+  },
+  "Elasticsearch": {
+    "brief": {
+      "required": "分布式搜索引擎，全文检索和日志分析首选",
+      "optional": "掌握Elasticsearch可以构建搜索功能"
+    },
+    "importance": {
+      "required": "该岗位需要实现搜索功能或日志分析，Elasticsearch是分布式搜索引擎的首选方案，支持全文检索、聚合分析等。",
+      "optional": "Elasticsearch是搜索和日志分析的标准工具，学习它能让你构建强大的搜索功能，提升产品竞争力。"
+    },
+    "estimatedTime": "3-4周",
+    "learningTips": [
+      "学习Elasticsearch的基本概念：索引、文档、映射",
+      "掌握查询DSL和聚合分析",
+      "理解分词器和全文检索原理",
+      "实践：为应用添加全文搜索功能"
+    ]
+  },
+  "日志系统": {
+    "brief": {
+      "required": "系统监控和故障排查的基础，运维必备",
+      "optional": "掌握日志系统可以快速定位问题"
+    },
+    "importance": {
+      "required": "该岗位需要监控系统运行状态和排查故障，日志系统（ELK、Loki等）是收集、存储、分析日志的关键工具。",
+      "optional": "日志系统是运维和开发的重要工具，学习它能让你快速定位问题，提升系统可维护性。"
+    },
+    "estimatedTime": "2-3周",
+    "learningTips": [
+      "学习日志收集、存储、分析的基本流程",
+      "掌握ELK Stack：Elasticsearch、Logstash、Kibana",
+      "理解日志格式规范和查询技巧",
+      "实践：搭建一个完整的日志分析系统"
+    ]
+  },
+  "监控系统": {
+    "brief": {
+      "required": "保障系统稳定运行的关键，DevOps核心技能",
+      "optional": "掌握监控系统可以提前发现问题"
+    },
+    "importance": {
+      "required": "该岗位需要监控系统性能、可用性、资源使用等指标，监控系统（Prometheus、Grafana等）是保障系统稳定运行的关键。",
+      "optional": "监控系统是DevOps的核心技能，学习它能让你全面了解系统运行状态，提前发现潜在问题。"
+    },
+    "estimatedTime": "2-3周",
+    "learningTips": [
+      "学习监控指标和告警策略",
+      "掌握Prometheus指标收集和Grafana可视化",
+      "理解指标类型：Counter、Gauge、Histogram",
+      "实践：搭建一个完整的监控告警系统"
+    ]
+  },
+  "单元测试": {
+    "brief": {
+      "required": "保障代码质量的基础，持续集成必备",
+      "optional": "掌握单元测试可以提升代码可靠性"
+    },
+    "importance": {
+      "required": "该岗位需要编写单元测试保障代码质量，这是持续集成和持续交付的基础。掌握测试框架和测试方法是开发的基本功。",
+      "optional": "单元测试是保障代码质量的重要手段，学习它能让你编写更可靠的代码，减少bug，提升开发效率。"
+    },
+    "estimatedTime": "2-3周",
+    "learningTips": [
+      "学习单元测试的基本概念和最佳实践",
+      "掌握测试框架：Jest、JUnit、pytest等",
+      "理解Mock、Stub、Spy等测试技巧",
+      "实践：为现有项目编写完整的单元测试"
+    ]
   }
 }
 

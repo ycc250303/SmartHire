@@ -19,10 +19,9 @@
             <text class="resume-meta">{{ formatDate(resume.updatedAt) }}</text>
           </view>
           <view class="resume-item-actions">
-            <view class="action-button" @tap.stop="handleDownload(resume)">
-              <text class="action-icon">⬇</text>
+            <view class="action-button" @tap.stop="handleViewResume(resume)">
+              <text class="action-icon">👁</text>
             </view>
-            <text class="item-arrow">›</text>
           </view>
         </view>
       </view>
@@ -51,7 +50,6 @@ useNavigationTitle('navigation.attachmentResume');
 
 const loading = ref(false);
 const resumeList = ref<Resume[]>([]);
-const downloading = ref<number | null>(null);
 
 onLoad(() => {
   loadResumes();
@@ -313,9 +311,7 @@ function formatDate(dateString: string): string {
   return `${year}-${month}-${day}`;
 }
 
-async function handleDownload(resume: Resume) {
-  if (downloading.value === resume.id) return;
-  
+async function handleViewResume(resume: Resume) {
   if (!resume.fileUrl) {
     uni.showToast({
       title: t('pages.resume.attachment.downloadError'),
@@ -324,123 +320,36 @@ async function handleDownload(resume: Resume) {
     return;
   }
 
-  downloading.value = resume.id;
+  // #ifdef H5
+  window.open(resume.fileUrl, '_blank');
+  // #endif
 
-  try {
-    const token = uni.getStorageSync('auth_token');
-
-    // #ifdef H5
-    const link = document.createElement('a');
-    link.href = resume.fileUrl;
-    link.download = resume.resumeName.endsWith('.pdf') ? resume.resumeName : `${resume.resumeName}.pdf`;
-    link.target = '_blank';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    uni.showToast({
-      title: t('pages.resume.attachment.downloadSuccess'),
-      icon: 'success',
-    });
-    // #endif
-
-    // #ifndef H5
-    uni.showLoading({
-      title: t('pages.resume.attachment.downloading'),
-      mask: true,
-    });
-
-    uni.downloadFile({
-      url: resume.fileUrl,
-      header: {
-        Authorization: token ? `Bearer ${token}` : '',
-      },
-      success: (res) => {
-        if (res.statusCode === 200) {
-          const filePath = res.tempFilePath;
-          const fileName = resume.resumeName.endsWith('.pdf') ? resume.resumeName : `${resume.resumeName}.pdf`;
-          
-          // #ifdef APP-PLUS
-          try {
-            const Documents = (plus as any).io.PUBLIC_DOCUMENTS;
-            (plus as any).io.resolveLocalFileSystemURL(filePath, (entry: any) => {
-              entry.copyTo(Documents, fileName, () => {
-                uni.hideLoading();
-                uni.showToast({
-                  title: t('pages.resume.attachment.downloadSuccess'),
-                  icon: 'success',
-                });
-              }, (error: any) => {
-                console.error('Save file failed:', error);
-                uni.hideLoading();
-                uni.showToast({
-                  title: t('pages.resume.attachment.downloadError'),
-                  icon: 'none',
-                });
-              });
-            }, (error: any) => {
-              console.error('Resolve file failed:', error);
-              uni.hideLoading();
-              uni.showToast({
-                title: t('pages.resume.attachment.downloadError'),
-                icon: 'none',
-              });
-            });
-          } catch (error) {
-            console.error('Download failed:', error);
-            uni.hideLoading();
-            uni.showToast({
-              title: t('pages.resume.attachment.downloadError'),
-              icon: 'none',
-            });
-          }
-          // #endif
-
-          // #ifndef APP-PLUS
-          uni.saveFile({
-            tempFilePath: filePath,
-            success: () => {
-              uni.hideLoading();
-              uni.showToast({
-                title: t('pages.resume.attachment.downloadSuccess'),
-                icon: 'success',
-              });
-            },
-            fail: () => {
-              uni.hideLoading();
-              uni.showToast({
-                title: t('pages.resume.attachment.downloadError'),
-                icon: 'none',
-              });
-            },
-          });
-          // #endif
-        } else {
-          uni.hideLoading();
-          uni.showToast({
-            title: t('pages.resume.attachment.downloadError'),
-            icon: 'none',
-          });
-        }
-      },
-      fail: () => {
-        uni.hideLoading();
-        uni.showToast({
-          title: t('pages.resume.attachment.downloadError'),
-          icon: 'none',
+  // #ifndef H5
+  uni.showLoading({ title: t('pages.chat.conversation.downloading') });
+  const token = uni.getStorageSync('auth_token');
+  uni.downloadFile({
+    url: resume.fileUrl,
+    header: {
+      Authorization: token ? `Bearer ${token}` : '',
+    },
+    success: (res) => {
+      uni.hideLoading();
+      if (res.statusCode === 200) {
+        uni.openDocument({
+          filePath: res.tempFilePath,
+          showMenu: true,
+          fail: () => uni.showToast({ title: t('pages.chat.conversation.openFileError'), icon: 'none' })
         });
-      },
-    });
-    // #endif
-  } catch (error) {
-    console.error('Download failed:', error);
-    uni.showToast({
-      title: t('pages.resume.attachment.downloadError'),
-      icon: 'none',
-    });
-  } finally {
-    downloading.value = null;
-  }
+      } else {
+        uni.showToast({ title: t('pages.chat.conversation.downloadError'), icon: 'none' });
+      }
+    },
+    fail: () => {
+      uni.hideLoading();
+      uni.showToast({ title: t('pages.chat.conversation.downloadError'), icon: 'none' });
+    }
+  });
+  // #endif
 }
 </script>
 

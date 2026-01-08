@@ -23,6 +23,8 @@ export interface RegisterHrParams {
   realName: string;
   position: string;
   workPhone: string;
+  companyId?: number;
+  isCompanyAdmin?: number;
 }
 
 interface PageResult<T> {
@@ -38,7 +40,7 @@ interface PageResult<T> {
  * @returns Operation result
  */
 export function registerHr(params: RegisterHrParams): Promise<null> {
-  const url = '/api/hr/info/register';
+  const url = '/api/hr/info';
   console.log('[Params]', url, params);
   return http<null>({
     url,

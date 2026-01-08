@@ -79,7 +79,16 @@
                 <text class="reply-text">{{ message.replyContent }}</text>
               </view>
             </view>
-            <view v-if="message.fileUrl" class="message-file">
+            <BracketCard
+              v-if="!message.isDateSeparator && isBracketMessage(message as any)"
+              :title="parseBracket(message as any).title"
+              :body="parseBracket(message as any).body"
+              :sent="isSentByMe(message)"
+              :show-actions="isOfferMessage(message as any) || isInterviewMessage(message as any)"
+              @accept="() => handleBracketAction(message as any, 1)"
+              @reject="() => handleBracketAction(message as any, 2)"
+            />
+            <view v-else-if="message.fileUrl" class="message-file">
               <image
                 v-if="isImage(message.fileUrl)"
                 :src="message.fileUrl"
@@ -95,7 +104,12 @@
                 </view>
               </view>
             </view>
-            <text v-if="message.content && !message.fileUrl" class="message-content">{{ message.content }}</text>
+            <text
+              v-else-if="shouldShowRawContent(message as any)"
+              class="message-content"
+            >
+              {{ message.content }}
+            </text>
             <view class="message-footer">
               <text class="message-time">{{ formatMessageTime(message.createdAt) }}</text>
               <text v-if="isSentByMe(message) && message.isRead === 1" class="read-indicator">✓✓</text>
@@ -159,6 +173,8 @@ import { onLoad, onShow } from '@dcloudio/uni-app';
 import { t } from '@/locales';
 import dayjs from 'dayjs';
 import { getChatHistory, sendMessage, sendMedia, markAsRead, getConversations, type Message } from '@/services/api/message';
+import BracketCard from '@/components/chat/BracketCard.vue';
+import { respondOffer, respondInterview } from '@/services/api/recruitment';
 import { useUserStore } from '@/store/user';
 import { useImageUrl } from '@/utils/useImageUrl';
 import { getCurrentUserInfo } from '@/services/api/user';
@@ -218,6 +234,8 @@ interface MessageWithDate extends Omit<Message, 'id'> {
   isDateSeparator?: boolean;
   date?: string;
 }
+
+type ChatMessage = MessageWithDate;
 
 const messagesWithDates = computed(() => {
   const result: MessageWithDate[] = [];
@@ -659,8 +677,110 @@ function getFileExt(url: string | null): string {
   return match && match[1] ? match[1].toUpperCase() : '';
 }
 
+function isOfferMessage(message: Message): boolean {
+  if (!message || !message.content) return false;
+  return /^(\u3010|\[)?offer/i.test(message.content.trim());
+}
+
+function isInterviewMessage(message: Message): boolean {
+  if (!message || !message.content) return false;
+  const text = message.content.trim();
+  return /^(\u3010|\[)?\s*面试邀请/.test(text) || /^(\u3010|\[)?interview/i.test(text);
+}
+
+function isBracketMessage(message: Message): boolean {
+  if (!message || !message.content) return false;
+  return /^(\u3010|\[).+(\u3011|\])/.test(message.content.trim());
+}
+
+function parseBracket(message: Message): { title: string; body: string } {
+  const content = message.content || '';
+  const match = content.trim().match(/^(\u3010|\[)(.+?)(\u3011|\])\s*(.*)$/);
+  const title = match?.[2]?.trim() || '';
+  const body = match?.[4]?.trim() || content;
+  return { title, body };
+}
+
+function extractOfferId(message: Message): number | undefined {
+  if (!message?.content) return undefined;
+  const match = message.content.match(/offerid\s*[:=]?\s*(\d+)/i);
+  if (match && match[1]) {
+    const id = parseInt(match[1], 10);
+    return Number.isNaN(id) ? undefined : id;
+  }
+  return undefined;
+}
+
+function extractInterviewId(message: Message): number | undefined {
+  if (!message?.content) return undefined;
+  const match = message.content.match(/interviewid\s*[:=]?\s*(\d+)/i);
+  if (match && match[1]) {
+    const id = parseInt(match[1], 10);
+    return Number.isNaN(id) ? undefined : id;
+  }
+  return undefined;
+}
+
+function getMessageNumericId(message: Message): number | undefined {
+  const num = Number(message?.id);
+  if (!Number.isFinite(num)) return undefined;
+  const adjusted = num - 1;
+  return Number.isFinite(adjusted) ? adjusted : undefined;
+}
+
 function formatMessageTime(time: string): string {
   return dayjs(time).format(t('pages.chat.conversation.timeFormat'));
+}
+
+function shouldShowRawContent(message: Message): boolean {
+  if (!message.content) return false;
+  if (message.fileUrl) return false;
+  if (isBracketMessage(message)) return false;
+  return true;
+}
+
+async function handleBracketAction(message: Message | undefined, response: number) {
+  if (!message) return;
+  const isOffer = isOfferMessage(message);
+  const isInterview = isInterviewMessage(message);
+  if (!isOffer && !isInterview) return;
+
+  if (isOffer) {
+    const messageId = getMessageNumericId(message);
+    if (!messageId) {
+      uni.showToast({ title: t('pages.chat.conversation.offerMissing'), icon: 'none' });
+      return;
+    }
+    try {
+      await respondOffer({ messageId, response });
+      uni.showToast({
+        title: response === 1 ? t('pages.chat.conversation.offerAccepted') : t('pages.chat.conversation.offerRejected'),
+        icon: 'success',
+        duration: 1500
+      });
+    } catch (err) {
+      console.error('Failed to respond offer:', err);
+      uni.showToast({ title: t('pages.chat.conversation.sendError'), icon: 'none' });
+    }
+    return;
+  }
+
+  const messageId = getMessageNumericId(message);
+  if (!messageId) {
+    uni.showToast({ title: t('pages.chat.conversation.interviewMissing'), icon: 'none' });
+    return;
+  }
+  try {
+    await respondInterview({ messageId, response });
+    uni.showToast({
+      title: response === 1 ? t('pages.chat.conversation.interviewAccepted') : t('pages.chat.conversation.interviewRejected'),
+      icon: 'success',
+      duration: 1500
+    });
+  } catch (err) {
+    console.error('Failed to respond interview:', err);
+    uni.showToast({ title: t('pages.chat.conversation.sendError'), icon: 'none' });
+  }
 }
 
 function formatDateSeparator(date: string): string {
@@ -1224,6 +1344,41 @@ function handleBack() {
 }
 
 .message-sent .file-link {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.offer-card {
+  background-color: vars.$surface-color;
+  border-radius: vars.$border-radius;
+  padding: vars.$spacing-md vars.$spacing-lg;
+  display: flex;
+  flex-direction: column;
+  gap: vars.$spacing-xs;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
+}
+
+.message-sent .offer-card {
+  background-color: rgba(255, 255, 255, 0.14);
+}
+
+.offer-title {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: vars.$primary-color;
+}
+
+.message-sent .offer-title {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.offer-content {
+  font-size: 28rpx;
+  color: vars.$text-color;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.message-sent .offer-content {
   color: rgba(255, 255, 255, 0.9);
 }
 

@@ -50,7 +50,7 @@ import FulltimePage from './fulltime.vue';
 import CustomTabBar from '@/components/common/CustomTabBar.vue';
 
 type CategoryType = 'internship' | 'fulltime';
-type FilterType = 'recommended' | 'nearby' | 'latest';
+type FilterType = 'recommended' | 'latest';
 
 const currentCategory = ref<CategoryType>('internship');
 const currentFilter = ref<FilterType>('recommended');
@@ -62,7 +62,6 @@ const categories = computed(() => [
 
 const filters = computed(() => [
   { value: 'recommended' as FilterType, label: t('pages.jobs.recommended') },
-  { value: 'nearby' as FilterType, label: t('pages.jobs.nearby') },
   { value: 'latest' as FilterType, label: t('pages.jobs.latest') },
 ]);
 

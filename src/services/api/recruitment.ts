@@ -10,6 +10,16 @@ export interface SubmitResumeResponse {
   applicationId: number;
 }
 
+export interface OfferRespondParams {
+  messageId: number;
+  response: number; // 1 accept, 2 reject
+}
+
+export interface InterviewRespondParams {
+  messageId: number;
+  response: number; // 1 accept, 2 reject
+}
+
 /**
  * Submit resume for job application
  * @returns Conversation and application info
@@ -18,6 +28,38 @@ export function submitResume(params: SubmitResumeParams): Promise<SubmitResumeRe
   const url = '/api/recruitment/seeker/submit-resume';
   console.log('[Params]', url, params);
   return http<SubmitResumeResponse>({
+    url,
+    method: 'POST',
+    data: params,
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
+  });
+}
+
+/**
+ * Respond to offer (accept / reject)
+ */
+export function respondOffer(params: OfferRespondParams): Promise<null> {
+  const url = '/api/recruitment/seeker/offer/respond';
+  console.log('[Params]', url, params);
+  return http<null>({
+    url,
+    method: 'POST',
+    data: params,
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
+  });
+}
+
+/**
+ * Respond to interview invitation (accept / reject)
+ */
+export function respondInterview(params: InterviewRespondParams): Promise<null> {
+  const url = '/api/recruitment/seeker/interview/respond';
+  console.log('[Params]', url, params);
+  return http<null>({
     url,
     method: 'POST',
     data: params,
@@ -124,6 +166,14 @@ export interface JobDetail {
   application?: JobDetailApplication;
 }
 
+export interface SubmitReportParams {
+  targetId: number;
+  targetType: number;
+  reportType: number;
+  reason: string;
+  evidenceImage?: string;
+}
+
 /**
  * Get job detail by ID
  * @returns Job detail data
@@ -134,6 +184,23 @@ export function getJobDetail(jobId: number): Promise<JobDetail> {
   return http<JobDetail>({
     url,
     method: 'GET',
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
+  });
+}
+
+/**
+ * Submit report by seeker
+ * @returns Operation result
+ */
+export function submitSeekerReport(params: SubmitReportParams): Promise<null> {
+  const url = '/api/recruitment/seeker/report';
+  console.log('[Params]', url, params);
+  return http<null>({
+    url,
+    method: 'POST',
+    data: params,
   }).then(response => {
     console.log('[Response]', url, response);
     return response;

@@ -7,6 +7,7 @@
     "/api/ai/career-planning/*/analysis": "prod" ,
     "/api/ai/career-planning/*/learning-plan": "prod",
     "/api/ai/career-planning/*/interview-prep": "prod",
+    "/api/ai/seeker/career-path": "prod",
     "/api/ai/hr/*": "prod",
     "/api/user-auth/send-verification-code": "prod",
     "/api/user-auth/verify-code": "prod",
@@ -55,6 +56,8 @@
     "/api/recruitment/seeker/job-recommendations/full-time": "prod",
     "/api/hr/info": "prod",
     "/api/hr/info/*": "prod",
+    "/api/hr/company/company": "prod",
+    "/api/hr/company/companies": "prod",
     "/api/hr/job-position": "prod",
     "/api/hr/job-position/*": "prod",
     "/api/hr/job-position/*/status": "prod",
@@ -65,6 +68,9 @@
     "/api/recruitment/seeker/submit-resume": "prod",
     "/api/recruitment/seeker/job-position/*": "prod",
     "/api/recruitment/seeker/job-list": "prod",
+    "/api/recruitment/seeker/job-list/intern/latest": "prod",
+    "/api/recruitment/seeker/job-list/full-time/latest": "prod",
+    "/api/recruitment/seeker/report": "prod",
     "/api/recruitment/hr/seeker-card": "prod",
     "/api/recruitment/hr/recommend": "prod",
     "/api/recruitment/hr/interviews": "prod",
@@ -124,6 +130,8 @@
     "/api/system-notification/unread-count": "prod",
     "/api/system-notification/read/*": "prod",
     "/api/system-notification/read-all": "prod",
-    "/api/system-notification/*": "prod"
+    "/api/system-notification/*": "prod",
+    "/api/recruitment/seeker/offer/respond": "prod",
+    "/api/recruitment/seeker/interview/respond": "prod"
   }
 }

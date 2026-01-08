@@ -1,5 +1,70 @@
 import { http } from '../http';
 
+export interface CompanyDTO {
+  companyName: string;
+  description: string;
+  companyScale: number;
+  financingStage: number;
+  industry: string;
+  companyCreatedAt: string;
+  registeredCapital: number;
+}
+
+export interface CompanyListItem {
+  companyId: number;
+  companyName: string;
+}
+
+export interface CompanySearchParams {
+  current?: number;
+  size?: number;
+}
+
+export interface CompanySearchResponse {
+  records: CompanyListItem[];
+  total?: number;
+  size?: number;
+  current?: number;
+  pages?: number;
+}
+
+/**
+ * Create company
+ * @returns Company ID
+ */
+export function createCompany(params: CompanyDTO): Promise<number> {
+  const url = '/api/hr/company/company';
+  console.log('[Params]', url, params);
+  return http<number>({
+    url,
+    method: 'POST',
+    data: params,
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
+  });
+}
+
+/**
+ * Search companies
+ * @returns Company list
+ */
+export function searchCompanies(params?: CompanySearchParams): Promise<CompanySearchResponse> {
+  const queryParams: string[] = [];
+  if (params?.current !== undefined) queryParams.push(`current=${params.current}`);
+  if (params?.size !== undefined) queryParams.push(`size=${params.size}`);
+  const queryString = queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
+  const url = `/api/hr/company/companies${queryString}`;
+  console.log('[Params]', url, params);
+  return http<CompanySearchResponse>({
+    url,
+    method: 'GET',
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
+  });
+}
+
 // Company management
 export interface UpdateCompanyInfoParams {
   companyName: string;

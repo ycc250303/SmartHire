@@ -217,6 +217,31 @@ function sortJobsByMatchScore<T extends { matchScore?: number | null }>(jobs: T[
   });
 }
 
+async function enrichJobsWithSupplement(jobs: InternJobItem[], options?: { sort?: boolean }): Promise<InternJobItem[]> {
+  const seekerProfile = await buildSeekerProfile();
+  const pyMatchScores = await batchCalculateMatchScores(jobs, seekerProfile);
+
+  const jobsWithPyScores = jobs.map(job => ({
+    ...job,
+    matchScore: pyMatchScores.get(job.jobId) ?? job.matchScore ?? null,
+  }));
+
+  const supplementedJobs = await Promise.all(
+    jobsWithPyScores.map(job => supplementJobItem(job))
+  );
+
+  if (options?.sort === false) {
+    return supplementedJobs;
+  }
+
+  return sortJobsByMatchScore(supplementedJobs);
+}
+
+export interface LatestJobListParams {
+  page?: number;
+  size?: number;
+}
+
 export async function calculateMatchScore(jobId: number): Promise<number | null> {
   try {
     const seekerProfile = await buildSeekerProfile();
@@ -261,7 +286,7 @@ async function buildSeekerProfile(): Promise<BatchMatchScoreRequest['seekerProfi
       highestEducation: highestEducation?.education?.toString(),
       skills: skills.map(skill => ({
         name: skill.skillName,
-        level: skill.skillLevel,
+        level: skill.level,
       })),
       workExperiences: workExperiences.map(exp => ({
         companyName: exp.companyName,
@@ -271,7 +296,7 @@ async function buildSeekerProfile(): Promise<BatchMatchScoreRequest['seekerProfi
       projectExperiences: projectExperiences.map(exp => ({
         projectName: exp.projectName,
         description: exp.description,
-        responsibilities: exp.responsibilities,
+        responsibilities: exp.responsibility,
       })),
     };
   } catch (error) {
@@ -282,21 +307,8 @@ async function buildSeekerProfile(): Promise<BatchMatchScoreRequest['seekerProfi
 
 export async function getInternJobRecommendationsWithSupplement(userId?: number | null): Promise<InternJobRecommendationsResponse> {
   const response = await getInternJobRecommendations(userId);
-  
-  const seekerProfile = await buildSeekerProfile();
-  const pyMatchScores = await batchCalculateMatchScores(response.jobs, seekerProfile);
-  
-  const jobsWithPyScores = response.jobs.map(job => ({
-    ...job,
-    matchScore: pyMatchScores.get(job.jobId) ?? job.matchScore ?? null,
-  }));
-  
-  const supplementedJobs = await Promise.all(
-    jobsWithPyScores.map(job => supplementJobItem(job))
-  );
-  
   return {
-    jobs: sortJobsByMatchScore(supplementedJobs),
+    jobs: await enrichJobsWithSupplement(response.jobs),
   };
 }
 
@@ -321,21 +333,8 @@ export function getInternJobRecommendations(userId?: number | null): Promise<Int
 
 export async function getFullTimeJobRecommendationsWithSupplement(userId?: number | null): Promise<FullTimeJobRecommendationsResponse> {
   const response = await getFullTimeJobRecommendations(userId);
-  
-  const seekerProfile = await buildSeekerProfile();
-  const pyMatchScores = await batchCalculateMatchScores(response.jobs, seekerProfile);
-  
-  const jobsWithPyScores = response.jobs.map(job => ({
-    ...job,
-    matchScore: pyMatchScores.get(job.jobId) ?? job.matchScore ?? null,
-  }));
-  
-  const supplementedJobs = await Promise.all(
-    jobsWithPyScores.map(job => supplementJobItem(job))
-  );
-  
   return {
-    jobs: sortJobsByMatchScore(supplementedJobs),
+    jobs: await enrichJobsWithSupplement(response.jobs),
   };
 }
 
@@ -356,6 +355,60 @@ export function getFullTimeJobRecommendations(userId?: number | null): Promise<F
     console.log('[Response]', url, response);
     return response;
   });
+}
+
+export async function getLatestInternJobs(params?: LatestJobListParams): Promise<InternJobRecommendationsResponse> {
+  const query: Record<string, any> = {};
+
+  if (params?.page !== undefined) {
+    query.page = params.page;
+  }
+  if (params?.size !== undefined) {
+    query.size = params.size;
+  }
+
+  const url = '/api/recruitment/seeker/job-list/intern/latest';
+  console.log('[Params]', url, query);
+
+  const response = await http<InternJobRecommendationsResponse>({
+    url,
+    method: 'GET',
+    data: query,
+  }).then(res => {
+    console.log('[Response]', url, res);
+    return res;
+  });
+
+  return {
+    jobs: await enrichJobsWithSupplement(response.jobs, { sort: false }),
+  };
+}
+
+export async function getLatestFullTimeJobs(params?: LatestJobListParams): Promise<FullTimeJobRecommendationsResponse> {
+  const query: Record<string, any> = {};
+
+  if (params?.page !== undefined) {
+    query.page = params.page;
+  }
+  if (params?.size !== undefined) {
+    query.size = params.size;
+  }
+
+  const url = '/api/recruitment/seeker/job-list/full-time/latest';
+  console.log('[Params]', url, query);
+
+  const response = await http<FullTimeJobRecommendationsResponse>({
+    url,
+    method: 'GET',
+    data: query,
+  }).then(res => {
+    console.log('[Response]', url, res);
+    return res;
+  });
+
+  return {
+    jobs: await enrichJobsWithSupplement(response.jobs, { sort: false }),
+  };
 }
 
 export interface LearningResource {

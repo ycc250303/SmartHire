@@ -28,6 +28,14 @@
       }
     },
     {
+      "path": "pages/seeker/jobs/report",
+      "style": {
+        "navigationBarTitleText": "举报",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff"
+      }
+    },
+    {
       "path": "pages/seeker/jobs/company-detail",
       "style": {
         "navigationBarTitleText": "公司详情",
@@ -91,6 +99,15 @@
       "path": "pages/seeker/profile/index",
       "style": {
         "navigationBarTitleText": "我的",
+        "navigationBarTextStyle": "black",
+        "navigationBarBackgroundColor": "#ffffff",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/seeker/profile/career-path",
+      "style": {
+        "navigationBarTitleText": "个人职业路径规划",
         "navigationBarTextStyle": "black",
         "navigationBarBackgroundColor": "#ffffff",
         "navigationStyle": "custom"

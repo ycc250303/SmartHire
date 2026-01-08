@@ -43,6 +43,10 @@
         <text class="resume-label">{{ t('pages.profile.favorites') }}</text>
         <text class="arrow">›</text>
       </view>
+      <view class="resume-item" @click="goToCareerPath">
+        <text class="resume-label">{{ t('pages.profile.careerPath.title') }}</text>
+        <text class="arrow">›</text>
+      </view>
     </view>
     
     <CustomTabBar />
@@ -122,6 +126,12 @@ function goToApplications() {
 function goToFavorites() {
   uni.navigateTo({
     url: '/pages/seeker/jobs/favorites'
+  });
+}
+
+function goToCareerPath() {
+  uni.navigateTo({
+    url: '/pages/seeker/profile/career-path'
   });
 }
 </script>

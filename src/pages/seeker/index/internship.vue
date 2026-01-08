@@ -22,10 +22,10 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue';
 import { t } from '@/locales';
-import { getInternJobRecommendationsWithSupplement, type InternJobItem } from '@/services/api/recommendations';
+import { getInternJobRecommendationsWithSupplement, getLatestInternJobs, type InternJobItem } from '@/services/api/recommendations';
 import JobCard from '@/components/common/JobCard.vue';
 
-type FilterType = 'recommended' | 'nearby' | 'latest';
+type FilterType = 'recommended' | 'latest';
 
 interface Props {
   filter: FilterType;
@@ -38,13 +38,25 @@ const loading = ref(false);
 const error = ref<string | null>(null);
 
 const loadJobs = async () => {
+  jobs.value = [];
   loading.value = true;
   error.value = null;
   try {
-    const response = await getInternJobRecommendationsWithSupplement();
-    jobs.value = response.jobs;
+    let response: { jobs: InternJobItem[] };
+
+    switch (props.filter) {
+      case 'latest':
+        response = await getLatestInternJobs({ page: 1, size: 20 });
+        break;
+      default:
+        response = await getInternJobRecommendationsWithSupplement();
+        break;
+    }
+
+    jobs.value = response.jobs || [];
   } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Unknown error';
+    error.value = err instanceof Error ? err.message : t('pages.jobs.loadError');
+    jobs.value = [];
   } finally {
     loading.value = false;
   }

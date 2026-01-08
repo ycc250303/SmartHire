@@ -752,3 +752,126 @@ export async function fetchCompositeResume(): Promise<CompositeResumeData> {
     throw error;
   }
 }
+
+export interface PersonalCareerPathRequest {
+  target_position?: string;
+  target_city?: string;
+  target_skills?: string;
+}
+
+export interface PersonalCareerPathProfileSummary {
+  current_level: string;
+  key_strengths: string[];
+  key_weaknesses: string[];
+  career_readiness_score: number;
+}
+
+export interface PersonalCareerPathSkillGapItem {
+  skill_name: string;
+  priority: string;
+  gap_reason: string;
+}
+
+export interface PersonalCareerPathExperienceGaps {
+  current_years: number;
+  target_years: number;
+  gap_years: number;
+  suggestion: string;
+}
+
+export interface PersonalCareerPathEducationGaps {
+  current: string;
+  target: string;
+  is_qualified: boolean;
+  suggestion: string;
+}
+
+export interface PersonalCareerPathGapAnalysis {
+  skill_gaps: PersonalCareerPathSkillGapItem[];
+  experience_gaps: PersonalCareerPathExperienceGaps;
+  education_gaps: PersonalCareerPathEducationGaps;
+}
+
+export interface PersonalCareerPathRoadmapOverview {
+  target_position: string;
+  current_level: string;
+  plan_duration_months: number;
+  milestones_count: number;
+}
+
+export interface PersonalCareerPathRoadmapPhase {
+  phase: number;
+  title: string;
+  description: string;
+  duration_months: number;
+  key_skills: string[];
+  deliverables: string[];
+}
+
+export interface PersonalCareerPathImmediateAction {
+  title: string;
+  description: string;
+  priority: string;
+}
+
+export interface PersonalCareerPathCareerRoadmap {
+  overview: PersonalCareerPathRoadmapOverview;
+  phases: PersonalCareerPathRoadmapPhase[];
+  immediate_actions: PersonalCareerPathImmediateAction[];
+}
+
+export interface PersonalCareerPathLearningResource {
+  name: string;
+  type: string;
+  url: string;
+}
+
+export interface PersonalCareerPathLearningSkill {
+  skill_name: string;
+  priority: string;
+  reason: string;
+  learning_steps: string[];
+  resources: PersonalCareerPathLearningResource[];
+  estimated_weeks: number;
+  difficulty: string;
+}
+
+export interface PersonalCareerPathLearningPlan {
+  skills: PersonalCareerPathLearningSkill[];
+}
+
+export interface PersonalCareerPathInterviewPrep {
+  project_tips: string;
+  possible_questions: string;
+  weakness_strategy: string;
+  strength_emphasis: string;
+}
+
+export interface PersonalCareerPathResponse {
+  profile_summary: PersonalCareerPathProfileSummary;
+  gap_analysis: PersonalCareerPathGapAnalysis;
+  career_roadmap: PersonalCareerPathCareerRoadmap;
+  learning_plan: PersonalCareerPathLearningPlan;
+  interview_prep: PersonalCareerPathInterviewPrep;
+  error?: string;
+}
+
+export function getPersonalCareerPath(
+  params?: PersonalCareerPathRequest,
+  forceRefresh?: boolean
+): Promise<PersonalCareerPathResponse> {
+  let url = '/api/ai/seeker/career-path';
+  if (forceRefresh) {
+    url += '?force_refresh=true';
+  }
+  console.log('[Params]', url, params || null);
+  return http<PersonalCareerPathResponse>({
+    url,
+    method: 'POST',
+    data: params || {},
+    timeout: 90000,
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
+  });
+}
