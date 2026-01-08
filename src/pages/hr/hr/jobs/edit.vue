@@ -11,11 +11,11 @@
       </view>
       <view class="form-item salary-row">
         <view class="salary-field">
-          <text class="label">最低薪资(k)</text>
+          <text class="label">最低薪资(元)</text>
           <input v-model.number="form.salaryMin" type="number" placeholder="最低" />
         </view>
         <view class="salary-field">
-          <text class="label">最高薪资(k)</text>
+          <text class="label">最高薪资(元)</text>
           <input v-model.number="form.salaryMax" type="number" placeholder="最高" />
         </view>
         <view class="salary-field">

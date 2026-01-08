@@ -174,7 +174,7 @@ const salaryText = (job: JobPosition) => {
   const min = job.salaryMin ?? 0;
   const max = job.salaryMax ?? min;
   const months = job.salaryMonths ? `${job.salaryMonths}薪` : '月薪';
-  return `${min}-${max}k·${months}`;
+  return `${min}-${max}·${months}`;
 };
 
 const formatTime = (time?: string) => (time ? dayjs(time).format('MM月DD日 HH:mm') : '--');

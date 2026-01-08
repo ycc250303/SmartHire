@@ -150,7 +150,7 @@ const salaryText = (jobInfo: JobPosition) => {
   const min = jobInfo.salaryMin ?? 0;
   const max = jobInfo.salaryMax ?? min;
   const months = jobInfo.salaryMonths ? `${jobInfo.salaryMonths}薪` : '月薪';
-  return `${min}-${max}k·${months}`;
+  return `${min}-${max}·${months}`;
 };
 
 const skillText = (skills?: JobPosition['skills']) => {

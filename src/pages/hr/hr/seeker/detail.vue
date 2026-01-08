@@ -14,7 +14,7 @@
           </view>
           <view class="header-info">
             <view class="name-row">
-              <text class="candidate-name">{{ seeker.username || '求职者' }}</text>
+              <text class="candidate-name">{{ displayName }}</text>
               <view class="status-badge">
                 <text class="badge-text">{{ jobStatusText(seeker.jobStatus) }}</text>
               </view>
@@ -192,7 +192,8 @@ const initialUniversity = ref('');
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const fallbackInitial = computed(() => (seeker.value?.username?.trim()?.[0] || 'H').toUpperCase());
+const displayName = computed(() => seeker.value?.realName || seeker.value?.username || '求职者');
+const fallbackInitial = computed(() => (displayName.value.trim()?.[0] || 'H').toUpperCase());
 
 const normalizeField = (value?: string) => {
   const trimmed = value?.trim();

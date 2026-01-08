@@ -81,7 +81,7 @@ const salaryText = (job: JobPosting) => {
   const min = job.salaryMin ?? 0;
   const max = job.salaryMax ?? min;
   const months = job.salaryMonths ? `${job.salaryMonths}薪` : '月薪';
-  return `${min}-${max}k·${months}`;
+  return `${min}-${max}·${months}`;
 };
 
 const handleCreateJob = () => {
