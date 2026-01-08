@@ -787,38 +787,49 @@ const submitOps = async () => {
         const cnDate = trimmed.match(/^(\d{4})年(\d{1,2})月(\d{1,2})日$/);
         if (cnDate) {
           const [, y, mo, d] = cnDate;
-          return `${y}-${pad2(mo)}-${pad2(d)} 09:00:00`;
+          return `${y}-${pad2(mo)}-${pad2(d)}T09:00:00`;
         }
         const dateOnly = trimmed.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
         if (dateOnly) {
           const [, y, mo, d] = dateOnly;
-          return `${y}-${pad2(mo)}-${pad2(d)} 09:00:00`;
+          return `${y}-${pad2(mo)}-${pad2(d)}T09:00:00`;
         }
         const match = trimmed.match(
           /^(\d{4})-(\d{1,2})-(\d{1,2})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?$/
         );
         if (match) {
           const [, y, mo, d, h, mi, s] = match;
-          return `${y}-${pad2(mo)}-${pad2(d)} ${pad2(h)}:${pad2(mi)}:${pad2(s || "00")}`;
+          return `${y}-${pad2(mo)}-${pad2(d)}T${pad2(h)}:${pad2(mi)}:${pad2(s || "00")}`;
         }
-        // Already ISO? normalize to space-separated and ensure seconds
-        if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(trimmed)) return trimmed.replace("T", " ") + ":00";
-        if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/.test(trimmed)) return trimmed.replace("T", " ");
+        if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(trimmed)) return `${trimmed}:00`;
+        if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/.test(trimmed)) return trimmed;
+        if (/^\d{4}-\d{2}-\d{2}\s/.test(trimmed)) {
+          return trimmed.replace(" ", "T");
+        }
         return trimmed;
       };
       const interviewTime = normalizeDateTime(interviewForm.value.interviewTime);
-
-      await scheduleInterview({
+      const isLikelyUrl = (value: string) => /^https?:\/\//i.test(value);
+      const noteText = interviewForm.value.note.trim();
+      const interviewPayload: any = {
         applicationId: appId,
         interviewTime,
-        duration: 30,
         interviewType: type,
-        interviewRound: 1,
-        location: type === 3 ? (locationOrLink || undefined) : undefined,
-        meetingLink: type !== 3 ? (locationOrLink || undefined) : undefined,
-        notifyCandidate: true,
-        note: interviewForm.value.note.trim() || undefined,
-      });
+      };
+      if (type === 3 && locationOrLink) {
+        interviewPayload.location = locationOrLink;
+      } else if (type !== 3 && locationOrLink) {
+        if (isLikelyUrl(locationOrLink)) {
+          interviewPayload.meetingLink = locationOrLink;
+        } else {
+          interviewPayload.note = noteText
+            ? `${noteText}（会议链接：${locationOrLink}）`
+            : `会议链接：${locationOrLink}`;
+        }
+      }
+      if (noteText && !interviewPayload.note) interviewPayload.note = noteText;
+
+      await scheduleInterview(interviewPayload);
 
       const text =
         `【面试邀请】\n面试时间：${interviewForm.value.interviewTime.trim()}\n` +
