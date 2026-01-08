@@ -14,21 +14,13 @@ import com.SmartHire.common.dto.hrDto.JobSearchDTO;
 import com.SmartHire.common.dto.seekerDto.SeekerCardDTO;
 import com.SmartHire.common.dto.seekerDto.SeekerCommonDTO;
 import com.SmartHire.common.dto.userDto.UserCommonDTO;
-import com.SmartHire.common.event.ApplicationCreatedEvent;
+import com.SmartHire.common.dto.messageDto.MessageCommonDTO;
+import com.SmartHire.common.dto.messageDto.SendMessageCommonDTO;
 import com.SmartHire.common.exception.enums.ErrorCode;
 import com.SmartHire.common.exception.exception.BusinessException;
-import com.SmartHire.recruitmentService.dto.FullTimeJobItemDTO;
-import com.SmartHire.recruitmentService.dto.FullTimeJobRecommendationsDTO;
-import com.SmartHire.recruitmentService.dto.InternJobItemDTO;
-import com.SmartHire.recruitmentService.dto.InternJobRecommendationsDTO;
-import com.SmartHire.recruitmentService.dto.InterviewResponseDTO;
-import com.SmartHire.recruitmentService.dto.SeekerApplicationDTO;
-import com.SmartHire.recruitmentService.dto.SeekerApplicationListDTO;
-import com.SmartHire.recruitmentService.dto.SeekerJobPositionDTO;
-import com.SmartHire.recruitmentService.dto.SubmitResumeDTO;
+import com.SmartHire.recruitmentService.dto.*;
 import com.SmartHire.recruitmentService.mapper.ApplicationMapper;
 import com.SmartHire.recruitmentService.model.Application;
-import com.SmartHire.recruitmentService.service.ApplicationEventProducer;
 import com.SmartHire.recruitmentService.service.InterviewService;
 import com.SmartHire.recruitmentService.service.SeekerApplicationService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -72,14 +64,11 @@ public class SeekerApplicationServiceImpl extends ServiceImpl<ApplicationMapper,
     private ApplicationMapper applicationMapper;
 
     @Autowired
-    private ApplicationEventProducer applicationEventProducer;
-
-    @Autowired
     private InterviewService interviewService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long submitResume(SubmitResumeDTO request) {
+    public SubmitResumeResponseDTO submitResume(SubmitResumeDTO request) {
         // ... (existing code same)
         if (request == null || request.getJobId() == null) {
             throw new BusinessException(ErrorCode.VALIDATION_ERROR);
@@ -119,23 +108,27 @@ public class SeekerApplicationServiceImpl extends ServiceImpl<ApplicationMapper,
         }
 
         String resumeType = resumeId != null ? "附件简历" : "在线简历";
-        log.info("投递{}成功, jobId={}, seekerId={}, resumeId={}", resumeType, jobId, seekerId, resumeId);
 
         Long hrId = hrApi.getHrIdByJobId(jobId);
         Long hrUserId = hrApi.getHrUserIdByHrId(hrId);
-        ApplicationCreatedEvent event = new ApplicationCreatedEvent();
-        event.setApplicationId(application.getId());
-        event.setJobId(jobId);
-        event.setJobSeekerId(seekerId);
-        event.setSeekerUserId(userId);
-        event.setHrId(hrId);
-        event.setHrUserId(hrUserId);
-        event.setMessageContent("您好，我对这个岗位感兴趣");
-        event.setInitiator((byte) 0);
 
-        applicationEventProducer.publishApplicationCreated(event);
-        log.info("投递/推荐岗位创建事件已发布: applicationId={}, jobId={}, seekerId={}", application.getId(), jobId, seekerId);
-        return application.getId();
+        // 同步发送初始消息以获取会话ID
+        SendMessageCommonDTO sendMessageDTO = new SendMessageCommonDTO();
+        sendMessageDTO.setReceiverId(hrUserId);
+        sendMessageDTO.setMessageType(1); // 文本消息
+        sendMessageDTO.setContent("您好，我对这个岗位感兴趣");
+
+        MessageCommonDTO messageDTO = messageApi.sendMessage(userId, sendMessageDTO);
+        Long conversationId = messageDTO != null ? messageDTO.getConversationId() : null;
+
+        // 更新投递记录中的会话ID
+        if (conversationId != null) {
+            application.setConversationId(conversationId);
+            this.updateById(application);
+        }
+
+        log.info("投递{}成功, jobId={}, seekerId={}, conversationId={}", resumeType, jobId, seekerId, conversationId);
+        return new SubmitResumeResponseDTO(application.getId(), conversationId);
     }
 
     @Override
@@ -358,7 +351,7 @@ public class SeekerApplicationServiceImpl extends ServiceImpl<ApplicationMapper,
 
         List<JobCardDTO> jobCards = hrApi.searchPublicJobs(searchDTO);
         List<InternJobItemDTO> items = new ArrayList<>();
-        
+
         for (JobCardDTO jc : jobCards) {
             InternJobItemDTO item = new InternJobItemDTO();
             item.setJobId(jc.getJobId());
@@ -505,5 +498,14 @@ public class SeekerApplicationServiceImpl extends ServiceImpl<ApplicationMapper,
     @Override
     public void respondToInterview(InterviewResponseDTO request) {
         interviewService.respondToInterview(request);
+    }
+
+    @Override
+    public Long getConversationIdByApplicationId(Long applicationId) {
+        if (applicationId == null) {
+            return null;
+        }
+        Application application = this.getById(applicationId);
+        return application != null ? application.getConversationId() : null;
     }
 }

@@ -51,9 +51,9 @@ public class SeekerRecruitmentController {
 
     @PostMapping("/submit-resume")
     @Operation(summary = "求职者投递简历", description = "求职者投递简历到指定职位。如果提供resumeId则投递附件简历，如果不提供resumeId则投递在线简历")
-    public Result<?> submitResume(@Valid @RequestBody SubmitResumeDTO request) {
-        Long applicationId = seekerApplicationService.submitResume(request);
-        return Result.success("投递简历成功", applicationId);
+    public Result<SubmitResumeResponseDTO> submitResume(@Valid @RequestBody SubmitResumeDTO request) {
+        SubmitResumeResponseDTO response = seekerApplicationService.submitResume(request);
+        return Result.success("投递简历成功", response);
     }
 
     @GetMapping("/job-card/{jobId}")

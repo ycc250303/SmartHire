@@ -102,7 +102,7 @@ public class InterviewServiceImpl extends ServiceImpl<InterviewMapper, Interview
 
     // 构建并发送消息通知求职者
     String content = String.format(
-        "您好，您有一场新的面试安排：时间：%s，地点：%s，面试官：%s。请按时参加。如有问题请联系HR。",
+        "您好，向您发送面试邀请：时间：%s，地点：%s，面试官：%s。请按时参加。如有问题请联系HR。",
         request.getInterviewTime() != null ? request.getInterviewTime().toString() : "未指定",
         request.getLocation() != null ? request.getLocation() : "未指定",
         request.getInterviewer() != null ? request.getInterviewer() : "未指定");

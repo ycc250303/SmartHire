@@ -7,6 +7,7 @@ import com.SmartHire.recruitmentService.dto.InterviewResponseDTO;
 import com.SmartHire.recruitmentService.dto.SeekerApplicationListDTO;
 import com.SmartHire.recruitmentService.dto.SeekerJobPositionDTO;
 import com.SmartHire.recruitmentService.dto.SubmitResumeDTO;
+import com.SmartHire.recruitmentService.dto.SubmitResumeResponseDTO;
 import com.SmartHire.recruitmentService.model.Application;
 import com.baomidou.mybatisplus.extension.service.IService;
 
@@ -19,9 +20,9 @@ public interface SeekerApplicationService extends IService<Application> {
      * 求职者投递简历
      *
      * @param request 投递请求
-     * @return 投递记录ID
+     * @return 投递响应（包含投递记录ID和会话ID）
      */
-    Long submitResume(SubmitResumeDTO request);
+    SubmitResumeResponseDTO submitResume(SubmitResumeDTO request);
 
     /**
      * 分页查询当前求职者的投递记录
@@ -62,7 +63,7 @@ public interface SeekerApplicationService extends IService<Application> {
      * @return 全职岗位推荐DTO
      */
     FullTimeJobRecommendationsDTO getFullTimeJobRecommendations();
-    
+
     /**
      * 获取最新的实习岗位列表（按时间排序）
      *
@@ -95,4 +96,12 @@ public interface SeekerApplicationService extends IService<Application> {
      * @param request 响应请求
      */
     void respondToInterview(InterviewResponseDTO request);
+
+    /**
+     * 根据投递ID获取会话ID
+     *
+     * @param applicationId 投递ID
+     * @return 会话ID
+     */
+    Long getConversationIdByApplicationId(Long applicationId);
 }
