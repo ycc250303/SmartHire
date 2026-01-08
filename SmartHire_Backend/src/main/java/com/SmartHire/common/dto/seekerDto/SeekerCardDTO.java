@@ -10,6 +10,7 @@ import java.io.Serializable;
 public class SeekerCardDTO implements Serializable {
     private Integer userId;
     private String username;
+    private String realName;
     private String graduationYear;
     private Integer age;
     private String highestEducation;

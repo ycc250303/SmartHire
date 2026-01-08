@@ -60,6 +60,7 @@ public class SeekerCardServiceImpl implements SeekerCardService {
       EducationExperience highestEducation = findHighestEducation(jobSeeker.getId());
       SeekerCardDTO dto = new SeekerCardDTO();
       dto.setUsername(user.getUsername());
+      dto.setRealName(jobSeeker.getRealName());
       dto.setAge(calculateAge(jobSeeker.getBirthDate()));
       dto.setJobStatus(jobSeeker.getJobStatus());
 
