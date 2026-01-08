@@ -783,13 +783,22 @@ const submitOps = async () => {
       const locationOrLink = interviewForm.value.locationOrLink.trim();
       const normalizeDateTime = (raw: string): string => {
         const trimmed = raw.trim().replace(/\//g, "-").replace(/\./g, "-");
+        const pad2 = (v: string) => v.padStart(2, "0");
+        const cnDate = trimmed.match(/^(\d{4})年(\d{1,2})月(\d{1,2})日$/);
+        if (cnDate) {
+          const [, y, mo, d] = cnDate;
+          return `${y}-${pad2(mo)}-${pad2(d)} 09:00:00`;
+        }
+        const dateOnly = trimmed.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+        if (dateOnly) {
+          const [, y, mo, d] = dateOnly;
+          return `${y}-${pad2(mo)}-${pad2(d)} 09:00:00`;
+        }
         const match = trimmed.match(
           /^(\d{4})-(\d{1,2})-(\d{1,2})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?$/
         );
         if (match) {
           const [, y, mo, d, h, mi, s] = match;
-          const pad2 = (v: string) => v.padStart(2, "0");
-          // Prefer "YYYY-MM-DD HH:mm:ss" for Java backends
           return `${y}-${pad2(mo)}-${pad2(d)} ${pad2(h)}:${pad2(mi)}:${pad2(s || "00")}`;
         }
         // Already ISO? normalize to space-separated and ensure seconds
@@ -838,12 +847,31 @@ const submitOps = async () => {
       const baseSalary = Number(offerForm.value.baseSalary);
       const bonus = Number(offerForm.value.bonus);
 
+      const normalizeDate = (raw: string): string => {
+        const trimmed = raw.trim().replace(/\//g, "-").replace(/\./g, "-");
+        const pad2 = (v: string) => v.padStart(2, "0");
+        const cnDate = trimmed.match(/^(\d{4})年(\d{1,2})月(\d{1,2})日$/);
+        if (cnDate) {
+          const [, y, mo, d] = cnDate;
+          return `${y}-${pad2(mo)}-${pad2(d)}`;
+        }
+        const dateOnly = trimmed.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+        if (dateOnly) {
+          const [, y, mo, d] = dateOnly;
+          return `${y}-${pad2(mo)}-${pad2(d)}`;
+        }
+        if (/^\d{4}-\d{2}-\d{2}T/.test(trimmed)) return trimmed.split("T")[0];
+        if (/^\d{4}-\d{2}-\d{2}\s/.test(trimmed)) return trimmed.split(" ")[0];
+        return trimmed;
+      };
+      const startDate = normalizeDate(offerForm.value.startDate);
+
       await sendOffer({
         applicationId: appId,
         title: offerForm.value.title.trim() || undefined,
         baseSalary: Number.isFinite(baseSalary) ? baseSalary : undefined,
         bonus: Number.isFinite(bonus) ? bonus : undefined,
-        startDate: offerForm.value.startDate.trim() || undefined,
+        startDate: startDate || undefined,
         employmentType: employmentTypeOptions[employmentTypeIndex.value]?.value,
         send: true,
         note: offerForm.value.note.trim() || undefined,

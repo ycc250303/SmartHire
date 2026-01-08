@@ -69,18 +69,41 @@ export function searchCompanies(params?: CompanySearchParams): Promise<CompanySe
 
 // Company management
 export interface UpdateCompanyInfoParams {
-  companyName: string;
-  description: string;
-  companyScale: number;
-  financingStage: number;
-  industry: string;
-  website: string;
-  logoUrl: string;
-  // mainBusiness: string;
-  benefits: string;
-  status: number;
-  companyCreatedAt: string;
-  registeredCapital: string;
+  companyId?: number;
+  companyName?: string;
+  companyLogo?: string;
+  companyScale?: number;
+  financingStage?: number;
+  industry?: string;
+  description?: string;
+  website?: string;
+}
+
+export interface CompanyInfo {
+  companyId: number;
+  companyName?: string;
+  companyLogo?: string;
+  companyScale?: number;
+  financingStage?: number;
+  industry?: string;
+  description?: string;
+  website?: string;
+}
+
+/**
+ * Get company information
+ * @returns Company information data
+ */
+export function getCompanyInfo(companyId: number): Promise<CompanyInfo> {
+  const url = `/api/hr/company/${companyId}/info`;
+  console.log('[Params]', url, { companyId });
+  return http<CompanyInfo>({
+    url,
+    method: 'GET',
+  }).then(response => {
+    console.log('[Response]', url, response);
+    return response;
+  });
 }
 
 /**
@@ -88,7 +111,7 @@ export interface UpdateCompanyInfoParams {
  * @returns Operation result
  */
 export function updateCompanyInfo(companyId: number, params: UpdateCompanyInfoParams): Promise<null> {
-  const url = `/hr/company/${companyId}/info`;
+  const url = `/api/hr/company/${companyId}/info`;
   console.log('[Params]', url, { companyId, ...params });
   return http<null>({
     url,

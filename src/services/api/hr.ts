@@ -9,6 +9,7 @@ export interface HrInfo {
   realName: string;
   position: string;
   workPhone: string;
+  isCompanyAdmin?: number;
   createdAt?: string;
   updatedAt?: string;
 }

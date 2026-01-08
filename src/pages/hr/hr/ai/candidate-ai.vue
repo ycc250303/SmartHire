@@ -582,7 +582,11 @@ const startInterview = (force: boolean) => {
       return;
     }
 
-    interviewCancel = streamCandidateInterviewQuestions(jobSeekerId.value, jobId.value, {
+    interviewCancel = streamCandidateInterviewQuestions(
+      jobSeekerId.value,
+      jobId.value,
+      useUserIdFallback.value ? seekerUserId.value : undefined,
+      {
       onStart: () => {
         interviewStatus.value = 'streaming';
       },
@@ -597,7 +601,8 @@ const startInterview = (force: boolean) => {
         interviewError.value = err.message || '生成失败';
         interviewStatus.value = 'error';
       },
-    });
+    }
+    );
   });
 
   if (force) {

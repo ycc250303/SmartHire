@@ -134,10 +134,11 @@ export type StreamCallbacks = {
 export function streamCandidateInterviewQuestions(
   jobSeekerId: number,
   jobId: number,
+  userId: number | undefined,
   callbacks: StreamCallbacks,
 ): () => void {
   let cancelled = false;
-  const url = `/api/ai/hr/candidate/${jobSeekerId}/interview-questions${buildJobQuery(jobId)}`;
+  const url = `/api/ai/hr/candidate/${jobSeekerId}/interview-questions${buildJobQuery(jobId, undefined, userId)}`;
   const cancel = () => {
     cancelled = true;
   };

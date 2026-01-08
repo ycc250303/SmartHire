@@ -801,7 +801,7 @@ export default {
       completeSuccess: '注册完成',
       hrFlow: {
         selectFlow: '选择注册方式',
-        createCompany: '创建公司（老板）',
+        createCompany: '创建公司',
         joinCompany: '加入已有公司',
         companyInfo: '公司信息',
         companyName: '公司名称',

@@ -194,8 +194,15 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const fallbackInitial = computed(() => (seeker.value?.username?.trim()?.[0] || 'H').toUpperCase());
 
-const displayCity = computed(() => seeker.value?.city || initialCity.value || '');
-const displayUniversity = computed(() => seeker.value?.university || initialUniversity.value || '');
+const normalizeField = (value?: string) => {
+  const trimmed = value?.trim();
+  if (!trimmed) return '';
+  if (trimmed === '未知' || trimmed === '未填写' || trimmed === '不详') return '';
+  return trimmed;
+};
+
+const displayCity = computed(() => normalizeField(seeker.value?.city) || initialCity.value || '');
+const displayUniversity = computed(() => normalizeField(seeker.value?.university) || initialUniversity.value || '');
 
 const basicMeta = computed(() => {
   const parts: string[] = [];
@@ -360,8 +367,8 @@ const loadData = async () => {
     ]);
     seeker.value = card || null;
     if (seeker.value) {
-      const city = seeker.value.city?.trim();
-      const university = seeker.value.university?.trim();
+      const city = normalizeField(seeker.value.city);
+      const university = normalizeField(seeker.value.university);
       if (!city && initialCity.value) {
         seeker.value.city = initialCity.value;
       }
