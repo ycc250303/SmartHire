@@ -232,9 +232,20 @@ const formatSalary = (item: any) => {
   return '';
 };
 
+const formatDateOnly = (value?: string) => {
+  if (!value) return '';
+  const trimmed = value.trim();
+  if (trimmed.includes('T')) return trimmed.split('T')[0];
+  if (trimmed.includes(' ')) return trimmed.split(' ')[0];
+  if (trimmed.length >= 10) return trimmed.slice(0, 10);
+  return trimmed;
+};
+
 const formatPeriod = (start?: string, end?: string) => {
+  const startText = formatDateOnly(start) || '未知';
+  const endText = formatDateOnly(end) || '至今';
   if (!start && !end) return '';
-  return `${start || '未知'} - ${end || '至今'}`;
+  return `${startText} - ${endText}`;
 };
 
 const loadOnlineResume = async () => {
