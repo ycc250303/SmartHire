@@ -3,6 +3,7 @@ package com.SmartHire.recruitmentService.service.impl;
 import com.SmartHire.common.api.SeekerApi;
 import com.SmartHire.common.api.HrApi;
 import com.SmartHire.common.api.MessageApi;
+import com.SmartHire.common.dto.messageDto.MessageCommonDTO;
 import com.SmartHire.common.dto.messageDto.SendMessageCommonDTO;
 import com.SmartHire.common.exception.enums.ErrorCode;
 import com.SmartHire.common.exception.exception.BusinessException;
@@ -13,8 +14,6 @@ import com.SmartHire.recruitmentService.mapper.ApplicationMapper;
 import com.SmartHire.recruitmentService.model.Interview;
 import com.SmartHire.recruitmentService.model.Application;
 import com.SmartHire.recruitmentService.service.InterviewService;
-import com.SmartHire.recruitmentService.service.InterviewEventProducer;
-import com.SmartHire.common.event.InterviewScheduledEvent;
 import com.SmartHire.common.auth.UserContext;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import java.util.Date;
@@ -48,9 +47,6 @@ public class InterviewServiceImpl extends ServiceImpl<InterviewMapper, Interview
 
   @Autowired
   private UserContext userContext;
-
-  @Autowired
-  private InterviewEventProducer interviewEventProducer;
 
   @Override
   @Transactional(rollbackFor = Exception.class)
@@ -110,20 +106,29 @@ public class InterviewServiceImpl extends ServiceImpl<InterviewMapper, Interview
     // 获取 HR 用户 ID（发送者）
     Long hrUserId = hrApi.getHrUserIdByHrId(currentHrId);
 
-    // 发布 InterviewScheduledEvent 到队列，通知消息服务异步发送通知
-    InterviewScheduledEvent event = new InterviewScheduledEvent();
-    event.setInterviewId(interview.getId());
-    event.setApplicationId(applicationId);
-    event.setSeekerUserId(seekerUserId);
-    event.setHrUserId(hrUserId);
-    event.setInterviewTime(request.getInterviewTime());
-    event.setMeetingLink(request.getMeetingLink());
-    event.setLocation(request.getLocation());
-    event.setInterviewer(request.getInterviewer());
-    event.setNote(request.getNote());
+    // 构建并发送消息通知求职者
+    String content = String.format(
+        "您好，您有一场新的面试安排：时间：%s，地点：%s，面试官：%s。请按时参加。如有问题请联系HR。",
+        request.getInterviewTime() != null ? request.getInterviewTime().toString() : "未指定",
+        request.getLocation() != null ? request.getLocation() : "未指定",
+        request.getInterviewer() != null ? request.getInterviewer() : "未指定");
+    if (request.getNote() != null && !request.getNote().isEmpty()) {
+      content = request.getNote();
+    }
 
-    interviewEventProducer.publishInterviewScheduled(event);
-    log.info("面试安排已发布事件: interviewId={}, applicationId={}", interview.getId(), applicationId);
+    SendMessageCommonDTO messageDTO = new SendMessageCommonDTO();
+    messageDTO.setReceiverId(seekerUserId);
+    messageDTO.setMessageType(8); // 面试邀请
+    messageDTO.setContent(content);
+
+    MessageCommonDTO messageResult = messageApi.sendMessage(hrUserId, messageDTO);
+    if (messageResult != null && messageResult.getId() != null) {
+      interview.setMessageId(messageResult.getId());
+      this.updateById(interview);
+      log.info("面试安排消息已发送, messageId={}, interviewId={}", messageResult.getId(), interview.getId());
+    } else {
+      log.warn("面试安排消息发送成功但未返回消息ID, interviewId={}", interview.getId());
+    }
 
     return interview.getId();
   }
@@ -222,5 +227,16 @@ public class InterviewServiceImpl extends ServiceImpl<InterviewMapper, Interview
       throw new BusinessException(ErrorCode.INTERVIEW_NOT_EXIST);
     }
     return interview.getStatus() == null ? null : interview.getStatus().intValue();
+  }
+
+  @Override
+  public Long getInterviewIdByMessageId(Long messageId) {
+    if (messageId == null) {
+      return null;
+    }
+    Interview interview = this.lambdaQuery()
+        .eq(Interview::getMessageId, messageId)
+        .one();
+    return interview != null ? interview.getId() : null;
   }
 }

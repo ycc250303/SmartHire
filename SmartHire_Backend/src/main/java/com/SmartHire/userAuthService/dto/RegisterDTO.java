@@ -23,19 +23,19 @@ public class RegisterDTO {
   private String password;
 
   /** 邮箱 */
-  @NotBlank(message = "邮箱不能为空")
-  @Email(message = "邮箱格式不正确")
+  // @NotBlank(message = "邮箱不能为空")
+  // @Email(message = "邮箱格式不正确")
   private String email;
 
   /** 手机号 */
-  @NotBlank(message = "手机号不能为空")
-  @Pattern(regexp = "^1[3-9]\\d{9}$", message = "手机号格式不正确")
+  // @NotBlank(message = "手机号不能为空")
+  // @Pattern(regexp = "^1[3-9]\\d{9}$", message = "手机号格式不正确")
   private String phone;
 
   /** 性别 */
-  @NotNull(message = "性别不能为空")
-  @Min(value = 0, message = "性别类型格式不正确")
-  @Max(value = 2, message = "性别类型格式不正确")
+  // @NotNull(message = "性别不能为空")
+  // @Min(value = 0, message = "性别类型格式不正确")
+  // @Max(value = 2, message = "性别类型格式不正确")
   private int gender;
 
   /** 用户类型 */
@@ -45,6 +45,6 @@ public class RegisterDTO {
   private Integer userType;
 
   /** 验证码 */
-  @NotBlank(message = "验证码不能为空")
+  // @NotBlank(message = "验证码不能为空")
   private String verifyCode;
 }

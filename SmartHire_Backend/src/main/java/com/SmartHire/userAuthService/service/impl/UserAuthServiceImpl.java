@@ -100,7 +100,9 @@ public class UserAuthServiceImpl extends ServiceImpl<UserAuthMapper, User>
     User user = new User();
     user.setUsername(request.getUsername());
     user.setPassword(passwordEncoder.encode(request.getPassword()));
-    user.setEmail(request.getEmail());
+    if (request.getEmail() != null) {
+      user.setEmail(request.getEmail());
+    }
     user.setPhone(request.getPhone());
     user.setGender(request.getGender());
 
@@ -115,7 +117,9 @@ public class UserAuthServiceImpl extends ServiceImpl<UserAuthMapper, User>
     userMapper.insert(user);
 
     // 注册成功后删除验证码
-    verificationCodeService.deleteCode(request.getEmail());
+    if (request.getEmail() != null) {
+      verificationCodeService.deleteCode(request.getEmail());
+    }
 
     log.info("用户注册成功，用户ID: {}", user.getId());
   }
@@ -295,19 +299,23 @@ public class UserAuthServiceImpl extends ServiceImpl<UserAuthMapper, User>
   /** 注册业务校验 */
   private void validateRegisterRequest(RegisterDTO request) {
     // 验证验证码（验证成功后不删除，等注册成功后再删除）
-    verificationCodeService.verifyCodeWithoutDelete(request.getEmail(), request.getVerifyCode());
+    // verificationCodeService.verifyCodeWithoutDelete(request.getEmail(),
+    // request.getVerifyCode());
 
-    if (userMapper.checkEmailExist(request.getEmail()) != null) {
-      throw new BusinessException(ErrorCode.EMAIL_ALREADY_REGISTERED);
-    }
+    // if (userMapper.checkEmailExist(request.getEmail()) != null) {
+    // throw new BusinessException(ErrorCode.EMAIL_ALREADY_REGISTERED);
+    // }
 
     if (userMapper.checkUsernameExist(request.getUsername()) != null) {
       throw new BusinessException(ErrorCode.USER_AUTH_USER_HAS_EXISTED);
     }
 
-    if (userMapper.checkPhoneExist(request.getPhone()) != null) {
-      throw new BusinessException(ErrorCode.USER_AUTH_PHONE_HAS_EXISTED);
-    }
+    /*
+     * 临时注释：手机号重复校验
+     * if (userMapper.checkPhoneExist(request.getPhone()) != null) {
+     * throw new BusinessException(ErrorCode.USER_AUTH_PHONE_HAS_EXISTED);
+     * }
+     */
   }
 
   /** 登录业务校验 */

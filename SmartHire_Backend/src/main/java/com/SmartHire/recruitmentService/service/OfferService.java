@@ -29,4 +29,12 @@ public interface OfferService {
    * @return Offer 状态：0-待接受 1-已接受 2-已拒绝
    */
   Integer getOfferStatus(Long offerId);
+
+  /**
+   * 根据消息ID获取 Offer ID
+   *
+   * @param messageId 消息ID
+   * @return Offer ID
+   */
+  Long getOfferIdByMessageId(Long messageId);
 }

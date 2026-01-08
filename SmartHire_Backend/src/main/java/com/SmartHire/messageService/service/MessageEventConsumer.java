@@ -143,15 +143,14 @@ public class MessageEventConsumer {
       // 构建发送消息DTO，由 HR 作为 sender 发送给求职者
       SendMessageDTO sendMessageDTO = new SendMessageDTO();
       sendMessageDTO.setReceiverId(event.getSeekerUserId());
-      sendMessageDTO.setMessageType(1); // 文本消息
+      sendMessageDTO.setMessageType(8); // 面试邀请
 
       // 构建通知内容
-      String content =
-          String.format(
-              "您好，您有一场新的面试安排：时间：%s，地点：%s，面试官：%s。请按时参加。如有问题请联系HR。",
-              event.getInterviewTime() != null ? event.getInterviewTime().toString() : "未指定",
-              event.getLocation() != null ? event.getLocation() : "未指定",
-              event.getInterviewer() != null ? event.getInterviewer() : "未指定");
+      String content = String.format(
+          "您好，您有一场新的面试安排：时间：%s，地点：%s，面试官：%s。请按时参加。如有问题请联系HR。",
+          event.getInterviewTime() != null ? event.getInterviewTime().toString() : "未指定",
+          event.getLocation() != null ? event.getLocation() : "未指定",
+          event.getInterviewer() != null ? event.getInterviewer() : "未指定");
 
       // 如果事件携带自定义 note，优先使用
       if (event.getNote() != null && !event.getNote().isEmpty()) {
@@ -168,7 +167,8 @@ public class MessageEventConsumer {
 
       log.info("面试通知已发送: interviewId={}, seekerUserId={}", event.getInterviewId(), event.getSeekerUserId());
     } catch (Exception e) {
-      log.error("消费面试安排事件失败: interviewId={}, applicationId={}", event != null ? event.getInterviewId() : null, event != null ? event.getApplicationId() : null, e);
+      log.error("消费面试安排事件失败: interviewId={}, applicationId={}", event != null ? event.getInterviewId() : null,
+          event != null ? event.getApplicationId() : null, e);
     }
   }
 
@@ -193,7 +193,7 @@ public class MessageEventConsumer {
 
       SendMessageDTO sendMessageDTO = new SendMessageDTO();
       sendMessageDTO.setReceiverId(event.getSeekerUserId());
-      sendMessageDTO.setMessageType(1); // 文本消息
+      sendMessageDTO.setMessageType(9); // Offer 通知
 
       StringBuilder content = new StringBuilder();
       content.append("恭喜，您收到录用通知！");
@@ -238,7 +238,7 @@ public class MessageEventConsumer {
 
       SendMessageDTO sendMessageDTO = new SendMessageDTO();
       sendMessageDTO.setReceiverId(event.getSeekerUserId());
-      sendMessageDTO.setMessageType(1);
+      sendMessageDTO.setMessageType(10); // 拒绝通知
 
       String content = "很抱歉，您的本次应聘未通过。";
       if (event.getReason() != null && !event.getReason().isEmpty()) {

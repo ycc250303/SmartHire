@@ -11,7 +11,7 @@ public class SendMessageCommonDTO implements Serializable {
     /** 接收者用户ID */
     private Long receiverId;
 
-    /** 消息类型：1-文本 2-图片 3-文件 4-语音 5-视频 */
+    /** 消息类型：1-文本 2-图片 3-文件 4-语音 5-视频 6-系统通知 7-卡片消息 8-面试邀请 9-Offer 10-拒绝通知 */
     private Integer messageType;
 
     /** 消息内容 */

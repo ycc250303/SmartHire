@@ -3,16 +3,15 @@ package com.SmartHire.recruitmentService.service.impl;
 import com.SmartHire.common.api.SeekerApi;
 import com.SmartHire.common.api.HrApi;
 import com.SmartHire.common.auth.UserContext;
+import com.SmartHire.common.dto.messageDto.MessageCommonDTO;
 import com.SmartHire.common.exception.enums.ErrorCode;
 import com.SmartHire.common.exception.exception.BusinessException;
-import com.SmartHire.common.event.OfferSentEvent;
 import com.SmartHire.recruitmentService.dto.OfferRequest;
 import com.SmartHire.recruitmentService.dto.OfferResponseDTO;
 import com.SmartHire.recruitmentService.mapper.ApplicationMapper;
 import com.SmartHire.recruitmentService.mapper.OfferMapper;
 import com.SmartHire.recruitmentService.model.Application;
 import com.SmartHire.recruitmentService.model.Offer;
-import com.SmartHire.recruitmentService.service.OfferEventProducer;
 import com.SmartHire.recruitmentService.service.OfferService;
 import com.SmartHire.common.dto.messageDto.SendMessageCommonDTO;
 import com.SmartHire.common.api.MessageApi;
@@ -48,9 +47,6 @@ public class OfferServiceImpl implements OfferService {
   @Autowired
   private UserContext userContext;
 
-  @Autowired
-  private OfferEventProducer offerEventProducer;
-
   @Override
   @Transactional(rollbackFor = Exception.class)
   public Long sendOffer(OfferRequest request) {
@@ -81,11 +77,42 @@ public class OfferServiceImpl implements OfferService {
       application.setUpdatedAt(new Date());
       applicationMapper.updateById(application);
 
+      // 获取 seeker 的用户ID（用于通知）
+      Long jobSeekerId = application.getJobSeekerId();
+      Long seekerUserId = seekerApi.getJobSeekerById(jobSeekerId).getUserId();
+      Long hrUserId = hrApi.getHrUserIdByHrId(currentHrId);
+
+      // 构建并发送消息通知求职者
+      StringBuilder content = new StringBuilder();
+      content.append("恭喜，您收到录用通知！");
+      if (request.getTitle() != null) {
+        content.append(" 职位：").append(request.getTitle()).append("；");
+      }
+      if (request.getBaseSalary() != null) {
+        content.append(" 薪资：").append(request.getBaseSalary()).append("；");
+      }
+      if (request.getStartDate() != null) {
+        content.append(" 到岗：").append(request.getStartDate().toString()).append("；");
+      }
+      if (request.getNote() != null && !request.getNote().isEmpty()) {
+        content.append(" 备注：").append(request.getNote());
+      }
+
+      SendMessageCommonDTO messageDTO = new SendMessageCommonDTO();
+      messageDTO.setReceiverId(seekerUserId);
+      messageDTO.setMessageType(9); // Offer 通知
+      messageDTO.setContent(content.toString());
+
+      MessageCommonDTO messageResult = messageApi.sendMessage(hrUserId, messageDTO);
+
       // 创建并保存 Offer 记录
       Offer offer = new Offer();
       offer.setApplicationId(applicationId);
       offer.setJobSeekerId(application.getJobSeekerId());
       offer.setHrId(currentHrId);
+      if (messageResult != null && messageResult.getId() != null) {
+        offer.setMessageId(messageResult.getId());
+      }
       if (request.getBaseSalary() != null) {
         offer.setBaseSalary(BigDecimal.valueOf(request.getBaseSalary()));
       }
@@ -95,31 +122,18 @@ public class OfferServiceImpl implements OfferService {
       offer.setCreatedAt(now);
       offer.setUpdatedAt(now);
       offerMapper.insert(offer);
-      log.info("已保存 Offer 记录: offerId={}, applicationId={}", offer.getId(), applicationId);
+      log.info("已保存 Offer 记录: offerId={}, applicationId={}, messageId={}", offer.getId(), applicationId,
+          offer.getMessageId());
     }
-
-    // 发布事件，用于消息服务异步发送通知
-    Long jobSeekerId = application.getJobSeekerId();
-    Long seekerUserId = seekerApi.getJobSeekerById(jobSeekerId).getUserId();
-    Long hrUserId = hrApi.getHrUserIdByHrId(currentHrId);
-
-    OfferSentEvent event = new OfferSentEvent();
-    event.setApplicationId(applicationId);
-    event.setSeekerUserId(seekerUserId);
-    event.setHrUserId(hrUserId);
-    event.setTitle(request.getTitle());
-    event.setBaseSalary(request.getBaseSalary());
-    event.setBonus(request.getBonus());
-    event.setStartDate(request.getStartDate());
-    event.setEmploymentType(request.getEmploymentType());
-    event.setNote(request.getNote());
-
-    offerEventProducer.publishOfferSent(event);
-    log.info("Offer 已发布事件: applicationId={}, seekerUserId={}", applicationId, seekerUserId);
 
     return applicationId;
   }
 
+  /**
+   * 响应 Offer（求职者调用）
+   *
+   * @param request 响应请求
+   */
   @Override
   @Transactional(rollbackFor = Exception.class)
   public void respondToOffer(OfferResponseDTO request) {
@@ -177,6 +191,16 @@ public class OfferServiceImpl implements OfferService {
       throw new BusinessException(ErrorCode.OFFER_NOT_EXIST);
     }
     return offer.getStatus() == null ? null : offer.getStatus().intValue();
+  }
+
+  @Override
+  public Long getOfferIdByMessageId(Long messageId) {
+    if (messageId == null) {
+      return null;
+    }
+    Offer offer = offerMapper.selectOne(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Offer>()
+        .eq(Offer::getMessageId, messageId));
+    return offer != null ? offer.getId() : null;
   }
 
   /**
