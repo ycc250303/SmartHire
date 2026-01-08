@@ -203,6 +203,23 @@
       "实践：开发一个后台管理系统"
     ]
   },
+  "Vue.js": {
+    "brief": {
+      "required": "国内最流行的前端框架，生态完善",
+      "optional": "掌握Vue可以快速构建现代化Web应用"
+    },
+    "importance": {
+      "required": "该项目使用Vue开发，需要熟练掌握Vue3的组合式API、响应式系统和生态工具。",
+      "optional": "Vue是国内最流行的前端框架，学习它能让你快速构建现代化Web应用，就业机会多。"
+    },
+    "estimatedTime": "3-4周",
+    "learningTips": [
+      "学习Vue3组合式API（Composition API）",
+      "掌握响应式原理和生命周期",
+      "学习Vue Router和Pinia状态管理",
+      "实践：开发一个后台管理系统"
+    ]
+  },
   "Spring": {
     "brief": {
       "required": "Java生态最重要的框架，企业开发标配",
