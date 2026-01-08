@@ -13,7 +13,8 @@ CREATE TABLE `user` (
     `username` VARCHAR(50) NOT NULL COMMENT '用户名',
     `password` VARCHAR(255) NOT NULL COMMENT '加密密码',
     `email` VARCHAR(100) NOT NULL COMMENT '邮箱',
-    `phone` VARCHAR(20) NULL COMMENT '手机号' `user_type` TINYINT NOT NULL COMMENT '用户类型：1-求职者 2-HR',
+    `phone` VARCHAR(20) NULL COMMENT '手机号',
+    `user_type` TINYINT NOT NULL COMMENT '用户类型：1-求职者 2-HR',
     `status` TINYINT DEFAULT 1 NULL COMMENT '账户状态：0-禁用 1-正常',
     `avatar_url` VARCHAR(255) NULL COMMENT '头像URL',
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP NULL COMMENT '创建时间',
@@ -146,7 +147,7 @@ CREATE TABLE `company` (
     `company_created_at` DATETIME NOT NULL COMMENT '公司创建时间',
     `registered_capital` INT NOT NULL COMMENT '注册资本（万元）',
     `audit_status` VARCHAR(20) DEFAULT 'pending' COMMENT '审核状态',
-    `audited_at` DATETIME NULL COMMENT '审核时间';
+    `audited_at` DATETIME NULL COMMENT '审核时间'
 ) COMMENT '公司信息表' CHARSET = utf8mb4;
 CREATE INDEX idx_company_name ON company (company_name);
 CREATE INDEX idx_industry ON company (industry);
@@ -405,7 +406,7 @@ CREATE TABLE `interview` (
     `location` VARCHAR(255) NULL COMMENT '面试地点',
     `meeting_link` VARCHAR(255) NULL COMMENT '视频链接',
     `interviewer` VARCHAR(100) NULL COMMENT '面试官',
-    `status` TINYINT DEFAULT 0 NULL COMMENT '状态：0-待确认 1-已确认 2-已完成 3-已取消',
+    `status` TINYINT DEFAULT 0 NULL COMMENT '状态：0-待确认 1-已确认 2-已取消',
     `feedback` TEXT NULL COMMENT '面试反馈',
     `result` TINYINT NULL COMMENT '面试结果：0-未通过 1-通过',
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP NULL COMMENT '创建时间',
@@ -414,6 +415,24 @@ CREATE TABLE `interview` (
 CREATE INDEX idx_application_id ON interview (application_id);
 CREATE INDEX idx_interview_time ON interview (interview_time);
 CREATE INDEX idx_status ON interview (status);
+-- Offer表（录用通知书）
+CREATE TABLE `offer` (
+    `id` BIGINT AUTO_INCREMENT COMMENT 'Offer ID' PRIMARY KEY,
+    `application_id` BIGINT NOT NULL COMMENT '投递记录ID',
+    `job_seeker_id` BIGINT NOT NULL COMMENT '求职者ID',
+    `hr_id` BIGINT NOT NULL COMMENT 'HR ID',
+    `base_salary` DECIMAL(10, 2) NULL COMMENT '基本薪资',
+    `start_date` DATE NULL COMMENT '到岗日期',
+    `status` TINYINT DEFAULT 0 NOT NULL COMMENT 'Offer状态：0-待接受 1-已接受 2-已拒绝',
+    `accepted_at` DATETIME NULL COMMENT '接受时间',
+    `rejected_at` DATETIME NULL COMMENT '拒绝时间',
+    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP NULL COMMENT '创建时间',
+    `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'
+) COMMENT 'Offer表（录用通知书）' CHARSET = utf8mb4;
+CREATE INDEX idx_application_id ON offer (application_id);
+CREATE INDEX idx_job_seeker_id ON offer (job_seeker_id);
+CREATE INDEX idx_hr_id ON offer (hr_id);
+CREATE INDEX idx_status ON offer (status);
 -- ==============================================
 -- 聊天与通知模块
 -- ==============================================
