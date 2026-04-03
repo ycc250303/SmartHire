@@ -1,89 +1,89 @@
-name: SmartHire Backend CD
+# name: SmartHire Backend CD
 
-on:
-  workflow_run:
-    workflows: ["SmartHire Backend CI"]
-    types:
-      - completed
-    branches: [main]
+# on:
+#   workflow_run:
+#     workflows: ["SmartHire Backend CI"]
+#     types:
+#       - completed
+#     branches: [main]
 
-jobs:
-  deploy:
-    name: Deploy to Production
-    runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+# jobs:
+#   deploy:
+#     name: Deploy to Production
+#     runs-on: ubuntu-latest
+#     if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
-    steps:
-      # 1️⃣ 检查 CI 状态
-      - name: Check CI workflow status
-        run: |
-          if [ "${{ github.event.workflow_run.conclusion }}" != "success" ]; then
-            echo "❌ CI 未成功完成，终止部署"
-            exit 1
-          fi
-          echo "✅ CI 成功，开始部署"
+#     steps:
+#       # 1️⃣ 检查 CI 状态
+#       - name: Check CI workflow status
+#         run: |
+#           if [ "${{ github.event.workflow_run.conclusion }}" != "success" ]; then
+#             echo "❌ CI 未成功完成，终止部署"
+#             exit 1
+#           fi
+#           echo "✅ CI 成功，开始部署"
 
-      # 2️⃣ 拉代码（用于读取 pom.xml）
-      - name: Checkout Code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+#       # 2️⃣ 拉代码（用于读取 pom.xml）
+#       - name: Checkout Code
+#         uses: actions/checkout@v4
+#         with:
+#           fetch-depth: 0
 
-      - name: Install xmllint
-        run: sudo apt-get update && sudo apt-get install -y libxml2-utils
+#       - name: Install xmllint
+#         run: sudo apt-get update && sudo apt-get install -y libxml2-utils
 
-      - name: Get version from pom.xml
-        id: get_version
-        shell: bash
-        run: |
-          VERSION=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='version']/text()" SmartHire_Backend/pom.xml)
-          CLEAN_VERSION="${VERSION/-SNAPSHOT/}"
-          TAG="v$CLEAN_VERSION"
+#       - name: Get version from pom.xml
+#         id: get_version
+#         shell: bash
+#         run: |
+#           VERSION=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='version']/text()" SmartHire_Backend/pom.xml)
+#           CLEAN_VERSION="${VERSION/-SNAPSHOT/}"
+#           TAG="v$CLEAN_VERSION"
 
-          echo "IMAGE_TAG=$TAG" >> $GITHUB_OUTPUT
-          echo "IMAGE_NAME=${{ secrets.IMAGE_NAME }}" >> $GITHUB_OUTPUT
+#           echo "IMAGE_TAG=$TAG" >> $GITHUB_OUTPUT
+#           echo "IMAGE_NAME=${{ secrets.IMAGE_NAME }}" >> $GITHUB_OUTPUT
 
-          echo "📦 Deploy image: ghcr.io/${{ github.repository_owner }}/${{ secrets.IMAGE_NAME }}:$TAG"
+#           echo "📦 Deploy image: ghcr.io/${{ github.repository_owner }}/${{ secrets.IMAGE_NAME }}:$TAG"
 
-      # 3️⃣ SSH 配置
-      - name: Setup SSH Agent
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
+#       # 3️⃣ SSH 配置
+#       - name: Setup SSH Agent
+#         uses: webfactory/ssh-agent@v0.9.0
+#         with:
+#           ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
 
-      - name: Add server to known_hosts
-        run: |
-          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+#       - name: Add server to known_hosts
+#         run: |
+#           ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
 
-      # 4️⃣ 正式部署
-      - name: Deploy to server
-        env:
-          SMARTHIRE_TOKEN: ${{ secrets.SMARTHIRE_TOKEN }}
-          IMAGE_NAME: ${{ secrets.IMAGE_NAME }}
-          IMAGE_TAG: ${{ steps.get_version.outputs.IMAGE_TAG }}
-          REPO_OWNER: ${{ github.repository_owner }}
-          GH_ACTOR: ${{ github.event.workflow_run.actor.login }}
-        run: |
-          ssh -T \
-            -o ServerAliveInterval=30 \
-            -o ServerAliveCountMax=10 \
-            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << EOF
+#       # 4️⃣ 正式部署
+#       - name: Deploy to server
+#         env:
+#           SMARTHIRE_TOKEN: ${{ secrets.SMARTHIRE_TOKEN }}
+#           IMAGE_NAME: ${{ secrets.IMAGE_NAME }}
+#           IMAGE_TAG: ${{ steps.get_version.outputs.IMAGE_TAG }}
+#           REPO_OWNER: ${{ github.repository_owner }}
+#           GH_ACTOR: ${{ github.event.workflow_run.actor.login }}
+#         run: |
+#           ssh -T \
+#             -o ServerAliveInterval=30 \
+#             -o ServerAliveCountMax=10 \
+#             ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << EOF
 
-          set -Eeuo pipefail
+#           set -Eeuo pipefail
 
-          echo "🚀 SmartHire Backend 开始部署"
-          echo "📦 镜像: ghcr.io/$REPO_OWNER/$IMAGE_NAME:$IMAGE_TAG"
+#           echo "🚀 SmartHire Backend 开始部署"
+#           echo "📦 镜像: ghcr.io/$REPO_OWNER/$IMAGE_NAME:$IMAGE_TAG"
 
-          cd /opt/smarthire/backend
+#           cd /opt/smarthire/backend
 
-          echo "$SMARTHIRE_TOKEN" | docker login ghcr.io -u "$GH_ACTOR" --password-stdin
+#           echo "$SMARTHIRE_TOKEN" | docker login ghcr.io -u "$GH_ACTOR" --password-stdin
 
-          echo "⬇️ 强制拉取镜像"
-          docker pull ghcr.io/$REPO_OWNER/$IMAGE_NAME:$IMAGE_TAG
+#           echo "⬇️ 强制拉取镜像"
+#           docker pull ghcr.io/$REPO_OWNER/$IMAGE_NAME:$IMAGE_TAG
 
-          docker tag ghcr.io/$REPO_OWNER/$IMAGE_NAME:$IMAGE_TAG $IMAGE_NAME:latest
+#           docker tag ghcr.io/$REPO_OWNER/$IMAGE_NAME:$IMAGE_TAG $IMAGE_NAME:latest
 
-          docker-compose up -d --force-recreate backend
+#           docker-compose up -d --force-recreate backend
 
-          echo "✅ 部署完成"
-          EOF
+#           echo "✅ 部署完成"
+#           EOF

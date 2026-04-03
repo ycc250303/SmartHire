@@ -1,164 +1,164 @@
-name: SmartHire Backend CI
+# name: SmartHire Backend CI
 
-on:
-  push:
-    branches: [ "main", "dev" ]
-  pull_request:
-    branches: [ "main" ]
-  # 手动触发（用于测试和让状态检查出现在分支保护列表中）
-  workflow_dispatch:
+# on:
+#   push:
+#     branches: [ "main", "dev" ]
+#   pull_request:
+#     branches: [ "main" ]
+#   # 手动触发（用于测试和让状态检查出现在分支保护列表中）
+#   workflow_dispatch:
 
-jobs:
-  build-backend:
-    name: Build & Test Backend
-    runs-on: ubuntu-latest
+# jobs:
+#   build-backend:
+#     name: Build & Test Backend
+#     runs-on: ubuntu-latest
 
-    steps:
-      # 1. Checkout
-      - name: Checkout Code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # 获取完整的Git历史，以便获取提交者信息
+#     steps:
+#       # 1. Checkout
+#       - name: Checkout Code
+#         uses: actions/checkout@v4
+#         with:
+#           fetch-depth: 0  # 获取完整的Git历史，以便获取提交者信息
 
-      # 2. Setup JDK
-      - name: Setup JDK 21
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 21
+#       # 2. Setup JDK
+#       - name: Setup JDK 21
+#         uses: actions/setup-java@v4
+#         with:
+#           distribution: temurin
+#           java-version: 21
 
-      # 3. Cache Maven repository
-      - name: Cache Maven Repo
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-m2-
+#       # 3. Cache Maven repository
+#       - name: Cache Maven Repo
+#         uses: actions/cache@v4
+#         with:
+#           path: ~/.m2/repository
+#           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+#           restore-keys: |
+#             ${{ runner.os }}-m2-
 
-      # # 5. Run circular dependency tests
-      # - name: Run circular dependency tests
-      #   run: mvn -B test -Dtest=ServiceCycleArchitectureTest
-      #   working-directory: SmartHire_Backend
+#       # # 5. Run circular dependency tests
+#       # - name: Run circular dependency tests
+#       #   run: mvn -B test -Dtest=ServiceCycleArchitectureTest
+#       #   working-directory: SmartHire_Backend
 
-      # 6. Build JAR file (without tests to speed up CI)
-      - name: Build JAR file
-        run: mvn -B clean package -DskipTests
-        working-directory: SmartHire_Backend
+#       # 6. Build JAR file (without tests to speed up CI)
+#       - name: Build JAR file
+#         run: mvn -B clean package -DskipTests
+#         working-directory: SmartHire_Backend
 
-      # 7. Upload artifact (both main & dev)
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: smarthire-backend-jar
-          path: SmartHire_Backend/target/*.jar
+#       # 7. Upload artifact (both main & dev)
+#       - name: Upload build artifact
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: smarthire-backend-jar
+#           path: SmartHire_Backend/target/*.jar
 
-      # 8. Install xmllint
-      - name: Install xmllint
-        run: sudo apt-get update && sudo apt-get install -y libxml2-utils
+#       # 8. Install xmllint
+#       - name: Install xmllint
+#         run: sudo apt-get update && sudo apt-get install -y libxml2-utils
 
-      # 9. Get version from pom.xml
-      - name: Get version from pom.xml
-        id: get_version
-        shell: bash
-        run: |
-          VERSION=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='version']/text()" SmartHire_Backend/pom.xml)
-          CLEAN_VERSION="${VERSION/-SNAPSHOT/}"
-          echo "VERSION=$CLEAN_VERSION" >> $GITHUB_ENV
-          echo "IMAGE_TAG=v$CLEAN_VERSION" >> $GITHUB_ENV
-          echo "Original version: $VERSION, Release version: $CLEAN_VERSION"
+#       # 9. Get version from pom.xml
+#       - name: Get version from pom.xml
+#         id: get_version
+#         shell: bash
+#         run: |
+#           VERSION=$(xmllint --xpath "//*[local-name()='project']/*[local-name()='version']/text()" SmartHire_Backend/pom.xml)
+#           CLEAN_VERSION="${VERSION/-SNAPSHOT/}"
+#           echo "VERSION=$CLEAN_VERSION" >> $GITHUB_ENV
+#           echo "IMAGE_TAG=v$CLEAN_VERSION" >> $GITHUB_ENV
+#           echo "Original version: $VERSION, Release version: $CLEAN_VERSION"
 
-      # 10. Only for main branch: Build and push Docker image
-      - name: Set up Docker Buildx
-        if: github.ref == 'refs/heads/main'
-        uses: docker/setup-buildx-action@v3
+#       # 10. Only for main branch: Build and push Docker image
+#       - name: Set up Docker Buildx
+#         if: github.ref == 'refs/heads/main'
+#         uses: docker/setup-buildx-action@v3
 
-      - name: Login to GitHub Container Registry
-        if: github.ref == 'refs/heads/main'
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          # 使用 SMARTHIRE_TOKEN（需要 write:packages 权限）
-          password: ${{ secrets.SMARTHIRE_TOKEN }}
+#       - name: Login to GitHub Container Registry
+#         if: github.ref == 'refs/heads/main'
+#         uses: docker/login-action@v3
+#         with:
+#           registry: ghcr.io
+#           username: ${{ github.actor }}
+#           # 使用 SMARTHIRE_TOKEN（需要 write:packages 权限）
+#           password: ${{ secrets.SMARTHIRE_TOKEN }}
 
-      - name: Build and push Docker image (main only)
-        if: github.ref == 'refs/heads/main'
-        uses: docker/build-push-action@v5
-        with:
-          context: SmartHire_Backend
-          file: SmartHire_Backend/deploy/Dockerfile
-          push: true
-          tags: |
-            ghcr.io/${{ github.repository_owner }}/${{ secrets.IMAGE_NAME }}:v${{ env.VERSION }}
-            ghcr.io/${{ github.repository_owner }}/${{ secrets.IMAGE_NAME }}:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+#       - name: Build and push Docker image (main only)
+#         if: github.ref == 'refs/heads/main'
+#         uses: docker/build-push-action@v5
+#         with:
+#           context: SmartHire_Backend
+#           file: SmartHire_Backend/deploy/Dockerfile
+#           push: true
+#           tags: |
+#             ghcr.io/${{ github.repository_owner }}/${{ secrets.IMAGE_NAME }}:v${{ env.VERSION }}
+#             ghcr.io/${{ github.repository_owner }}/${{ secrets.IMAGE_NAME }}:latest
+#           cache-from: type=gha
+#           cache-to: type=gha,mode=max
 
-      # 11. Only for main branch: create tag
-      - name: Create Git tag (main only)
-        if: github.ref == 'refs/heads/main'
-        shell: bash
-        env:
-          GITHUB_TOKEN: ${{ secrets.SMARTHIRE_TOKEN }}
-        run: |
-          # 配置Git用户信息，使用原始提交者的信息
-          git config --global user.name "${{ github.event.head_commit.author.name }}"
-          git config --global user.email "${{ github.event.head_commit.author.email }}"
+#       # 11. Only for main branch: create tag
+#       - name: Create Git tag (main only)
+#         if: github.ref == 'refs/heads/main'
+#         shell: bash
+#         env:
+#           GITHUB_TOKEN: ${{ secrets.SMARTHIRE_TOKEN }}
+#         run: |
+#           # 配置Git用户信息，使用原始提交者的信息
+#           git config --global user.name "${{ github.event.head_commit.author.name }}"
+#           git config --global user.email "${{ github.event.head_commit.author.email }}"
           
-          git fetch --tags
-          TAG="v${{ env.VERSION }}"
-          if git rev-parse "$TAG" >/dev/null 2>&1; then
-            echo "Tag $TAG already exists, skipping tag creation"
-          else
-            git tag "$TAG"
-            git push https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git "$TAG"
-          fi
+#           git fetch --tags
+#           TAG="v${{ env.VERSION }}"
+#           if git rev-parse "$TAG" >/dev/null 2>&1; then
+#             echo "Tag $TAG already exists, skipping tag creation"
+#           else
+#             git tag "$TAG"
+#             git push https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git "$TAG"
+#           fi
 
-      # 12. Only for main branch: Delete existing release if exists (for overwrite)
-      - name: Delete existing release if exists (main only)
-        if: github.ref == 'refs/heads/main'
-        shell: bash
-        env:
-          GITHUB_TOKEN: ${{ secrets.SMARTHIRE_TOKEN }}
-        run: |
-          # 确保 jq 已安装
-          if ! command -v jq &> /dev/null; then
-            sudo apt-get update && sudo apt-get install -y jq
-          fi
+#       # 12. Only for main branch: Delete existing release if exists (for overwrite)
+#       - name: Delete existing release if exists (main only)
+#         if: github.ref == 'refs/heads/main'
+#         shell: bash
+#         env:
+#           GITHUB_TOKEN: ${{ secrets.SMARTHIRE_TOKEN }}
+#         run: |
+#           # 确保 jq 已安装
+#           if ! command -v jq &> /dev/null; then
+#             sudo apt-get update && sudo apt-get install -y jq
+#           fi
           
-          TAG="v${{ env.VERSION }}"
-          echo "🔍 检查是否存在 Release: $TAG"
+#           TAG="v${{ env.VERSION }}"
+#           echo "🔍 检查是否存在 Release: $TAG"
           
-          RELEASE_ID=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
-            -H "Accept: application/vnd.github.v3+json" \
-            "https://api.github.com/repos/${{ github.repository }}/releases/tags/$TAG" \
-            | jq -r '.id // empty')
+#           RELEASE_ID=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+#             -H "Accept: application/vnd.github.v3+json" \
+#             "https://api.github.com/repos/${{ github.repository }}/releases/tags/$TAG" \
+#             | jq -r '.id // empty')
           
-          if [ -n "$RELEASE_ID" ] && [ "$RELEASE_ID" != "null" ]; then
-            echo "🗑️ 删除已存在的 Release (ID: $RELEASE_ID)"
-            curl -X DELETE \
-              -H "Authorization: token $GITHUB_TOKEN" \
-              -H "Accept: application/vnd.github.v3+json" \
-              "https://api.github.com/repos/${{ github.repository }}/releases/$RELEASE_ID"
-            echo "✅ 已删除旧的 Release"
-          else
-            echo "ℹ️  Release 不存在，跳过删除步骤"
-          fi
+#           if [ -n "$RELEASE_ID" ] && [ "$RELEASE_ID" != "null" ]; then
+#             echo "🗑️ 删除已存在的 Release (ID: $RELEASE_ID)"
+#             curl -X DELETE \
+#               -H "Authorization: token $GITHUB_TOKEN" \
+#               -H "Accept: application/vnd.github.v3+json" \
+#               "https://api.github.com/repos/${{ github.repository }}/releases/$RELEASE_ID"
+#             echo "✅ 已删除旧的 Release"
+#           else
+#             echo "ℹ️  Release 不存在，跳过删除步骤"
+#           fi
 
-      # 13. Only for main branch: create Release and upload JAR
-      - name: Create Release & Upload JAR (main only)
-        if: github.ref == 'refs/heads/main'
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: v${{ env.VERSION }}
-          name: Release v${{ env.VERSION }}
-          files: SmartHire_Backend/target/*.jar
-          overwrite: true
-          # 确保覆盖已存在的文件
-          file_glob: true
-          # 强制创建新的 release（已删除旧的）
-          draft: false
-          prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.SMARTHIRE_TOKEN }}
+#       # 13. Only for main branch: create Release and upload JAR
+#       - name: Create Release & Upload JAR (main only)
+#         if: github.ref == 'refs/heads/main'
+#         uses: softprops/action-gh-release@v1
+#         with:
+#           tag_name: v${{ env.VERSION }}
+#           name: Release v${{ env.VERSION }}
+#           files: SmartHire_Backend/target/*.jar
+#           overwrite: true
+#           # 确保覆盖已存在的文件
+#           file_glob: true
+#           # 强制创建新的 release（已删除旧的）
+#           draft: false
+#           prerelease: false
+#         env:
+#           GITHUB_TOKEN: ${{ secrets.SMARTHIRE_TOKEN }}
